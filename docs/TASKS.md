@@ -22,7 +22,7 @@ Cada tarea se trabaja en **un único worktree/rama** (`mp-00X-nombre-corto`), co
 - **Criterios de aceptación:** ver `MADRID_PULSE_BRIEF_INICIAL.md` §7 (enlaces navegables, separación confirmado/propuesto/pendiente, cada tarea con responsable y revisor, `STATUS.md` con checklist y bitácora, `AGENTS.md`/`CLAUDE.md` coherentes, sin servicios cloud configurados, sin producto implementado).
 - **Pruebas necesarias:** validación documental (enlaces internos resuelven, tabla de tareas sin huecos de responsable/revisor, ausencia de secretos).
 - **Evidencia de verificación:** 4 rondas de revisión cruzada con Codex en este mismo worktree (dispatches `ctx_64731a94e6bc` → `ctx_e72e7a44721a` → `ctx_762cad1ca40c` → `ctx_0ee25a6a5d2c`): 1 bloqueante + 3 menores (ronda 1), 2 bloqueantes + 2 menores (ronda 2), 1 bloqueante + 1 menor (ronda 3), **APROBADO sin hallazgos** (ronda 4). Detalle completo en `docs/STATUS.md` → bitácora.
-- **Estado:** `REVIEW` — **Codex: APROBADO**. Pendiente: confirmación del propietario del alcance de "Hito 1" y aceptación final (push + PR + merge a `main`) antes de pasar a `DONE`.
+- **Estado:** `DONE` — **Codex: APROBADO** en revisión cruzada; el propietario autorizó Hito 1 (`MP-002` → `MP-009`) el 2026-11-18. El merge a `main` no es requisito para `DONE` según ADR-0007.
 
 ---
 
@@ -39,8 +39,8 @@ Cada tarea se trabaja en **un único worktree/rama** (`mp-00X-nombre-corto`), co
 - **Entregables:** matriz de licencias confirmada (no asumida) con `source_id`, publisher, licencia exacta, texto de atribución y restricciones por fuente.
 - **Criterios de aceptación:** cada fuente usada tiene licencia verificada contra su página oficial (no solo citada por la investigación previa); AGPL de Via Península y ODbL de OSM explícitamente resueltos con sus implicaciones documentadas.
 - **Pruebas necesarias:** checklist de verificación por fuente (URL accedida, fecha de verificación, captura/registro de la licencia vigente).
-- **Evidencia de verificación:** enlaces y fecha de verificación registrados en `docs/legal/DATA_SOURCES.md`.
-- **Estado:** `TODO`
+- **Evidencia de verificación:** checklist por fuente, URLs oficiales accedidas, fecha/hora UTC, hallazgo y hashes de los ficheros `LICENSE` registrados en `docs/legal/DATA_SOURCES.md`; implicaciones ODbL/AGPL resueltas en `docs/legal/LICENSE_MATRIX.md`; textos de atribución en `docs/legal/ATTRIBUTION.md`. Valfiguer queda documentado con datos/API `CC BY 4.0` y licencia de implementación desconocida (DEC-016).
+- **Estado:** `REVIEW` — implementación documental completada por Codex el 2026-11-18; pendiente de auditoría y aprobación de Claude Code.
 
 ---
 

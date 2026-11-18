@@ -4,6 +4,19 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 
 ## [Unreleased]
 
+### MP-002 — Matriz de fuentes y licencias
+
+#### Changed
+- `docs/legal/DATA_SOURCES.md`: licencias de Renfe GTFS/GTFS-RT, CRTM GTFS, estadística 1923861, OpenStreetMap y proyectos de referencia verificadas contra páginas oficiales y ficheros `LICENSE`, con `source_id`, publisher, dataset, URL, fecha UTC, restricciones y checklist reproducible.
+- `docs/legal/LICENSE_MATRIX.md`: sustituidas las hipótesis `PENDING` por resultados verificables; documentadas la reciprocidad ODbL para bases derivadas, la separación consulta/software, y las obligaciones AGPL de Via Península sin reutilizar código.
+- `docs/legal/ATTRIBUTION.md`: textos operativos de atribución para Renfe, CRTM, OSM, Comunidad de Madrid y el uso eventual de datos normalizados de Valfiguer.
+- `docs/DECISIONS.md`: DEC-016 registra que los datos/API de Valfiguer son `CC BY 4.0`, pero no existe un repositorio público de implementación verificable ni puede inferirse su licencia de código.
+- `docs/TASKS.md` y `docs/STATUS.md`: MP-001 reflejada como `DONE`, Hito 1 autorizado y MP-002 entregada en `REVIEW` para auditoría de Claude Code.
+
+#### Verified
+- Via Península: `AGPL-3.0`; Niltra/cercanias: `MIT`; atlas-ferroviario: texto MIT para código más aviso Renfe `CC BY 4.0`; Valfiguer: datos/API `CC BY 4.0`, código desconocido.
+- Renfe Data: `CC BY 4.0` en GTFS estático y los tres datasets GTFS-RT, con condiciones adicionales del portal; CRTM: licencia propia `CRTM-LDA`; OpenStreetMap: `ODbL-1.0`.
+
 ### MP-001 — Bootstrap documental del repositorio
 
 #### Added
