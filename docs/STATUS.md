@@ -19,7 +19,7 @@ MP-001 está `DONE`: Codex aprobó la revisión cruzada y, conforme a ADR-0007, 
 
 **MP-002 — Matriz de fuentes y licencias**
 
-Ejecutor: OpenAI Codex · Revisor: Claude Code · Estado: **REVIEW**
+Ejecutor: OpenAI Codex · Revisor: Claude Code · Estado: **DONE** (aprobado por Claude Code el 2026-11-18)
 
 Worktree/rama: `mp-002-fuentes-licencias`
 
@@ -39,7 +39,7 @@ Worktree/rama: `mp-002-fuentes-licencias`
 - [x] Dataset estadístico Comunidad de Madrid 1923861 verificado como `CC BY 4.0` y de ámbito declarado nacional.
 - [x] `DATA_SOURCES.md`, `LICENSE_MATRIX.md` y `ATTRIBUTION.md` actualizados con evidencia y fecha real.
 - [x] `TASKS.md`, `STATUS.md`, `CHANGELOG.md` y `DECISIONS.md` actualizados.
-- [ ] Revisión independiente de Claude Code.
+- [x] Revisión independiente de Claude Code: re-verificación propia (no solo lectura del reporte de Codex) vía `gh api` y fetch directo de `data.renfe.com`, `crtm.es` y los ficheros `LICENSE` reales de los tres repos de referencia. Todas las afirmaciones de Codex se confirmaron exactas, incluido el matiz MIT-pero-`NOASSERTION` de atlas-ferroviario. **APROBADO.**
 
 ### Resultado y límites
 
@@ -53,7 +53,11 @@ Ninguno. La licencia desconocida de la implementación Valfiguer no bloquea porq
 
 ### Siguiente paso
 
-Claude Code debe auditar el diff completo y las URLs/evidencias dentro de este mismo worktree. MP-002 solo pasará a `DONE` tras su aprobación explícita; entonces MP-003 podrá ramificar desde esta rama sin esperar merge a `main`.
+MP-002 está `DONE`. MP-003 ramifica desde esta rama (`mp-002-fuentes-licencias`) sin esperar merge a `main`, conforme a ADR-0007.
+
+### Nota de proceso (ramas encadenadas)
+
+Esta rama se bifurcó de `chore/mp-001-foundation` en el commit `3e7b533`, **antes** de que esa rama recibiera un commit posterior (`fac945c`) registrando la aceptación de MP-001 por el propietario y la autorización de Hito 1. Codex infirió correctamente esa autorización por el contexto del encargo (no por leer un `STATUS.md` ya actualizado, que en esta rama no existía todavía) y la registró aquí de forma independiente. Resultado: `chore/mp-001-foundation` y esta rama tienen ahora dos redacciones distintas, pero no contradictorias, de "MP-001 está DONE / Hito 1 autorizado". Claude Code alineó el campo `Estado` de MP-001 en `docs/TASKS.md` de ambas ramas a `DONE` para que la reconciliación en el merge final sea trivial. **Lección para hitos futuros:** si se edita el `STATUS.md` de la rama base después de que una rama hija ya se bifurcó, esa edición no llega a la hija automáticamente — hay que reconciliarla explícitamente, como aquí.
 
 ## Bitácora
 
@@ -64,6 +68,7 @@ Claude Code debe auditar el diff completo y las URLs/evidencias dentro de este m
 | `2026-11-18T15:16:53Z` | MP-002 | Cierre de verificación formal de licencias y condiciones | Checklist y enlaces en `docs/legal/DATA_SOURCES.md` |
 | `2026-11-18T15:16:53Z` | MP-002 | Hallazgo Valfiguer: datos/API `CC BY 4.0`, implementación sin repo/licencia verificable | DEC-016; `docs/legal/LICENSE_MATRIX.md` |
 | `2026-11-18T15:16:53Z` | MP-002 | Entregables documentales completados; tarea pasa a `REVIEW` | `docs/TASKS.md`; commit local de MP-002 |
+| `2026-11-18` | MP-002 | Revisión independiente de Claude Code (gh api + fetch directo de Renfe/CRTM/LICENSE reales): **APROBADO**, sin hallazgos bloqueantes ni menores sobre el contenido. Hallazgo de proceso (divergencia de ramas) documentado y reconciliado | — |
 
 ## Cómo usar este documento
 
