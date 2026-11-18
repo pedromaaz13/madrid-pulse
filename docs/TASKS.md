@@ -126,8 +126,27 @@ Cada tarea se trabaja en **un único worktree/rama** (`mp-00X-nombre-corto`), co
   la imagen se conservan deliberadamente en rollback (ver README). Contenedor
   detenido al terminar con `docker compose -p madrid-pulse ... down`; volumen
   nombrado conservado con la migración final aplicada.
-- **Estado:** `REVIEW` — implementación completada por OpenAI Codex el 2026-11-18;
-  pendiente de revisión independiente de Claude Code en este mismo worktree.
+- **Revisión independiente de Claude Code (2026-11-19): APROBADA.** Reproducida de
+  forma propia en el mismo worktree, no solo verificado lo reportado por Codex:
+  contenedor levantado, `0001_init.up.sql` aplicada sobre un volumen que ya tenía
+  el esquema cargado (rollback previo necesario, reproducido primero), geometría
+  generada confirmada (`POINT(-3.689 40.406)` con posición, `NULL` sin ella), los
+  tres `UNIQUE` (`route`, `trip`, `vehicle_position_observation`) rechazados de
+  verdad con `exit 1`, los dos índices `GIST` presentes, ausencia confirmada de
+  `effect`/`cause`/`header_text` y `current_stop_sequence`. Ciclo completo
+  `down → up → down → up` repetido independientemente, exit 0 en cada paso.
+  Suites de regresión reejecutadas de forma independiente: contratos 23/23 `OK`,
+  fixtures 6/6 `OK`. `check_links.py` sobre todo el repo: 46 enlaces, ninguno roto.
+  Identidad Git verificada (`Pedro Matute`, sin coautores). Contenedores
+  `*-traza-app` confirmados intactos antes y después.
+  **Hallazgo (corregido):** `docs/STATUS.md` reemplazó el registro completo de
+  MP-005 en "Tarea actual" por el de MP-006 sin archivarlo primero en "Tareas
+  cerradas de la cadena", rompiendo el patrón seguido por MP-002/MP-003/MP-004 —
+  el checklist detallado de MP-005 se perdía del documento vivo (solo quedaba una
+  línea de bitácora y el CHANGELOG). Corregido moviendo el registro completo de
+  MP-005 a "Tareas cerradas de la cadena".
+- **Estado:** `DONE` (aprobado el 2026-11-19). MP-007 puede ramificar desde
+  `mp-006-postgis-schema` sin esperar merge a `main`.
 
 ---
 

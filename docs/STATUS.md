@@ -17,9 +17,17 @@ MP-001 está `DONE`: Codex aprobó la revisión cruzada y, conforme a ADR-0007, 
 
 ## Tarea actual
 
+**MP-007 — Collector idempotente**
+
+Ejecutor: Claude Code · Revisor: OpenAI Codex · Estado: **TODO** (pendiente de dispatch)
+
+Worktree/rama: a crear como `mp-007-collector`, ramificada desde `mp-006-postgis-schema` (MP-006 `DONE`)
+
+## Tareas cerradas de la cadena
+
 **MP-006 — Esquema PostgreSQL/PostGIS v1**
 
-Ejecutor: OpenAI Codex · Revisor: Claude Code · Estado: **REVIEW**
+Ejecutor: OpenAI Codex · Revisor: Claude Code · Estado: **DONE** (aprobado el 2026-11-19)
 
 Worktree/rama: `mp-006-postgis-schema`, ramificada desde `mp-005-contrato-canonico` (MP-005 `DONE`)
 
@@ -50,6 +58,19 @@ Worktree/rama: `mp-006-postgis-schema`, ramificada desde `mp-005-contrato-canoni
 - [x] `docker compose ... config --quiet` y `git diff --check`: exit 0.
 - [x] Contenedor de Madrid Pulse detenido al finalizar; volumen propio conservado
   con la migración final aplicada para que el propietario pueda reanudarlo.
+- [x] Revisión independiente de Claude Code (2026-11-19): **APROBADA**. Reproducido
+  el ciclo completo de forma propia (no solo verificado el reporte de Codex):
+  rollback necesario primero porque el volumen ya tenía el esquema cargado, luego
+  `up → datos de prueba → 3 duplicados rechazados → down → up` otra vez, todo
+  `exit 0`/`exit 1` según corresponde. GIST confirmados en `vehicle_position_observation.geom`
+  y `station.geom`. Confirmada la ausencia real de `effect`/`cause`/`header_text`
+  y `current_stop_sequence`. Suites de regresión reejecutadas de forma
+  independiente (23/23 y 6/6). `check_links.py`: 46 enlaces, ninguno roto.
+  Identidad Git verificada. Contenedores `*-traza-app` intactos.
+  **Hallazgo (corregido en esta misma revisión):** este documento había
+  reemplazado el registro completo de MP-005 en "Tarea actual" por el de MP-006
+  sin archivarlo primero aquí, rompiendo el patrón de MP-002/MP-003/MP-004 —
+  corregido moviendo el registro íntegro de MP-005 a esta sección.
 
 ### Resultado y límites
 
@@ -64,10 +85,43 @@ Ninguno.
 
 ### Siguiente paso
 
-Claude Code debe auditar el diff y repetir las comprobaciones pertinentes en este
-mismo worktree. MP-006 no pasa a `DONE` hasta esa aprobación independiente.
+MP-006 está `DONE`. MP-007 puede ramificar desde `mp-006-postgis-schema` sin
+esperar merge a `main`, conforme al hito autorizado y ADR-0007.
 
-## Tareas cerradas de la cadena
+**MP-005 — Contrato canónico interno**
+
+Ejecutor: Claude Code · Revisor: OpenAI Codex · Estado: **DONE** (aprobado el 2026-11-18)
+
+Worktree/rama: `mp-005-contrato-canonico`, ramificada desde `mp-004-fixtures` (MP-004 `DONE`)
+
+### Checklist de MP-005
+
+- [x] `packages/contracts/raw.py`: modelos Pydantic que reflejan exactamente el JSON bruto observado en MP-003/MP-004 (sin inventar campos); acepta campos nuevos no verificados sin fallar (`extra="ignore"`).
+- [x] `packages/contracts/nucleo.py`: tabla de prefijos de núcleo verificada en MP-003, con `is_madrid`/`nucleo_name`.
+- [x] `packages/contracts/canonical.py`: `VehiclePositionObservation`, `TripUpdateObservation`, `ServiceAlert`, `FeedHealth` — UTC siempre, dato ausente = `None` nunca `0`, `nucleo_prefix` derivado como `computed_field` (no aceptado como entrada independiente).
+- [x] `packages/contracts/normalize.py`: funciones puras `raw → canonical`, sin red ni base de datos.
+- [x] 23 tests reales ejecutados (`python3 -m unittest discover -s packages/contracts/tests -p 'test_*.py' -v`) → `OK`: parseo contra fixtures reales, normalización (incluido el test de colisión núcleo/C5 a nivel de contrato canónico), sintéticos (JSON Schema, rechazo de datos inválidos, caso multi-núcleo no observado), enforcement UTC y regresión de campos `raw` no observados.
+- [x] **Hallazgo:** `docs/DATA_MODEL.md` asumía `speed_kmh`/`bearing`/`current_stop_sequence` y `effect`/`cause`/`header_text` de alertas que el feed real NUNCA emite (verificado contra ~800 entidades combinadas de MP-003/MP-004). Corregido `docs/DATA_MODEL.md`, `docs/DATA_QUALITY.md` (nota sobre cómo calcular `implausible_speed` sin un campo de origen), registrado DEC-018/ADR-0009 (`Propuesto`).
+- [x] Autocorregido antes de delegar: una edición introdujo una fila duplicada en `docs/DATA_QUALITY.md` (`off_track` repetida) — detectado y corregido en la misma ronda, sin necesitar que Codex lo señalara.
+- [x] Primera revisión independiente de Codex (dispatch `ctx_ea1d5cf46d74`): **no aprobada** — reejecutó la suite (17/17 OK en su entorno) y auditó el diff campo a campo. 3 bloqueantes + 1 menor:
+  - **Bloqueante 1:** `RawActivePeriod.end` no tenía el comentario de "campo opcional no observado" que sí llevan los demás campos documentados tras el hallazgo de MP-005 — se corrigió **añadiendo un comentario**, lo que resultó insuficiente (ver 2ª ronda).
+  - **Bloqueante 2:** el esquema canónico documentaba "UTC siempre" pero no lo exigía — un `datetime` naive o con offset no UTC pasaría la validación sin error. Corregido con `field_validator` en los 4 modelos (`VehiclePositionObservation`, `TripUpdateObservation`, `ServiceAlert`, `FeedHealth`), con 5 tests nuevos que prueban el rechazo real.
+  - **Bloqueante 3:** `docs/research/TRACEABILITY.md` no señalaba que el modelo candidato original (`deep-research-report.md`) queda contradicho por esta verificación — añadida la fila correspondiente sin editar el documento de investigación congelado.
+  - **Menor:** `ADR-0009` decía erróneamente que Codex podía promover el ADR a `Aceptado` (contrario a `AGENTS.md`/ADR-0007: solo el propietario puede) — corregido; `raw.py` tenía un error de redacción ("ninguno de los dos" para tres campos) — corregido.
+- [x] Segunda revisión independiente de Codex (dispatch `ctx_ded900b82f20`): **no aprobada** — señaló correctamente que un comentario no resuelve una contradicción: `raw.py:1-9` declara explícitamente que el módulo no debe contener campos no observados, y `RawActivePeriod.end` seguía ahí. Corregido de verdad esta vez: `end` **eliminado** de `RawActivePeriod` (no solo comentado); `normalize.py`/`canonical.py` ajustados; añadido un test de regresión (`test_raw_active_period_has_no_unobserved_end_field`) que falla si alguien lo reintroduce sin verificarlo, incluso si el JSON de origen lo trae (se ignora por `extra="ignore"`). 23 tests en total.
+- [x] Tercera revisión independiente de Codex: **APROBADA**, sin hallazgos abiertos — reejecutó 23/23 tests; confirmó independientemente que `RawActivePeriod.model_fields == {"start"}`, que un `end` extra se ignora sin convertirse en atributo, que fechas naive y `+02:00` se rechazan mientras UTC se acepta, y que trazabilidad, ADR, enlaces, secretos y whitespace son coherentes.
+
+### Resultado y límites
+
+El contrato canónico se valida contra datos reales (MP-004) y sintéticos. La separación `raw`/`canonical` evita que un cambio futuro del feed de Renfe se propague directamente al resto del sistema sin pasar por una capa de normalización explícita. Los hallazgos de campos no observados (ADR-0009) son correcciones al modelo candidato de MP-001, no contradicciones nuevas sin resolver.
+
+### Bloqueos
+
+Ninguno.
+
+### Siguiente paso
+
+MP-005 está `DONE`. MP-006 pudo ramificar desde esta rama sin esperar merge a `main`, conforme al hito autorizado y ADR-0007.
 
 **MP-004 — Fixtures reproducibles**
 
@@ -209,6 +263,7 @@ Esta rama se bifurcó de `chore/mp-001-foundation` en el commit `3e7b533`, **ant
 | `2026-11-18` | MP-005 | `end` eliminado de `RawActivePeriod` (no solo comentado); `normalize.py`/`canonical.py` ajustados; test de regresión añadido (23 tests); reenviado a Codex para tercera verificación | commit `a9b1172` |
 | `2026-11-18` | MP-005 | Tercera revisión independiente de Codex: **APROBADA** — 23/23 tests, esquema `raw`, enforcement UTC, trazabilidad, ADR, enlaces, secretos y whitespace verificados; tarea pasa a `DONE` | revisión posterior a `a9b1172` |
 | `2026-11-18T22:53:33Z` | MP-006 | Migración PostGIS aplicada, constraints probadas con duplicados reales, rollback verificado (`0` tablas de aplicación) y ciclo final `down → up` completado; tarea pasa a `REVIEW` | `infra/migrations/`; salida real de `psql` documentada en TASKS/checklist |
+| `2026-11-19` | MP-006 | Revisión independiente de Claude Code: ciclo `up/down/up` reproducido desde cero en el worktree, 3 `UNIQUE` rechazados de verdad, 2 `GIST` confirmados, ausencia de campos no observados verificada, suites de regresión reejecutadas (23/23, 6/6), 46 enlaces sin romper. **APROBADA**. Hallazgo de proceso: `STATUS.md` había perdido el checklist completo de MP-005 al no archivarlo antes de escribir el de MP-006; corregido en la misma revisión. Tarea pasa a `DONE` | commit `30507cf`; commit de revisión pendiente |
 
 ## Cómo usar este documento
 

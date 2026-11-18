@@ -32,6 +32,17 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
   conserva correctamente esa infraestructura preexistente y elimina solo el
   esquema de aplicación, sin `CASCADE` destructivo.
 
+#### Revisión independiente (Claude Code, 2026-11-19)
+- Reproducido el ciclo completo `down → up → datos → 3 rechazos UNIQUE → down → up`
+  de forma propia en el mismo worktree, sin depender solo del reporte de Codex;
+  confirmados los 2 índices `GIST`, la ausencia real de `effect`/`cause`/
+  `header_text`/`current_stop_sequence`, y las suites de regresión (23/23, 6/6).
+  `*-traza-app` verificado intacto antes y después. **APROBADA.**
+- **Hallazgo corregido:** `docs/STATUS.md` había sustituido el checklist completo
+  de MP-005 en "Tarea actual" por el de MP-006 sin archivarlo primero en "Tareas
+  cerradas de la cadena", rompiendo el patrón seguido por MP-002/MP-003/MP-004.
+  Corregido moviendo el registro íntegro de MP-005 a esa sección.
+
 ### MP-005 — Contrato canónico interno
 
 #### Added
