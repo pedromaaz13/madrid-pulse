@@ -4,6 +4,34 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 
 ## [Unreleased]
 
+### MP-006 — Esquema PostgreSQL/PostGIS v1
+
+#### Added
+- Compose local aislado con `postgis/postgis:17-3.5`, puerto `127.0.0.1:5433`,
+  volumen/red propios y montaje de migraciones en solo lectura.
+- Migración SQL plana `0001_init` up/down con 14 tablas de aplicación,
+  `source_feed_version`, PostGIS, constraints de dominio/deduplicación y los cinco
+  índices propuestos (incluidos dos GIST).
+- Documentación de arranque/parada, aplicación ordenada, rollback y diferencias
+  de nombres resueltas a favor de `packages/contracts/canonical.py`.
+
+#### Verified
+- Aplicación real en PostgreSQL 17/PostGIS 3.5.2: 14 `CREATE TABLE`, 5
+  `CREATE INDEX`, `COMMIT`; geometría generada y caso de posición ausente nulo.
+- Duplicados de route, trip y observación rechazados realmente por PostgreSQL
+  (exit 1 y nombre de constraint en cada caso).
+- Rollback real: 14 `DROP TABLE`, `COMMIT` y 0 tablas de aplicación restantes;
+  ciclo posterior `down → up` completado con exit 0.
+- Regresión: 23 tests de contratos y 6 tests de fixtures, todos `OK`.
+
+#### Fixed during verification
+- La etiqueta oficial no ofrece manifiesto ARM64: Compose fija `linux/amd64` para
+  Docker Desktop en Apple Silicon.
+- El primer `down` intentaba retirar `postgis`, pero la imagen ya había creado
+  extensiones dependientes y PostgreSQL revirtió la transacción. El rollback final
+  conserva correctamente esa infraestructura preexistente y elimina solo el
+  esquema de aplicación, sin `CASCADE` destructivo.
+
 ### MP-005 — Contrato canónico interno
 
 #### Added

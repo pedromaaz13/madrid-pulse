@@ -17,32 +17,46 @@ MP-001 está `DONE`: Codex aprobó la revisión cruzada y, conforme a ADR-0007, 
 
 ## Tarea actual
 
-**MP-005 — Contrato canónico interno**
+**MP-006 — Esquema PostgreSQL/PostGIS v1**
 
-Ejecutor: Claude Code · Revisor: OpenAI Codex · Estado: **DONE** (aprobado el 2026-11-18)
+Ejecutor: OpenAI Codex · Revisor: Claude Code · Estado: **REVIEW**
 
-Worktree/rama: `mp-005-contrato-canonico`, ramificada desde `mp-004-fixtures` (MP-004 `DONE`)
+Worktree/rama: `mp-006-postgis-schema`, ramificada desde `mp-005-contrato-canonico` (MP-005 `DONE`)
 
-### Checklist de MP-005
+### Checklist de MP-006
 
-- [x] `packages/contracts/raw.py`: modelos Pydantic que reflejan exactamente el JSON bruto observado en MP-003/MP-004 (sin inventar campos); acepta campos nuevos no verificados sin fallar (`extra="ignore"`).
-- [x] `packages/contracts/nucleo.py`: tabla de prefijos de núcleo verificada en MP-003, con `is_madrid`/`nucleo_name`.
-- [x] `packages/contracts/canonical.py`: `VehiclePositionObservation`, `TripUpdateObservation`, `ServiceAlert`, `FeedHealth` — UTC siempre, dato ausente = `None` nunca `0`, `nucleo_prefix` derivado como `computed_field` (no aceptado como entrada independiente).
-- [x] `packages/contracts/normalize.py`: funciones puras `raw → canonical`, sin red ni base de datos.
-- [x] 23 tests reales ejecutados (`python3 -m unittest discover -s packages/contracts/tests -p 'test_*.py' -v`) → `OK`: parseo contra fixtures reales, normalización (incluido el test de colisión núcleo/C5 a nivel de contrato canónico), sintéticos (JSON Schema, rechazo de datos inválidos, caso multi-núcleo no observado), enforcement UTC y regresión de campos `raw` no observados.
-- [x] **Hallazgo:** `docs/DATA_MODEL.md` asumía `speed_kmh`/`bearing`/`current_stop_sequence` y `effect`/`cause`/`header_text` de alertas que el feed real NUNCA emite (verificado contra ~800 entidades combinadas de MP-003/MP-004). Corregido `docs/DATA_MODEL.md`, `docs/DATA_QUALITY.md` (nota sobre cómo calcular `implausible_speed` sin un campo de origen), registrado DEC-018/ADR-0009 (`Propuesto`).
-- [x] Autocorregido antes de delegar: una edición introdujo una fila duplicada en `docs/DATA_QUALITY.md` (`off_track` repetida) — detectado y corregido en la misma ronda, sin necesitar que Codex lo señalara.
-- [x] Primera revisión independiente de Codex (dispatch `ctx_ea1d5cf46d74`): **no aprobada** — reejecutó la suite (17/17 OK en su entorno) y auditó el diff campo a campo. 3 bloqueantes + 1 menor:
-  - **Bloqueante 1:** `RawActivePeriod.end` no tenía el comentario de "campo opcional no observado" que sí llevan los demás campos documentados tras el hallazgo de MP-005 — se corrigió **añadiendo un comentario**, lo que resultó insuficiente (ver 2ª ronda).
-  - **Bloqueante 2:** el esquema canónico documentaba "UTC siempre" pero no lo exigía — un `datetime` naive o con offset no UTC pasaría la validación sin error. Corregido con `field_validator` en los 4 modelos (`VehiclePositionObservation`, `TripUpdateObservation`, `ServiceAlert`, `FeedHealth`), con 5 tests nuevos que prueban el rechazo real.
-  - **Bloqueante 3:** `docs/research/TRACEABILITY.md` no señalaba que el modelo candidato original (`deep-research-report.md`) queda contradicho por esta verificación — añadida la fila correspondiente sin editar el documento de investigación congelado.
-  - **Menor:** `ADR-0009` decía erróneamente que Codex podía promover el ADR a `Aceptado` (contrario a `AGENTS.md`/ADR-0007: solo el propietario puede) — corregido; `raw.py` tenía un error de redacción ("ninguno de los dos" para tres campos) — corregido.
-- [x] Segunda revisión independiente de Codex (dispatch `ctx_ded900b82f20`): **no aprobada** — señaló correctamente que un comentario no resuelve una contradicción: `raw.py:1-9` declara explícitamente que el módulo no debe contener campos no observados, y `RawActivePeriod.end` seguía ahí. Corregido de verdad esta vez: `end` **eliminado** de `RawActivePeriod` (no solo comentado); `normalize.py`/`canonical.py` ajustados; añadido un test de regresión (`test_raw_active_period_has_no_unobserved_end_field`) que falla si alguien lo reintroduce sin verificarlo, incluso si el JSON de origen lo trae (se ignora por `extra="ignore"`). 23 tests en total.
-- [x] Tercera revisión independiente de Codex: **APROBADA**, sin hallazgos abiertos — reejecutó 23/23 tests; confirmó independientemente que `RawActivePeriod.model_fields == {"start"}`, que un `end` extra se ignora sin convertirse en atributo, que fechas naive y `+02:00` se rechazan mientras UTC se acepta, y que trazabilidad, ADR, enlaces, secretos y whitespace son coherentes.
+- [x] Compose aislado: proyecto `madrid-pulse`, imagen `postgis/postgis:17-3.5`,
+  puerto `127.0.0.1:5433`, red y volumen nombrados propios; los contenedores
+  `*-traza-app` no se tocaron.
+- [x] `0001_init.up.sql` transaccional: PostGIS y las 14 entidades de aplicación
+  (más `source_feed_version`, exigida por el versionado GTFS y su FK), constraints
+  e índices B-tree/GIST.
+- [x] Correspondencia canónica documentada: `entity_count`, `affected_route_ids`,
+  `latitude`/`longitude`, `raw_vehicle_label`, `next_stop_id`,
+  `nucleo_prefix`/`nucleo_name`/`nucleo_prefixes`; `geom` generado desde las
+  coordenadas y nullable cuando la fuente no aporta posición.
+- [x] Migración aplicada sobre PostgreSQL/PostGIS real con `ON_ERROR_STOP=1`:
+  `CREATE TABLE` ×14, `CREATE INDEX` ×5 y `COMMIT`; PostGIS `3.5.2`.
+- [x] Datos válidos insertados; `geom` generado como `POINT(-3.689 40.406)` y
+  observación sin posición persistida con `latitude`, `longitude` y `geom` nulos.
+- [x] Constraints probadas con fallos reales (todos exit 1): duplicado de
+  `(network_id, source_route_id)`, de `(service_date, source_trip_id)` y de
+  `(ingestion_run_id, payload_hash)` rechazados por sus `UNIQUE` respectivos.
+- [x] Rollback real con `ON_ERROR_STOP=1`: 14 tablas eliminadas y `COMMIT`;
+  consulta posterior `remaining_application_tables = 0`. PostGIS se conserva
+  porque la imagen instala extensiones dependientes antes de la migración.
+- [x] Ciclo final `down → up` repetido desde cero: ambos comandos exit 0.
+- [x] Suites de regresión reejecutadas: contratos 23/23 `OK`; fixtures 6/6 `OK`.
+- [x] `docker compose ... config --quiet` y `git diff --check`: exit 0.
+- [x] Contenedor de Madrid Pulse detenido al finalizar; volumen propio conservado
+  con la migración final aplicada para que el propietario pueda reanudarlo.
 
 ### Resultado y límites
 
-El contrato canónico se valida contra datos reales (MP-004) y sintéticos. La separación `raw`/`canonical` evita que un cambio futuro del feed de Renfe se propague directamente al resto del sistema sin pasar por una capa de normalización explícita. Los hallazgos de campos no observados (ADR-0009) son correcciones al modelo candidato de MP-001, no contradicciones nuevas sin resolver.
+SQL plano permite auditar el DDL inicial sin introducir todavía un framework de
+migraciones. El rollback elimina el esquema de aplicación pero no usa
+`DROP EXTENSION ... CASCADE`: las extensiones PostGIS dependientes vienen
+preinstaladas por la imagen y no pertenecen a esta migración.
 
 ### Bloqueos
 
@@ -50,7 +64,8 @@ Ninguno.
 
 ### Siguiente paso
 
-MP-005 está `DONE`. MP-006 puede ramificar desde esta rama sin esperar merge a `main`, conforme al hito autorizado y ADR-0007.
+Claude Code debe auditar el diff y repetir las comprobaciones pertinentes en este
+mismo worktree. MP-006 no pasa a `DONE` hasta esa aprobación independiente.
 
 ## Tareas cerradas de la cadena
 
@@ -193,6 +208,7 @@ Esta rama se bifurcó de `chore/mp-001-foundation` en el commit `3e7b533`, **ant
 | `2026-11-18` | MP-005 | Segunda revisión de Codex: no aprobada — el bloqueante 1 de la ronda anterior solo se había documentado con un comentario, no resuelto; `raw.py` seguía declarando `end` pese a que el propio módulo prohíbe campos no observados | dispatch `ctx_ded900b82f20` |
 | `2026-11-18` | MP-005 | `end` eliminado de `RawActivePeriod` (no solo comentado); `normalize.py`/`canonical.py` ajustados; test de regresión añadido (23 tests); reenviado a Codex para tercera verificación | commit `a9b1172` |
 | `2026-11-18` | MP-005 | Tercera revisión independiente de Codex: **APROBADA** — 23/23 tests, esquema `raw`, enforcement UTC, trazabilidad, ADR, enlaces, secretos y whitespace verificados; tarea pasa a `DONE` | revisión posterior a `a9b1172` |
+| `2026-11-18T22:53:33Z` | MP-006 | Migración PostGIS aplicada, constraints probadas con duplicados reales, rollback verificado (`0` tablas de aplicación) y ciclo final `down → up` completado; tarea pasa a `REVIEW` | `infra/migrations/`; salida real de `psql` documentada en TASKS/checklist |
 
 ## Cómo usar este documento
 

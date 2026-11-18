@@ -1,0 +1,28 @@
+services:
+  postgres:
+    image: postgis/postgis:17-3.5
+    platform: linux/amd64
+    environment:
+      POSTGRES_DB: madrid_pulse
+      POSTGRES_USER: madrid_pulse
+      POSTGRES_PASSWORD: madrid_pulse_local
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - madrid_pulse_postgres_data:/var/lib/postgresql/data
+      - ../migrations:/migrations:ro
+    networks:
+      - madrid_pulse_internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U madrid_pulse -d madrid_pulse"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  madrid_pulse_postgres_data:
+    name: madrid-pulse-postgres-data
+
+networks:
+  madrid_pulse_internal:
+    name: madrid-pulse-internal

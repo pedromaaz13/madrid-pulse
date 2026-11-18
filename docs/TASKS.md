@@ -111,8 +111,23 @@ Cada tarea se trabaja en **un único worktree/rama** (`mp-00X-nombre-corto`), co
 - **Entregables:** migraciones versionadas (up/down), constraints de unicidad e índices (incluyendo `GIST` sobre geometría).
 - **Criterios de aceptación:** migraciones aplican y revierten limpiamente sobre PostgreSQL/PostGIS local; constraints reflejan las claves de deduplicación documentadas.
 - **Pruebas necesarias:** aplicación y rollback de migraciones en base local, verificación de constraints con datos de prueba.
-- **Evidencia de verificación:** log de ejecución de migraciones.
-- **Estado:** `TODO`
+- **Evidencia de verificación:** PostgreSQL 17 + PostGIS 3.5.2 real en
+  `postgis/postgis:17-3.5`, proyecto Compose aislado `madrid-pulse` y puerto host
+  `127.0.0.1:5433`. `0001_init.up.sql` ejecutada con `ON_ERROR_STOP=1`: 14 tablas
+  de aplicación y 5 índices propuestos creados, `COMMIT`. Datos válidos insertados:
+  la geometría generada devolvió `POINT(-3.689 40.406)` y una observación sin
+  posición conservó coordenadas/`geom` como `NULL`. PostgreSQL rechazó realmente
+  tres duplicados (exit 1): `route_network_id_source_route_id_key`,
+  `trip_service_date_source_trip_id_key` y
+  `vehicle_position_observation_ingestion_run_id_payload_hash_key`.
+  `0001_init.down.sql` ejecutada con `ON_ERROR_STOP=1`: 14 `DROP TABLE`, `COMMIT`;
+  consulta posterior: `remaining_application_tables = 0`. Ciclo final
+  `down → up` repetido con ambos comandos en exit 0. Las extensiones provistas por
+  la imagen se conservan deliberadamente en rollback (ver README). Contenedor
+  detenido al terminar con `docker compose -p madrid-pulse ... down`; volumen
+  nombrado conservado con la migración final aplicada.
+- **Estado:** `REVIEW` — implementación completada por OpenAI Codex el 2026-11-18;
+  pendiente de revisión independiente de Claude Code en este mismo worktree.
 
 ---
 
