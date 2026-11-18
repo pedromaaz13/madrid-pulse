@@ -1,0 +1,56 @@
+# DEVELOPMENT.md
+
+Qué se necesita en local y qué requiere un servicio cloud, y en qué fase se activa cada uno. Nada de esto está contratado ni configurado durante MP-001 — este documento es la referencia para cuando corresponda.
+
+## Ahora (disponible/usable desde MP-001)
+
+```text
+GitHub (repositorio ya existente: pedromaaz13/madrid-pulse)
+Orca IDE
+Claude Code
+OpenAI Codex
+```
+
+## Requisitos locales (a partir de MP-003/MP-006, no antes)
+
+```text
+Docker Desktop / Docker Engine
+Python (versión a fijar en MP-005/ADR correspondiente)
+Node.js (versión a fijar en MP-014/ADR correspondiente)
+PostgreSQL + PostGIS (local, vía docker-compose en infra/docker/)
+DuckDB (embebido, sin servicio)
+```
+
+Madrid Pulse puede desarrollarse **completamente en local** hasta el final de la validación del colector (MP-001 a MP-006), sin pagar nada.
+
+## Después de validar el colector (post-MP-007)
+
+```text
+Cuenta Cloudflare
+Bucket R2 (histórico frío)
+```
+
+Se activa solo cuando el volumen real de ingesta (medido en MP-007) confirme que el modelo de almacenamiento híbrido (ver `docs/DECISIONS.md`, DEC-011) es necesario y dimensionable.
+
+## Antes de producción (post-MP-015, fuera del alcance actual)
+
+```text
+PostgreSQL gestionado (Supabase Pro u equivalente)
+Hosting para FastAPI/collector (Render / Railway / Fly u equivalente)
+Dominio propio
+Monitorización
+```
+
+Ninguno de estos se contrata durante el backlog MP-001 a MP-015. La estimación de coste orientativa de la investigación (no un presupuesto garantizado) es de **25–40 USD/mes** en operación 24/7 de producción: ~25 USD de Postgres gestionado, ~7 USD de un servicio Python pequeño, potencialmente 0 USD de R2 mientras se mantenga en el free tier.
+
+## Principio de activación de servicios
+
+No se contrata ni habilita ningún recurso externo sin:
+
+1. Validación empírica previa de que es necesario (no por anticipación).
+2. Autorización explícita del propietario del repositorio.
+3. Registro de la decisión en `docs/DECISIONS.md` y, si implica arquitectura, un ADR en `docs/adr/`.
+
+## Entorno de agentes
+
+Claude Code y Codex operan dentro de Orca IDE con permisos potencialmente amplios por defecto — verificar los ajustes de autonomía antes de ejecutar comandos que toquen credenciales, red externa o infraestructura real. Ningún agente debe compartir credenciales ni datos privados; las pruebas contra feeds externos (MP-003) deben respetar los límites y condiciones de servicio documentados en `docs/legal/DATA_SOURCES.md`.

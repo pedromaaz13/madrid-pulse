@@ -1,0 +1,36 @@
+# CHANGELOG.md
+
+Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se registran cambios realmente realizados y verificables — nunca funcionalidad planeada o supuesta.
+
+## [Unreleased]
+
+### MP-001 — Bootstrap documental del repositorio
+
+#### Added
+- Estructura de monorepo: `apps/{web,api}`, `services/{collector,normalizer,snapshotter}`, `packages/{contracts,gtfs,geo,quality}`, `analytics/{dbt,duckdb}`, `infra/{docker,cloudflare,migrations}`, `tests/{fixtures,integration,e2e}`, `.github/{ISSUE_TEMPLATE,pull_request_template.md}` — todos los directorios de servicios futuros contienen únicamente `README.md` explicativo, sin código funcional.
+- `AGENTS.md` y `CLAUDE.md`: protocolo de colaboración Claude Code ↔ Codex, regla de autoría exclusiva del propietario humano, principios de datos transversales.
+- `docs/PLAN.md`: roadmap por fases F0–F10 con dependencias, entregables y gates de calidad.
+- `docs/TASKS.md`: backlog completo MP-001 a MP-015 con ejecutor, revisor, dependencias, entradas/entregables, criterios de aceptación y estado.
+- `docs/STATUS.md`: tablero vivo con checklist, bloqueos y bitácora.
+- `docs/DECISIONS.md`: decisiones aceptadas, propuestas y pendientes.
+- `docs/ARCHITECTURE.md`, `docs/DATA_MODEL.md`, `docs/DATA_CONTRACTS.md`, `docs/DATA_QUALITY.md`, `docs/DEVELOPMENT.md`.
+- `docs/adr/0001` a `0006`: decisiones de alcance C5, fuentes de datos, estrategia de almacenamiento, modelo de posición, contrato de API y política de licenciamiento.
+- `docs/legal/DATA_SOURCES.md`, `LICENSE_MATRIX.md`, `ATTRIBUTION.md`.
+- `docs/research/TRACEABILITY.md`: trazabilidad entre decisiones/tareas y evidencia consultada.
+- `README.md` reescrito con visión del producto, estructura del repo y enlaces a la documentación.
+- `.gitignore` para Python/Node/datos/env.
+
+- `docs/adr/0007-autonomy-model.md` y DEC-014 en `docs/DECISIONS.md`: modelo de autonomía acotada (autorización por hito, commits de iteración en worktree, gates limitados a licencia/coste), a petición explícita del propietario.
+
+#### Changed
+- `deep-research-report.md` y `MADRID_PULSE_BRIEF_INICIAL.md` movidos a `docs/research/`, contenido preservado íntegro.
+- `AGENTS.md`/`CLAUDE.md`: protocolo de coordinación en Orca (un worktree por tarea, delegación directa agente-a-agente) añadido a petición del propietario.
+- `AGENTS.md`/`CLAUDE.md`: regla de autoría reescrita tras la revisión de Codex (hallazgo bloqueante — contradicción entre la excepción de "commit si el propietario lo pide" y la prohibición absoluta) y para incorporar la nueva política de commits de iteración en worktree.
+- `docs/TASKS.md`: añadido `analytics/dbt/` a los componentes afectados de MP-009 y MP-015 (hallazgo menor de Codex); grafo de dependencias en ASCII sustituido por tabla exacta de dependencias directas (hallazgo menor de Codex).
+- `AGENTS.md`: añadida nota de excepción de naming de rama para `chore/mp-001-foundation` (hallazgo menor de Codex).
+- Segunda ronda de correcciones tras la primera re-verificación de Codex (2 bloqueantes + 2 menores, dispatch `ctx_e72e7a44721a`): añadida la sección "Modelo de autonomía por hito" a `AGENTS.md` (antes referenciada pero inexistente); reescritos el protocolo de worktree, el diagrama de flujo y la regla 10 en `AGENTS.md`/`CLAUDE.md`/`docs/TASKS.md`/`docs/PLAN.md` para reflejar autorización por hito y worktrees paralelos entre tareas independientes, en vez del texto anterior que seguía exigiendo autorización y merge por tarea individual; `docs/adr/0007-autonomy-model.md` corregido para que los ADR de arquitectura propuestos durante la autonomía se registren como `Propuesto` (nunca `Aceptado`) hasta la revisión del propietario, coherente con `docs/adr/README.md`; `docs/STATUS.md` corregido para quitar MP-010 del paralelismo de Hito 1 (está fuera de su rango MP-002→MP-009) y quitar DEC-003 de los gates de licencia/coste (es una decisión de visibilidad, no de licencia/coste).
+- Tercera ronda de correcciones tras la segunda re-verificación de Codex (1 bloqueante + 1 menor, dispatch `ctx_762cad1ca40c`): el protocolo exigía que la dependencia directa de una tarea estuviera fusionada en `main` antes de abrir el siguiente worktree, lo que obligaba al propietario a fusionar en tiempo real tras cada tarea y anulaba el propósito del modelo de autonomía (ADR-0007 solo exigía `DONE`, no fusionada). Corregido introduciendo un mecanismo de ramas encadenadas: el worktree de una tarea dependiente se crea a partir de la rama de su dependencia directa en cuanto está `DONE`, sin esperar merge a `main`; el propietario decide cuándo fusionar (en lote al cierre del hito u otro momento) sin bloquear el avance. Reescrito en `AGENTS.md` (regla 10, sección de autonomía por hito, pasos 1/6/7 del protocolo, diagrama de flujo), `CLAUDE.md`, `docs/TASKS.md` y `docs/PLAN.md`. También corregido el "Principio rector" de `docs/PLAN.md`, que afirmaba una cadena de fases estrictamente lineal contradiciendo la excepción de dependencias (F5↔F2) ya documentada en la misma página.
+- Cuarta revisión de Codex (dispatch `ctx_0ee25a6a5d2c`): **APROBADA**, sin hallazgos bloqueantes ni menores. Registrada la sugerencia no bloqueante de Codex (cómo converge una tarea con varias dependencias de ramas paralelas, relevante para MP-012) como DEC-015 en `docs/DECISIONS.md` y como nota en la ficha de MP-012 en `docs/TASKS.md`, a resolver antes de abrir esa tarea, no antes de cerrar MP-001.
+
+#### Not done in this task
+- Sin código de producto, sin dependencias instaladas, sin servicios cloud configurados, sin bases de datos ni contenedores — fuera de alcance de MP-001 según `docs/research/MADRID_PULSE_BRIEF_INICIAL.md` §7.
