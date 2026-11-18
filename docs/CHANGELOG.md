@@ -4,6 +4,18 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 
 ## [Unreleased]
 
+### MP-004 — Fixtures reproducibles
+
+#### Added
+- Fixtures JSON reducidas de capturas reales frescas de `vehicle_positions`, `trip_updates` y `alerts`, sin cabeceras ni cookies, con casos Madrid y colisión C5 entre núcleos.
+- `tests/fixtures/MANIFEST.md`: fecha UTC, endpoints, recuentos original/conservado y SHA-256 de cada fixture.
+- `tests/fixtures/test_parse_fixtures.py`: 6 pruebas offline con `unittest` para integridad, envoltura GTFS-RT, esquemas observados y disambiguación por prefijo de núcleo.
+
+#### Verified
+- Capturas directas: `200 application/json`; 394 posiciones, 401 actualizaciones y 76 alertas antes del recorte.
+- `python3 -m unittest discover -s tests/fixtures -p 'test_*.py' -v`: 6 tests ejecutados, `OK`.
+- Los 3 JSON pasan `python3 -m json.tool`; SHA-256 recalculados coinciden con el manifiesto.
+
 ### MP-003 — Probe real de feeds C5
 
 #### Added

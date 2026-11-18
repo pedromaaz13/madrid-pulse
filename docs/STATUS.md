@@ -17,6 +17,37 @@ MP-001 está `DONE`: Codex aprobó la revisión cruzada y, conforme a ADR-0007, 
 
 ## Tarea actual
 
+**MP-004 — Fixtures reproducibles**
+
+Ejecutor: OpenAI Codex · Revisor: Claude Code · Estado: **REVIEW**
+
+Worktree/rama: `mp-004-fixtures`, ramificada desde `mp-003-probe-c5` (MP-003 `DONE`)
+
+### Checklist de MP-004
+
+- [x] Capturas frescas directas de `vehicle_positions.json`, `trip_updates.json` y `alerts.json`: `200 application/json`, sin guardar cabeceras ni cookies.
+- [x] Tres fixtures JSON reducidas y versionables: 394 → 10 posiciones, 401 → 8 actualizaciones y 76 → 3 alertas.
+- [x] Cada fixture conserva entidades de Madrid; posiciones conserva además C5 con prefijos `20`, `30` y `40` para probar la colisión entre núcleos.
+- [x] `tests/fixtures/MANIFEST.md` registra fecha UTC, endpoint, recuentos y SHA-256.
+- [x] Tests offline con Python `unittest`: envoltura GTFS-RT, esquema por feed, integridad SHA-256, cobertura Madrid y rechazo del filtro ingenuo por etiqueta C5.
+- [x] Ejecución real: `python3 -m unittest discover -s tests/fixtures -p 'test_*.py' -v` → 6 tests, `OK` (0.001 s).
+- [x] Los tres ficheros pasan `python3 -m json.tool`; hashes re-verificados con `shasum -a 256`.
+- [ ] Revisión independiente de Claude Code.
+
+### Resultado y límites
+
+Las fixtures se cargan exclusivamente desde disco y no incluyen código de red ni dependencias externas. La captura de posiciones no contenía ninguna entidad sin `position`; el caso observado en MP-003 no se fabricó. `pytest` no estaba instalado, por lo que se eligió `unittest` de la biblioteca estándar para mantener la suite reproducible sin instalación adicional.
+
+### Bloqueos
+
+Ninguno.
+
+### Siguiente paso
+
+Claude Code debe auditar el diff y repetir la suite/hash en este mismo worktree. MP-004 permanecerá en `REVIEW` hasta su aprobación explícita.
+
+## Tareas cerradas de la cadena
+
 **MP-003 — Probe real de feeds C5 (GTFS + GTFS-RT)**
 
 Ejecutor: Claude Code · Revisor: OpenAI Codex · Estado: **DONE** (aprobado el 2026-11-18)
@@ -55,7 +86,7 @@ Ninguno. El hallazgo de la colisión de "C5" no bloquea MP-003 (ya está documen
 
 MP-004 puede ramificar desde `mp-003-probe-c5` conforme al hito autorizado y al grafo de dependencias; no necesita esperar a que el propietario fusione esta rama a `main`.
 
-### Histórico (MP-001, MP-002 — cerradas en ramas anteriores de esta cadena)
+### MP-001 y MP-002 — cerradas en ramas anteriores de esta cadena
 
 **MP-002 — Matriz de fuentes y licencias**
 
@@ -116,6 +147,8 @@ Esta rama se bifurcó de `chore/mp-001-foundation` en el commit `3e7b533`, **ant
 | `2026-11-18` | MP-003 | Los 4 hallazgos corregidos tras verificación propia (comparación de conjuntos 403/403, medición real de trip_updates Δ42s y alerts Δ20s); reenviado a Codex | `bdf263e` |
 | `2026-11-18` | MP-003 | Segunda revisión de Codex (con descarga fresca, 404/404 confirmado): **no aprobada** — hallazgo menor residual: `docs/STATUS.md` conservaba la afirmación bloqueante ya desmentida en un bullet que no se había actualizado; además "alerts sin cambios de contenido" se basaba solo en igual recuento, no en comparación real de contenido | dispatch `ctx_e4a31f1e7e61` |
 | `2026-11-18` | MP-003 | Revisión final de Codex: **APROBADA** — 404/404 `trip_id` resueltos por igualdad literal, 0 sin match; cardinalidad, documentación, enlaces, secretos y licencias coherentes. MP-003 pasa a `DONE` | revisión posterior a `f6d8ee9` |
+| `2026-11-18T16:01Z` | MP-004 | Capturas frescas de los 3 feeds; fixtures reducidas 394→10, 401→8 y 76→3 con hashes SHA-256 documentados | `tests/fixtures/MANIFEST.md` |
+| `2026-11-18T16:04Z` | MP-004 | Suite offline ejecutada: 6 tests `unittest`, `OK`; JSON y hashes revalidados; tarea pasa a `REVIEW` | `tests/fixtures/test_parse_fixtures.py`; `docs/TASKS.md` |
 
 ## Cómo usar este documento
 

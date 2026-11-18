@@ -75,8 +75,8 @@ Cada tarea se trabaja en **un único worktree/rama** (`mp-00X-nombre-corto`), co
 - **Entregables:** fixtures congeladas (JSON/protobuf decodificado) con hash de verificación; tests de parseo contra esas fixtures.
 - **Criterios de aceptación:** fixtures no contienen datos sensibles ni dependen de endpoints en vivo; tests de parseo reproducibles sin red.
 - **Pruebas necesarias:** suite de parseo ejecutada en CI local.
-- **Evidencia de verificación:** salida de tests y hashes documentados.
-- **Estado:** `TODO`
+- **Evidencia de verificación:** captura fresca del 2026-11-18T16:01Z: 394 entidades de `vehicle_positions`, 401 de `trip_updates` y 76 de `alerts`, reducidas respectivamente a 10/8/3 entidades representativas. `tests/fixtures/MANIFEST.md` registra endpoints, recuentos y SHA-256 (`80af5343…`, `78974c85…`, `cdd94af7…`). Ejecución real offline: `python3 -m unittest discover -s tests/fixtures -p 'test_*.py' -v` → `Ran 6 tests in 0.001s`, `OK`. Validación adicional: `python3 -m json.tool` sobre los 3 JSON y `shasum -a 256 tests/fixtures/*.json`, ambas sin error y con hashes coincidentes con el manifiesto.
+- **Estado:** `REVIEW` — implementación de OpenAI Codex completada y delegada a Claude Code para revisión independiente en este mismo worktree.
 
 ---
 
