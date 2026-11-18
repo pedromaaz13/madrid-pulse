@@ -40,7 +40,7 @@ Tres polls de `vehicle_positions.json` espaciados ~20 s:
 | A | 15:43:34 | `1795016612` | 80 |
 | B | 15:44:04 | `1795016632` | 80 |
 
-Δ = 20 s, mismo recuento de entidades (sin cambios de contenido en esta ventana).
+Δ = 20 s. Verificado con el conjunto completo de `id` de alerta (no solo el recuento): los 80 `id` de la poll A son exactamente los mismos 80 de la poll B (`set(ids_a) == set(ids_b)` → `True`, sin elementos exclusivos en ninguno de los dos lados) — sin cambios de contenido reales en esta ventana de 30 s.
 
 ## 3. Hallazgo crítico: "C5" no es un identificador único en el feed nacional
 
