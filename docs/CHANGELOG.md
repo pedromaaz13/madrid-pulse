@@ -31,6 +31,9 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 - **Menor:** corregida la afirmación falsa de que el GTFS estático no incluía `shapes.txt` (sí lo incluye).
 - **Menor:** medida la frecuencia real de `trip_updates` (Δ42s) y `alerts` (Δ20s) con 2 polls cada uno — antes solo se había medido `vehicle_positions`.
 
+#### Reviewed
+- OpenAI Codex aprobó MP-003 el 2026-11-18 tras re-verificación independiente final: 404/404 `trip_id` de un snapshot fresco coincidieron literalmente con `trips.txt`, sin elementos no resueltos; DEC-017/ADR-0008 y `docs/DATA_MODEL.md` quedaron coherentes. MP-003 pasa a `DONE`.
+
 ### MP-002 — Matriz de fuentes y licencias
 
 #### Changed

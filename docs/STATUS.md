@@ -19,7 +19,7 @@ MP-001 está `DONE`: Codex aprobó la revisión cruzada y, conforme a ADR-0007, 
 
 **MP-003 — Probe real de feeds C5 (GTFS + GTFS-RT)**
 
-Ejecutor: Claude Code · Revisor: OpenAI Codex · Estado: **REVIEW**
+Ejecutor: Claude Code · Revisor: OpenAI Codex · Estado: **DONE** (aprobado el 2026-11-18)
 
 Worktree/rama: `mp-003-probe-c5`, ramificada desde `mp-002-fuentes-licencias` (MP-002 `DONE`)
 
@@ -39,7 +39,7 @@ Worktree/rama: `mp-003-probe-c5`, ramificada desde `mp-002-fuentes-licencias` (M
   - **Menor:** findings afirmaba falsamente que el GTFS no incluía `shapes.txt` (sí lo incluye, está en la propia tabla del documento). Corregido.
   - **Menor:** no se había medido la frecuencia de `trip_updates`/`alerts` (solo `vehicle_positions`). Medido: `trip_updates` Δ42s, `alerts` Δ20s (2 polls cada uno).
   - Codex confirmó que el resto de pendientes (cobertura larga de `trip_updates`, CRTM, shapes/stop_times detallados, cambio de día) están razonablemente fuera de alcance de MP-003.
-- [ ] Segunda revisión independiente de Codex — pendiente, reenviada al mismo worker.
+- [x] Revisión final independiente de Codex: **APROBADA**, sin hallazgos abiertos. Repetida la comparación con datos frescos: 404/404 `trip_id` vivos coinciden literalmente con `trips.txt`, 0 sin match. Confirmada la coherencia de cardinalidad entre `docs/DATA_MODEL.md`, DEC-017 y ADR-0008; enlaces, secretos y licencias revalidados.
 
 ### Resultado y límites
 
@@ -53,7 +53,7 @@ Ninguno. El hallazgo de la colisión de "C5" no bloquea MP-003 (ya está documen
 
 ### Siguiente paso
 
-Claude Code delega a Codex para revisión independiente en este mismo worktree. MP-003 solo pasará a `DONE` tras su aprobación explícita; entonces MP-004 podrá ramificar desde esta rama.
+MP-004 puede ramificar desde `mp-003-probe-c5` conforme al hito autorizado y al grafo de dependencias; no necesita esperar a que el propietario fusione esta rama a `main`.
 
 ### Histórico (MP-001, MP-002 — cerradas en ramas anteriores de esta cadena)
 
@@ -115,6 +115,7 @@ Esta rama se bifurcó de `chore/mp-001-foundation` en el commit `3e7b533`, **ant
 | `2026-11-18` | MP-003 | Revisión de Codex (repitiendo probes en vivo él mismo): no aprobada — 2 bloqueantes (trip_id sí coincide literalmente con trips.txt; cardinalidad imposible en DATA_MODEL.md) + 2 menores (shapes.txt sí incluido; faltaba medir frecuencia de trip_updates/alerts) | dispatch `ctx_61d7dd4fd86b` |
 | `2026-11-18` | MP-003 | Los 4 hallazgos corregidos tras verificación propia (comparación de conjuntos 403/403, medición real de trip_updates Δ42s y alerts Δ20s); reenviado a Codex | `bdf263e` |
 | `2026-11-18` | MP-003 | Segunda revisión de Codex (con descarga fresca, 404/404 confirmado): **no aprobada** — hallazgo menor residual: `docs/STATUS.md` conservaba la afirmación bloqueante ya desmentida en un bullet que no se había actualizado; además "alerts sin cambios de contenido" se basaba solo en igual recuento, no en comparación real de contenido | dispatch `ctx_e4a31f1e7e61` |
+| `2026-11-18` | MP-003 | Revisión final de Codex: **APROBADA** — 404/404 `trip_id` resueltos por igualdad literal, 0 sin match; cardinalidad, documentación, enlaces, secretos y licencias coherentes. MP-003 pasa a `DONE` | revisión posterior a `f6d8ee9` |
 
 ## Cómo usar este documento
 
