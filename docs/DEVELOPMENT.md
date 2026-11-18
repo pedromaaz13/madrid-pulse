@@ -15,10 +15,19 @@ OpenAI Codex
 
 ```text
 Docker Desktop / Docker Engine
-Python (versión a fijar en MP-005/ADR correspondiente)
+Python 3.12 (fijado en MP-007/DEC-019; sin gestor adicional: venv + requirements.txt)
 Node.js (versión a fijar en MP-014/ADR correspondiente)
 PostgreSQL + PostGIS (local, vía docker-compose en infra/docker/)
 DuckDB (embebido, sin servicio)
+```
+
+El colector (`services/collector/`, MP-007) es el primer componente que escribe en
+PostgreSQL desde Python y necesita un entorno aislado:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
 ```
 
 Madrid Pulse puede desarrollarse **completamente en local** hasta el final de la validación del colector (MP-001 a MP-006), sin pagar nada.

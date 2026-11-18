@@ -32,3 +32,12 @@ Mantener estos campos en el modelo candidato como si estuvieran garantizados hab
 - MP-006 (esquema PostgreSQL) debe definir `speed_kmh`/`bearing`/`geom` como columnas `NULL`-ables, y `current_stop_id` (no `current_stop_sequence`) como la columna de ingesta cruda.
 - MP-010 es responsable de la resolución `stop_id` → `stop_sequence` vía el GTFS estático, no MP-007.
 - Pendiente: Codex (revisor de MP-005) audita el contenido técnico de este ADR como parte de la revisión de la tarea; **solo el propietario** puede promoverlo a `Aceptado`, en el cierre de Hito 1.
+
+## Adenda (MP-007, 2026-11-18): dos hallazgos adicionales en vivo
+
+Al ejecutar el colector de MP-007 contra el feed en vivo (no las fixtures más pequeñas de MP-004), aparecieron dos casos adicionales del mismo patrón que motivó este ADR — campos del estándar GTFS-RT presentes en el modelo candidato pero cuyo comportamiento real no coincidía con lo asumido:
+
+4. `trip_update.trip.scheduleRelationship` tiene un **tercer** valor real además de `SCHEDULED`/`CANCELED`: `ADDED` (trenes de refuerzo sin viaje programado en `trips.txt`, ver `docs/research/MP-003-probe-findings.md` §10). No requiere cambio de modelo (`schedule_relationship` ya es `str` libre, no un `Literal` cerrado), solo se documenta como valor real observado.
+5. `stopTimeUpdate[].arrival.delay` (dentro de `RawStopTimeArrival`) se asumía obligatorio en `raw.py` porque la fixture de MP-004 siempre lo incluía; una entidad `ADDED` real solo trae `arrival.time`, sin `delay`. Corregido a `Optional[int] = None` en `packages/contracts/raw.py`. Este campo nunca se leía en `normalize.py` (solo se usa el `delay` de nivel `TripUpdate`), así que el cambio no afecta al contrato canónico, solo evita que el parseo rechace un payload real.
+
+Ninguno de los dos hallazgos contradice la decisión original de este ADR; la extienden con casos reales que la muestra de MP-003/MP-004 no cubría.

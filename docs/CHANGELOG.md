@@ -4,6 +4,26 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 
 ## [Unreleased]
 
+### MP-007 — Collector idempotente
+
+#### Added
+- `services/collector/`: colector de polling contra los tres feeds GTFS-RT de Renfe, con reintentos/backoff/timeout (`http_client.py`, solo `urllib`), filtro de alcance por núcleo (ADR-0008), deduplicación por hash canónico contra la última fila almacenada (ADR-0010, nuevo) y persistencia en PostgreSQL (MP-006).
+- `requirements.txt` + `.venv`: primera dependencia de terceros del proyecto (`psycopg[binary]`) para escribir en PostgreSQL desde Python; Python 3.12 fijado como versión de desarrollo (DEC-019).
+
+#### Verified
+- 45 tests reales en verde (31 contratos, 6 fixtures, 8 colector — 4 de ellos integración real contra PostgreSQL, no mocks).
+- Soak test real de 20 minutos contra los tres feeds en vivo: 40 ciclos, 0 errores, 1155 entidades insertadas, 304 deduplicadas, 2622 fuera de alcance; durabilidad confirmada con una conexión nueva tras el proceso.
+- Rechazo de duplicados y detección de cambios reales verificados contra PostgreSQL real (no simulado).
+
+#### Fixed during verification
+- `packages/contracts/nucleo.py`: `nucleo_prefix()` no reconocía trip_id de refuerzo con formato `SPECIAL_<núcleo>_<resto>` (sin prefijo numérico directo) — hallazgo real del feed en vivo, corregido con una regex específica.
+- `packages/contracts/raw.py`: `RawStopTimeArrival.delay` y los tres `entity` de `Raw*Feed` eran obligatorios basándose en las fixtures de MP-004; el feed en vivo trajo un `arrival` sin `delay` (tren `ADDED`) y una respuesta sin la clave `entity` (0 vehículos activos) — ambos corregidos a opcionales/con default, con test de regresión.
+- `services/collector/db.py`: una versión anterior envolvía cada `INSERT` en su propio `with conn.transaction()`; con una conexión de larga duración, esto dejaba filas de observación sin comprometer indefinidamente mientras `source_ingestion_run` sí persistía (detectado verificando con una conexión nueva, no confiando en la ausencia de excepción). Corregido centralizando el límite de transacción en `run_cycle` (todo el ciclo se compromete como una unidad).
+- Tests de integración: `addCleanup` en orden LIFO cerraba la conexión antes de poder hacer `rollback()`; corregido el orden de registro.
+
+#### Known limitation (documented, not blocking)
+- El filtro de ingesta descarta por núcleo (Madrid), no todavía por línea C5 específicamente (ADR-0001, `Aceptado`) — ver DEC-020. Acotar a C5 exige la resolución `trip_id` → `route_id` vía el GTFS estático, asignada explícitamente a MP-010 por ADR-0009.
+
 ### MP-006 — Esquema PostgreSQL/PostGIS v1
 
 #### Added

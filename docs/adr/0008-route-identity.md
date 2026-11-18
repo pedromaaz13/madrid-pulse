@@ -27,3 +27,9 @@ El prefijo de dos cifras del `route_id`/`service_id`/`trip_id` (`10` = Madrid, `
 - `services/collector` (MP-007) debe filtrar por prefijo de núcleo `10`, no por subcadena `"C5"`.
 - `packages/contracts` (MP-005) resuelve `trip_id` del feed en vivo contra `trips.txt` por **igualdad literal de cadena** (confirmado 403/403 en MP-003, ver findings §7) — es un `JOIN` directo, no requiere reconstrucción por `(service_id, vehículo, línea)`.
 - Pendiente: el propietario revisa y promueve este ADR a `Aceptado` (o lo corrige) en el cierre de Hito 1, conforme a ADR-0007.
+
+## Adenda (MP-007, 2026-11-18): formato `SPECIAL_<núcleo>_<resto>` y alcance real implementado
+
+El colector de MP-007 encontró en vivo un `trip_id` de tren de refuerzo (`SPECIAL_10_91567C2`) que no empieza por 2 cifras numéricas — rompe el supuesto de extracción `trip_or_route_id[:2]` de `packages/contracts/nucleo.py`. Corregido con una regex específica para el prefijo `SPECIAL_`; no contradice el disambiguador de 2 cifras para el formato estándar, lo complementa. Detalle completo en `docs/research/MP-003-probe-findings.md` §10.
+
+MP-007 implementa el filtro de ingesta por núcleo que este ADR pide ("Consecuencias" arriba): descarta entidades cuyo `nucleo_prefix` no sea `10` (Madrid) antes de persistir. **Limitación conocida** (ver DEC-020 en `docs/DECISIONS.md`): esto filtra por núcleo (todo Madrid), no todavía por línea C5 específicamente, que es el alcance real exigido por ADR-0001 (`Aceptado`). Acotar a C5 exige resolver `trip_id` → `route_id` contra el GTFS estático, trabajo que ADR-0009 asigna explícitamente a MP-010. El filtro por núcleo es una reducción de alcance real y verificada hacia ese objetivo, no el objetivo completo.

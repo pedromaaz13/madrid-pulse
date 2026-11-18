@@ -65,14 +65,25 @@ class RawVehiclePositionEntity(RawModel):
 
 class RawVehiclePositionsFeed(RawModel):
     header: RawHeader
-    entity: list[RawVehiclePositionEntity]
+    # Hallazgo real de MP-007 (soak test del colector contra el feed en vivo):
+    # una respuesta real omitió la clave `entity` por completo (0 vehículos
+    # activos en ese instante), no un array vacío `[]`. Con default
+    # obligatorio, Pydantic rechazaba un payload real y válido. `default_factory`
+    # trata la ausencia como lista vacía, que es semánticamente correcto.
+    entity: list[RawVehiclePositionEntity] = Field(default_factory=list)
 
 
 # --- trip_updates.json ------------------------------------------------------
 
 
 class RawStopTimeArrival(RawModel):
-    delay: int
+    # Hallazgo real de MP-007 (colector contra el feed en vivo): un
+    # `stopTimeUpdate.arrival` de un tren de refuerzo ("TUADDED_SPECIAL_...",
+    # `scheduleRelationship == "ADDED"`) solo trae `time`, sin `delay`. No se
+    # observó en las fixtures más pequeñas de MP-003/MP-004. `delay` no se usa
+    # en `normalize.py` (solo el `delay` de nivel `TripUpdate`, ya `Optional`),
+    # así que esto solo corrige el modelo para que no rechace un payload real.
+    delay: Optional[int] = None
     time: str
 
 
@@ -101,7 +112,10 @@ class RawTripUpdateEntity(RawModel):
 
 class RawTripUpdatesFeed(RawModel):
     header: RawHeader
-    entity: list[RawTripUpdateEntity]
+    # Ver nota en RawVehiclePositionsFeed.entity -- mismo hallazgo de MP-007,
+    # aplicado aquí por consistencia aunque no se observó directamente en
+    # trip_updates (ambos feeds comparten la misma estructura de header/entity).
+    entity: list[RawTripUpdateEntity] = Field(default_factory=list)
 
 
 # --- alerts.json -------------------------------------------------------------
@@ -155,4 +169,5 @@ class RawAlertEntity(RawModel):
 
 class RawAlertsFeed(RawModel):
     header: RawHeader
-    entity: list[RawAlertEntity]
+    # Ver nota en RawVehiclePositionsFeed.entity.
+    entity: list[RawAlertEntity] = Field(default_factory=list)

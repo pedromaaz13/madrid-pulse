@@ -61,6 +61,16 @@ class RawParsingTests(unittest.TestCase):
         feed = RawVehiclePositionsFeed.model_validate(payload)
         self.assertTrue(feed.entity)
 
+    def test_feed_with_missing_entity_key_parses_as_empty_list(self) -> None:
+        """Regresión (soak test de MP-007 contra el feed en vivo): una respuesta
+        real de vehicle_positions.json omitió la clave `entity` por completo
+        (0 vehículos activos), no un array vacío. El feed debe parsear sin error
+        con `entity == []`, no rechazar el payload."""
+        payload = load_fixture("vehicle_positions.json")
+        header_only = {"header": payload["header"]}
+        feed = RawVehiclePositionsFeed.model_validate(header_only)
+        self.assertEqual(feed.entity, [])
+
     def test_raw_active_period_has_no_unobserved_end_field(self) -> None:
         """Regresión (2ª revisión de Codex en MP-005): `end` de GTFS-RT Alert.ActivePeriod
         no se ha observado nunca en una captura real -- `raw.py` no debe declararlo ni

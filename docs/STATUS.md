@@ -19,9 +19,35 @@ MP-001 está `DONE`: Codex aprobó la revisión cruzada y, conforme a ADR-0007, 
 
 **MP-007 — Collector idempotente**
 
-Ejecutor: Claude Code · Revisor: OpenAI Codex · Estado: **TODO** (pendiente de dispatch)
+Ejecutor: Claude Code · Revisor: OpenAI Codex · Estado: **REVIEW**
 
-Worktree/rama: a crear como `mp-007-collector`, ramificada desde `mp-006-postgis-schema` (MP-006 `DONE`)
+Worktree/rama: `mp-007-collector`, ramificada desde `mp-006-postgis-schema` (MP-006 `DONE`)
+
+### Checklist de MP-007
+
+- [x] `services/collector/http_client.py`: `fetch_with_retry` con backoff exponencial y timeout, solo `urllib` (sin dependencia nueva para HTTP).
+- [x] `services/collector/db.py`: capa de acceso a PostgreSQL (MP-006); corregido un bug real de transacciones (ver más abajo) para que cada ciclo se comprometa como unidad atómica.
+- [x] `services/collector/collector.py`: `run_cycle` = fetch → parse → filtro de alcance (núcleo Madrid, ADR-0008) → dedupe (ADR-0010) → persist, con el ciclo entero en una sola transacción.
+- [x] `services/collector/__main__.py`: bucle de polling infinito, un feed fallido no detiene el colector completo.
+- [x] `docs/adr/0010-dedup-strategy.md` (nuevo, `Propuesto`): hash completo de la entidad comparado contra la última fila almacenada por clave de entidad; sin `seen_count`.
+- [x] 45 tests reales en verde (31 contratos + 6 fixtures + 8 colector); 4 de los 8 del colector son integración real contra PostgreSQL (no mocks de BD).
+- [x] **Soak test real de 20 minutos** contra los 3 feeds en vivo: 40 ciclos, 0 errores, 1155 entidades insertadas, 304 deduplicadas, 2622 fuera de alcance; durabilidad confirmada con una conexión `psql` nueva tras el proceso.
+- [x] **3 hallazgos reales corregidos** (feed en vivo, no cubiertos por fixtures de MP-003/MP-004): `trip_id` de refuerzo `SPECIAL_<núcleo>_<resto>`, `stopTimeUpdate[].arrival` sin `delay`, respuesta real sin la clave `entity`. Los tres con test de regresión. Detalle en `docs/research/MP-003-probe-findings.md` §10.
+- [x] **1 bug de transacciones corregido antes de producción:** `with conn.transaction()` por `INSERT` individual, con una conexión de larga duración, dejaba `vehicle_position_observation` sin comprometer mientras `source_ingestion_run` sí persistía — detectado verificando con una conexión nueva, no confiando en la ausencia de excepción. Corregido centralizando la transacción en `run_cycle`.
+- [x] **Hallazgo de alcance documentado, no bloqueante** (DEC-020): el filtro descarta por núcleo (Madrid), no todavía por línea C5 específica (ADR-0001 `Aceptado`) — acotar a C5 requiere la resolución `trip_id`→`route_id` de MP-010.
+- [x] Identidad Git verificada en cada commit; contenedor `madrid-pulse` detenido al finalizar (volumen con los datos reales del soak test conservado); `*-traza-app` intactos.
+
+### Resultado y límites
+
+El colector ingiere y deduplica de verdad contra el feed en vivo de Renfe, con evidencia de ejecución sostenida de 20 minutos sin errores. No resuelve `trip_id` contra el GTFS estático (diferido a MP-010 por ADR-0009) ni acota a C5 específicamente (DEC-020) — ambas limitaciones ya estaban previstas y documentadas antes de empezar la tarea, no son hallazgos de última hora sin plan.
+
+### Bloqueos
+
+Ninguno (los dos puntos de alcance pendientes están documentados, no bloquean el cierre de MP-007 según los criterios de aceptación de `docs/TASKS.md`).
+
+### Siguiente paso
+
+Codex debe auditar el diff y repetir las comprobaciones pertinentes en este mismo worktree (incluida la verificación independiente de que los commits no persisten datos sin comprometer). MP-007 no pasa a `DONE` hasta esa aprobación independiente.
 
 ## Tareas cerradas de la cadena
 
@@ -264,6 +290,8 @@ Esta rama se bifurcó de `chore/mp-001-foundation` en el commit `3e7b533`, **ant
 | `2026-11-18` | MP-005 | Tercera revisión independiente de Codex: **APROBADA** — 23/23 tests, esquema `raw`, enforcement UTC, trazabilidad, ADR, enlaces, secretos y whitespace verificados; tarea pasa a `DONE` | revisión posterior a `a9b1172` |
 | `2026-11-18T22:53:33Z` | MP-006 | Migración PostGIS aplicada, constraints probadas con duplicados reales, rollback verificado (`0` tablas de aplicación) y ciclo final `down → up` completado; tarea pasa a `REVIEW` | `infra/migrations/`; salida real de `psql` documentada en TASKS/checklist |
 | `2026-11-19` | MP-006 | Revisión independiente de Claude Code: ciclo `up/down/up` reproducido desde cero en el worktree, 3 `UNIQUE` rechazados de verdad, 2 `GIST` confirmados, ausencia de campos no observados verificada, suites de regresión reejecutadas (23/23, 6/6), 46 enlaces sin romper. **APROBADA**. Hallazgo de proceso: `STATUS.md` había perdido el checklist completo de MP-005 al no archivarlo antes de escribir el de MP-006; corregido en la misma revisión. Tarea pasa a `DONE` | commit `30507cf`; commit de revisión pendiente |
+| `2026-11-18T23:31Z–23:51Z` | MP-007 | Soak test real de 20 min contra los 3 feeds en vivo: 40 ciclos, 0 errores, 1155 insertadas/304 dedup/2622 fuera de alcance; durabilidad confirmada con conexión `psql` nueva | `services/collector/`; log del soak test |
+| `2026-11-18` | MP-007 | 3 hallazgos reales corregidos (trip_id `SPECIAL_`, `arrival` sin `delay`, `entity` ausente) y 1 bug de transacciones corregido antes de producción (commits parciales con conexión de larga duración); tarea pasa a `REVIEW`, delegada a Codex en este mismo worktree | `packages/contracts/nucleo.py`; `packages/contracts/raw.py`; `services/collector/db.py` |
 
 ## Cómo usar este documento
 

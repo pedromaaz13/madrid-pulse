@@ -33,6 +33,9 @@ route (dim_route)
   color
   nucleo_prefix            -- prefijo numérico de 2 cifras del route_id ("10"=Madrid, "20"=Asturias,
                            -- "30"/"31"/"32"=Andalucía, etc.) — disambiguador verificado en MP-003.
+                           -- AÑADIDO en MP-007: los trip_id de refuerzo tienen el formato
+                           -- "SPECIAL_<núcleo>_<resto>" (núcleo embebido, no como prefijo
+                           -- literal) — ver packages/contracts/nucleo.py y ADR-0008 adenda.
   UNIQUE(network_id, source_route_id)
   -- La C5 de Madrid tiene 5 source_route_id distintos (variantes de sentido/tramo):
   -- 10T0017C5, 10T0018C5, 10T0035C5, 10T0047C5, 10T0048C5. Por la restricción UNIQUE
@@ -109,6 +112,8 @@ trip_update_observation
   trip_id FK nullable
   schedule_relationship     -- AÑADIDO en MP-005: observado SCHEDULED y CANCELED en datos
                             -- reales; CANCELED nunca trae stopTimeUpdate ni delay.
+                            -- AÑADIDO en MP-007: también observado ADDED (tren de refuerzo
+                            -- sin viaje programado en trips.txt, ver ADR-0009 adenda).
   delay_seconds nullable    -- nullable, nunca 0 por defecto cuando no hay dato
   delay_coverage            -- reported | missing
   ingestion_run_id FK
@@ -162,7 +167,7 @@ data_quality_event
 
 ## Deduplicación
 
-- Clave de deduplicación propuesta: hash canónico (`payload_hash`) de los campos relevantes de una observación. Si Renfe repite exactamente el mismo payload en polls consecutivos, se almacena una sola fila (o se incrementa un contador `seen_count` si se decide conservarlo — pendiente de ADR en MP-007).
+- Clave de deduplicación (resuelta en MP-007, ver [ADR-0010](adr/0010-dedup-strategy.md)): hash canónico (`payload_hash`) de los campos relevantes de una observación, comparado contra la última fila almacenada para la misma clave de entidad de origen. Si Renfe repite exactamente el mismo payload en polls consecutivos, se almacena una sola fila. Sin `seen_count` (deliberadamente fuera de alcance).
 - La deduplicación nunca debe ocultar un cambio de `quality_flags` o de `current_status` aunque la posición geográfica no cambie.
 
 ## Versionado GTFS

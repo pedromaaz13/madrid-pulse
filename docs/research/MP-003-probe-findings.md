@@ -178,3 +178,16 @@ Las filas marcadas `Disponibilidad y contrato: PENDING MP-003` para los tres fee
 - Cobertura real de `trip_updates` para Madrid en ventanas más largas que las aquí medidas (ver §5) — una sola comparación de 2 polls no basta para concluir un patrón de cobertura.
 - Validación de `shapes.txt`/`stop_times.txt` específicos de las 5 variantes de `route_id` de C5 Madrid (se confirmó que existen y tienen volumen, no se validó su contenido detallado — corresponde a MP-010).
 - Comportamiento en cambio de día de servicio (medianoche) — no se probó en esta ventana de captura.
+
+## 10. Adenda (MP-007, 2026-11-18): trenes de refuerzo `SPECIAL_`/`ADDED`
+
+Esta sección **añade** un hallazgo posterior sin modificar las secciones anteriores (ver `docs/research/TRACEABILITY.md` para el principio de no reescribir hallazgos ya cerrados).
+
+Al ejecutar el colector de MP-007 contra los tres feeds en vivo (fuera de la muestra de 403 entidades de este documento), apareció un `trip_id` con formato `SPECIAL_10_91567C2` en `vehicle_positions.json` y `trip_updates.json` (1 de 25–26 entidades, ~4%):
+
+- **No empieza por 2 cifras numéricas** — rompe el supuesto de §3 (prefijo = 2 primeras cifras). El núcleo real (`10` = Madrid) está embebido tras `SPECIAL_`. Corregido en `packages/contracts/nucleo.py` (regex específica para este formato) — no contradice el hallazgo de §3 para el formato estándar, lo complementa.
+- **No aparece en `trips.txt`** del GTFS estático (`fomento_transit.zip`, verificado con `grep`: 0 coincidencias) — es un tren de refuerzo añadido dinámicamente, sin viaje programado.
+- Su entidad correspondiente en `trip_updates.json` trae `scheduleRelationship: "ADDED"` (un tercer valor, además de los `SCHEDULED`/`CANCELED` documentados en MP-005) y además `routeId` dentro de `trip` (`"10T0005C2"`) — presumiblemente porque, al no existir en `trips.txt`, Renfe no puede inferir el `route_id` por el `JOIN` habitual y lo incluye explícitamente en el propio feed. Esta correlación `ADDED` ⇔ ausente de `trips.txt` ⇔ `routeId` explícito es consistente, no contradictoria.
+- Su `stopTimeUpdate[].arrival` solo trae `time`, sin `delay` — campo que `raw.py` declaraba obligatorio basándose en la muestra de MP-004 (que no incluía este caso). Corregido a `Optional`.
+
+Pendiente explícito: capturar `routeId` cuando viene explícito en `trip_update` (hoy se ignora por `extra="ignore"`) queda fuera de alcance de MP-007 — anotado para quien resuelva la resolución `trip_id` → `route_id`/`stop_sequence` (MP-010).
