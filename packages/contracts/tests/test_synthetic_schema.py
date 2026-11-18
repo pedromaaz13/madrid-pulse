@@ -9,10 +9,11 @@ contenían.
 from __future__ import annotations
 
 import unittest
+from datetime import datetime, timedelta, timezone
 
 from pydantic import ValidationError
 
-from packages.contracts.canonical import ServiceAlert, VehiclePositionObservation
+from packages.contracts.canonical import FeedHealth, ServiceAlert, VehiclePositionObservation
 from packages.contracts.raw import RawVehiclePositionsFeed
 
 
@@ -65,6 +66,65 @@ class InvalidInputRejectionTests(unittest.TestCase):
                 raw_vehicle_label="C5-00000",
                 payload_hash="deadbeef",
             )  # type: ignore[call-arg]
+
+
+class UtcEnforcementTests(unittest.TestCase):
+    """Hallazgo de la revisión de Codex en MP-005: el tipo `datetime` por sí solo
+    no garantiza 'UTC siempre' -- estos tests prueban que el contrato lo rechaza
+    de verdad, no solo que lo documenta en un comentario."""
+
+    def _build(self, observed_at) -> VehiclePositionObservation:
+        return VehiclePositionObservation(
+            source_vehicle_id="1",
+            source_trip_id="1021X00001C5",
+            observed_at=observed_at,
+            raw_vehicle_label="C5-00001",
+            payload_hash="deadbeef",
+        )
+
+    def test_naive_datetime_is_rejected(self) -> None:
+        with self.assertRaises(ValidationError):
+            self._build(datetime(2026, 11, 18, 10, 0, 0))  # sin tzinfo
+
+    def test_non_utc_offset_is_rejected(self) -> None:
+        madrid_tz = timezone(timedelta(hours=1))
+        with self.assertRaises(ValidationError):
+            self._build(datetime(2026, 11, 18, 10, 0, 0, tzinfo=madrid_tz))
+
+    def test_utc_datetime_is_accepted(self) -> None:
+        obs = self._build(datetime(2026, 11, 18, 10, 0, 0, tzinfo=timezone.utc))
+        self.assertEqual(obs.observed_at.tzinfo, timezone.utc)
+
+    def test_service_alert_end_accepts_none_but_rejects_naive(self) -> None:
+        # None debe pasar (campo opcional, ver canonical.py); un valor naive no.
+        alert = ServiceAlert(
+            source_alert_id="X",
+            active_period_start=datetime(2026, 11, 18, tzinfo=timezone.utc),
+            active_period_end=None,
+            affected_route_ids=["10T0047C5"],
+            description_text="t",
+            description_language="es",
+            payload_hash="deadbeef",
+        )
+        self.assertIsNone(alert.active_period_end)
+        with self.assertRaises(ValidationError):
+            ServiceAlert(
+                source_alert_id="X",
+                active_period_start=datetime(2026, 11, 18, tzinfo=timezone.utc),
+                active_period_end=datetime(2026, 11, 19),  # naive
+                affected_route_ids=["10T0047C5"],
+                description_text="t",
+                description_language="es",
+                payload_hash="deadbeef",
+            )
+
+    def test_feed_health_rejects_naive_source_timestamp(self) -> None:
+        with self.assertRaises(ValidationError):
+            FeedHealth(
+                feed_name="vehicle_positions",
+                source_timestamp=datetime(2026, 11, 18),
+                entity_count=1,
+            )
 
 
 class SyntheticMultiNucleoAlertTests(unittest.TestCase):

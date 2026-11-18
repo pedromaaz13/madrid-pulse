@@ -109,6 +109,14 @@ class RawTripUpdatesFeed(RawModel):
 
 class RawActivePeriod(RawModel):
     start: str
+    # `end` es parte del estándar GTFS-RT Alert.ActivePeriod, pero NO se ha observado
+    # en ninguna de las capturas reales de MP-003/MP-004 (82+76+3 alertas revisadas,
+    # todas solo con `start`). Se mantiene como Optional[None por defecto] en vez de
+    # eliminarlo porque es plausible que Renfe lo emita para una alerta con fecha de
+    # fin conocida que no hemos capturado todavía -- pero ningún código debe asumir
+    # que está poblado. Hallazgo de la revisión de Codex en MP-005: esta nota faltaba
+    # y la ausencia quedaba sin documentar, a diferencia de los demás campos opcionales
+    # de este módulo.
     end: Optional[str] = None
 
 
@@ -132,7 +140,7 @@ class RawAlert(RawModel):
     informed_entity: list[RawInformedEntity] = Field(alias="informedEntity")
     description_text: RawDescriptionText = Field(alias="descriptionText")
     # NOTA (hallazgo MP-005, ver docs/DECISIONS.md): el GTFS-RT estándar define
-    # `effect`, `cause` y `headerText` para Alert. Ninguno de los dos aparece en
+    # `effect`, `cause` y `headerText` para Alert. Ninguno de los tres aparece en
     # las capturas reales de Renfe (MP-003/MP-004) -- no se modelan aquí porque
     # añadirlos sin evidencia sería inventar un campo. Si aparecen en una captura
     # futura, añadirlos aquí tras verificarlo, no antes.

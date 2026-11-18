@@ -1,8 +1,8 @@
 # ADR-0009: Campos del modelo candidato no observados en el feed real de Renfe
 
-- **Estado:** `Propuesto` — aplicado provisionalmente en MP-005 bajo el régimen de autonomía de ADR-0007; pendiente de revisión y promoción a `Aceptado` por el propietario (o por Codex como revisor de MP-005) en el cierre de Hito 1.
+- **Estado:** `Propuesto` — aplicado provisionalmente en MP-005 bajo el régimen de autonomía de ADR-0007. Codex (revisor de MP-005) audita y aprueba o rechaza su contenido técnico como parte de la revisión de la tarea; eso no equivale a promoverlo a `Aceptado` — **solo el propietario** puede hacerlo, en el cierre de Hito 1 (ver `docs/adr/README.md` y `AGENTS.md`). Corregido tras la revisión de Codex: una redacción anterior sugería erróneamente que Codex podía promoverlo.
 - **Fecha:** 2026-11-18
-- **Decisores (propuesta):** Claude Code (ejecutor de MP-005); pendiente de revisión de Codex en esta misma tarea.
+- **Decisores (propuesta):** Claude Code (ejecutor de MP-005); auditado por Codex como revisor de MP-005; promoción a `Aceptado` pendiente exclusivamente del propietario.
 
 ## Contexto
 
@@ -31,4 +31,4 @@ Mantener estos campos en el modelo candidato como si estuvieran garantizados hab
 - `packages/contracts/raw.py` y `canonical.py` reflejan exactamente estos hallazgos, con comentarios explicando por qué cada campo ausente no se modela o se modela como opcional.
 - MP-006 (esquema PostgreSQL) debe definir `speed_kmh`/`bearing`/`geom` como columnas `NULL`-ables, y `current_stop_id` (no `current_stop_sequence`) como la columna de ingesta cruda.
 - MP-010 es responsable de la resolución `stop_id` → `stop_sequence` vía el GTFS estático, no MP-007.
-- Pendiente: Codex (revisor de MP-005) y, en el cierre del hito, el propietario, revisan y promueven este ADR a `Aceptado`.
+- Pendiente: Codex (revisor de MP-005) audita el contenido técnico de este ADR como parte de la revisión de la tarea; **solo el propietario** puede promoverlo a `Aceptado`, en el cierre de Hito 1.

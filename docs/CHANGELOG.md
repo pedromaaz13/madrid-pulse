@@ -26,6 +26,12 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 #### Found
 - `docs/DATA_MODEL.md` (escrito en MP-001, antes de verificación empírica) asumía tres grupos de campos que el feed real de Renfe nunca emite — ver DEC-018/ADR-0009.
 
+#### Fixed (tras 1ª revisión de Codex, dispatch `ctx_ea1d5cf46d74`)
+- **Bloqueante:** `RawActivePeriod.end` carecía del comentario de "no observado" que sí tienen los demás campos corregidos tras el hallazgo de MP-005 — añadido.
+- **Bloqueante:** el esquema canónico documentaba "UTC siempre" sin exigirlo — añadidos `require_utc`/`require_utc_or_none` como `field_validator` en los 4 modelos; 5 tests nuevos prueban el rechazo real de `datetime` naive u offset no UTC (22 tests en total).
+- **Bloqueante:** `docs/research/TRACEABILITY.md` no señalaba que el modelo candidato de `deep-research-report.md` queda contradicho por esta verificación — añadida la fila, sin editar el documento congelado.
+- **Menor:** `ADR-0009` decía erróneamente que Codex (revisor) podía promover el ADR a `Aceptado` — corregido, solo el propietario puede; `raw.py` tenía un error de redacción ("ninguno de los dos" para tres campos).
+
 ### MP-004 — Fixtures reproducibles
 
 #### Added

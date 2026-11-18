@@ -18,7 +18,7 @@ import json
 from datetime import datetime, timezone
 from typing import Literal, Optional
 
-from pydantic import BaseModel, computed_field
+from pydantic import BaseModel, computed_field, field_validator
 
 from packages.contracts.nucleo import nucleo_name, nucleo_prefix
 
@@ -26,6 +26,31 @@ from packages.contracts.nucleo import nucleo_name, nucleo_prefix
 def epoch_to_utc(value: str) -> datetime:
     """Convierte un timestamp epoch (string, como lo da Renfe) a datetime UTC."""
     return datetime.fromtimestamp(int(value), tz=timezone.utc)
+
+
+def require_utc(value: datetime) -> datetime:
+    """Rechaza cualquier datetime que no sea explícitamente UTC-aware.
+
+    El docstring del módulo promete "UTC siempre"; sin este validador, Pydantic
+    aceptaría silenciosamente un `datetime` naive o con un offset distinto de UTC
+    pasado directamente al modelo (fuera de las funciones de `normalize.py`, que
+    sí usan siempre `epoch_to_utc`). Hallazgo de la revisión de Codex en MP-005:
+    el tipo `datetime` por sí solo no garantiza la invariante declarada.
+    """
+    if value.tzinfo is None or value.tzinfo.utcoffset(value) is None:
+        raise ValueError("datetime naive no permitido: todos los timestamps deben ser UTC-aware")
+    if value.utcoffset() != timezone.utc.utcoffset(value):
+        raise ValueError(
+            f"datetime con offset distinto de UTC no permitido (offset={value.utcoffset()})"
+        )
+    return value
+
+
+def require_utc_or_none(value: Optional[datetime]) -> Optional[datetime]:
+    """Como `require_utc`, pero deja pasar `None` para campos opcionales."""
+    if value is None:
+        return None
+    return require_utc(value)
 
 
 def canonical_payload_hash(raw_entity: dict) -> str:
@@ -51,6 +76,8 @@ class VehiclePositionObservation(BaseModel):
     raw_vehicle_label: str
     payload_hash: str
 
+    _validate_observed_at = field_validator("observed_at", mode="after")(require_utc)
+
     @computed_field  # type: ignore[prop-decorator]
     @property
     def nucleo_prefix(self) -> str:
@@ -75,6 +102,8 @@ class TripUpdateObservation(BaseModel):
     next_stop_id: Optional[str] = None
     payload_hash: str
 
+    _validate_observed_at = field_validator("observed_at", mode="after")(require_utc)
+
     @computed_field  # type: ignore[prop-decorator]
     @property
     def nucleo_prefix(self) -> str:
@@ -89,6 +118,13 @@ class ServiceAlert(BaseModel):
     description_text: str
     description_language: str
     payload_hash: str
+
+    _validate_active_period_start = field_validator("active_period_start", mode="after")(
+        require_utc
+    )
+    _validate_active_period_end = field_validator("active_period_end", mode="after")(
+        require_utc_or_none
+    )
 
     @computed_field  # type: ignore[prop-decorator]
     @property
@@ -105,3 +141,5 @@ class FeedHealth(BaseModel):
     feed_name: Literal["vehicle_positions", "trip_updates", "alerts"]
     source_timestamp: datetime  # UTC, del header del feed
     entity_count: int
+
+    _validate_source_timestamp = field_validator("source_timestamp", mode="after")(require_utc)
