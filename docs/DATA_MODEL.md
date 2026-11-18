@@ -85,21 +85,30 @@ vehicle_position_observation (vehicle_observation)
   source_vehicle_id
   source_trip_id
   trip_id FK nullable       -- resuelto contra GTFS estático; nullable si no resuelve
-  geom geography(Point,4326)
+  geom geography(Point,4326) nullable  -- NULLABLE: ~0.25% de entidades no traen position
+                                       -- (verificado en MP-003/MP-004, ver packages/contracts)
   current_status
-  current_stop_sequence
-  speed_kmh
-  bearing
+  current_stop_id           -- CORREGIDO en MP-005 (antes "current_stop_sequence"): el feed
+                            -- real solo da stopId (identificador de parada), no stop_sequence.
+                            -- Resolver a stop_sequence requiere JOIN contra stop_times.txt
+                            -- del GTFS estático -- eso es trabajo de MP-010, no de la ingesta.
+  speed_kmh nullable        -- CORREGIDO en MP-005: NO observado en ningún payload real de
+                            -- Renfe capturado hasta ahora (MP-003/MP-004). Se mantiene el
+                            -- campo porque el estándar GTFS-RT lo define, pero es nullable
+                            -- y no debe asumirse poblado. Ver ADR-0009.
+  bearing nullable          -- ídem speed_kmh. Ver ADR-0009.
   quality_flags jsonb
   payload_hash
   ingestion_run_id FK
 
 trip_update_observation
   id bigint PK
-  observed_at timestamptz
+  observed_at timestamptz   -- del header del feed (la entidad no trae timestamp propio)
   received_at timestamptz
   source_trip_id
   trip_id FK nullable
+  schedule_relationship     -- AÑADIDO en MP-005: observado SCHEDULED y CANCELED en datos
+                            -- reales; CANCELED nunca trae stopTimeUpdate ni delay.
   delay_seconds nullable    -- nullable, nunca 0 por defecto cuando no hay dato
   delay_coverage            -- reported | missing
   ingestion_run_id FK
@@ -107,14 +116,17 @@ trip_update_observation
 service_alert
   id PK
   source_alert_id
-  effect
-  cause
-  header_text
   description_text
+  description_language      -- AÑADIDO en MP-005: el feed real da el idioma junto al texto.
   active_period_start timestamptz
   active_period_end timestamptz nullable
   affected_routes jsonb
   ingestion_run_id FK
+  -- CORREGIDO en MP-005: `effect`, `cause` y `header_text` (estándar GTFS-RT Alert) se
+  -- eliminan de este modelo porque NO aparecen en ningún payload real de Renfe capturado
+  -- hasta ahora (MP-003/MP-004, verificado explícitamente). Mantenerlos habría sido
+  -- inventar campos no observados (viola AGENTS.md: "no se inventan campos"). Si Renfe
+  -- los empieza a emitir en el futuro, añadirlos aquí tras verificarlo. Ver ADR-0009.
 
 daily_line_metrics (daily_trip_quality + agregado por línea)
   service_date

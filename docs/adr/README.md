@@ -10,6 +10,7 @@
 | [0006](0006-licensing-policy.md) | Política de licenciamiento frente a proyectos de referencia | Aceptado |
 | [0007](0007-autonomy-model.md) | Modelo de autonomía acotada para la ejecución del backlog (autorización por hito, commits en worktree, gates limitados a licencia/coste) | Aceptado |
 | [0008](0008-route-identity.md) | `route_id` completo (no el código de línea) como identificador de ruta, tras descubrir en MP-003 que "C5" existe también en Asturias y Andalucía | `Propuesto` — pendiente de revisión del propietario en cierre de Hito 1 |
+| [0009](0009-unobserved-raw-fields.md) | Campos del modelo candidato no observados en el feed real (`speed_kmh`/`bearing` nullable, `current_stop_id` en vez de `current_stop_sequence`, se elimina `effect`/`cause`/`header_text` de alertas) | `Propuesto` — pendiente de revisión de Codex (MP-005) y del propietario en cierre de Hito 1 |
 
 Ver `docs/DECISIONS.md` para el resumen ejecutivo de estado de todas las decisiones (aceptadas, propuestas, pendientes y no-go), con enlaces de vuelta a estos ADRs.
 

@@ -4,6 +4,28 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 
 ## [Unreleased]
 
+### MP-005 — Contrato canónico interno
+
+#### Added
+- `packages/contracts/raw.py`: modelos Pydantic fieles al JSON bruto observado de Renfe (vehicle_positions, trip_updates, alerts), sin campos inventados.
+- `packages/contracts/nucleo.py`: tabla de prefijos de núcleo verificada en MP-003 y helpers de disambiguación.
+- `packages/contracts/canonical.py`: esquema normalizado (`VehiclePositionObservation`, `TripUpdateObservation`, `ServiceAlert`, `FeedHealth`) con UTC, dato ausente = `None`, y `nucleo_prefix` como campo derivado.
+- `packages/contracts/normalize.py`: funciones puras `raw → canonical`.
+- `packages/contracts/tests/`: 17 tests (`test_raw_parsing.py`, `test_canonical_normalization.py`, `test_synthetic_schema.py`).
+- `docs/adr/0009-unobserved-raw-fields.md` (`Propuesto`) y DEC-018.
+
+#### Changed
+- `docs/DATA_MODEL.md`: `speed_kmh`/`bearing` marcados `nullable` (no observados nunca), `current_stop_sequence` renombrado a `current_stop_id` (el feed da stopId, no posición de secuencia), eliminados `effect`/`cause`/`header_text` de `service_alert` (no observados), añadido `schedule_relationship` y `description_language` (sí observados).
+- `docs/DATA_QUALITY.md`: nota aclarando que `implausible_speed` debe calcularse a partir de posiciones consecutivas, no leerse de un campo `speed_kmh` de origen.
+
+#### Verified
+- `python3 -m unittest discover -s packages/contracts/tests -p 'test_*.py' -v`: 17 tests, `OK`.
+- JSON Schema exportable (`model_json_schema`) incluyendo campos derivados en modo serialización.
+- Rechazo activo de datos inválidos (`ValidationError` en tipos incorrectos y campos obligatorios ausentes).
+
+#### Found
+- `docs/DATA_MODEL.md` (escrito en MP-001, antes de verificación empírica) asumía tres grupos de campos que el feed real de Renfe nunca emite — ver DEC-018/ADR-0009.
+
 ### MP-004 — Fixtures reproducibles
 
 #### Added

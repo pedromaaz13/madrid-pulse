@@ -17,6 +17,37 @@ MP-001 está `DONE`: Codex aprobó la revisión cruzada y, conforme a ADR-0007, 
 
 ## Tarea actual
 
+**MP-005 — Contrato canónico interno**
+
+Ejecutor: Claude Code · Revisor: OpenAI Codex · Estado: **REVIEW**
+
+Worktree/rama: `mp-005-contrato-canonico`, ramificada desde `mp-004-fixtures` (MP-004 `DONE`)
+
+### Checklist de MP-005
+
+- [x] `packages/contracts/raw.py`: modelos Pydantic que reflejan exactamente el JSON bruto observado en MP-003/MP-004 (sin inventar campos); acepta campos nuevos no verificados sin fallar (`extra="ignore"`).
+- [x] `packages/contracts/nucleo.py`: tabla de prefijos de núcleo verificada en MP-003, con `is_madrid`/`nucleo_name`.
+- [x] `packages/contracts/canonical.py`: `VehiclePositionObservation`, `TripUpdateObservation`, `ServiceAlert`, `FeedHealth` — UTC siempre, dato ausente = `None` nunca `0`, `nucleo_prefix` derivado como `computed_field` (no aceptado como entrada independiente).
+- [x] `packages/contracts/normalize.py`: funciones puras `raw → canonical`, sin red ni base de datos.
+- [x] 17 tests reales ejecutados (`python3 -m unittest discover -s packages/contracts/tests -p 'test_*.py' -v`) → `OK`: parseo contra fixtures reales, normalización (incluido el test de colisión núcleo/C5 a nivel de contrato canónico), y sintéticos (JSON Schema, rechazo de datos inválidos, caso multi-núcleo no observado).
+- [x] **Hallazgo:** `docs/DATA_MODEL.md` asumía `speed_kmh`/`bearing`/`current_stop_sequence` y `effect`/`cause`/`header_text` de alertas que el feed real NUNCA emite (verificado contra ~800 entidades combinadas de MP-003/MP-004). Corregido `docs/DATA_MODEL.md`, `docs/DATA_QUALITY.md` (nota sobre cómo calcular `implausible_speed` sin un campo de origen), registrado DEC-018/ADR-0009 (`Propuesto`).
+- [x] Autocorregido antes de delegar: una edición introdujo una fila duplicada en `docs/DATA_QUALITY.md` (`off_track` repetida) — detectado y corregido en la misma ronda, sin necesitar que Codex lo señalara.
+- [ ] Revisión independiente de Codex.
+
+### Resultado y límites
+
+El contrato canónico se valida contra datos reales (MP-004) y sintéticos. La separación `raw`/`canonical` evita que un cambio futuro del feed de Renfe se propague directamente al resto del sistema sin pasar por una capa de normalización explícita. Los hallazgos de campos no observados (ADR-0009) son correcciones al modelo candidato de MP-001, no contradicciones nuevas sin resolver.
+
+### Bloqueos
+
+Ninguno.
+
+### Siguiente paso
+
+Claude Code delega a Codex para revisión independiente en este mismo worktree. MP-005 permanecerá en `REVIEW` hasta su aprobación explícita; entonces MP-006 podrá ramificar desde esta rama.
+
+## Tareas cerradas de la cadena
+
 **MP-004 — Fixtures reproducibles**
 
 Ejecutor: OpenAI Codex · Revisor: Claude Code · Estado: **DONE** (aprobado el 2026-11-18)
@@ -45,8 +76,6 @@ Ninguno.
 ### Siguiente paso
 
 MP-004 está `DONE`. MP-005 (Contrato canónico interno, ejecutor Claude Code, revisor Codex) puede ramificar desde `mp-004-fixtures` sin esperar merge a `main`.
-
-## Tareas cerradas de la cadena
 
 **MP-003 — Probe real de feeds C5 (GTFS + GTFS-RT)**
 
@@ -150,6 +179,9 @@ Esta rama se bifurcó de `chore/mp-001-foundation` en el commit `3e7b533`, **ant
 | `2026-11-18T16:01Z` | MP-004 | Capturas frescas de los 3 feeds; fixtures reducidas 394→10, 401→8 y 76→3 con hashes SHA-256 documentados | `tests/fixtures/MANIFEST.md` |
 | `2026-11-18T16:04Z` | MP-004 | Suite offline ejecutada: 6 tests `unittest`, `OK`; JSON y hashes revalidados; tarea pasa a `REVIEW` | `tests/fixtures/test_parse_fixtures.py`; `docs/TASKS.md` |
 | `2026-11-18` | MP-004 | Revisión independiente de Claude Code: hashes y suite re-ejecutados, test de colisión C5 inspeccionado y confirmado sustantivo. **APROBADO**, sin hallazgos. MP-004 pasa a `DONE` | commit pendiente |
+| `2026-11-18` | MP-005 | Contrato canónico implementado (`packages/contracts/`) con 17 tests reales (reales + sintéticos) ejecutados en verde | commit pendiente |
+| `2026-11-18` | MP-005 | Hallazgo: `speed_kmh`/`bearing`/`current_stop_sequence`/`effect`/`cause`/`header_text` del modelo candidato nunca aparecen en el feed real; corregidos `docs/DATA_MODEL.md`/`docs/DATA_QUALITY.md`, registrado DEC-018/ADR-0009 (`Propuesto`) | — |
+| `2026-11-18` | MP-005 | Tarea pasa a `REVIEW`, delegada a Codex para revisión independiente en este mismo worktree | — |
 
 ## Cómo usar este documento
 

@@ -88,13 +88,13 @@ Cada tarea se trabaja en **un único worktree/rama** (`mp-00X-nombre-corto`), co
 - **Depende de:** MP-004
 - **Ejecutor:** Claude Code
 - **Revisor:** OpenAI Codex
-- **Archivos/componentes afectados:** `packages/contracts/`.
+- **Archivos/componentes afectados:** `packages/contracts/` (nuevo: `raw.py`, `canonical.py`, `nucleo.py`, `normalize.py`, `tests/`), `docs/DATA_MODEL.md`, `docs/DATA_QUALITY.md`, `docs/DECISIONS.md` (DEC-018), `docs/adr/0009-unobserved-raw-fields.md` (nuevo, `Propuesto`).
 - **Entradas:** fixtures de MP-004, modelo propuesto en `docs/DATA_MODEL.md` y `docs/DATA_CONTRACTS.md`.
 - **Entregables:** esquema canónico versionado, con separación explícita `raw` vs `normalized`.
 - **Criterios de aceptación:** el esquema resuelve el modelo candidato de `docs/DATA_MODEL.md` sin contradicciones no documentadas; cambios respecto al modelo candidato se registran como ADR.
 - **Pruebas necesarias:** tests de validación de esquema contra fixtures reales y sintéticas.
-- **Evidencia de verificación:** suite de tests de esquema.
-- **Estado:** `TODO`
+- **Evidencia de verificación:** `packages/contracts/tests/` — 17 tests (`python3 -m unittest discover -s packages/contracts/tests -p 'test_*.py' -v`), `OK`: 3 de parseo `raw` contra fixtures reales (`test_raw_parsing.py`), 9 de normalización `raw→canonical` contra fixtures reales incluyendo el test de colisión núcleo/C5 equivalente al de MP-004 (`test_canonical_normalization.py`), y 5 sintéticos (JSON Schema, rechazo de datos inválidos, caso multi-núcleo no observado en producción) en `test_synthetic_schema.py`. Hallazgo: `docs/DATA_MODEL.md` asumía `speed_kmh`/`bearing`/`current_stop_sequence`/`effect`/`cause`/`header_text` que el feed real nunca emite — corregido, registrado como DEC-018/ADR-0009 (`Propuesto`).
+- **Estado:** `REVIEW` — implementado por Claude Code el 2026-11-18, delegado a Codex para revisión independiente en este mismo worktree.
 
 ---
 

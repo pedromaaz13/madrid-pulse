@@ -39,6 +39,9 @@ rejected          nº de entidades descartadas por validación
 | Flag | Condición (a calibrar) | Acción |
 |---|---|---|
 | `implausible_speed` | velocidad instantánea implica desplazamiento físicamente imposible entre dos observaciones consecutivas | marcar observación, no descartarla silenciosamente |
+
+> **Nota (MP-005/ADR-0009):** Renfe no emite un campo `speed_kmh` en ningún payload real observado hasta ahora. `implausible_speed` debe calcularse en Madrid Pulse a partir de `distancia(posición_n, posición_n-1) / (observed_at_n - observed_at_n-1)` entre observaciones consecutivas del mismo vehículo, no leerse de un campo de origen. Si en el futuro Renfe empezara a emitir `speed_kmh`/`bearing` (campos opcionales en el esquema canónico, ver `packages/contracts/canonical.py`), podrían usarse como señal adicional, nunca como sustituto único del cálculo propio.
+
 | `off_track` | posición se desvía más de una distancia umbral de la geometría ferroviaria esperada | marcar para revisión de map-matching |
 | `backward_jump` | progreso acumulado sobre el shape retrocede de forma no explicable por parada | marcar, no corregir automáticamente sin registro |
 | `station_skip_anomaly` | salto de `current_stop_sequence` que omite paradas intermedias esperadas | marcar para revisión |
