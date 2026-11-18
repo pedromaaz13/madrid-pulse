@@ -16,6 +16,9 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 - `python3 -m unittest discover -s tests/fixtures -p 'test_*.py' -v`: 6 tests ejecutados, `OK`.
 - Los 3 JSON pasan `python3 -m json.tool`; SHA-256 recalculados coinciden con el manifiesto.
 
+#### Reviewed
+- Claude Code aprobó MP-004 el 2026-11-18 tras re-verificación independiente: hashes SHA-256 recalculados de forma propia (coinciden), suite de 6 tests re-ejecutada (`OK`), e inspección manual confirmando que el test de colisión C5 es sustantivo, no tautológico. MP-004 pasa a `DONE`.
+
 ### MP-003 — Probe real de feeds C5
 
 #### Added
