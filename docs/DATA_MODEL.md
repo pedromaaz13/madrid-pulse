@@ -25,10 +25,18 @@ network
 route (dim_route)
   id PK
   network_id FK
-  source_route_id
-  short_name
+  source_route_id          -- route_id COMPLETO del proveedor (p. ej. "10T0047C5"), NUNCA
+                           -- el route_short_name en solitario — ver ADR-0008/DEC-017: "C5"
+                           -- existe también en Asturias (20T0011C5) y Andalucía (30T0009C5)
+                           -- en el mismo feed nacional de Renfe (verificado en MP-003).
+  short_name               -- p. ej. "C5" — puede repetirse entre núcleos distintos, NO es único
   color
+  nucleo_prefix            -- prefijo numérico de 2 cifras del route_id ("10"=Madrid, "20"=Asturias,
+                           -- "30"/"31"/"32"=Andalucía, etc.) — disambiguador verificado en MP-003.
   UNIQUE(network_id, source_route_id)
+  -- La C5 de Madrid tiene 5 source_route_id distintos (variantes de sentido/tramo):
+  -- 10T0017C5, 10T0018C5, 10T0035C5, 10T0047C5, 10T0048C5 — todos agrupados bajo un único
+  -- route.id con short_name="C5" cuando pertenecen al mismo network_id (Madrid).
 
 station (dim_station)
   id PK

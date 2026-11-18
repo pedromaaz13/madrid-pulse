@@ -4,6 +4,27 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 
 ## [Unreleased]
 
+### MP-003 — Probe real de feeds C5
+
+#### Added
+- `docs/research/MP-003-probe-findings.md`: evidencia real (status HTTP, timestamps, esquema JSON observado) de los 3 feeds GTFS-RT y descarga/inspección real del GTFS estático de Cercanías.
+- `docs/adr/0008-route-identity.md` (`Propuesto`): `route.source_route_id` debe ser el `route_id` completo, no el código de línea.
+
+#### Changed
+- `docs/legal/DATA_SOURCES.md`: disponibilidad y esquema de los 3 feeds GTFS-RT y del GTFS estático pasan de `PENDING MP-003` a `VERIFIED`.
+- `docs/DATA_MODEL.md`: entidad `route` corregida para explicitar `source_route_id` como `route_id` completo y añadir `nucleo_prefix`.
+- `docs/DECISIONS.md`: DEC-017 (route_id completo, no código de línea).
+
+#### Verified
+- `vehicle_positions.json`, `trip_updates.json`, `alerts.json`: `200 OK`, JSON real GTFS-RT 2.0, no protobuf.
+- Frecuencia de refresco de `vehicle_positions`: ~20–22 s medidos con 3 polls reales (coincide con `Cache-Control: max-age=30`).
+- GTFS estático: descarga real exitosa (15,7 MB) vía `ssl.renfe.com/ftransit/Fichero_CER_FOMENTO/fomento_transit.zip`; el fallo SSL mencionado en MP-002 correspondía al enlace de portal (CKAN), no al enlace de descarga real.
+- `stop_id` del feed en vivo coincide con `stops.txt` del GTFS estático (coordenadas verificadas).
+
+#### Found
+- **"C5" no es un identificador único**: existe también en Asturias (`20T0011C5`, Gijón–Pola de Laviana) y Andalucía (`30T0009C5`, Jardines de Hércules–Benacazón) en el mismo feed nacional. Ver DEC-017.
+- Cobertura de `trip_updates` para Madrid fue 0/302 en el único poll realizado — pendiente de más muestreo antes de concluir nada (no se afirma que sea un problema sistemático).
+
 ### MP-002 — Matriz de fuentes y licencias
 
 #### Changed

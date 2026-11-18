@@ -52,13 +52,13 @@ Cada tarea se trabaja en **un único worktree/rama** (`mp-00X-nombre-corto`), co
 - **Depende de:** MP-002
 - **Ejecutor:** Claude Code
 - **Revisor:** OpenAI Codex
-- **Archivos/componentes afectados:** `docs/research/` (nuevo subdocumento de hallazgos), fixtures crudas temporales (no versionadas todavía — ver MP-004).
+- **Archivos/componentes afectados:** `docs/research/MP-003-probe-findings.md` (nuevo), `docs/legal/DATA_SOURCES.md`, `docs/DATA_MODEL.md`, `docs/DECISIONS.md` (DEC-017), `docs/adr/0008-route-identity.md` (nuevo, `Propuesto`); fixtures crudas temporales (no versionadas todavía — ver MP-004).
 - **Entradas:** endpoints hipotéticos de `MADRID_PULSE_BRIEF_INICIAL.md` §2.
 - **Entregables:** captura controlada de los tres feeds GTFS-RT y del GTFS estático; esquema real de payload documentado (campos observados, no asumidos); frecuencia de actualización medida (no asumida en ~20/30/60 s).
 - **Criterios de aceptación:** evidencia reproducible (comandos, timestamps, status HTTP) de que los endpoints responden y cubren trenes de la C5; cualquier discrepancia con lo documentado en la investigación queda registrada en `docs/DECISIONS.md`.
 - **Pruebas necesarias:** capturas repetidas en ventanas de tiempo distintas para medir frecuencia real; validación de que `trip_id` del feed en vivo es resoluble contra el GTFS estático.
-- **Evidencia de verificación:** logs de petición/respuesta y resumen de esquema real.
-- **Estado:** `TODO`
+- **Evidencia de verificación:** `docs/research/MP-003-probe-findings.md` — 3 polls reales de `vehicle_positions.json` espaciados ~20 s (headers/timestamps), 1 poll de `trip_updates.json` (302 entidades) y de `alerts.json` (82 entidades), descarga real del GTFS estático (15,7 MB, `200 OK`) e inspección de `routes.txt`/`trips.txt`/`stops.txt`/`calendar.txt`. `docs/legal/DATA_SOURCES.md` actualizado de `PENDING MP-003` a `VERIFIED` para disponibilidad/esquema. Hallazgo crítico registrado como DEC-017/ADR-0008 (`Propuesto`): "C5" no es único en el feed nacional (existe también en Asturias y Andalucía); `docs/DATA_MODEL.md` corregido en consecuencia.
+- **Estado:** `REVIEW` — implementación completada por Claude Code el 2026-11-18; pendiente de auditoría y aprobación de Codex. Pendientes explícitos y no bloqueantes para tareas posteriores: cobertura de `trip_updates` para Madrid en ventana más larga (MP-007/MP-008), descarga real del GTFS CRTM (requería login en el NAP, no probado), validación detallada de `shapes`/`stop_times` de C5 (MP-010), comportamiento en cambio de día de servicio (MP-012).
 
 ---
 
