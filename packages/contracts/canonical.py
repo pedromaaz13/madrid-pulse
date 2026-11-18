@@ -113,7 +113,11 @@ class TripUpdateObservation(BaseModel):
 class ServiceAlert(BaseModel):
     source_alert_id: str
     active_period_start: datetime  # UTC
-    active_period_end: Optional[datetime] = None
+    active_period_end: Optional[datetime] = None  # estándar GTFS-RT; raw.py no lo modela
+                                                   # (no observado) -- normalize.py siempre
+                                                   # pasa None aquí hoy. Optional por si
+                                                   # Renfe empieza a emitirlo; no asumir
+                                                   # que está poblado.
     affected_route_ids: list[str]
     description_text: str
     description_language: str

@@ -108,16 +108,18 @@ class RawTripUpdatesFeed(RawModel):
 
 
 class RawActivePeriod(RawModel):
+    # El estándar GTFS-RT Alert.ActivePeriod también define `end`, pero NO se ha
+    # observado en ninguna de las capturas reales de MP-003/MP-004 (82+76+3 alertas
+    # revisadas, todas solo con `start`). A diferencia de `canonical.py` (pensado
+    # como esquema interno estable, con margen para campos del estándar todavía no
+    # vistos), este módulo `raw` existe específicamente para reflejar la realidad
+    # observada sin especular -- ver el docstring del módulo. Por eso `end` NO se
+    # declara aquí: añadirlo "por si acaso" habría repetido el mismo error que este
+    # módulo existe para evitar (hallazgo de la 2ª revisión de Codex en MP-005; la
+    # 1ª ronda lo había dejado como campo opcional con un comentario, lo cual
+    # documentaba la contradicción en vez de resolverla). Si una captura futura
+    # confirma `end`, se añade aquí entonces, no antes.
     start: str
-    # `end` es parte del estándar GTFS-RT Alert.ActivePeriod, pero NO se ha observado
-    # en ninguna de las capturas reales de MP-003/MP-004 (82+76+3 alertas revisadas,
-    # todas solo con `start`). Se mantiene como Optional[None por defecto] en vez de
-    # eliminarlo porque es plausible que Renfe lo emita para una alerta con fecha de
-    # fin conocida que no hemos capturado todavía -- pero ningún código debe asumir
-    # que está poblado. Hallazgo de la revisión de Codex en MP-005: esta nota faltaba
-    # y la ausencia quedaba sin documentar, a diferencia de los demás campos opcionales
-    # de este módulo.
-    end: Optional[str] = None
 
 
 class RawInformedEntity(RawModel):

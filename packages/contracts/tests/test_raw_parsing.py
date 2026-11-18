@@ -61,6 +61,22 @@ class RawParsingTests(unittest.TestCase):
         feed = RawVehiclePositionsFeed.model_validate(payload)
         self.assertTrue(feed.entity)
 
+    def test_raw_active_period_has_no_unobserved_end_field(self) -> None:
+        """Regresión (2ª revisión de Codex en MP-005): `end` de GTFS-RT Alert.ActivePeriod
+        no se ha observado nunca en una captura real -- `raw.py` no debe declararlo ni
+        como campo opcional. Si una fixture futura confirma `end`, este test debe
+        actualizarse entonces, no antes."""
+        feed = RawAlertsFeed.model_validate(load_fixture("alerts.json"))
+        for entity in feed.entity:
+            for period in entity.alert.active_period:
+                self.assertFalse(hasattr(period, "end"))
+        # Un `end` presente en el JSON de origen debe ser ignorado (extra="ignore"),
+        # no aceptado como atributo del modelo.
+        payload = load_fixture("alerts.json")
+        payload["entity"][0]["alert"]["activePeriod"][0]["end"] = "1700000000"
+        feed_with_end = RawAlertsFeed.model_validate(payload)
+        self.assertFalse(hasattr(feed_with_end.entity[0].alert.active_period[0], "end"))
+
 
 if __name__ == "__main__":
     unittest.main()

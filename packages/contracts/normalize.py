@@ -85,9 +85,12 @@ def alerts_to_canonical(feed: RawAlertsFeed) -> list[ServiceAlert]:
             ServiceAlert(
                 source_alert_id=entity.id,
                 active_period_start=epoch_to_utc(first_period.start),
-                active_period_end=(
-                    epoch_to_utc(first_period.end) if first_period.end else None
-                ),
+                # `active_period_end` siempre es None aquí: el feed real nunca lo
+                # emite (ver raw.py, RawActivePeriod -- no declara `end` porque no
+                # se ha observado). El campo existe en ServiceAlert por si Renfe
+                # empieza a emitirlo en el futuro, pero esta función no puede leer
+                # algo que el modelo `raw` no modela.
+                active_period_end=None,
                 affected_route_ids=[
                     informed.route_id
                     for informed in alert.informed_entity

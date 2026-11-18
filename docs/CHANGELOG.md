@@ -27,10 +27,13 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 - `docs/DATA_MODEL.md` (escrito en MP-001, antes de verificación empírica) asumía tres grupos de campos que el feed real de Renfe nunca emite — ver DEC-018/ADR-0009.
 
 #### Fixed (tras 1ª revisión de Codex, dispatch `ctx_ea1d5cf46d74`)
-- **Bloqueante:** `RawActivePeriod.end` carecía del comentario de "no observado" que sí tienen los demás campos corregidos tras el hallazgo de MP-005 — añadido.
+- **Bloqueante:** `RawActivePeriod.end` carecía del comentario de "no observado" que sí tienen los demás campos corregidos tras el hallazgo de MP-005 — se corrigió añadiendo un comentario. Insuficiente: ver 2ª ronda.
 - **Bloqueante:** el esquema canónico documentaba "UTC siempre" sin exigirlo — añadidos `require_utc`/`require_utc_or_none` como `field_validator` en los 4 modelos; 5 tests nuevos prueban el rechazo real de `datetime` naive u offset no UTC (22 tests en total).
 - **Bloqueante:** `docs/research/TRACEABILITY.md` no señalaba que el modelo candidato de `deep-research-report.md` queda contradicho por esta verificación — añadida la fila, sin editar el documento congelado.
 - **Menor:** `ADR-0009` decía erróneamente que Codex (revisor) podía promover el ADR a `Aceptado` — corregido, solo el propietario puede; `raw.py` tenía un error de redacción ("ninguno de los dos" para tres campos).
+
+#### Fixed (tras 2ª revisión de Codex, dispatch `ctx_ded900b82f20`)
+- **Bloqueante:** Codex señaló que un comentario no resuelve una contradicción -- `packages/contracts/raw.py` declara explícitamente que no debe contener campos no observados, y `RawActivePeriod.end` seguía declarado. Corregido eliminando `end` del modelo `raw` (no comentándolo); `normalize.py` ya no lo lee (`active_period_end` siempre `None` hoy); `canonical.py` conserva `ServiceAlert.active_period_end` como campo opcional de cara al futuro, con un comentario que aclara por qué siempre es `None` actualmente. Añadido test de regresión que falla si se reintroduce sin verificar, incluso si el JSON de origen lo trae (se ignora por `extra="ignore"`). 23 tests en total.
 
 ### MP-004 — Fixtures reproducibles
 
