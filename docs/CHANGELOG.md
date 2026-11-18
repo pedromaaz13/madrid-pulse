@@ -19,7 +19,7 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 - `docs/DATA_QUALITY.md`: nota aclarando que `implausible_speed` debe calcularse a partir de posiciones consecutivas, no leerse de un campo `speed_kmh` de origen.
 
 #### Verified
-- `python3 -m unittest discover -s packages/contracts/tests -p 'test_*.py' -v`: 17 tests, `OK`.
+- `python3 -m unittest discover -s packages/contracts/tests -p 'test_*.py' -v`: 23 tests, `OK`.
 - JSON Schema exportable (`model_json_schema`) incluyendo campos derivados en modo serialización.
 - Rechazo activo de datos inválidos (`ValidationError` en tipos incorrectos y campos obligatorios ausentes).
 
@@ -34,6 +34,9 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 
 #### Fixed (tras 2ª revisión de Codex, dispatch `ctx_ded900b82f20`)
 - **Bloqueante:** Codex señaló que un comentario no resuelve una contradicción -- `packages/contracts/raw.py` declara explícitamente que no debe contener campos no observados, y `RawActivePeriod.end` seguía declarado. Corregido eliminando `end` del modelo `raw` (no comentándolo); `normalize.py` ya no lo lee (`active_period_end` siempre `None` hoy); `canonical.py` conserva `ServiceAlert.active_period_end` como campo opcional de cara al futuro, con un comentario que aclara por qué siempre es `None` actualmente. Añadido test de regresión que falla si se reintroduce sin verificar, incluso si el JSON de origen lo trae (se ignora por `extra="ignore"`). 23 tests en total.
+
+#### Reviewed
+- Tercera revisión independiente de Codex: **APROBADA**, sin hallazgos abiertos. Reejecutados 23/23 tests; verificados directamente el esquema `raw`, el descarte de campos extra no observados, el enforcement UTC, la trazabilidad del modelo candidato, ADR-0009, enlaces, ausencia de secretos y whitespace.
 
 ### MP-004 — Fixtures reproducibles
 
