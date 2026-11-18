@@ -24,6 +24,24 @@ Tres polls de `vehicle_positions.json` espaciados ~20 s:
 
 **Resultado:** el contenido cambia realmente cada ~20–22 s, consistente con el `Cache-Control: max-age=30` del servidor. La hipótesis de la investigación previa (~20 s para posiciones) queda **confirmada empíricamente**, no solo citada. Pendiente: repetir la medición en otra franja horaria/día antes de fijarlo como SLA en `docs/DATA_QUALITY.md`.
 
+**`trip_updates.json`** — 2 polls espaciados 30 s (comando: `curl -sS https://gtfsrt.renfe.com/trip_updates.json`, repetido tras `sleep 30`):
+
+| Poll | Hora UTC | `header.timestamp` | Entidades |
+|---|---|---|---|
+| A | 15:42:58 | `1795016565` | 422 |
+| B | 15:43:28 | `1795016607` | 420 |
+
+Δ = 42 s. Más lento que `vehicle_positions` (~20–22 s); una sola medición, no fijar como SLA todavía.
+
+**`alerts.json`** — 2 polls espaciados 30 s:
+
+| Poll | Hora UTC | `header.timestamp` | Entidades |
+|---|---|---|---|
+| A | 15:43:34 | `1795016612` | 80 |
+| B | 15:44:04 | `1795016632` | 80 |
+
+Δ = 20 s, mismo recuento de entidades (sin cambios de contenido en esta ventana).
+
 ## 3. Hallazgo crítico: "C5" no es un identificador único en el feed nacional
 
 El feed **no está limitado a Madrid** — es nacional, cubre todos los núcleos de Cercanías de España. Confirmado con los 3 polls (~400 entidades cada uno, 28 códigos de línea distintos: `C1`–`C10`, `R1`–`R16`, `RG1`, `RL4`, `T1`).
@@ -134,9 +152,22 @@ transfers.txt       3 020 B
 trips.txt      19 817 542 B
 ```
 
-**No incluye `calendar_dates.txt`, `fare_*.txt` ni `shapes` por archivo separado de forma estándar GTFS completa** — el conjunto es mínimo pero funcional para rutas/paradas/horarios/calendario/geometría.
+**No incluye `calendar_dates.txt` ni `fare_*.txt`** — el conjunto es mínimo pero funcional para rutas/paradas/horarios/calendario/geometría (`shapes.txt` **sí está incluido**, ver tabla arriba — corrección: una versión anterior de este documento afirmaba erróneamente lo contrario).
 
-Cruce de identificadores confirmado: el `stop_id` del GTFS estático (p. ej. `35011` = "Parque Polvoranca", `35607` = "Móstoles-El Soto") **coincide exactamente** con el `stopId` observado en `vehicle_positions.json` en vivo, y sus coordenadas (40.31,-3.78 / 40.33,-3.88) coinciden con las posiciones reales capturadas. **El `trip_id` del feed en vivo (`1021X20869C5`) se construye como `<service_id del día><id de vehículo><línea>`** — el `service_id` `1021X` aparece literalmente en `calendar.txt` como servicio activo el miércoles `2026-11-18`. Esto resuelve una de las preguntas abiertas de MP-003: **sí es posible resolver `trip_id` del feed en vivo contra el GTFS estático**, pero no por coincidencia directa de `trip_id` contra `trips.txt` (los `trip_id` de `trips.txt` tienen un formato distinto, p. ej. `1024S36048C5`) — hay que resolver por `(service_id activo hoy, número de vehículo, línea)`, no por igualdad literal de cadena. Esto debe documentarse como regla de resolución en `packages/contracts/` (MP-005), no asumirse como un simple `JOIN`.
+Cruce de identificadores confirmado: el `stop_id` del GTFS estático (p. ej. `35011` = "Parque Polvoranca", `35607` = "Móstoles-El Soto") **coincide exactamente** con el `stopId` observado en `vehicle_positions.json` en vivo, y sus coordenadas (40.31,-3.78 / 40.33,-3.88) coinciden con las posiciones reales capturadas.
+
+**Corrección (hallazgo bloqueante de la revisión de Codex, verificado independientemente):** una versión anterior de este documento afirmaba que el `trip_id` del feed en vivo NO coincidía literalmente con `trips.txt` y que había que resolverlo por `(service_id, vehículo, línea)`. **Eso era incorrecto** — el error venía de un `grep` mal anclado (`^1021X20869C5,`) que asumía que `trip_id` era el primer campo de `trips.txt`, cuando en realidad es el **tercer** campo (`route_id,service_id,trip_id,...`). Verificado con una comparación de conjuntos completa:
+
+```text
+$ cut -d, -f3 trips.txt | sed 's/[[:space:]]*$//' | sort -u > static_tripids.txt
+$ <extraer trip_id de las 403 entidades de vehicle_positions.json> | sort -u > live_tripids.txt
+$ comm -12 live_tripids.txt static_tripids.txt | wc -l   # coinciden
+403
+$ comm -23 live_tripids.txt static_tripids.txt | wc -l   # solo en vivo, sin match
+0
+```
+
+**Resultado correcto: el `trip_id` del feed en vivo coincide literalmente, carácter a carácter, con el campo `trip_id` de `trips.txt` — 403/403 en esta muestra.** Es un `JOIN` directo por igualdad de cadena, sin necesidad de reconstrucción por `(service_id, vehículo, línea)`. Esta regla de resolución (correcta) debe documentarse en `packages/contracts/` (MP-005).
 
 ## 8. Actualización de `docs/legal/DATA_SOURCES.md`
 
@@ -144,7 +175,6 @@ Las filas marcadas `Disponibilidad y contrato: PENDING MP-003` para los tres fee
 
 ## 9. Pendiente explícito (no resuelto en esta tarea)
 
-- Cobertura real de `trip_updates` para Madrid en ventanas más largas (ver §5).
-- Medición de frecuencia de `trip_updates`/`alerts` (solo se probó `vehicle_positions` con múltiples polls).
+- Cobertura real de `trip_updates` para Madrid en ventanas más largas que las aquí medidas (ver §5) — una sola comparación de 2 polls no basta para concluir un patrón de cobertura.
 - Validación de `shapes.txt`/`stop_times.txt` específicos de las 5 variantes de `route_id` de C5 Madrid (se confirmó que existen y tienen volumen, no se validó su contenido detallado — corresponde a MP-010).
 - Comportamiento en cambio de día de servicio (medianoche) — no se probó en esta ventana de captura.

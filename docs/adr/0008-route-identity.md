@@ -12,7 +12,7 @@ El probe real de MP-003 (`docs/research/MP-003-probe-findings.md`) descubrió, m
 
 ## Decisión
 
-`route.source_route_id` (y cualquier filtro de ingesta/colector por línea) debe usar el **`route_id` completo** devuelto por Renfe (p. ej. `10T0047C5`), nunca el `route_short_name` (`"C5"`) en solitario. Para la C5 de Madrid existen **cinco** `route_id` distintos que deben tratarse como la misma línea comercial a efectos de producto (`10T0017C5`, `10T0018C5`, `10T0035C5`, `10T0047C5`, `10T0048C5` — variantes de sentido y de tramo corto/largo), agrupados bajo un único `route.id` interno con `short_name = "C5"` y una lista de `source_route_id` asociados, o bien un campo adicional `route_variant`.
+`route.source_route_id` (y cualquier filtro de ingesta/colector por línea) debe usar el **`route_id` completo** devuelto por Renfe (p. ej. `10T0047C5`), nunca el `route_short_name` (`"C5"`) en solitario. Para la C5 de Madrid existen **cinco** `route_id` distintos (`10T0017C5`, `10T0018C5`, `10T0035C5`, `10T0047C5`, `10T0048C5` — variantes de sentido y de tramo corto/largo). Dado que `UNIQUE(network_id, source_route_id)` exige una fila de `route` por cada `source_route_id`, **cada variante recibe su propia fila `route.id`**; la agrupación como "la misma línea comercial C5" se expresa mediante `short_name = "C5"` compartido entre esas cinco filas (todas con el mismo `network_id` = Madrid) — no mediante una lista de `source_route_id` dentro de una sola fila, que sería incompatible con la restricción `UNIQUE` existente. Cualquier consulta de producto que quiera "todos los trenes de la C5 de Madrid" debe agrupar por `(network_id, short_name)`, no asumir un único `route.id`.
 
 El prefijo de dos cifras del `route_id`/`service_id`/`trip_id` (`10` = Madrid, `20` = Asturias, `30`/`31`/`32` = Andalucía, etc. — tabla completa en los findings de MP-003) identifica el núcleo de Cercanías y debe usarse como filtro de ingesta para limitar el colector (MP-007) a Madrid, en vez de filtrar por texto de línea.
 
@@ -23,7 +23,7 @@ El prefijo de dos cifras del `route_id`/`service_id`/`trip_id` (`10` = Madrid, `
 
 ## Consecuencias
 
-- `docs/DATA_MODEL.md` debe actualizarse (hecho en esta misma tarea) para explicitar que `route.source_route_id` es el `route_id` completo del proveedor, con una nota sobre las 5 variantes de C5 Madrid.
+- `docs/DATA_MODEL.md` debe actualizarse (hecho en esta misma tarea) para explicitar que `route.source_route_id` es el `route_id` completo del proveedor, con una fila por variante y agrupación por `(network_id, short_name)` — no una lista de `source_route_id` en una sola fila.
 - `services/collector` (MP-007) debe filtrar por prefijo de núcleo `10`, no por subcadena `"C5"`.
-- `packages/contracts` (MP-005) debe resolver `trip_id` del feed en vivo contra `trips.txt` por `(service_id activo, número de vehículo, línea)`, no por igualdad literal de `trip_id` — ver findings §7.
+- `packages/contracts` (MP-005) resuelve `trip_id` del feed en vivo contra `trips.txt` por **igualdad literal de cadena** (confirmado 403/403 en MP-003, ver findings §7) — es un `JOIN` directo, no requiere reconstrucción por `(service_id, vehículo, línea)`.
 - Pendiente: el propietario revisa y promueve este ADR a `Aceptado` (o lo corrige) en el cierre de Hito 1, conforme a ADR-0007.

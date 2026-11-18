@@ -25,6 +25,12 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 - **"C5" no es un identificador único**: existe también en Asturias (`20T0011C5`, Gijón–Pola de Laviana) y Andalucía (`30T0009C5`, Jardines de Hércules–Benacazón) en el mismo feed nacional. Ver DEC-017.
 - Cobertura de `trip_updates` para Madrid fue 0/302 en el único poll realizado — pendiente de más muestreo antes de concluir nada (no se afirma que sea un problema sistemático).
 
+#### Fixed (tras 1ª revisión de Codex, dispatch `ctx_61d7dd4fd86b`)
+- **Bloqueante:** corregida la afirmación de que el `trip_id` en vivo no coincidía literalmente con `trips.txt`. Era falsa — causada por un `grep` propio anclado al campo equivocado (`trip_id` es el 3er campo del CSV, no el 1º). Verificado con comparación de conjuntos completa: 403/403 coinciden.
+- **Bloqueante:** corregida la cardinalidad imposible en `docs/DATA_MODEL.md` — `UNIQUE(network_id, source_route_id)` exige una fila `route.id` por cada una de las 5 variantes de C5 Madrid, no una fila con una lista de `source_route_id`. `docs/adr/0008-route-identity.md` actualizado igual.
+- **Menor:** corregida la afirmación falsa de que el GTFS estático no incluía `shapes.txt` (sí lo incluye).
+- **Menor:** medida la frecuencia real de `trip_updates` (Δ42s) y `alerts` (Δ20s) con 2 polls cada uno — antes solo se había medido `vehicle_positions`.
+
 ### MP-002 — Matriz de fuentes y licencias
 
 #### Changed

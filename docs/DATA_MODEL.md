@@ -35,8 +35,12 @@ route (dim_route)
                            -- "30"/"31"/"32"=Andalucía, etc.) — disambiguador verificado en MP-003.
   UNIQUE(network_id, source_route_id)
   -- La C5 de Madrid tiene 5 source_route_id distintos (variantes de sentido/tramo):
-  -- 10T0017C5, 10T0018C5, 10T0035C5, 10T0047C5, 10T0048C5 — todos agrupados bajo un único
-  -- route.id con short_name="C5" cuando pertenecen al mismo network_id (Madrid).
+  -- 10T0017C5, 10T0018C5, 10T0035C5, 10T0047C5, 10T0048C5. Por la restricción UNIQUE
+  -- anterior, cada uno ocupa su PROPIA fila route.id (5 filas, no 1) — la agrupación como
+  -- "la misma línea C5" se hace consultando por (network_id, short_name), nunca asumiendo
+  -- un único route.id por línea comercial. Ver ADR-0008 (corregido tras hallazgo de Codex
+  -- en la revisión de MP-003: la redacción anterior de este comentario era contradictoria
+  -- con el propio UNIQUE de arriba).
 
 station (dim_station)
   id PK
