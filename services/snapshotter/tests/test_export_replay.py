@@ -20,9 +20,12 @@ import unittest
 from datetime import date, datetime, timezone
 from pathlib import Path
 
+import json
+
 import duckdb
 import psycopg
 
+from packages.contracts.canonical import ServiceAlert
 from services.collector import db as collector_db
 from services.collector.config import CollectorConfig
 from services.snapshotter.config import SnapshotterConfig
@@ -34,6 +37,13 @@ TEST_SERVICE_DATE = date(2099, 1, 1)
 # ambigüedad de medianoche) -- deliberado para que este test no dependa de
 # la conversión de huso horario, que ya tiene su propio test en `export.py`.
 TEST_OBSERVED_AT = datetime(2099, 1, 1, 10, 0, tzinfo=timezone.utc)
+# Deliberadamente MUY lejos de TEST_SERVICE_DATE: regresión directa del
+# hallazgo real de la revisión de Codex en MP-009 (la primera entrega de esta
+# tarea particionaba `service_alert` por `active_period_start`, por lo que
+# alertas realmente ingeridas un día desaparecían si su vigencia caía en otra
+# fecha). El alert de este test debe aparecer en el export de
+# `TEST_SERVICE_DATE` PESE a que su `active_period_start` sea esta fecha.
+TEST_ALERT_ACTIVE_PERIOD_START = datetime(2020, 1, 1, tzinfo=timezone.utc)
 
 
 def _connect_or_skip() -> psycopg.Connection:
@@ -125,7 +135,45 @@ class ExportReplayTests(unittest.TestCase):
             self._cleanup_queries.append(
                 ("DELETE FROM trip_update_observation WHERE ingestion_run_id = %s", (run_id,))
             )
-        return {"vehicle_position_observation": 2, "trip_update_observation": 1}
+
+            alert = ServiceAlert(
+                source_alert_id="replay-test-alert-0",
+                active_period_start=TEST_ALERT_ACTIVE_PERIOD_START,
+                affected_route_ids=["10T0047C5"],
+                description_text="aviso de prueba de replay",
+                description_language="es",
+                payload_hash="3" * 64,
+            )
+            collector_db.insert_service_alert(self.conn, alert, ingestion_run_id=run_id)
+            self._cleanup_queries.append(
+                ("DELETE FROM service_alert WHERE ingestion_run_id = %s", (run_id,))
+            )
+
+            self.conn.execute(
+                """
+                INSERT INTO data_quality_event (occurred_at, entity_type, entity_ref, flag, details)
+                VALUES (%s, %s, %s, %s, %s)
+                """,
+                (
+                    TEST_OBSERVED_AT,
+                    "vehicle_position",
+                    "replay-test-vehicle-0",
+                    "stale",
+                    json.dumps({"synthetic": True}),
+                ),
+            )
+            self._cleanup_queries.append(
+                (
+                    "DELETE FROM data_quality_event WHERE entity_ref = %s",
+                    ("replay-test-vehicle-0",),
+                )
+            )
+        return {
+            "vehicle_position_observation": 2,
+            "trip_update_observation": 1,
+            "service_alert": 1,
+            "data_quality_event": 1,
+        }
 
     def test_exported_day_reconstructs_the_same_rows_without_loss(self) -> None:
         expected_counts = self._insert_known_day()
@@ -162,6 +210,27 @@ class ExportReplayTests(unittest.TestCase):
                 ).fetchall()
             ]
             self.assertEqual(exported_trip_ids, ["replay-test-trip-0"])
+
+            # Regresión directa del hallazgo de Codex: el alert aparece en el
+            # día en que se INGIRIÓ (TEST_SERVICE_DATE), no en el día de su
+            # `active_period_start` (2020-01-01, un año completamente distinto).
+            sa_path = results_by_table["service_alert"].output_path
+            exported_alert_ids = [
+                row[0]
+                for row in con.execute(
+                    f"SELECT source_alert_id FROM read_parquet('{sa_path}/**/*.parquet')"
+                ).fetchall()
+            ]
+            self.assertEqual(exported_alert_ids, ["replay-test-alert-0"])
+
+            dqe_path = results_by_table["data_quality_event"].output_path
+            exported_flags = [
+                row[0]
+                for row in con.execute(
+                    f"SELECT flag FROM read_parquet('{dqe_path}/**/*.parquet')"
+                ).fetchall()
+            ]
+            self.assertEqual(exported_flags, ["stale"])
         finally:
             con.close()
 

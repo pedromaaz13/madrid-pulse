@@ -34,18 +34,20 @@ Worktree/rama: `mp-009-historical-export`, ramificada desde `mp-008-quality-engi
 - [x] CLI (`python -m services.snapshotter YYYY-MM-DD`) probado de punta a punta contra PostgreSQL real.
 - [x] 64 tests reales en verde: 31 contratos + 6 fixtures + 9 colector + 13 calidad + 5 snapshotter.
 - [x] Identidad Git verificada; contenedor `madrid-pulse` detenido al finalizar la implementación (volumen real conservado); `*-traza-app` intactos.
+- [x] **Primera revisión independiente de Codex (dispatch `ctx_d2b95955a73a`): no aprobada** — reejecutó las 64 pruebas, confirmó la conversión Europe/Madrid y el export/gold reales, y encontró un bloqueante real: las 3 `service_alert` reales (ingeridas el 19-nov vía `ingestion_run` 78) desaparecían del export de ese día porque `export.py` particionaba `service_alert` por `active_period_start` (ventana de vigencia del aviso) en vez de por cuándo se observó — esa tabla no tiene columna propia de observación.
+- [x] Corregido uniendo `service_alert` a `source_ingestion_run` y usando `started_at` de esa ejecución; verificado revirtiendo el fix (el test ampliado falla `0 != 1` exactamente como reportó Codex) y restaurándolo (pasa). Reexportado el día real: `service_alert` pasa de 0 a 3 filas. Test de replay ampliado para cubrir las 5 tablas (antes solo 2).
 
 ### Resultado y límites
 
-El exportador mueve de verdad datos reales de PostgreSQL a Parquet particionado sin pérdida, con la trampa de huso horario (Europe/Madrid vs. UTC) encontrada y corregida con evidencia real, no solo teórica. El agregado gold queda deliberadamente acotado a núcleo (no a línea/estación) hasta que MP-010 resuelva las FK necesarias — documentado, no improvisado.
+El exportador mueve de verdad datos reales de PostgreSQL a Parquet particionado sin pérdida, con dos trampas reales encontradas y corregidas con evidencia, no solo teóricas: el huso horario Europe/Madrid vs. UTC, y la semántica temporal de `service_alert` (vigencia vs. observación). El agregado gold queda deliberadamente acotado a núcleo (no a línea/estación) hasta que MP-010 resuelva las FK necesarias — documentado, no improvisado.
 
 ### Bloqueos
 
-Ninguno. La limitación de alcance del agregado gold está documentada y no bloquea el criterio de aceptación real (replay sin pérdida de la capa raw).
+Ninguno abierto: el bloqueante real de la primera revisión de Codex (semántica temporal de `service_alert`) está corregido y verificado; la limitación de alcance del agregado gold está documentada y no bloquea el criterio de aceptación real (replay sin pérdida de la capa raw).
 
 ### Siguiente paso
 
-Codex debe auditar el diff y reejecutar la suite (incluido el test de replay) contra el mismo PostgreSQL antes de aprobar MP-009. Esta es la última tarea de Hito 1 (MP-002 → MP-009) — su cierre completa el hito autorizado.
+Codex debe verificar de forma independiente que el fix de `service_alert` resuelve su hallazgo (puede reexportar el día real `2026-11-19` y confirmar 3 filas de alertas) antes de aprobar. Esta es la última tarea de Hito 1 (MP-002 → MP-009) — su cierre completa el hito autorizado.
 
 ## Tareas cerradas de la cadena
 
@@ -376,6 +378,9 @@ Esta rama se bifurcó de `chore/mp-001-foundation` en el commit `3e7b533`, **ant
 | `2026-11-19` | MP-008 | Motor de cinco reglas implementado e integrado transaccionalmente en el colector; umbrales calibrables documentados y reglas geométricas diferidas explícitamente a MP-012 | `packages/quality/`; `services/collector/` |
 | `2026-11-19` | MP-008 | Suite completa ejecutada contra PostgreSQL real: 59/59 (31 contratos + 6 fixtures + 9 colector + 13 calidad), incluidos 10 casos mínimos disparo/no-disparo, medianoche UTC y persistencia/feed congelado con rollback. Tarea pasa a `REVIEW` para Claude Code | `packages/quality/tests/`; dispatch `ctx_63638731fde4` |
 | `2026-11-19` | MP-008 | Revisión independiente de Claude Code: 59/59 reproducidas contra el mismo PostgreSQL real; diseño auditado. Hallazgo empírico no bloqueante: 12/117 pares reales de posiciones consecutivas del soak test disparan `implausible_speed` (246–787 km/h) — saltos reales de posición, no bug de cálculo; registrado para calibración en MP-012. **APROBADA**. Tarea pasa a `DONE` | commit `c3db20b`; commit de revisión pendiente |
+| `2026-11-19` | MP-009 | Exportador DuckDB implementado; hallazgo real de huso horario (Europe/Madrid vs. UTC) encontrado y corregido antes de delegar; export real del 19-nov (1272 filas, ~76 KB ZSTD) y test de replay verificados; tarea pasa a `REVIEW`, delegada a Codex en este mismo worktree | `services/snapshotter/`; commit `0119c6a` |
+| `2026-11-19` | MP-009 | Primera revisión de Codex: no aprobada — bloqueante real reproducido (3 `service_alert` reales desaparecían del export por particionar por `active_period_start` en vez de por observación real vía `ingestion_run_id`) | dispatch `ctx_d2b95955a73a` |
+| `2026-11-19` | MP-009 | Corregido uniendo `service_alert` a `source_ingestion_run`; replay ampliado a las 5 tablas; verificado revirtiendo el fix (falla `0≠1` como reportó Codex) y restaurándolo; reexportado el día real: `service_alert` pasa de 0 a 3; reenviado a Codex para segunda verificación | — |
 
 ## Cómo usar este documento
 

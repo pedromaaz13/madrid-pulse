@@ -20,6 +20,9 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 - Test de replay real: día de prueba conocido insertado y COMPROMETIDO (no `rollback()` — DuckDB usa su propia conexión `libpq`), exportado, verificado fila a fila, y limpiado explícitamente (`finally`).
 - Suite completa: 64/64 pruebas en verde (31 contratos + 6 fixtures + 9 colector + 13 calidad + 5 snapshotter).
 
+#### Fixed after Codex review (first round, blocking)
+- `services/snapshotter/export.py`: `service_alert` no tiene columna propia de observación/recepción; se particionaba por `active_period_start` (la ventana de VIGENCIA del aviso), por lo que 3 alertas reales ingeridas el 19-nov desaparecían de ese día si su vigencia caía en otra fecha. Corregido uniendo `service_alert` a `source_ingestion_run` (vía `ingestion_run_id`) y usando `started_at` de esa ejecución como el momento de observación real. `test_export_replay.py` ampliado para cubrir las 5 tablas (antes solo `vehicle_position_observation`/`trip_update_observation`); verificado revirtiendo el fix (falla `0 ≠ 1` exactamente como reportó Codex) y restaurándolo. Reexportado el día real: `service_alert` pasa de 0 a 3 filas.
+
 #### Known limitation (documented, not blocking)
 - El resumen gold calcula por núcleo, no por `route_id`/`station_id` (`daily_line_metrics`/`station_daily_metrics`): esa resolución depende de MP-010 (GTFS estático), que no es dependencia de MP-009. Ver DEC-021.
 

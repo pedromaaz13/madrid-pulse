@@ -272,8 +272,10 @@ Cada tarea se trabaja en **un único worktree/rama** (`mp-00X-nombre-corto`), co
     export + resumen gold de punta a punta contra el PostgreSQL real.
   - 64 tests reales en verde: 31 contratos + 6 fixtures + 9 colector + 13
     calidad + 5 snapshotter (3 puros de huso horario + 2 de replay real).
-- **Estado:** `REVIEW` — implementado por Claude Code el 2026-11-19;
-  pendiente de revisión independiente de OpenAI Codex en este mismo worktree.
+  - **Primera revisión independiente de Codex (dispatch `ctx_d2b95955a73a`): no aprobada — 1 bloqueante real y reproducible.** Repitió las 64 pruebas, confirmó la conversión Europe/Madrid, reprodujo el export real (668/484/120/0) y el resumen gold (668/24/484/24), y verificó que `test_export_replay.py` limpiaba de verdad sus filas. Encontró que las 3 `service_alert` reales del `ingestion_run` 78 (ingeridas el `2026-11-18 23:31:55Z`, día local 19-nov) desaparecían del export del 19-nov porque `export.py` particionaba `service_alert` por `active_period_start` — la ventana de VIGENCIA del aviso, no el momento en que se observó. `service_alert` no tiene ninguna columna propia de observación/recepción.
+  - Corregido uniendo `service_alert` a `source_ingestion_run` (vía `ingestion_run_id`) y usando `started_at` de esa ejecución como el momento de observación real, igual que el resto de tablas. Verificado revirtiendo el fix temporalmente: el test ampliado (ahora cubre las 5 tablas, no solo 2) falla exactamente con `service_alert: 0 != 1`, y pasa con el fix restaurado. Reexportado el día real `2026-11-19`: `service_alert` pasa de 0 a **3** filas, el resto sin cambios (668/484/120/0). 64 tests en verde tras el fix (mismo total; 2 tests existentes ampliados, no se añadieron archivos nuevos).
+- **Estado:** `REVIEW` — bloqueante de la primera revisión de Codex corregido y verificado por Claude Code el 2026-11-19;
+  pendiente de segunda verificación independiente de OpenAI Codex en este mismo worktree.
 
 ---
 
