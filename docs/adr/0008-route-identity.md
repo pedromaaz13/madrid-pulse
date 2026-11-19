@@ -1,6 +1,6 @@
 # ADR-0008: `route_id` completo, no el código de línea, como identificador de ruta
 
-- **Estado:** `Propuesto` — aplicado provisionalmente en MP-003 bajo el régimen de autonomía de ADR-0007; pendiente de revisión y promoción a `Aceptado` por el propietario en el cierre de Hito 1.
+- **Estado:** `Propuesto` — aplicado provisionalmente en MP-003 bajo el régimen de autonomía de ADR-0007; pendiente de revisión y promoción a `Aceptado` por el propietario. **Corrección de MP-015:** el cierre real de Hito 1 (fusión a `main`, 2026-11-19) ocurrió sin que el propietario promoviera este ADR — la revisión pendiente pasa al cierre de Hito 2.
 - **Fecha:** 2026-11-18
 - **Decisores (propuesta):** Claude Code (ejecutor de MP-003); pendiente de aprobación del propietario.
 
@@ -26,7 +26,7 @@ El prefijo de dos cifras del `route_id`/`service_id`/`trip_id` (`10` = Madrid, `
 - `docs/DATA_MODEL.md` debe actualizarse (hecho en esta misma tarea) para explicitar que `route.source_route_id` es el `route_id` completo del proveedor, con una fila por variante y agrupación por `(network_id, short_name)` — no una lista de `source_route_id` en una sola fila.
 - `services/collector` (MP-007) debe filtrar por prefijo de núcleo `10`, no por subcadena `"C5"`.
 - `packages/contracts` (MP-005) resuelve `trip_id` del feed en vivo contra `trips.txt` por **igualdad literal de cadena** (confirmado 403/403 en MP-003, ver findings §7) — es un `JOIN` directo, no requiere reconstrucción por `(service_id, vehículo, línea)`.
-- Pendiente: el propietario revisa y promueve este ADR a `Aceptado` (o lo corrige) en el cierre de Hito 1, conforme a ADR-0007.
+- Pendiente: el propietario revisa y promueve este ADR a `Aceptado` (o lo corrige), conforme a ADR-0007 — en el cierre de Hito 2 (ver corrección en el campo `Estado`).
 
 ## Adenda (MP-007, 2026-11-18): formato `SPECIAL_<núcleo>_<resto>` y alcance real implementado
 

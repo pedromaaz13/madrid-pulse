@@ -24,7 +24,7 @@ Renfe GTFS-Realtime (vehicle_positions,              │
         └──► Parquet diario particionado (histórico frío)
                      │
                      ▼
-              DuckDB + dbt (analytics/)
+              DuckDB (analytics/, disciplina dbt sin el motor literal)
                      │
               métricas/agregados permanentes
                      │
@@ -56,8 +56,8 @@ Almacena el estado operativo actual y el histórico "caliente" de corto plazo. S
 ### Parquet + R2/object storage
 Histórico frío, particionado diariamente (`date=YYYY-MM-DD/hour=HH` para `raw`, `date=YYYY-MM-DD` para `silver`/`gold`). Se eligió Parquet columnar porque el análisis histórico (Explore) es predominantemente agregado y por línea/estación/fecha, no por fila individual — el formato columnar y la partición diaria permiten escanear solo lo necesario. Cloudflare R2 se señala como candidato por no cobrar egress y por el tamaño estimado del histórico (ver `docs/DECISIONS.md`, DEC-011), pero no se contrata durante MP-001 a MP-006.
 
-### DuckDB + dbt (`analytics/`)
-Motor analítico local sobre los Parquet para transformar silver → gold (métricas diarias por línea/estación) con disciplina dbt (staging/intermediate/marts, tests, documentación, lineage) aunque dbt-core no se use necesariamente de forma literal desde el día uno — a decidir en MP-009.
+### DuckDB (`analytics/` + `services/snapshotter/gold.py`)
+Motor analítico local sobre los Parquet para transformar silver → gold (métricas diarias por núcleo/línea/estación) con disciplina dbt (staging/intermediate/marts, tests, documentación, lineage) — decidido en MP-015 (DEC-034): dbt-core/dbt-duckdb no se introduce como motor literal, la disciplina se aplica directamente en `services/snapshotter/gold.py` (ver `analytics/dbt/README.md` para el detalle).
 
 ### FastAPI (`apps/api`)
 API propia versionada (`/api/v1/*`), nunca un passthrough de la API de Renfe ni de proyectos de terceros. Expone vehículos en vivo, salud de feed, líneas, estaciones e histórico, siempre con metadatos de frescura/calidad (ver `docs/DATA_CONTRACTS.md`). FastAPI se eligió por tipado con Pydantic (coherente con el contrato canónico interno), generación automática de OpenAPI y ecosistema async maduro para I/O concurrente (polling + servir peticiones).

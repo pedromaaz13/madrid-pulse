@@ -11,20 +11,18 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 - `services/snapshotter/tests/test_gold.py` (9 tests, sin PostgreSQL, fixture GTFS real con calendario de un solo día) y una extensión real de `test_export_replay.py` (PostgreSQL real). 112/112 tests Python en verde.
 - DEC-034: decisión documentada de no introducir dbt-core/dbt-duckdb como herramienta literal — `gold.py` ya aplica la disciplina dbt (capas, tests, documentación) sin el motor dbt, consistente con DEC-021. `analytics/dbt/README.md`/`analytics/duckdb/README.md` actualizados para reflejar esto.
 
-#### Verified
-- Corrida real end-to-end (`python -m services.snapshotter 2026-11-19`) contra el soak completo ya existente en PostgreSQL: 3 filas en `daily_line_metrics` (una por variante de ruta C5 con trips programados ese día), 18 en `station_daily_metrics`, sin datos fabricados. PostgreSQL restaurado exactamente a `668/484/3/120/0` tras el test de replay.
-
 - `.github/workflows/ci.yml`: job Python (PostgreSQL de servicio, migraciones aplicadas desde cero, suite real) y job frontend (lint/typecheck/test/build); nunca toca Renfe/CRTM/OSM en vivo. Verificado de verdad contra un contenedor PostgreSQL recién creado, no solo contra la base de desarrollo (DEC-035).
 - `tests/e2e/test_replay.py`: replay E2E determinista — inyecta bytes de fixtures reales como respuesta del `fetcher` real del colector, recorriendo la cadena completa sin red en vivo (JSON crudo con forma de Renfe → colector → PostgreSQL real → resolución GTFS → API real). Dos escenarios: la fixture de MP-004 (nunca fabrica una resolución) y un payload sintético con forma real para un trip de la GTFS reducida (resuelve `route_id`/posición de extremo a extremo).
 
 #### Fixed
 - DEC-035: 5 tests (`test_export_replay.py`, `test_collector_cycle.py`, `test_persistence.py`, `test_real_soak_postgres.py`) usaban `CollectorConfig()` en vez de `CollectorConfig.from_env()`, ignorando silenciosamente `MADRID_PULSE_DATABASE_URL` — nunca se notaba porque el valor por defecto coincidía con el de desarrollo local. Encontrado al verificar la suite contra un PostgreSQL recién creado (no la base de desarrollo). Los tests atados al soak real irrepetible de MP-007 (668 filas/24 vehículos) ahora hacen `skip` explícito y documentado, no `fail`, cuando ese histórico puntual no está presente.
+- Auditoría de contenido de los 12 ADRs contra la implementación real (ningún `Estado` cambiado — esa promoción sigue siendo decisión exclusiva del propietario). 6 corregidos: ADR-0002 (CRTM verificado por licencia pero nunca integrado — solo Renfe se implementó), ADR-0003/ADR-0004 (eliminan la implicación de dbt-core literal y corrigen la nomenclatura real de campos de posición: `position.mode`, no `position_mode`; sin `source` público), ADR-0008/0009/0010 (la referencia "pendiente... en el cierre de Hito 1" ya pasó sin promoción el 2026-11-19 — corregida a "cierre de Hito 2", igual que `docs/adr/README.md` y `docs/DECISIONS.md`). `docs/ARCHITECTURE.md`/`docs/PLAN.md` corregidos para no implicar dbt-core literal (DEC-034).
 
 #### Verified
-- 114/114 tests Python en verde contra la base de desarrollo real (sin ningún `skip`); 109 en verde + 5 `skip` explícitos contra un PostgreSQL recién creado con las migraciones aplicadas desde cero, simulando exactamente lo que hace CI. Frontend: lint/typecheck/5 tests/build en verde.
+- 114/114 tests Python en verde contra la base de desarrollo real (sin ningún `skip`); 109 en verde + 5 `skip` explícitos contra un PostgreSQL recién creado con las migraciones aplicadas desde cero, simulando exactamente lo que hace CI. Frontend: lint/typecheck/5 tests/build en verde. Corrida real end-to-end del exportador (`python -m services.snapshotter 2026-11-19`) contra el soak completo: 3 filas en `daily_line_metrics`, 18 en `station_daily_metrics`, sin datos fabricados. PostgreSQL restaurado exactamente a `668/484/3/120/0` en todos los casos.
 
 #### In progress
-- Resto del checklist (auditoría de ADRs, checklist de MVP) — ver `docs/STATUS.md`.
+- Checklist de preparación de MVP — ver `docs/STATUS.md`.
 
 ### MP-014 — Frontend React/MapLibre C5
 

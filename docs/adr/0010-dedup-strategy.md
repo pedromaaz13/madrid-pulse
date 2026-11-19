@@ -1,6 +1,6 @@
 # ADR-0010: Estrategia de deduplicación del colector
 
-- **Estado:** `Propuesto` — aplicado provisionalmente en MP-007 bajo el régimen de autonomía de ADR-0007. Codex (revisor de MP-007) audita y aprueba o rechaza su contenido técnico como parte de la revisión de la tarea; eso no equivale a promoverlo a `Aceptado` — **solo el propietario** puede hacerlo, en el cierre de Hito 1.
+- **Estado:** `Propuesto` — aplicado provisionalmente en MP-007 bajo el régimen de autonomía de ADR-0007. Codex (revisor de MP-007) audita y aprueba o rechaza su contenido técnico como parte de la revisión de la tarea; eso no equivale a promoverlo a `Aceptado` — **solo el propietario** puede hacerlo. **Corrección de MP-015:** el cierre real de Hito 1 (fusión a `main`, 2026-11-19) ocurrió sin que el propietario promoviera este ADR — la revisión pendiente pasa al cierre de Hito 2.
 - **Fecha:** 2026-11-19
 - **Decisores (propuesta):** Claude Code (ejecutor de MP-007); auditado por Codex como revisor; promoción a `Aceptado` pendiente exclusivamente del propietario.
 
@@ -27,4 +27,4 @@
 - `services/collector/db.py` expone `latest_payload_hash(conn, tabla, clave)` como única consulta de lectura antes de cada posible inserción.
 - El test de idempotencia de MP-007 (`services/collector/tests/`) verifica contra la base real que un mismo payload repetido produce una sola fila almacenada, no dos.
 - Si una fase posterior necesita `seen_count` o una métrica de "última vez vista sin cambios", requerirá una migración adicional y una revisión de este ADR — no se improvisa sin verificar antes.
-- Pendiente: Codex (revisor de MP-007) audita el contenido técnico de este ADR; **solo el propietario** puede promoverlo a `Aceptado`, en el cierre de Hito 1.
+- Pendiente: Codex (revisor de MP-007) audita el contenido técnico de este ADR; **solo el propietario** puede promoverlo a `Aceptado` — en el cierre de Hito 2 (ver corrección en el campo `Estado`).
