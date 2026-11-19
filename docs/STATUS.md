@@ -4,7 +4,7 @@
 
 ## Hito autorizado actualmente
 
-**Hito 1 autorizado por el propietario el `2026-11-18`: `MP-002` → `MP-009`.**
+**Hito 1 — `MP-002` → `MP-009`: completado, aprobado por revisión cruzada el `2026-11-19`, y fusionado a `main` por el propietario (`pedromaaz13`) el `2026-11-19`.** PR #1 (`mp-009-historical-export` → `main`), commit de merge `f567d3c`. Confirmado: `git merge-base --is-ancestor 8be1272 f567d3c` → `0` (el último commit de la cadena MP-009 es ancestro de `main`; nada quedó sin integrar).
 
 ```text
 Cobertura: F1 (factibilidad) + F2 (contratos) + F3 (persistencia/colector) + F4 (calidad/histórico)
@@ -13,9 +13,36 @@ Cadena: MP-002 → MP-003 → MP-004 → MP-005 → MP-006 → MP-007 → MP-008
 Gates activos: decisiones reales de licencia o coste, conforme a ADR-0007.
 ```
 
-MP-001 está `DONE`: Codex aprobó la revisión cruzada y, conforme a ADR-0007, no es necesario que la rama esté fusionada en `main` para que una tarea dependiente avance.
+MP-001 está `DONE`: Codex aprobó la revisión cruzada y, conforme a ADR-0007, no fue necesario que la rama estuviera fusionada en `main` para que una tarea dependiente avanzara. La rama paralela `chore/mp-001-foundation` (bitácora administrativa parcial, superada por el registro completo de la cadena `mp-00X`, ver nota de proceso más abajo) y los 9 worktrees `mp-002` a `mp-009` se conservan intactos tal como exige el propietario — ninguno se ha borrado.
 
-**Hito 1 completado el `2026-11-19`: MP-002 → MP-009 están `DONE` tras revisión cruzada.** Queda pendiente que el propietario decida los siguientes pasos y autorice un nuevo hito; no debe iniciarse MP-010 ni ninguna tarea fuera del rango ya autorizado hasta recibir esa autorización.
+**Hito 2 autorizado por el propietario el `2026-11-19`: `MP-010` → `MP-015` ("Live Railway MVP").**
+
+```text
+Cobertura: F5 (geometría y topología) + F6 (motor de movimiento) + F7 (API) + F8 (frontend) + F9 (E2E/readiness)
+Objetivo de salida: primera app local funcional mostrando la C5 en vivo — topología GTFS real, geometría OSM,
+  motor de movimiento con cuatro estados, API /api/v1 propia, frontend React/MapLibre, E2E + CI.
+Tabla ejecutor/revisor (fijada por el propietario, coherente con docs/TASKS.md):
+  MP-010 Topología GTFS      → Ejecutor Codex   · Revisor Claude
+  MP-011 Geometrías OSM      → Ejecutor Claude   · Revisor Codex
+  MP-012 Motor de movimiento → Ejecutor Codex   · Revisor Claude
+  MP-013 FastAPI             → Ejecutor Claude   · Revisor Codex
+  MP-014 React/MapLibre      → Ejecutor Codex   · Revisor Claude
+  MP-015 E2E y MVP readiness → Ejecutor Claude   · Revisor Codex
+Gates activos: decisiones reales de licencia o coste, conforme a ADR-0007. Además, por instrucción explícita
+  del propietario para este hito: ningún push/PR/merge se ejecuta sin solicitar autorización en el momento
+  (revierte, para Hito 2, la autorización puntual ya consumida en el cierre de Hito 1 — ver AGENTS.md).
+No se avanza fuera de MP-010→MP-015 sin nueva autorización explícita (p. ej. no se implementa la red completa
+  de Cercanías Madrid en este hito — eso es Hito 3, solo backlog de planificación, ver docs/PLAN.md F10 y la
+  bitácora de este documento).
+```
+
+### Política de selección de modelo (Hito 2, fijada por el propietario)
+
+- **Modelo principal: Claude Sonnet, esfuerzo de razonamiento alto** — por defecto para coordinación en Orca, implementación ordinaria, desarrollo de API/frontend, tests automatizados y revisiones cruzadas rutinarias.
+- **Escalado: Claude Opus, esfuerzo de razonamiento alto** — solo con justificación técnica concreta (geometría/arquitectura geoespacial compleja, resolución ambigua de topología ferroviaria, algoritmos de map-matching/movimiento, errores persistentes que Sonnet no resuelve, decisiones arquitectónicas de alto impacto, revisión avanzada de UX/rendimiento/arquitectura frontend). Nunca se escala solo porque una tarea "parece importante" sin evaluar primero si Sonnet basta.
+- **Verificación empírica realizada el `2026-11-19` (no se asumió ni inventó ningún identificador):** `orca orchestration worker-start --help` confirma que `--model`/`--effort` son parámetros reales y soportados para lanzar un agente Claude (`--model` acepta "opaque provider model ids"; `--effort` requiere `--model`). El identificador verificado empíricamente para "Sonnet" es `sonnet` y para "Opus" es `opus` (documentado como ejemplo real por Orca: `--model opus --effort high`); el esfuerzo de razonamiento se pasa como `--effort high`.
+- **Discrepancia señalada al propietario:** el encargo nombra "Claude Sonnet 5.5" / "Claude Opus 5.5 High" como modelos. El contexto de entorno de esta sesión solo confirma la existencia de **Sonnet 5** y **Opus 5** (además de Haiku 4.5) como los modelos Claude más recientes disponibles — no se ha podido verificar ningún identificador "5.5". Siguiendo la instrucción explícita de no inventar identificadores, los workers de Hito 2 se lanzan con `--model sonnet --effort high` (por defecto) y `--model opus --effort high` (escalado), que son los identificadores reales confirmados, no una invención de "5.5".
+- Codex: se usa el modelo/nivel de razonamiento disponible más adecuado, priorizando razonamiento alto para geometría, movimiento, contratos e integración, conforme a los roles ya fijados en `docs/TASKS.md`.
 
 ## Auditoría independiente de preparación para integración
 
@@ -31,6 +58,14 @@ Evidencia reproducida de forma independiente:
 - Enlaces: 48 enlaces relativos Markdown comprobados en el repositorio, 0 rotos. `docs/TASKS.md` marca MP-001 → MP-009 como `DONE`; este documento declara el Hito 1 completado y prohíbe iniciar MP-010 sin autorización nueva; `docs/CHANGELOG.md` conserva el historial de las nueve tareas.
 
 **Veredicto de integración:** `mp-009-historical-export` está preparada para que el propietario la integre en `main`; no se identificaron omisiones, pérdida documental, problemas de autoría ni bloqueantes técnicos. Los tres avisos de whitespace en fixtures son los únicos hallazgos abiertos y no son bloqueantes.
+
+## Resolución de DEC-015 (mecánica de convergencia de ramas, antes de MP-012)
+
+**Resuelto el `2026-11-19`, documentado aquí y en `docs/DECISIONS.md`/`AGENTS.md`.** La pregunta abierta era qué rama usar como base y cómo integrar las demás cuando una tarea depende de varias ramas potencialmente distintas (caso previsto: MP-012 depende de MP-008, MP-010 y MP-011).
+
+Con Hito 1 ya fusionado a `main`, el caso concreto de MP-012 **deja de requerir una fusión real de ramas divergentes**: MP-008 ya es ancestro de `main` (se fusionó como parte de la cadena MP-002→MP-009). Si MP-010 y MP-011 se ramifican a partir de `main` (o de una rama que a su vez parte de `main`, como esta misma `chore/hito-2-coordination`), entonces la cadena resultante — `main → MP-010 → MP-011` — ya contiene a MP-008 de forma transitiva. MP-012 puede ramificar simplemente desde la rama de MP-011 sin ningún `git merge` real: sus tres dependencias (MP-008, MP-010, MP-011) son todas ancestros de ese punto.
+
+**Mecanismo general (para este y futuros casos de convergencia múltiple), registrado en `AGENTS.md`:** antes de abrir el worktree de una tarea con varias dependencias directas, comprobar con `git merge-base --is-ancestor <dependencia> <candidata-a-base>` si cada dependencia ya es ancestro de la rama candidata a base (normalmente la más "profunda" en la cadena). Si todas lo son, se ramifica directamente desde esa rama — no hace falta fusión. Solo si una dependencia **no** es ancestro de la otra (p. ej. dos ramas que de verdad divergieron sin que ninguna absorbiera a la otra vía `main`) se necesita una fusión real (`git merge` de la rama no-ancestro sobre la rama base elegida, documentando el resultado y cualquier conflicto en `docs/STATUS.md` antes de continuar). Este hito no necesita ese caso general porque la estructura tras el merge de Hito 1 ya lo evita.
 
 ## Tarea actual
 
@@ -400,6 +435,12 @@ Esta rama se bifurcó de `chore/mp-001-foundation` en el commit `3e7b533`, **ant
 | `2026-11-19` | MP-009 | Primera revisión de Codex: no aprobada — bloqueante real reproducido (3 `service_alert` reales desaparecían del export por particionar por `active_period_start` en vez de por observación real vía `ingestion_run_id`) | dispatch `ctx_d2b95955a73a` |
 | `2026-11-19` | MP-009 | Corregido uniendo `service_alert` a `source_ingestion_run`; replay ampliado a las 5 tablas; verificado revirtiendo el fix (falla `0≠1` como reportó Codex) y restaurándolo; reexportado el día real: `service_alert` pasa de 0 a 3; reenviado a Codex para segunda verificación | — |
 | `2026-11-19` | MP-009 / Hito 1 | Segunda revisión independiente de Codex aprobada: replay ampliado 2/2, limpieza completa, export real 668/484/3/120/0 y tres alertas confirmadas en Parquet. MP-009 pasa a `DONE`; Hito 1 (`MP-002` → `MP-009`) completo, pendiente de decisión del propietario sobre el siguiente hito | dispatch `ctx_095ae1499806` |
+| `2026-11-19` | Hito 1 | Auditoría independiente de Codex (dispatch no registrado como `ctx_` en esta rama, ver worktree `mp-009-historical-export`): **APROBADA**, sin bloqueantes. Propietario crea PR #1 (`mp-009-historical-export` → `main`) y lo fusiona él mismo | PR #1; commit de merge `f567d3c` |
+| `2026-11-19` | Hito 2 | Propietario autoriza explícitamente `MP-010` → `MP-015` ("Live Railway MVP"), fija la tabla ejecutor/revisor, la política de selección de modelo y los límites de autonomía (sin push/PR/merge sin autorización puntual; identidad Git exclusiva del propietario; sin coautores de agente) | mensaje de autorización del propietario, `2026-11-19` |
+| `2026-11-19` | Hito 2 | Sincronización inicial: `git fetch`/`git pull --ff-only` confirma `main` local al día con `origin/main`; verificado que `8be1272` (tope de `mp-009-historical-export`) es ancestro de `f567d3c`, sin commits perdidos. Verificación empírica (no asumida) de que `orca orchestration worker-start --model/--effort` son parámetros reales para Claude; identificadores confirmados `sonnet`/`opus` (no existe un "5.5" verificable en este entorno) | `agent-context.json`; `worker-start --help` |
+| `2026-11-19` | Hito 2 | DEC-015 resuelto: con Hito 1 ya en `main`, la convergencia de MP-012 (MP-008+MP-010+MP-011) no requiere `git merge` real — basta ramificar la cadena MP-010→MP-011 desde una rama que ya contenga a `main` (y por tanto a MP-008) como ancestro; mecanismo general documentado en `AGENTS.md` para casos futuros con divergencia real | este documento; `AGENTS.md` |
+| `2026-11-19` | Hito 2 | ADR-0011 (`Propuesto`) redactado: distingue el piloto técnico de Hito 2 (C5) del objetivo de primera versión pública (toda la red de Cercanías Madrid), sin reescribir ADR-0001 (`Aceptado`) — amplía su alcance de implementación sin contradecir su decisión ya aceptada | `docs/adr/0011-public-scope-vs-technical-pilot.md` |
+| `2026-11-19` | Hito 2 | Worktrees de MP-010 (ejecutor Codex) y, tras su cierre, MP-011 (ejecutor Claude Code) preparados ramificando desde esta rama de coordinación (`chore/hito-2-coordination`, a su vez ramificada desde `main`) | `docs/TASKS.md` |
 
 ## Cómo usar este documento
 
