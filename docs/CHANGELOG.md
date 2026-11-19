@@ -21,6 +21,9 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 - `services/collector/db.py`: una versión anterior envolvía cada `INSERT` en su propio `with conn.transaction()`; con una conexión de larga duración, esto dejaba filas de observación sin comprometer indefinidamente mientras `source_ingestion_run` sí persistía (detectado verificando con una conexión nueva, no confiando en la ausencia de excepción). Corregido centralizando el límite de transacción en `run_cycle` (todo el ciclo se compromete como una unidad).
 - Tests de integración: `addCleanup` en orden LIFO cerraba la conexión antes de poder hacer `rollback()`; corregido el orden de registro.
 
+#### Fixed after Codex review (first round, blocking)
+- `services/collector/db.py`: `latest_payload_hash` ordenaba solo por `observed_at DESC` sin desempate; dos filas de la misma entidad con `observed_at` empatado (ese timestamp lo reporta la fuente, no nuestro poll) hacían que Postgres devolviera una fila arbitraria, insertando una fila duplicada real en vez de deduplicar (reproducido por Codex: `(1, 6)` en vez de `(0, 7)` en el tercer ciclo de una secuencia inicial→cambio→repetición). Corregido con `id DESC` como desempate secundario en las 3 consultas de `_LATEST_HASH_QUERIES`; test de regresión `test_tied_observed_at_does_not_break_dedup_on_third_cycle` verificado contra el fix revertido (falla igual que reportó Codex) y restaurado (pasa).
+
 #### Known limitation (documented, not blocking)
 - El filtro de ingesta descarta por núcleo (Madrid), no todavía por línea C5 específicamente (ADR-0001, `Aceptado`) — ver DEC-020. Acotar a C5 exige la resolución `trip_id` → `route_id` vía el GTFS estático, asignada explícitamente a MP-010 por ADR-0009.
 

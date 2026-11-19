@@ -113,6 +113,44 @@ class VehiclePositionIdempotencyTests(unittest.TestCase):
         self.assertEqual(second.inserted_count, 1)
         self.assertEqual(second.deduped_count, first.inserted_count - 1)
 
+    def test_tied_observed_at_does_not_break_dedup_on_third_cycle(self) -> None:
+        """Regresión (hallazgo real de la revisión de Codex en MP-007,
+        reproducido de forma independiente): la fixture no cambia el campo
+        `timestamp` de la entidad al simular un cambio real, así que el
+        `observed_at` del ciclo 1 y el ciclo 2 (cambiado) quedan EMPATADOS
+        para el mismo vehículo. Sin un desempate determinista en
+        `latest_payload_hash` (`ORDER BY observed_at DESC` sin más), un
+        tercer ciclo que repite el payload cambiado podía compararse contra
+        la fila vieja (empatada) en vez de la nueva, insertando una fila
+        duplicada en vez de deduplicar. `id DESC` como desempate lo corrige."""
+        fetcher = lambda url, timeout: self.body  # noqa: E731
+        first = run_cycle(self.feed, self.conn, _POLICY, fetcher=fetcher)
+
+        payload = json.loads(self.body)
+        payload["entity"][0]["vehicle"]["currentStatus"] = "IN_TRANSIT_TO"
+        changed_body = json.dumps(payload).encode("utf-8")
+        changed_fetcher = lambda url, timeout: changed_body  # noqa: E731
+
+        second = run_cycle(self.feed, self.conn, _POLICY, fetcher=changed_fetcher)
+        self.assertEqual((second.inserted_count, second.deduped_count), (1, first.inserted_count - 1))
+
+        third = run_cycle(self.feed, self.conn, _POLICY, fetcher=changed_fetcher)
+        self.assertEqual(
+            (third.inserted_count, third.deduped_count),
+            (0, first.inserted_count),
+            "repetir el mismo payload cambiado no debe insertar una fila nueva",
+        )
+
+        changed_vehicle_id = json.loads(self.body)["entity"][0]["vehicle"]["vehicle"]["id"]
+        with self.conn.cursor() as cur:
+            cur.execute(
+                "SELECT count(*) FROM vehicle_position_observation "
+                "WHERE source_vehicle_id = %s AND ingestion_run_id IN (%s, %s, %s)",
+                (changed_vehicle_id, first.run_id, second.run_id, third.run_id),
+            )
+            (rows_for_vehicle,) = cur.fetchone()
+        self.assertEqual(rows_for_vehicle, 2, "1 fila del estado inicial + 1 del cambio, nunca 3")
+
 
 class FetchFailureHandlingTests(unittest.TestCase):
     def setUp(self) -> None:

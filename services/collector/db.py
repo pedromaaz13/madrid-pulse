@@ -59,19 +59,31 @@ def insert_ingestion_run(
 
 
 # Las tres tablas de observación comparten la misma forma de dedup: la fila
-# más reciente (por `observed_at`) para la misma clave de entidad de origen.
+# más reciente para la misma clave de entidad de origen.
+#
+# Hallazgo real de la revisión de Codex en MP-007 (reproducido de forma
+# independiente, no solo reportado): `ORDER BY observed_at DESC` por sí solo
+# NO es determinista cuando dos filas comparten el mismo `observed_at` --
+# ese timestamp es el que reporta la propia fuente (el tren/el feed), no el
+# instante de nuestro poll, así que dos polls consecutivos con cambios reales
+# pueden perfectamente compartir el mismo `observed_at`. Sin un desempate,
+# Postgres puede devolver cualquiera de las filas empatadas, y un tercer poll
+# que repite el payload cambiado puede compararse contra la fila VIEJA en vez
+# de la nueva, insertando una fila duplicada en vez de deduplicar. `id DESC`
+# como desempate secundario es monotónico con el orden real de inserción y
+# resuelve el empate de forma determinista.
 _LATEST_HASH_QUERIES = {
     "vehicle_position_observation": (
         "SELECT payload_hash FROM vehicle_position_observation "
-        "WHERE source_vehicle_id = %s ORDER BY observed_at DESC LIMIT 1"
+        "WHERE source_vehicle_id = %s ORDER BY observed_at DESC, id DESC LIMIT 1"
     ),
     "trip_update_observation": (
         "SELECT payload_hash FROM trip_update_observation "
-        "WHERE source_trip_id = %s ORDER BY observed_at DESC LIMIT 1"
+        "WHERE source_trip_id = %s ORDER BY observed_at DESC, id DESC LIMIT 1"
     ),
     "service_alert": (
         "SELECT payload_hash FROM service_alert "
-        "WHERE source_alert_id = %s ORDER BY active_period_start DESC LIMIT 1"
+        "WHERE source_alert_id = %s ORDER BY active_period_start DESC, id DESC LIMIT 1"
     ),
 }
 

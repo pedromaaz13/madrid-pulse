@@ -36,6 +36,8 @@ Worktree/rama: `mp-007-collector`, ramificada desde `mp-006-postgis-schema` (MP-
 - [x] **1 bug de transacciones corregido antes de producción:** `with conn.transaction()` por `INSERT` individual, con una conexión de larga duración, dejaba `vehicle_position_observation` sin comprometer mientras `source_ingestion_run` sí persistía — detectado verificando con una conexión nueva, no confiando en la ausencia de excepción. Corregido centralizando la transacción en `run_cycle`.
 - [x] **Hallazgo de alcance documentado, no bloqueante** (DEC-020): el filtro descarta por núcleo (Madrid), no todavía por línea C5 específica (ADR-0001 `Aceptado`) — acotar a C5 requiere la resolución `trip_id`→`route_id` de MP-010.
 - [x] Identidad Git verificada en cada commit; contenedor `madrid-pulse` detenido al finalizar (volumen con los datos reales del soak test conservado); `*-traza-app` intactos.
+- [x] **Primera revisión independiente de Codex (dispatch `ctx_a674a371ce8a`): no aprobada** — reejecutó las 45 pruebas, reprodujo en vivo `SPECIAL_`/`ADDED` y encontró un bloqueante real: `latest_payload_hash` sin desempate (`ORDER BY observed_at DESC` solo) producía una fila duplicada real en su reproducción de 3 ciclos (`(1, 6)` en vez de `(0, 7)` en el tercer ciclo) cuando dos filas de la misma entidad comparten `observed_at`.
+- [x] Corregido con `id DESC` como desempate secundario en las 3 consultas de `_LATEST_HASH_QUERIES`; verificado revirtiendo el fix temporalmente y confirmando que el nuevo test (`test_tied_observed_at_does_not_break_dedup_on_third_cycle`) falla exactamente como reportó Codex y pasa con el fix restaurado. 46 tests en verde.
 
 ### Resultado y límites
 
@@ -43,11 +45,11 @@ El colector ingiere y deduplica de verdad contra el feed en vivo de Renfe, con e
 
 ### Bloqueos
 
-Ninguno (los dos puntos de alcance pendientes están documentados, no bloquean el cierre de MP-007 según los criterios de aceptación de `docs/TASKS.md`).
+Ninguno abierto: el bloqueante real encontrado por la primera revisión de Codex (dedup no determinista) está corregido y verificado; los dos puntos de alcance documentados no bloquean el cierre de MP-007 según los criterios de aceptación de `docs/TASKS.md`.
 
 ### Siguiente paso
 
-Codex debe auditar el diff y repetir las comprobaciones pertinentes en este mismo worktree (incluida la verificación independiente de que los commits no persisten datos sin comprometer). MP-007 no pasa a `DONE` hasta esa aprobación independiente.
+Codex debe verificar de forma independiente que el fix de `id DESC` resuelve su hallazgo (puede reproducir su propio escenario de 3 ciclos) antes de aprobar. MP-007 no pasa a `DONE` hasta esa segunda verificación.
 
 ## Tareas cerradas de la cadena
 
@@ -292,6 +294,8 @@ Esta rama se bifurcó de `chore/mp-001-foundation` en el commit `3e7b533`, **ant
 | `2026-11-19` | MP-006 | Revisión independiente de Claude Code: ciclo `up/down/up` reproducido desde cero en el worktree, 3 `UNIQUE` rechazados de verdad, 2 `GIST` confirmados, ausencia de campos no observados verificada, suites de regresión reejecutadas (23/23, 6/6), 46 enlaces sin romper. **APROBADA**. Hallazgo de proceso: `STATUS.md` había perdido el checklist completo de MP-005 al no archivarlo antes de escribir el de MP-006; corregido en la misma revisión. Tarea pasa a `DONE` | commit `30507cf`; commit de revisión pendiente |
 | `2026-11-18T23:31Z–23:51Z` | MP-007 | Soak test real de 20 min contra los 3 feeds en vivo: 40 ciclos, 0 errores, 1155 insertadas/304 dedup/2622 fuera de alcance; durabilidad confirmada con conexión `psql` nueva | `services/collector/`; log del soak test |
 | `2026-11-18` | MP-007 | 3 hallazgos reales corregidos (trip_id `SPECIAL_`, `arrival` sin `delay`, `entity` ausente) y 1 bug de transacciones corregido antes de producción (commits parciales con conexión de larga duración); tarea pasa a `REVIEW`, delegada a Codex en este mismo worktree | `packages/contracts/nucleo.py`; `packages/contracts/raw.py`; `services/collector/db.py` |
+| `2026-11-19` | MP-007 | Primera revisión de Codex: no aprobada — bloqueante real reproducido (dedup no determinista por `observed_at` empatado, fila duplicada real en reproducción de 3 ciclos) | dispatch `ctx_a674a371ce8a` |
+| `2026-11-19` | MP-007 | Corregido con `id DESC` como desempate en `_LATEST_HASH_QUERIES`; verificado revirtiendo el fix y confirmando que el test de regresión reproduce exactamente el fallo reportado y pasa con el fix restaurado; reenviado a Codex para segunda verificación | — |
 
 ## Cómo usar este documento
 

@@ -172,8 +172,10 @@ Cada tarea se trabaja en **un único worktree/rama** (`mp-00X-nombre-corto`), co
   - **Hallazgo de alcance documentado, no bloqueante:** el filtro de ingesta descarta por núcleo (`nucleo_prefix == "10"`, Madrid) pero no acota todavía a la línea C5 específicamente, que es el alcance real de ADR-0001 (`Aceptado`). Ver DEC-020/ADR-0008 (adenda). Acotar a C5 exige resolver `trip_id` → `route_id` vía el GTFS estático, trabajo asignado explícitamente a MP-010 por ADR-0009.
   - `ADR-0010` (nuevo, `Propuesto`): estrategia de deduplicación — hash canónico completo de la entidad comparado contra la última fila almacenada por clave de entidad de origen, sin `seen_count`.
   - Identidad Git verificada en cada commit (`Pedro Matute`, sin coautores); contenedor `madrid-pulse` detenido al finalizar (`docker compose ... down`, sin `--volumes`: el volumen con los datos reales del soak test se conserva); contenedores `*-traza-app` confirmados intactos antes y después.
-- **Estado:** `REVIEW` — implementación completada por Claude Code el 2026-11-19;
-  pendiente de revisión independiente de OpenAI Codex en este mismo worktree.
+  - **Primera revisión independiente de Codex (dispatch `ctx_a674a371ce8a`): no aprobada — 1 bloqueante real y reproducible.** Repitió las 45 pruebas, auditó transacciones/alcance/secretos/identidad Git/enlaces, y reprodujo en vivo (`curl` directo) los hallazgos de `SPECIAL_`/`ADDED`. Encontró que `latest_payload_hash` (`db.py`) ordenaba solo por `observed_at DESC` sin desempate: cuando dos filas de la misma entidad comparten `observed_at` (plausible porque ese timestamp lo reporta la fuente, no nuestro poll), Postgres puede devolver cualquiera de las filas empatadas sin garantía de orden. En su reproducción de 3 ciclos (inicial → cambio con mismo `observed_at` → repetición del cambio) obtuvo `(1, 6)` en el tercer ciclo en vez de `(0, 7)`: una fila duplicada real para el vehículo 19705, no solo un riesgo teórico.
+  - Corregido añadiendo `id DESC` como desempate secundario en las tres consultas de `_LATEST_HASH_QUERIES`. Verificado revirtiendo el fix temporalmente y confirmando que el nuevo test de regresión (`test_tied_observed_at_does_not_break_dedup_on_third_cycle`) falla exactamente con `(1, 6)` como reportó Codex, y pasa `(0, 7)` con el fix restaurado. 46 tests en verde tras el fix (45 + 1 nuevo).
+- **Estado:** `REVIEW` — bloqueante de la primera revisión de Codex corregido y verificado por Claude Code el 2026-11-19;
+  pendiente de segunda verificación independiente de OpenAI Codex en este mismo worktree.
 
 ---
 
