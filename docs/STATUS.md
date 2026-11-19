@@ -71,7 +71,7 @@ Con Hito 1 ya fusionado a `main`, el caso concreto de MP-012 **deja de requerir 
 
 **MP-015 — E2E y readiness MVP**
 
-Ejecutor: Claude Code · Revisor: OpenAI Codex · Estado: **IN_PROGRESS**
+Ejecutor: Claude Code · Revisor: OpenAI Codex · Estado: **REVIEW**
 
 Worktree/rama: `mp-015-e2e-readiness`, ramificada desde `mp-014-frontend` (MP-014 `DONE`). Dependencias MP-009/MP-012/MP-013 confirmadas como ancestros de `mp-014-frontend` con `git merge-base --is-ancestor` antes de ramificar (mismo mecanismo que DEC-015).
 
@@ -95,34 +95,44 @@ Orden de trabajo elegido (cada paso se implementa, se prueba de verdad y se docu
 - [x] **CI real (DEC-035):** `.github/workflows/ci.yml` — job Python (PostgreSQL de servicio, migraciones desde cero, suite real) + job frontend (lint/typecheck/test/build). Verificado de verdad en ambos sentidos: 114/114 contra la base de desarrollo (sin `skip`), 109 + 5 `skip` explícitos contra un contenedor PostgreSQL fresco simulando CI exactamente. Hallazgo real corregido en el proceso: 5 tests usaban `CollectorConfig()` en vez de `.from_env()`, ignorando `MADRID_PULSE_DATABASE_URL` en silencio.
 - [x] **Replay E2E determinista (`tests/e2e/test_replay.py`):** inyecta bytes de fixtures reales como respuesta del `fetcher` del colector real — JSON crudo con forma de Renfe → colector → PostgreSQL real → resolución GTFS → API real, sin red en vivo. Dos escenarios reales: la fixture de MP-004 (nunca fabrica una resolución) y un payload sintético con forma real para un trip que sí existe en la GTFS reducida (resuelve `route_id`/posición de extremo a extremo).
 - [x] **Auditoría de contenido de los 12 ADRs completa (sin cambiar ningún `Estado` a `Aceptado`):** 6 ADRs corregidos. ADR-0002: aclara que CRTM quedó verificado por licencia pero nunca integrado (solo Renfe se implementó). ADR-0003/ADR-0004: eliminan la implicación de dbt-core literal / corrigen la nomenclatura real de campos (`position.mode`, no `position_mode`; sin `source` público). ADR-0008/0009/0010: corrigen la referencia obsoleta "pendiente... en el cierre de Hito 1" (ese cierre ya ocurrió el 2026-11-19 sin promoción) a "cierre de Hito 2", igual que `docs/adr/README.md` y `docs/DECISIONS.md` (DEC-017/DEC-013). `docs/ARCHITECTURE.md`/`docs/PLAN.md` también corregidos para no implicar dbt-core literal (DEC-034). Los otros 6 ADRs (0001, 0005, 0006, 0007, 0011, 0012) se verificaron contra la implementación real sin encontrar drift.
-- [ ] Checklist de preparación de MVP para aceptación del propietario.
-- [ ] `docs/TASKS.md`/`docs/STATUS.md`/`docs/CHANGELOG.md`/`docs/DATA_CONTRACTS.md`/`docs/DECISIONS.md` actualizados con evidencia real.
+- [x] **Checklist de preparación de MVP (`docs/MVP_READINESS.md`):** resumen ejecutivo del cumplimiento del objetivo de Hito 2, demo local reproducible, estado real de tests, principios de datos verificados, hallazgos clave, límites conocidos documentados y pendientes exclusivos de gobernanza del propietario. También recuperado `docs/HITO_3_BACKLOG.md` (Sección 7 de la autorización) desde la rama `chore/hito-2-coordination`, que había divergido de la cadena `mp-010`→`mp-015` y se habría perdido al fusionar a `main` sin traerlo explícitamente.
+- [x] `docs/TASKS.md`/`docs/STATUS.md`/`docs/CHANGELOG.md`/`docs/DATA_CONTRACTS.md`/`docs/DECISIONS.md` actualizados con evidencia real.
 
 ### Resultado y límites
 
-Fases 1-2 completas: métricas gold reales + CI + replay E2E. Verificación
-ejecutada: 114/114 tests Python contra la base de desarrollo (102 previos +
-10 de la fase 1 + 2 de E2E replay); contra un PostgreSQL recién creado
-(migraciones aplicadas desde cero, simulando CI) 109 en verde + 5 `skip`
-explícitos y documentados (dependen del soak real irrepetible de MP-007,
-DEC-035). Frontend: lint/typecheck/5 tests/build en verde. PostgreSQL
-restaurado exactamente a `668/484/3/120/0` en todos los casos. Corrida real
-end-to-end del exportador (`python -m services.snapshotter 2026-11-19`
-contra el soak completo): 3 líneas, 18 estaciones, sin filas fabricadas.
-Límites documentados en DEC-033 (calendario sin excepciones, umbral de
-puntualidad calibrable, sin `data_quality_events_count` por estación) y
-DEC-035 (alcance real de CI: la suite de replay/contrato es reproducible
-desde cero; los tests atados al histórico puntual de MP-007 no lo son por
-diseño y se saltan explícitamente, nunca fallan en silencio ni se declaran
-superados sin ejecutarse).
+Implementación completa, lista para revisión cruzada de Codex. Resumen de
+las seis fases: (1) `daily_line_metrics`/`station_daily_metrics` reales
+(DEC-033); (2) CI real + replay E2E determinista, con un hallazgo real
+corregido en el proceso (DEC-035, 5 tests ignoraban
+`MADRID_PULSE_DATABASE_URL`); (3) auditoría de contenido de los 12 ADRs, 6
+corregidos, ningún `Estado` cambiado; (4) `docs/MVP_READINESS.md` y
+recuperación de `docs/HITO_3_BACKLOG.md` desde una rama divergente que se
+habría perdido al fusionar.
+
+Verificación ejecutada: 114/114 tests Python contra la base de desarrollo
+(102 previos + 10 de la fase 1 + 2 de E2E replay); contra un PostgreSQL
+recién creado (migraciones aplicadas desde cero, simulando CI) 109 en verde
++ 5 `skip` explícitos y documentados (dependen del soak real irrepetible de
+MP-007, DEC-035). Frontend: lint/typecheck/5 tests/build en verde.
+PostgreSQL restaurado exactamente a `668/484/3/120/0` en todos los casos.
+Corrida real end-to-end del exportador (`python -m services.snapshotter
+2026-11-19` contra el soak completo): 3 líneas, 18 estaciones, sin filas
+fabricadas. Límites documentados en DEC-033 (calendario sin excepciones,
+umbral de puntualidad calibrable, sin `data_quality_events_count` por
+estación) y DEC-035 (alcance real de CI: la suite de replay/contrato es
+reproducible desde cero; los tests atados al histórico puntual de MP-007 no
+lo son por diseño y se saltan explícitamente, nunca fallan en silencio ni se
+declaran superados sin ejecutarse).
 
 ### Bloqueos
 
-Ninguno conocido hasta ahora.
+Ninguno conocido. Pendiente de revisión cruzada real de Codex antes de `DONE`.
 
 ### Siguiente paso
 
-Al completarse y ser aprobada por Codex (revisor), MP-015 cierra la cadena del Hito 2. El propietario decide la auditoría de integración final y el momento de fusionar a `main`.
+Delegado a Codex (revisor) para auditoría cruzada en este mismo worktree. Al
+aprobarse, MP-015 cierra la cadena del Hito 2. El propietario decide la
+auditoría de integración final y el momento de fusionar a `main`.
 
 ## Tareas cerradas de la cadena
 

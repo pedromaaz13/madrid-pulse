@@ -21,8 +21,12 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 #### Verified
 - 114/114 tests Python en verde contra la base de desarrollo real (sin ningún `skip`); 109 en verde + 5 `skip` explícitos contra un PostgreSQL recién creado con las migraciones aplicadas desde cero, simulando exactamente lo que hace CI. Frontend: lint/typecheck/5 tests/build en verde. Corrida real end-to-end del exportador (`python -m services.snapshotter 2026-11-19`) contra el soak completo: 3 filas en `daily_line_metrics`, 18 en `station_daily_metrics`, sin datos fabricados. PostgreSQL restaurado exactamente a `668/484/3/120/0` en todos los casos.
 
+#### Added
+- `docs/MVP_READINESS.md`: checklist de cierre de Hito 2 para la aceptación del propietario — cumplimiento del objetivo declarado, demo local reproducible, estado real de tests (ambos escenarios), principios de datos verificados con evidencia, hallazgos clave, límites conocidos documentados y pendientes exclusivos de gobernanza.
+- `docs/HITO_3_BACKLOG.md` recuperado desde `chore/hito-2-coordination` (redactado en una sesión anterior por instrucción explícita del propietario, Sección 7 de la autorización de Hito 2) — había divergido de la cadena `mp-010`→`mp-015` y se habría perdido al fusionar a `main` sin traerlo explícitamente a este worktree. Actualizado con un pointer a DEC-033 (las métricas por línea que planificaba como pendientes ya están resueltas para C5).
+
 #### In progress
-- Checklist de preparación de MVP — ver `docs/STATUS.md`.
+- MP-015 pasa a `REVIEW`, pendiente de auditoría cruzada de Codex — ver `docs/STATUS.md`.
 
 ### MP-014 — Frontend React/MapLibre C5
 

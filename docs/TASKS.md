@@ -384,8 +384,8 @@ Cada tarea se trabaja en **un único worktree/rama** (`mp-00X-nombre-corto`), co
 - **Entregables:** replay E2E completo, pipeline CI configurado y verde, checklist de MVP documentado, ADRs reconciliados con la implementación final.
 - **Criterios de aceptación:** checklist de MVP superado y aceptado por el propietario; ningún ADR describe algo distinto de lo implementado.
 - **Pruebas necesarias:** suite E2E completa + CI.
-- **Evidencia de verificación:** resultado de CI + checklist firmado.
-- **Estado:** `IN_PROGRESS` — worktree `mp-015-e2e-readiness` abierto (ramificado desde `mp-014-frontend`, MP-014 `DONE`); dependencias MP-009/MP-012/MP-013 confirmadas como ancestros. Ver `docs/STATUS.md` → "Tarea actual" para el checklist y el orden de trabajo elegido.
+- **Evidencia de verificación:** `daily_line_metrics`/`station_daily_metrics` reales (DEC-033), CI real verificado dos veces (base de desarrollo: 114/114 sin `skip`; PostgreSQL recién creado simulando CI: 109 + 5 `skip` explícitos, DEC-035), replay E2E determinista (`tests/e2e/test_replay.py`, dos escenarios reales), auditoría de contenido de los 12 ADRs (6 corregidos, ningún `Estado` cambiado), `docs/MVP_READINESS.md` y recuperación de `docs/HITO_3_BACKLOG.md` desde una rama divergente. Detalle completo en `docs/STATUS.md` → "Tarea actual".
+- **Estado:** `REVIEW` — implementación de Claude Code lista para auditoría independiente de Codex en el mismo worktree.
 
 ---
 
