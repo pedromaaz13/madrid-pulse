@@ -193,7 +193,32 @@ Cada tarea se trabaja en **un único worktree/rama** (`mp-00X-nombre-corto`), co
 - **Criterios de aceptación:** cada regla tiene al menos un test con caso real o fixture que la dispara y uno que no la dispara (falso positivo controlado).
 - **Pruebas necesarias:** suite de tests de reglas de calidad.
 - **Evidencia de verificación:** 59 pruebas reales ejecutadas en verde: 31 contratos, 6 fixtures, 9 colector y 13 calidad. La suite de calidad incluye al menos disparo + falso positivo controlado para cada uno de los 5 flags, caso UTC de cambio de día y 2 integraciones PostgreSQL con rollback (persistencia atómica de `quality_flags`/`data_quality_event` y feed idéntico que solo dispara `duplicate_snapshot` tras 181s, no en el poll normal inicial). `implausible_speed` usa Haversine entre posiciones consecutivas del mismo vehículo; los casos anómalos no presentes en fixtures están identificados explícitamente como sintéticos. Contenedor `madrid-pulse-postgres-1` dejado levantado y saludable para revisión; volumen real conservado, `*-traza-app` intactos.
-- **Estado:** `REVIEW` — implementado por OpenAI Codex el 2026-11-19; pendiente de revisión independiente de Claude Code en este mismo worktree.
+- **Revisión independiente de Claude Code (2026-11-19): APROBADA.** Reproducida de
+  forma propia en el mismo worktree: 59/59 pruebas reejecutadas contra el
+  PostgreSQL real (los mismos 668/484/3/120 registros del soak test de MP-007,
+  intactos antes y después — `data_quality_event` seguía en 0 porque el
+  motor no existía durante ese soak). Revisados `engine.py`/`db.py`/
+  `collector.py`: separación limpia reglas-puras/persistencia, transacción
+  atómica correcta (reutiliza el patrón `id DESC` de MP-007 en las nuevas
+  consultas de historial), `duplicate_snapshot` correctamente distinto de la
+  deduplicación normal de MP-007, `implausible_speed` sin depender de
+  `speed_kmh` de origen (ausente, ADR-0009).
+  **Hallazgo empírico documentado, no bloqueante:** se repitieron 117 pares
+  reales de posiciones consecutivas del soak test de MP-007 contra
+  `check_implausible_speed`; 12/117 (~10%) dispararon con velocidades
+  implícitas de 246–787 km/h, físicamente imposibles para un tren de
+  Cercanías. Inspeccionada la secuencia completa del vehículo `21053`:
+  son saltos reales entre filas ya almacenadas (no duplicadas, 20–40s de
+  separación, varios km de distancia), no un error en el cálculo de
+  Haversine. Indica que el feed en vivo de Renfe actualiza la posición en
+  saltos más gruesos de lo que el cadencia de poll (~20-30s) sugiere, no
+  como GPS continuo — un hallazgo real sobre la fuente, no un defecto del
+  motor. El umbral de `200 km/h` ya estaba documentado como "a calibrar, no
+  verdad de diseño" (ver `QualityThresholds`); esta evidencia debe
+  considerarse explícitamente al calibrarlo en MP-012, registrada aquí para
+  no perderse.
+- **Estado:** `DONE` (aprobado el 2026-11-19). MP-009 puede ramificar desde
+  `mp-008-quality-engine` sin esperar merge a `main`.
 
 ---
 

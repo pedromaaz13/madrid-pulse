@@ -17,9 +17,17 @@ MP-001 está `DONE`: Codex aprobó la revisión cruzada y, conforme a ADR-0007, 
 
 ## Tarea actual
 
+**MP-009 — Exportador histórico (Parquet particionado)**
+
+Ejecutor: Claude Code · Revisor: OpenAI Codex · Estado: **TODO** (pendiente de dispatch)
+
+Worktree/rama: a crear como `mp-009-historical-export`, ramificada desde `mp-008-quality-engine` (MP-008 `DONE`)
+
+## Tareas cerradas de la cadena
+
 **MP-008 — Quality engine**
 
-Ejecutor: OpenAI Codex · Revisor: Claude Code · Estado: **REVIEW**
+Ejecutor: OpenAI Codex · Revisor: Claude Code · Estado: **DONE** (aprobado el 2026-11-19)
 
 Worktree/rama: `mp-008-quality-engine`, ramificada desde `mp-007-collector` (MP-007 `DONE`)
 
@@ -35,6 +43,20 @@ Worktree/rama: `mp-008-quality-engine`, ramificada desde `mp-007-collector` (MP-
 - [x] Suite completa ejecutada: **59/59** (31 contratos + 6 fixtures + 9 colector + 13 calidad), todas `OK`.
 - [x] Casos anómalos ausentes de las fixtures reales marcados explícitamente como sintéticos; no se presentan como observados.
 - [x] Contenedor `madrid-pulse-postgres-1` dejado levantado para la revisión, volumen real conservado; contenedores `*-traza-app` verificados intactos.
+- [x] **Revisión independiente de Claude Code (2026-11-19): APROBADA.** Reproducidas
+  59/59 pruebas contra el mismo PostgreSQL real (668/484/3/120 registros del
+  soak test de MP-007, intactos). Revisado el diseño (reglas puras vs.
+  persistencia, transacción atómica, reutilización del patrón `id DESC` de
+  MP-007 en el historial de calidad).
+  **Hallazgo empírico documentado, no bloqueante:** al repetir 117 pares
+  reales de posiciones consecutivas del soak test contra
+  `check_implausible_speed`, 12/117 (~10%) dispararon con velocidades
+  implícitas de 246–787 km/h. Inspección de la secuencia del vehículo
+  `21053` confirmó que son saltos reales entre filas ya almacenadas (20-40s,
+  varios km), no un error de cálculo — indica que Renfe actualiza posición
+  en saltos más gruesos que el cadencia de poll, no como GPS continuo.
+  Registrado para considerarlo al calibrar el umbral en MP-012 (ya
+  documentado como "a calibrar, no verdad de diseño").
 
 ### Resultado y límites
 
@@ -42,13 +64,11 @@ El motor queda integrado antes de persistir para aprovechar los objetos canónic
 
 ### Bloqueos
 
-Ninguno. Los umbrales requieren calibración operativa futura, tal como exige `docs/DATA_QUALITY.md`, pero no bloquean el punto de partida probado.
+Ninguno. Los umbrales requieren calibración operativa futura (ver hallazgo de `implausible_speed` arriba), tal como exige `docs/DATA_QUALITY.md`, pero no bloquean el punto de partida probado.
 
 ### Siguiente paso
 
-Claude Code debe auditar el diff y reejecutar la suite contra el mismo PostgreSQL antes de aprobar MP-008. Solo entonces podrá pasar a `DONE` y habilitar MP-009.
-
-## Tareas cerradas de la cadena
+MP-008 está `DONE`. MP-009 puede ramificar desde `mp-008-quality-engine` sin esperar merge a `main`, conforme al hito autorizado y ADR-0007.
 
 **MP-007 — Collector idempotente**
 
@@ -331,6 +351,7 @@ Esta rama se bifurcó de `chore/mp-001-foundation` en el commit `3e7b533`, **ant
 | `2026-11-19` | MP-007 | Segunda revisión independiente de Codex: test específico y suite completa (46/46) reejecutados contra PostgreSQL real; fix de desempate confirmado. **APROBADA**. MP-007 pasa a `DONE` | dispatch `ctx_801574c4ef71`; commit de revisión pendiente |
 | `2026-11-19` | MP-008 | Motor de cinco reglas implementado e integrado transaccionalmente en el colector; umbrales calibrables documentados y reglas geométricas diferidas explícitamente a MP-012 | `packages/quality/`; `services/collector/` |
 | `2026-11-19` | MP-008 | Suite completa ejecutada contra PostgreSQL real: 59/59 (31 contratos + 6 fixtures + 9 colector + 13 calidad), incluidos 10 casos mínimos disparo/no-disparo, medianoche UTC y persistencia/feed congelado con rollback. Tarea pasa a `REVIEW` para Claude Code | `packages/quality/tests/`; dispatch `ctx_63638731fde4` |
+| `2026-11-19` | MP-008 | Revisión independiente de Claude Code: 59/59 reproducidas contra el mismo PostgreSQL real; diseño auditado. Hallazgo empírico no bloqueante: 12/117 pares reales de posiciones consecutivas del soak test disparan `implausible_speed` (246–787 km/h) — saltos reales de posición, no bug de cálculo; registrado para calibración en MP-012. **APROBADA**. Tarea pasa a `DONE` | commit `c3db20b`; commit de revisión pendiente |
 
 ## Cómo usar este documento
 

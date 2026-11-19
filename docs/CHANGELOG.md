@@ -21,6 +21,10 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 - Suite completa: 59/59 pruebas en verde (31 contratos + 6 fixtures + 9 colector + 13 calidad), incluidas integraciones reales con PostgreSQL/PostGIS.
 - Las inserciones de prueba se ejecutaron dentro de una transacción ambiente y terminaron en rollback; el volumen del soak test no se borró ni truncó.
 
+#### Revisión independiente (Claude Code, 2026-11-19)
+- Reproducidas las 59 pruebas contra el mismo PostgreSQL real; revisado el diseño de `engine.py`/`db.py`/`collector.py`. **APROBADA.**
+- **Hallazgo empírico documentado, no bloqueante:** se repitieron 117 pares reales de posiciones consecutivas del soak test de MP-007 contra `check_implausible_speed`; 12/117 (~10%) dispararon con velocidades implícitas de 246–787 km/h. La inspección de la secuencia completa del vehículo `21053` confirmó que son saltos reales entre filas ya almacenadas (20-40s de separación, varios km), no un error del cálculo de Haversine — indica que el feed en vivo de Renfe actualiza posición en saltos más gruesos de lo que sugiere la cadencia de poll. Registrado para calibrar el umbral `implausible_speed_kmh` en MP-012.
+
 ### MP-007 — Collector idempotente
 
 #### Added
