@@ -17,6 +17,39 @@ MP-001 está `DONE`: Codex aprobó la revisión cruzada y, conforme a ADR-0007, 
 
 ## Tarea actual
 
+**MP-008 — Quality engine**
+
+Ejecutor: OpenAI Codex · Revisor: Claude Code · Estado: **REVIEW**
+
+Worktree/rama: `mp-008-quality-engine`, ramificada desde `mp-007-collector` (MP-007 `DONE`)
+
+### Checklist de MP-008
+
+- [x] Cinco flags del `CHECK` de MP-006 implementados: `stale`, `implausible_speed`, `missing_id`, `duplicate_snapshot`, `clock_anomaly`.
+- [x] Reglas puras en `packages/quality/engine.py`, separadas de red/BD; capa PostgreSQL en `packages/quality/db.py`.
+- [x] Umbrales calibrables y nombrados: stale 180s, velocidad 200km/h, feed congelado 180s, drift de reloj 300s; documentados como puntos de partida, no contrato de Renfe.
+- [x] Velocidad implícita calculada por Haversine entre posiciones consecutivas del mismo vehículo, sin usar `speed_kmh` de origen.
+- [x] `duplicate_snapshot` opera sobre el hash completo del feed sostenido en el tiempo; dos polls normales iguales no disparan la regla.
+- [x] Eventos y `quality_flags` persistidos dentro de la misma transacción atómica del colector; flags de feed no se atribuyen falsamente a una observación.
+- [x] 13 tests de calidad: al menos disparo + falso positivo por cada regla, rollover UTC de medianoche y dos integraciones PostgreSQL reales con rollback.
+- [x] Suite completa ejecutada: **59/59** (31 contratos + 6 fixtures + 9 colector + 13 calidad), todas `OK`.
+- [x] Casos anómalos ausentes de las fixtures reales marcados explícitamente como sintéticos; no se presentan como observados.
+- [x] Contenedor `madrid-pulse-postgres-1` dejado levantado para la revisión, volumen real conservado; contenedores `*-traza-app` verificados intactos.
+
+### Resultado y límites
+
+El motor queda integrado antes de persistir para aprovechar los objetos canónicos de MP-005 y conservar atomicidad con MP-007, sin duplicar el colector. Las reglas geométricas `off_track`, `backward_jump` y `station_skip_anomaly` siguen diferidas a MP-012: requieren map-matching y no caben en el `CHECK` actual.
+
+### Bloqueos
+
+Ninguno. Los umbrales requieren calibración operativa futura, tal como exige `docs/DATA_QUALITY.md`, pero no bloquean el punto de partida probado.
+
+### Siguiente paso
+
+Claude Code debe auditar el diff y reejecutar la suite contra el mismo PostgreSQL antes de aprobar MP-008. Solo entonces podrá pasar a `DONE` y habilitar MP-009.
+
+## Tareas cerradas de la cadena
+
 **MP-007 — Collector idempotente**
 
 Ejecutor: Claude Code · Revisor: OpenAI Codex · Estado: **DONE** (aprobado el 2026-11-19)
@@ -51,8 +84,6 @@ Ninguno. El bloqueante real encontrado por la primera revisión de Codex (dedup 
 ### Siguiente paso
 
 MP-007 está `DONE`. MP-008 puede abrir su worktree desde `mp-007-collector` conforme al hito autorizado y al modelo de autonomía de ADR-0007, sin esperar merge a `main`.
-
-## Tareas cerradas de la cadena
 
 **MP-006 — Esquema PostgreSQL/PostGIS v1**
 
@@ -298,6 +329,8 @@ Esta rama se bifurcó de `chore/mp-001-foundation` en el commit `3e7b533`, **ant
 | `2026-11-19` | MP-007 | Primera revisión de Codex: no aprobada — bloqueante real reproducido (dedup no determinista por `observed_at` empatado, fila duplicada real en reproducción de 3 ciclos) | dispatch `ctx_a674a371ce8a` |
 | `2026-11-19` | MP-007 | Corregido con `id DESC` como desempate en `_LATEST_HASH_QUERIES`; verificado revirtiendo el fix y confirmando que el test de regresión reproduce exactamente el fallo reportado y pasa con el fix restaurado; reenviado a Codex para segunda verificación | — |
 | `2026-11-19` | MP-007 | Segunda revisión independiente de Codex: test específico y suite completa (46/46) reejecutados contra PostgreSQL real; fix de desempate confirmado. **APROBADA**. MP-007 pasa a `DONE` | dispatch `ctx_801574c4ef71`; commit de revisión pendiente |
+| `2026-11-19` | MP-008 | Motor de cinco reglas implementado e integrado transaccionalmente en el colector; umbrales calibrables documentados y reglas geométricas diferidas explícitamente a MP-012 | `packages/quality/`; `services/collector/` |
+| `2026-11-19` | MP-008 | Suite completa ejecutada contra PostgreSQL real: 59/59 (31 contratos + 6 fixtures + 9 colector + 13 calidad), incluidos 10 casos mínimos disparo/no-disparo, medianoche UTC y persistencia/feed congelado con rollback. Tarea pasa a `REVIEW` para Claude Code | `packages/quality/tests/`; dispatch `ctx_63638731fde4` |
 
 ## Cómo usar este documento
 

@@ -4,6 +4,23 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 
 ## [Unreleased]
 
+### MP-008 — Quality engine
+
+#### Added
+- `packages/quality/engine.py`: reglas puras para los cinco flags admitidos por el esquema v1, con umbrales calibrables nombrados y eventos estructurados.
+- `packages/quality/db.py`: lectura de historial reciente y persistencia transaccional de `data_quality_event`; derivación estable de `vehicle_position_observation.quality_flags`.
+- Integración en el colector: calidad evaluada sobre observaciones normalizadas antes de persistirlas, dentro de la misma transacción del poll.
+- 13 tests de calidad: disparo y control de falso positivo para cada regla, cambio de día UTC y dos pruebas contra PostgreSQL real con rollback.
+
+#### Changed
+- `duplicate_snapshot` se calcula sobre el hash del payload completo sostenido más de 180s; la deduplicación normal entre polls consecutivos de MP-007 no se marca.
+- `implausible_speed` se calcula en Python con Haversine entre posiciones consecutivas del mismo `source_vehicle_id`; no espera el campo `speed_kmh`, ausente en Renfe.
+- `docs/DATA_QUALITY.md` distingue los cinco flags implementados de las tres reglas geométricas diferidas a MP-012.
+
+#### Verified
+- Suite completa: 59/59 pruebas en verde (31 contratos + 6 fixtures + 9 colector + 13 calidad), incluidas integraciones reales con PostgreSQL/PostGIS.
+- Las inserciones de prueba se ejecutaron dentro de una transacción ambiente y terminaron en rollback; el volumen del soak test no se borró ni truncó.
+
 ### MP-007 — Collector idempotente
 
 #### Added

@@ -1,6 +1,10 @@
 # DATA_QUALITY.md
 
-Estado: **propuesta de reglas y métricas, no implementada**. Umbrales marcados explícitamente como calibrables — no son verdad de diseño, deben ajustarse con datos reales en MP-003/MP-008/MP-012.
+Estado: **cinco flags del esquema v1 implementados en MP-008** (`stale`,
+`implausible_speed`, `missing_id`, `duplicate_snapshot`, `clock_anomaly`);
+reglas que requieren geometría ferroviaria diferidas a MP-012. Umbrales marcados
+explícitamente como calibrables — no son verdad de diseño y deben ajustarse con
+datos operativos.
 
 ## Principio rector
 
@@ -46,11 +50,17 @@ rejected          nº de entidades descartadas por validación
 | `backward_jump` | progreso acumulado sobre el shape retrocede de forma no explicable por parada | marcar, no corregir automáticamente sin registro |
 | `station_skip_anomaly` | salto de `current_stop_sequence` que omite paradas intermedias esperadas | marcar para revisión |
 
+`off_track`, `backward_jump` y `station_skip_anomaly` no forman parte de MP-008:
+requieren map-matching/topología de MP-010–MP-012 y no están admitidos por el
+`CHECK` de `data_quality_event` en el esquema v1.
+
 ## Posiciones repetidas y snapshots duplicados
 
 - Un mismo payload (por hash canónico) recibido en polls consecutivos se deduplica — ver `docs/DATA_MODEL.md`.
 - La deduplicación se aplica al **contenido**, no al hecho de recibir un poll: dos polls que devuelven el mismo contenido cuentan como una sola observación persistida, pero el `feed_run` de cada poll se registra igualmente (para medir disponibilidad del feed).
 - `duplicate_snapshot` se marca cuando el feed devuelve contenido idéntico durante una ventana anómalamente larga (posible indicio de feed congelado, no de tráfico real sin cambios).
+- MP-008 usa `180s` como punto de partida calibrable para esa ventana; dos polls
+  consecutivos iguales a la cadencia normal de ~30s no disparan el flag.
 
 ## Anomalías de reloj y cambio de día
 

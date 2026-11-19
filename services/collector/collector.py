@@ -38,6 +38,15 @@ from packages.contracts.normalize import (
     vehicle_positions_to_canonical,
 )
 from packages.contracts.raw import RawAlertsFeed, RawTripUpdatesFeed, RawVehiclePositionsFeed
+from packages.quality import db as quality_db
+from packages.quality.engine import (
+    SnapshotObservation,
+    check_clock_anomaly,
+    check_duplicate_snapshot,
+    check_missing_id,
+    check_stale,
+    evaluate_vehicle_position,
+)
 from services.collector import db
 from services.collector.config import FeedConfig
 from services.collector.http_client import Fetcher, RetryPolicy, default_fetcher, fetch_with_retry
@@ -100,11 +109,13 @@ def run_cycle(
     parsed = raw_model.model_validate_json(raw_body)
     health = feed_health_from_raw(feed.name, parsed)
     received_at = now()
+    payload_hash = hashlib.sha256(raw_body).hexdigest()
 
     # Todo el ciclo (alta de `source_ingestion_run` + inserciones de entidades)
     # se compromete como una sola transacción: o se registra el ciclo completo
     # (ejecución + lo que se pudo persistir), o no se registra nada de él.
     with conn.transaction():
+        snapshot_history = quality_db.recent_feed_snapshots(conn, feed.name)
         run_id = db.insert_ingestion_run(
             conn,
             feed_name=feed.name,
@@ -113,8 +124,20 @@ def run_cycle(
             finished_at=now(),
             status="ok",
             entity_count=health.entity_count,
-            payload_hash=hashlib.sha256(raw_body).hexdigest(),
+            payload_hash=payload_hash,
         )
+
+        snapshot_events = check_duplicate_snapshot(
+            current=SnapshotObservation(payload_hash=payload_hash, received_at=received_at),
+            consecutive_history=snapshot_history,
+            feed_name=feed.name,
+            entity_type={
+                "vehicle_positions": "vehicle_position",
+                "trip_updates": "trip_update",
+                "alerts": "alert",
+            }[feed.name],
+        )
+        quality_db.insert_quality_events(conn, snapshot_events)
 
         if feed.name == "vehicle_positions":
             inserted, deduped, skipped = _persist_vehicle_positions(
@@ -123,7 +146,7 @@ def run_cycle(
         elif feed.name == "trip_updates":
             inserted, deduped, skipped = _persist_trip_updates(conn, parsed, received_at, run_id)
         else:
-            inserted, deduped, skipped = _persist_alerts(conn, parsed, run_id)
+            inserted, deduped, skipped = _persist_alerts(conn, parsed, received_at, run_id)
 
     logger.info(
         "run_cycle: %s ok (run_id=%d, entidades=%d, insertadas=%d, dedup=%d, fuera_de_alcance=%d)",
@@ -149,9 +172,18 @@ def _persist_vehicle_positions(conn, parsed, received_at, run_id: int) -> tuple[
         if previous_hash == obs.payload_hash:
             deduped += 1
             continue
-        db.insert_vehicle_position_observation(
-            conn, obs, received_at=received_at, ingestion_run_id=run_id
+        previous = quality_db.latest_vehicle_position(conn, obs.source_vehicle_id)
+        quality_events = evaluate_vehicle_position(
+            obs, received_at=received_at, previous=previous
         )
+        db.insert_vehicle_position_observation(
+            conn,
+            obs,
+            received_at=received_at,
+            ingestion_run_id=run_id,
+            quality_flags=quality_db.observation_flags(quality_events),
+        )
+        quality_db.insert_quality_events(conn, quality_events)
         inserted += 1
     return inserted, deduped, skipped
 
@@ -166,14 +198,38 @@ def _persist_trip_updates(conn, parsed, received_at, run_id: int) -> tuple[int, 
         if previous_hash == obs.payload_hash:
             deduped += 1
             continue
+        previous_observed_at = quality_db.latest_observed_at(
+            conn, "trip_update_observation", obs.source_trip_id
+        )
+        quality_events = check_missing_id(
+            identifier=obs.source_trip_id,
+            id_field="source_trip_id",
+            occurred_at=received_at,
+            entity_type="trip_update",
+            entity_ref=obs.source_trip_id,
+        )
+        quality_events += check_stale(
+            observed_at=obs.observed_at,
+            received_at=received_at,
+            entity_type="trip_update",
+            entity_ref=obs.source_trip_id,
+        )
+        quality_events += check_clock_anomaly(
+            observed_at=obs.observed_at,
+            received_at=received_at,
+            previous_observed_at=previous_observed_at,
+            entity_type="trip_update",
+            entity_ref=obs.source_trip_id,
+        )
         db.insert_trip_update_observation(
             conn, obs, received_at=received_at, ingestion_run_id=run_id
         )
+        quality_db.insert_quality_events(conn, quality_events)
         inserted += 1
     return inserted, deduped, skipped
 
 
-def _persist_alerts(conn, parsed, run_id: int) -> tuple[int, int, int]:
+def _persist_alerts(conn, parsed, received_at, run_id: int) -> tuple[int, int, int]:
     inserted = deduped = skipped = 0
     for alert in alerts_to_canonical(parsed):
         if MADRID_PREFIX not in alert.nucleo_prefixes:
@@ -183,6 +239,14 @@ def _persist_alerts(conn, parsed, run_id: int) -> tuple[int, int, int]:
         if previous_hash == alert.payload_hash:
             deduped += 1
             continue
+        quality_events = check_missing_id(
+            identifier=alert.source_alert_id,
+            id_field="source_alert_id",
+            occurred_at=received_at,
+            entity_type="alert",
+            entity_ref=alert.source_alert_id,
+        )
         db.insert_service_alert(conn, alert, ingestion_run_id=run_id)
+        quality_db.insert_quality_events(conn, quality_events)
         inserted += 1
     return inserted, deduped, skipped

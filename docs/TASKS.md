@@ -192,8 +192,8 @@ Cada tarea se trabaja en **un único worktree/rama** (`mp-00X-nombre-corto`), co
 - **Entregables:** reglas de calidad con flags documentados (`quality_flags`), eventos de calidad persistidos (`data_quality_event`).
 - **Criterios de aceptación:** cada regla tiene al menos un test con caso real o fixture que la dispara y uno que no la dispara (falso positivo controlado).
 - **Pruebas necesarias:** suite de tests de reglas de calidad.
-- **Evidencia de verificación:** suite de tests y ejemplos de flags generados.
-- **Estado:** `TODO`
+- **Evidencia de verificación:** 59 pruebas reales ejecutadas en verde: 31 contratos, 6 fixtures, 9 colector y 13 calidad. La suite de calidad incluye al menos disparo + falso positivo controlado para cada uno de los 5 flags, caso UTC de cambio de día y 2 integraciones PostgreSQL con rollback (persistencia atómica de `quality_flags`/`data_quality_event` y feed idéntico que solo dispara `duplicate_snapshot` tras 181s, no en el poll normal inicial). `implausible_speed` usa Haversine entre posiciones consecutivas del mismo vehículo; los casos anómalos no presentes en fixtures están identificados explícitamente como sintéticos. Contenedor `madrid-pulse-postgres-1` dejado levantado y saludable para revisión; volumen real conservado, `*-traza-app` intactos.
+- **Estado:** `REVIEW` — implementado por OpenAI Codex el 2026-11-19; pendiente de revisión independiente de Claude Code en este mismo worktree.
 
 ---
 

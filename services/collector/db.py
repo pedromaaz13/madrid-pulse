@@ -108,6 +108,7 @@ def insert_vehicle_position_observation(
     *,
     received_at: datetime,
     ingestion_run_id: int,
+    quality_flags: list[str] | None = None,
 ) -> None:
     with conn.cursor() as cur:
         cur.execute(
@@ -115,8 +116,8 @@ def insert_vehicle_position_observation(
             INSERT INTO vehicle_position_observation
                 (observed_at, received_at, source_vehicle_id, source_trip_id, latitude, longitude,
                  current_status, current_stop_id, raw_vehicle_label, nucleo_prefix, nucleo_name,
-                 payload_hash, ingestion_run_id)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                 quality_flags, payload_hash, ingestion_run_id)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """,
             (
                 obs.observed_at,
@@ -130,6 +131,7 @@ def insert_vehicle_position_observation(
                 obs.raw_vehicle_label,
                 obs.nucleo_prefix,
                 obs.nucleo_name,
+                json.dumps(quality_flags or []),
                 obs.payload_hash,
                 ingestion_run_id,
             ),
