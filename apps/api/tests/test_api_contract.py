@@ -91,9 +91,10 @@ class ApiContractTests(unittest.TestCase):
     def test_live_vehicles_never_fabricates_route_for_unresolvable_trip(self) -> None:
         """Hallazgo real: la mayoría de los vehículos del soak de MP-007
         pertenecen a otras líneas del núcleo (DEC-020, confirmado con el GTFS
-        completo: C1/C3/C4a/C4b/C8b) y no resuelven contra la fixture
-        reducida de C5. La API debe devolverlos con campos `None` honestos,
-        nunca con un `route_id`/posición inventados."""
+        completo: 19 de C1/C2/C3/C4/C4a/C4b/C8a/C8b/C10 más 1 trip de
+        refuerzo sin resolver) y no resuelven contra la fixture reducida de
+        C5. La API debe devolverlos con campos `None` honestos, nunca con un
+        `route_id`/posición inventados."""
         response = self.client.get("/api/v1/live/vehicles")
         self.assertEqual(response.status_code, 200)
         vehicles = response.json()
