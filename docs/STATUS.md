@@ -123,15 +123,25 @@ typecheck, 3/3 tests y build en verde. Falta la confirmación visual de Claude.
 
 ### Bloqueos
 
-El bloqueante de la primera revisión está corregido por Codex: MapLibre queda
-fuera del prebundle de Vite dev, su ESM se sirve directo con `200` y se evita
-la ruta `maplibre-gl-worker.mjs` que respondía `504`. El selector ya tiene
-`id`/`name` y asociación explícita con su etiqueta. La build de producción
-incorpora el worker en el chunk `MapView` y no referencia `.vite/deps`; el
-preview local devuelve la API real con 1 segmento y 23 estaciones. La sesión
-de Codex volvió a carecer de navegador, por lo que permanece un único gate:
-segunda verificación visual de Claude en dev y preview (capas, consola e
-interacciones). La tarea sigue en `REVIEW`, nunca `DONE` por el ejecutor.
+Segunda ronda de revisión visual de Claude Code: `dev` (puerto 5173) queda
+confirmado correcto — cero errores de consola, corredor y 23 estaciones
+dibujados, selector con `id`/`name`. Pero la build de producción real
+(`npm run build && npm run preview`, verificada por Claude Code directamente
+en navegador, no solo por curl) sigue mostrando el mismo defecto visual que
+el hallazgo original, por una causa distinta: `apps/web/dist/assets/` no
+contiene ningún archivo `maplibre-gl-worker*` — el worker de MapLibre nunca
+se emite en el build de producción. La petición del navegador a
+`/assets/maplibre-gl-worker.mjs` recibía `200`, pero era el *fallback* SPA de
+`vite preview` sirviendo `index.html` (`Content-Type: text/html`, 252 bytes),
+no el worker real — por eso la verificación anterior de Codex (status `200` +
+ausencia de `.vite/deps` en `dist`) no lo detectó: confirmaba que *algo*
+respondía en esa ruta, no que fuera el worker real ni que el navegador
+pudiera instanciarlo. `optimizeDeps.exclude` resuelve el prebundle de *dev*
+pero no tiene efecto sobre el empaquetado de producción (Rolldown/Rollup) del
+worker de MapLibre -- es un problema de empaquetado distinto, pendiente de
+que Codex lo diagnostique y corrija con verificación real en navegador sobre
+el propio build de producción. Delegado de vuelta (`ctx_2ce422035b3e`). La
+tarea sigue en `REVIEW`, nunca `DONE` por el ejecutor.
 
 ### Siguiente paso
 
