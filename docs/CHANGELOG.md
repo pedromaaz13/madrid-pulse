@@ -22,10 +22,10 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 #### Found
 - El feed vivo de `trip_updates` incorporó un caso nuevo `stopTimeUpdate.arrival` ausente con `scheduleRelationship=SKIPPED`; el colector actual lo rechazó por validación. Queda registrado para MP-015/una tarea de colector; no impidió refrescar `vehicle_positions`, y la UI comunica estados de fuente y cobertura ausente sin inventar retrasos.
 
-#### Fixed after Claude review (first round, blocking)
+#### Fixed after Claude review
 - Inspección real en navegador: Vite 8 prebundled devolvía `504` para `maplibre-gl-worker.mjs`; tiles raster y marcadores DOM aparecían, pero el worker no procesaba las fuentes GeoJSON y el corredor/las 23 estaciones quedaban invisibles. `optimizeDeps.exclude = ["maplibre-gl"]` sirve el ESM directo (`200`) y la revisión de Claude confirmó visualmente que ambas capas vuelven a aparecer con el cambio diagnóstico; Codex aplicó el fix definitivo y lo dejó para re-verificación visual.
-- El fallo es exclusivo del servidor dev/prebundle: la build Vite de producción completa correctamente e incorpora el worker al chunk `MapView`, sin dependencia runtime de `.vite/deps`; `npm run preview` sirve el chunk y proxifica `/api` para un smoke local reproducible. La sesión Codex siguió sin navegador disponible, por lo que la confirmación visual de producción queda incluida explícitamente en la segunda pasada de Claude.
 - Accesibilidad: el selector de línea ahora tiene `id="line-selector"`, `name="line"` y asociación explícita `label[for]`, eliminando el aviso de Chrome sobre campos sin identificador.
+- La segunda revisión confirmó dev correcto, pero detectó que producción pedía un worker no emitido y recibía `index.html` como fallback SPA. Vite ahora emite explícitamente `assets/maplibre-gl-worker.mjs`, `MapView` configura esa URL solo en producción y el build falla si el asset no coincide byte a byte con la dependencia instalada. Smoke de preview: `200`, `Content-Type: text/javascript`, 550.754 bytes y SHA-256 `c8564c4a4147326a587c9cc4c2a871c4b02a6c37c3f1ea51da55be3220d4b112`; queda pendiente la tercera pasada visual de Claude, no sustituida por esta evidencia HTTP.
 
 ### MP-013 — FastAPI v1
 

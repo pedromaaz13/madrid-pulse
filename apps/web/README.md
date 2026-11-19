@@ -30,7 +30,10 @@ npm run preview
 desarrollo. Vite 8 respondía `504` para su worker ESM prebundled y dejaba sin
 procesar el corredor/las estaciones GeoJSON aunque tiles y marcadores DOM sí
 aparecieran; servido directamente desde `node_modules`, el worker responde y
-ambas capas se dibujan. La build de producción no usa `.vite/deps`: incorpora
-el worker al chunk de MapLibre. `npm run preview` añade solo para el smoke local
-el mismo proxy `/api` que desarrollo; el artefacto sigue siendo estático y en
-despliegue espera `/api` bajo el mismo origen.
+ambas capas se dibujan. En producción, un plugin local de Vite emite
+`dist/assets/maplibre-gl-worker.mjs` y `MapView` fija esa URL mediante
+`setWorkerUrl`; `npm run build` compara el asset byte a byte con el paquete
+instalado para impedir que un fallback HTML pase por worker válido.
+`npm run preview` añade solo para el smoke local el mismo proxy `/api` que
+desarrollo; el artefacto sigue siendo estático y en despliegue espera `/api`
+bajo el mismo origen.

@@ -5,6 +5,12 @@ import type { FeatureCollection } from "geojson";
 import "maplibre-gl/dist/maplibre-gl.css";
 import type { LayerVisibility, Line, Vehicle } from "./types";
 
+if (import.meta.env.PROD) {
+  maplibregl.setWorkerUrl(
+    `${import.meta.env.BASE_URL}assets/maplibre-gl-worker.mjs?v=${maplibregl.getVersion()}`,
+  );
+}
+
 interface Props {
   line: Line | null;
   vehicles: Vehicle[];
