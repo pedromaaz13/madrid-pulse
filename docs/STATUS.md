@@ -17,6 +17,21 @@ MP-001 está `DONE`: Codex aprobó la revisión cruzada y, conforme a ADR-0007, 
 
 **Hito 1 completado el `2026-11-19`: MP-002 → MP-009 están `DONE` tras revisión cruzada.** Queda pendiente que el propietario decida los siguientes pasos y autorice un nuevo hito; no debe iniciarse MP-010 ni ninguna tarea fuera del rango ya autorizado hasta recibir esa autorización.
 
+## Auditoría independiente de preparación para integración
+
+**OpenAI Codex — `2026-11-19`: APROBADA, sin bloqueantes reales para integrar `mp-009-historical-export` en `main`.** El estado auditado (`c8d3bd0`, antes de registrar esta entrada) contiene de forma lineal y sin merges todo MP-001 → MP-009: `git merge-base --is-ancestor 3e7b533 c8d3bd0` devuelve `0`, y el recorrido desde `origin/main` (`5b45227`) hasta `c8d3bd0` contiene los 23 commits esperados. Los 23 tienen autor y committer `Pedro Matute <pedromaaz13@gmail.com>` y ninguno incluye un trailer literal `Co-authored-by:`.
+
+Evidencia reproducida de forma independiente:
+
+- La rama paralela `chore/mp-001-foundation` se separa en `3e7b533` y añade cinco commits (`fac945c` → `15820ac`) que solo modifican `docs/STATUS.md`, `docs/TASKS.md` y `docs/CHANGELOG.md`. Su contenido es seguimiento administrativo hasta MP-005 en `REVIEW`; la autorización del Hito 1, sus condiciones operativas, los hallazgos y cierres de MP-002 → MP-005 ya están reflejados —con estado final y mayor detalle— en esta rama. No se encontró contenido único material cuya ausencia causase pérdida al integrar únicamente `mp-009-historical-export`.
+- Worktrees muestreados limpios antes de registrar esta auditoría: clon original, `mp-004-fixtures`, `mp-007-collector` y `chore/mp-001-foundation`; este worktree también estaba limpio.
+- Diff `origin/main..HEAD`: 95 ficheros (92 añadidos, `README.md` modificado y dos renombres `R100` hacia `docs/research/`), sin cachés, entornos virtuales ni temporales versionados. `git diff --check` solo informa de una línea en blanco final en cada una de las tres fixtures JSON; son avisos cosméticos y las pruebas que las parsean pasan.
+- Suites ejecutadas realmente: contratos 31/31, fixtures 6/6, collector 9/9, quality 13/13 y snapshotter 5/5 — **64/64 en verde**. PostgreSQL conservó exactamente los recuentos `668/484/3/120/0` en `vehicle_position_observation` / `trip_update_observation` / `service_alert` / `source_ingestion_run` / `data_quality_event` antes y después; no quedó residuo de pruebas.
+- Escaneo de secretos: no se encontraron claves, tokens, ficheros de entorno ni llaves privadas. La única contraseña es `madrid_pulse_local`, credencial de desarrollo local usada exclusivamente contra `127.0.0.1:5433`.
+- Enlaces: 48 enlaces relativos Markdown comprobados en el repositorio, 0 rotos. `docs/TASKS.md` marca MP-001 → MP-009 como `DONE`; este documento declara el Hito 1 completado y prohíbe iniciar MP-010 sin autorización nueva; `docs/CHANGELOG.md` conserva el historial de las nueve tareas.
+
+**Veredicto de integración:** `mp-009-historical-export` está preparada para que el propietario la integre en `main`; no se identificaron omisiones, pérdida documental, problemas de autoría ni bloqueantes técnicos. Los tres avisos de whitespace en fixtures son los únicos hallazgos abiertos y no son bloqueantes.
+
 ## Tarea actual
 
 **MP-009 — Exportador histórico (Parquet particionado)**
