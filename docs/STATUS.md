@@ -69,6 +69,35 @@ Con Hito 1 ya fusionado a `main`, el caso concreto de MP-012 **deja de requerir 
 
 ## Tarea actual
 
+**MP-010 — Topología GTFS C5**
+
+Ejecutor: OpenAI Codex · Revisor: Claude Code · Estado: **IN_PROGRESS**
+
+Worktree/rama: `mp-010-gtfs-topology`, ramificada desde `chore/hito-2-coordination` (que a su vez parte de `main`, post-merge de Hito 1 — MP-004, su única dependencia directa, ya es ancestro de `main`).
+
+### Checklist de MP-010
+
+- [ ] `packages/gtfs/`: parser de topología GTFS estático (routes/trips/stops/stop_times/shapes/calendar) sin inventar campos no observados.
+- [ ] Resolver las 5 variantes `source_route_id` de C5 Madrid (`10T0017C5`, `10T0018C5`, `10T0035C5`, `10T0047C5`, `10T0048C5`) agrupadas por `(network_id, short_name)`, nunca asumiendo un único `route.id` por línea comercial (ver `docs/DATA_MODEL.md`, ADR-0008/DEC-017).
+- [ ] Resolución genérica de `route_id`/`trip_id`/`stop_id` (ADR-0011, `Propuesto`): sin literales `"C5"` hardcodeados en la lógica de parseo/resolución — la app debe poder resolver cualquier línea del núcleo Madrid, aunque Hito 2 solo pueble C5.
+- [ ] Validación de recorrido: orden de estaciones y direcciones de cada variante contra el GTFS estático real (MP-003/MP-004).
+- [ ] Tests de parseo reales contra el GTFS estático capturado en MP-003/MP-004.
+- [ ] Actualizar `docs/TASKS.md`/`docs/STATUS.md`/`docs/CHANGELOG.md` con evidencia real de ejecución antes de delegar a revisión.
+
+### Resultado y límites
+
+Pendiente de implementación.
+
+### Bloqueos
+
+Ninguno conocido al inicio de la tarea.
+
+### Siguiente paso
+
+Al completarse y ser aprobada por Claude Code (revisor), MP-011 (Prototipo de geometría ferroviaria sobre OSM, ejecutor Claude Code) puede ramificar su worktree desde `mp-010-gtfs-topology` sin esperar merge a `main`, conforme al hito autorizado y ADR-0007.
+
+## Tareas cerradas de la cadena
+
 **MP-009 — Exportador histórico (Parquet particionado)**
 
 Ejecutor: Claude Code · Revisor: OpenAI Codex · Estado: **DONE** (aprobado el 2026-11-19)
@@ -100,9 +129,7 @@ Ninguno: el bloqueante real de la primera revisión de Codex (semántica tempora
 
 ### Siguiente paso
 
-MP-009 y el Hito 1 (`MP-002` → `MP-009`) están completos. El worktree queda listo para revisión del propietario; no se inicia MP-010 ni otro hito hasta que el propietario lo autorice expresamente.
-
-## Tareas cerradas de la cadena
+MP-009 y el Hito 1 (`MP-002` → `MP-009`) están completos. El worktree queda listo para revisión del propietario; no se inicia MP-010 ni otro hito hasta que el propietario lo autorice expresamente. **Nota añadida al preparar Hito 2 (`2026-11-19`):** el propietario autorizó y fusionó Hito 1 a `main`; MP-010 arrancó en su propio worktree, registrado arriba en "Tarea actual".
 
 **MP-008 — Quality engine**
 
