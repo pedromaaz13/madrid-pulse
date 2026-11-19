@@ -13,6 +13,7 @@
 | [0009](0009-unobserved-raw-fields.md) | Campos del modelo candidato no observados en el feed real (`speed_kmh`/`bearing` nullable, `current_stop_id` en vez de `current_stop_sequence`, se elimina `effect`/`cause`/`header_text` de alertas) | `Propuesto` — pendiente de revisión de Codex (MP-005) y del propietario en cierre de Hito 1 |
 | [0010](0010-dedup-strategy.md) | Deduplicación por hash canónico de payload completo comparado contra la última fila almacenada por clave de entidad de origen; sin `seen_count` | `Propuesto` — pendiente de revisión del propietario en cierre de Hito 1 |
 | [0011](0011-public-scope-vs-technical-pilot.md) | C5 es el piloto técnico de Hito 2; el objetivo de primera versión pública es toda la red de Cercanías Madrid — complementa ADR-0001 sin reescribirlo | `Propuesto` — pendiente de revisión del propietario en cierre de Hito 2 |
+| [0012](0012-movement-package-boundary.md) | Motor de movimiento como capa independiente entre geometría, topología, calidad y API | `Propuesto` — pendiente de revisión del propietario en cierre de Hito 2 |
 
 Ver `docs/DECISIONS.md` para el resumen ejecutivo de estado de todas las decisiones (aceptadas, propuestas, pendientes y no-go), con enlaces de vuelta a estos ADRs.
 

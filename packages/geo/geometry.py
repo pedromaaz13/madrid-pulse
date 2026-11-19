@@ -97,3 +97,29 @@ def arc_length_to(polyline: list[tuple[float, float]], projection: Projection) -
     lat_a, lon_a = polyline[projection.segment_index]
     total += haversine_m(lat_a, lon_a, projection.lat, projection.lon)
     return total
+
+
+def point_at_arc_length(
+    polyline: list[tuple[float, float]], distance_m: float
+) -> tuple[float, float]:
+    """Localiza un punto a una distancia acumulada sobre una polilínea.
+
+    La distancia se limita a los extremos. Esta es la operación inversa de
+    :func:`arc_length_to` que necesita el motor de movimiento para convertir
+    progreso escalar de nuevo a una coordenada *map-matched*.
+    """
+    if len(polyline) < 2:
+        raise ValueError("la polilínea necesita al menos dos puntos")
+    remaining = max(0.0, distance_m)
+    for (lat1, lon1), (lat2, lon2) in zip(polyline, polyline[1:]):
+        segment_m = haversine_m(lat1, lon1, lat2, lon2)
+        if segment_m == 0:
+            continue
+        if remaining <= segment_m:
+            fraction = remaining / segment_m
+            return (
+                lat1 + fraction * (lat2 - lat1),
+                lon1 + fraction * (lon2 - lon1),
+            )
+        remaining -= segment_m
+    return polyline[-1]

@@ -330,8 +330,8 @@ Cada tarea se trabaja en **un único worktree/rama** (`mp-00X-nombre-corto`), co
 - **Entregables:** motor de movimiento con los cuatro estados, `confidence`, `age_s`, umbrales parametrizados (no fijos) siguiendo `docs/DATA_QUALITY.md`.
 - **Criterios de aceptación:** tests deterministas cubren transición entre estados, saltos de estación y velocidades físicamente inverosímiles.
 - **Pruebas necesarias:** suite de tests deterministas del motor de movimiento.
-- **Evidencia de verificación:** suite de tests.
-- **Estado:** `IN_PROGRESS` — worktree `mp-012-movement-engine` abierto el 2026-11-19, ramificado desde `mp-011-osm-geometry` (MP-011 `DONE`).
+- **Evidencia de verificación:** `packages/movement/` implementa el pipeline completo de ADR-0004 como capa independiente (ADR-0012, `Propuesto`): resolución GTFS literal, map-matching mediante `Corridor.project_station`, perfil horario con horas >24/cambio de día de servicio, offset temporal, interpolación limitada por aceleración/velocidad y fallback a la última muestra plausible. Contrato directo para MP-013 con `position_mode`, `confidence`, `age_s`, `source` y anomalías estructuradas. Defaults `60s/180s` mantenidos tras calibración contra la cadencia real ~20–22 s; límite físico estimado 160 km/h separado del filtro de salto de feed 900 km/h. `off_track`/`backward_jump`/`station_skip_anomaly` implementados y expuestos; persistencia diferida explícitamente porque `data_quality_event` v1 representa observaciones crudas, no posiciones derivadas. **90/90 tests reales en verde:** 11 movement (10 deterministas + 1 integración PostgreSQL), 7 GTFS, 8 geo, 31 contratos, 6 fixtures, 9 collector, 13 quality y 5 snapshotter. Integración de solo lectura sobre el soak: `668` posiciones antes/después, 177 a ≤200 m del corredor, máximo salto map-matched 666,4 km/h; volumen completo conservado `668/484/3/120/0`. `python -m compileall` y `git diff --check` sin errores al cierre.
+- **Estado:** `REVIEW` — implementación de OpenAI Codex lista para auditoría independiente de Claude Code en este mismo worktree; no marcar `DONE` hasta su aprobación.
 
 ---
 

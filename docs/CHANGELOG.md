@@ -6,8 +6,20 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 
 ### MP-012 — Motor de movimiento v1
 
-#### In progress
-- Worktree `mp-012-movement-engine` abierto (ramificado desde `mp-011-osm-geometry`, resolviendo DEC-015 sin fusión real); tarea delegada a Codex (ejecutor) vía Orca. Sin entregables todavía — ver `docs/STATUS.md` para el checklist.
+#### Added
+- `packages/movement/`: motor genérico con estados `observed`/`estimated`/`stale`/`scheduled`, contrato tipado directo para MP-013 (`confidence`, `age_s`, `source`, progreso, timestamps y anomalías) y umbrales configurables.
+- Pipeline completo de ADR-0004 sobre APIs existentes: resolución literal GTFS, map-matching OSM, perfil de horario con horas >24/día de servicio, offset temporal, interpolación limitada y fallback a la última muestra plausible.
+- `off_track`, `backward_jump` y `station_skip_anomaly` calculados y expuestos en cada resultado; `implausible_speed` refinado con distancia map-matched.
+- ADR-0012 (`Propuesto`)/DEC-026: el motor vive en `packages/movement`, separado de geometría y reglas sobre observaciones crudas. `packages/geo.point_at_arc_length` añadido como primitiva geométrica genérica.
+
+#### Calibrated
+- Defaults `60s/180s` mantenidos: con `vehicle_positions` cada ~20–22 s equivalen a ~3/~8 polls perdidos.
+- Límite físico de estimación 160 km/h y aceleración 1,2 m/s² separados del filtro de discontinuidad de fuente 900 km/h. El soak real midió un máximo map-matched de 666,4 km/h, coherente con los saltos crudos 246–787 km/h ya encontrados por MP-008.
+
+#### Verified
+- 90/90 tests en verde: 11 movement (10 deterministas + integración real), 7 GTFS, 8 geo, 31 contratos, 6 fixtures, 9 collector, 13 quality y 5 snapshotter.
+- Volumen PostgreSQL real consultado en solo lectura: 668 posiciones antes/después, 177 a ≤200 m del corredor; recuentos finales `668/484/3/120/0` sin residuo.
+- Cambio de día de servicio/horas GTFS >24, UTC estricto, transición de estados, fuentes distintas, saltos de estación, retrocesos, off-track y velocidades imposibles cubiertos por test.
 
 ### MP-011 — Prototipo de geometría ferroviaria sobre OSM
 

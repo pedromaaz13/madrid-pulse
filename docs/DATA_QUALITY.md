@@ -50,9 +50,12 @@ rejected          nº de entidades descartadas por validación
 | `backward_jump` | progreso acumulado sobre el shape retrocede de forma no explicable por parada | marcar, no corregir automáticamente sin registro |
 | `station_skip_anomaly` | salto de `current_stop_sequence` que omite paradas intermedias esperadas | marcar para revisión |
 
-`off_track`, `backward_jump` y `station_skip_anomaly` no forman parte de MP-008:
-requieren map-matching/topología de MP-010–MP-012 y no están admitidos por el
-`CHECK` de `data_quality_event` en el esquema v1.
+`off_track`, `backward_jump` y `station_skip_anomaly` no forman parte de MP-008.
+MP-012 ya los calcula mediante map-matching/topología y los expone en
+`MovementPosition.anomalies`. No se persisten todavía en `data_quality_event`:
+ese esquema v1 pertenece a observaciones crudas y no existe aún una tabla/clave
+para resultados de movimiento derivados. ADR-0012 documenta esta frontera; una
+persistencia futura exige migración explícita, no ampliar el `CHECK` a ciegas.
 
 ## Posiciones repetidas y snapshots duplicados
 
@@ -90,9 +93,9 @@ SI publicar:  "87% de los viajes observados con delay disponible estuvieron
 | Modo | Origen del dato | Cuándo se usa |
 |---|---|---|
 | `observed` | Posición directa del feed GTFS-RT, map-matched a la vía | Hay observación reciente y plausible |
-| `estimated` (interpolado) | Progreso esperado por horario + offset temporal desde la última observación | Entre observaciones, dentro de la ventana `60–180s` |
+| `estimated` (interpolado) | Progreso esperado por horario + offset temporal desde la última observación plausible | Más de `60s` y hasta `180s`; defaults configurables calibrados en MP-012 |
 | `stale` | Última posición conocida, sin corrección adicional | Más de `180s` sin observación nueva |
-| `scheduled` | Puramente horario GTFS, sin ninguna observación disponible | Sin datos de posición en absoluto para ese viaje |
+| `scheduled` | Puramente horario GTFS, sin observación plausible utilizable | Sin datos de posición, o muestra imposible sin una anterior plausible; cualquier rechazo queda en `anomalies` |
 
 Este contrato se detalla con el pipeline completo (map-match → localizar sobre shape → estimar progreso por horario → calcular offset → interpolar → limitar aceleración/velocidad/retrocesos) en `docs/ARCHITECTURE.md` y se implementa en MP-012.
 

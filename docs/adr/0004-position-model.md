@@ -1,6 +1,6 @@
 # ADR-0004: Modelo de posición en cuatro estados
 
-- **Estado:** Aceptado (principio y estados), umbrales **propuestos, pendientes de calibración real**
+- **Estado:** Aceptado (principio y estados); defaults calibrados en MP-012, todavía configurables
 - **Fecha:** 2026-11-18
 - **Decisores:** Propietario del repositorio, con fundamento en `docs/research/deep-research-report.md`
 
@@ -30,5 +30,6 @@ Pipeline de cálculo: GPS reciente y plausible → map-match al track → locali
 
 ## Consecuencias
 
-- Los umbrales `60s`/`180s` son los propuestos por la investigación como punto de partida, **no verdad de diseño**: MP-012 debe calibrarlos contra datos reales de frecuencia de actualización medidos en MP-003.
+- MP-012 mantuvo `60s`/`180s` como defaults configurables después de calibrarlos: `vehicle_positions` se actualizó cada ~20–22 s en MP-003, de modo que representan aproximadamente 3 y 8 actualizaciones perdidas. No son verdad de fuente ni constantes ocultas; viven en `MovementThresholds`.
+- El límite de interpolación física (`160 km/h`) es distinto del filtro de salto inutilizable del feed (`900 km/h`). MP-008 observó saltos crudos reales de 246–787 km/h y la validación map-matched de MP-012 midió 666,4 km/h; tratarlos como velocidad continua sería incorrecto, pero descartarlos con un corte ferroviario convencional también eliminaría observaciones reales.
 - Todo endpoint de vehículo en vivo debe exponer estos campos sin excepción (ver `docs/DATA_CONTRACTS.md`).

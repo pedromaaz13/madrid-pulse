@@ -71,32 +71,35 @@ Con Hito 1 ya fusionado a `main`, el caso concreto de MP-012 **deja de requerir 
 
 **MP-012 — Motor de movimiento v1**
 
-Ejecutor: OpenAI Codex · Revisor: Claude Code · Estado: **IN_PROGRESS**
+Ejecutor: OpenAI Codex · Revisor: Claude Code · Estado: **REVIEW**
 
 Worktree/rama: `mp-012-movement-engine`, ramificada desde `mp-011-osm-geometry` (MP-011 `DONE`). DEC-015 resuelto: `git merge-base --is-ancestor origin/main HEAD` confirmado `true` desde `mp-011-osm-geometry` — MP-008 (ancestro de `main`), MP-010 y MP-011 quedan todos satisfechos sin fusión real (ver `AGENTS.md`).
 
 ### Checklist de MP-012
 
-- [ ] Motor de movimiento con los cuatro estados `OBSERVED` (0–60s) / `ESTIMATED` (60–180s) / `STALE` (>180s) / `SCHEDULED` (sin dato), conforme a ADR-0004 — umbrales parametrizados (no fijos), pendientes de calibración con datos reales, no verdad de diseño.
-- [ ] Pipeline de ADR-0004: GPS reciente y plausible → map-match al track (reutilizar `packages/geo.Corridor.project_station`, no reimplementar) → localizar distancia acumulada sobre shape (`arc_length_to`) → estimar progreso esperado por horario (GTFS `stop_times`, vía `packages/gtfs`) → calcular offset temporal → interpolar hasta siguiente observación → limitar aceleración/velocidad/retrocesos imposibles.
-- [ ] Cada posición expone `position_mode`, `confidence` (decreciente con la edad del dato), `age_s`, `source`.
-- [ ] Calibrar umbrales con datos reales: frecuencia de refresco medida en MP-003 (~20-22s `vehicle_positions`, ~42s `trip_updates`, ~20s `alerts`) y el hallazgo empírico de MP-008 (12/117 pares reales de posiciones consecutivas del soak test dispararon `implausible_speed` a 246-787 km/h — saltos reales de posición más gruesos que el cadencia de poll, no error de cálculo; considerar al definir el umbral de "retroceso/velocidad imposible").
-- [ ] Tests deterministas: transición entre los cuatro estados, saltos de estación, velocidades físicamente inverosímiles.
-- [ ] Validación contra datos reales: el volumen del soak test de MP-007 sigue en el volumen Docker (668 `vehicle_position_observation` reales, ~24 vehículos, 20 min) — usarlo para calibrar/validar, no solo fixtures sintéticas.
-- [ ] Decidir y documentar en ADR la ubicación exacta del motor si no cabe limpiamente en `packages/geo`/`packages/quality` existentes.
-- [ ] Actualizar `docs/TASKS.md`/`docs/STATUS.md`/`docs/CHANGELOG.md` con evidencia real antes de delegar a revisión.
+- [x] Motor de movimiento con los cuatro estados `OBSERVED` (0–60s) / `ESTIMATED` (>60–180s) / `STALE` (>180s) / `SCHEDULED` (sin observación plausible), conforme a ADR-0004; defaults parametrizados en `MovementThresholds`.
+- [x] Pipeline de ADR-0004 completo: resolución GTFS → `Corridor.project_station` → progreso acumulado → perfil de `stop_times` → offset temporal → interpolación → límites de aceleración/velocidad/retroceso; una muestra imposible no borra la anterior plausible.
+- [x] `MovementPosition` expone `position_mode`, `confidence` decreciente, `age_s`, `source`, timestamps, progreso y anomalías; fuentes distintas impiden confundir estimado/stale/scheduled con observado.
+- [x] Calibración real: `60s/180s` mantenidos porque la cadencia ~20–22s equivale a ~3/~8 polls perdidos. Separados `max_estimated_speed_kmh=160` (trayectoria fabricada) y `unusable_jump_speed_kmh=900` (discontinuidad del feed): MP-008 midió 246–787 km/h crudos y MP-012 666,4 km/h map-matched en el volumen real.
+- [x] Tests deterministas: cuatro transiciones, confianza/fuente, offset horario, velocidad/aceleración, salto de estación, retroceso, off-track, salto imposible, rango empírico 700 km/h aceptado, UTC y cambio de día/horas GTFS >24.
+- [x] Validación real PostgreSQL de solo lectura: 668 observaciones antes y después, 177 a ≤200 m del corredor, máximo salto map-matched 666,4 km/h; volumen completo `668/484/3/120/0` intacto tras toda la regresión.
+- [x] Ubicación decidida en ADR-0012 (`Propuesto`): `packages/movement` orquesta las capas existentes sin contaminar `geo` con horarios ni `quality` con generación de posiciones.
+- [x] `off_track`/`backward_jump`/`station_skip_anomaly` calculados y expuestos. Persistencia diferida explícitamente: el `CHECK`/modelo v1 de `data_quality_event` pertenece a observaciones crudas y MP-012 no crea una tabla de derivados; cualquier persistencia futura requiere migración con dueño/clave claros.
+- [x] `docs/TASKS.md`/`docs/STATUS.md`/`docs/CHANGELOG.md`/`docs/DATA_QUALITY.md`/ADR-0004/ADR-0012/DEC-026 actualizados con evidencia real.
 
 ### Resultado y límites
 
-Pendiente de implementación.
+Motor genérico implementado en `packages/movement/`, sin literal de la línea piloto en la lógica. `point_at_arc_length` completa la API geométrica genérica como inversa de `arc_length_to`. El motor exige un corredor continuo por trip y rechaza explícitamente geometrías con huecos en vez de fabricar distancia. La topología huérfana sin `stop_times` sigue produciendo error explícito, no un recorrido inventado.
+
+Ejecución final real (`.venv`, Python 3.12): 90/90 tests en verde — movement 11, GTFS 7, geo 8, contratos 31, fixtures 6, collector 9, quality 13, snapshotter 5. Las suites con PostgreSQL se ejecutaron con el contenedor `madrid-pulse` levantado por el ejecutor; recuentos finales `668/484/3/120/0`. `compileall` y `git diff --check` sin errores.
 
 ### Bloqueos
 
-Ninguno conocido al inicio de la tarea.
+Ningún bloqueo de implementación. Pendiente exclusivamente la auditoría independiente de Claude Code. ADR-0012 permanece `Propuesto` hasta revisión formal del propietario al cierre de Hito 2.
 
 ### Siguiente paso
 
-Al completarse y ser aprobada por Claude Code (revisor), MP-013 (FastAPI v1, ejecutor Claude Code) puede ramificar su worktree desde `mp-012-movement-engine` sin esperar merge a `main`, conforme al hito autorizado y ADR-0007.
+Claude Code debe auditar el diff y reejecutar las comprobaciones pertinentes en este mismo worktree. Solo tras su aprobación MP-012 pasa a `DONE` y MP-013 puede ramificar desde `mp-012-movement-engine` sin esperar merge a `main`, conforme al hito autorizado y ADR-0007.
 
 ## Tareas cerradas de la cadena
 
@@ -561,6 +564,7 @@ Esta rama se bifurcó de `chore/mp-001-foundation` en el commit `3e7b533`, **ant
 | `2026-11-19` | MP-011 | Corregido: `Corridor.segments` separa tramos reales (verificado revirtiendo el fix — el test de regresión falla exactamente como describió Codex y pasa con el fix restaurado); `render_preview.py` dibuja un `<polyline>` por tramo; ruta corta dividida en variante base contigua (6 estaciones, verificado por comparación literal de IDs) y variante con Atocha monótona-pero-no-contigua (7 estaciones); 4 SHA-256 añadidos y verificados en `MANIFEST.md`. 79/79 tests en verde (8 geo + 71 regresión). Reenviado a Codex para segunda verificación | — |
 | `2026-11-19` | MP-011 | Segunda verificación independiente de Codex aprobada sobre `f795036`: repro sintética propia a `2223,9 m` del tramo más cercano (sin geometría fabricada), 8 geo + 71 regresión en verde, PostgreSQL `668/484/3/120/0` antes/después, patrones corto base/variante comprobados literalmente, 4 SHA-256 coincidentes, diff limpio e identidad Git correcta. MP-011 pasa a `DONE` | dispatch `ctx_24d7ea61fba0` |
 | `2026-11-19` | MP-012 | DEC-015 resuelto y aplicado: `git merge-base --is-ancestor origin/main HEAD` confirmado desde `mp-011-osm-geometry`; worktree `mp-012-movement-engine` abierto sin fusión real. Dispatchado a Codex (ejecutor) con contexto de ADR-0004 (pipeline, cuatro estados), frecuencias reales medidas en MP-003 y el hallazgo de `implausible_speed` de MP-008 para calibración | `docs/TASKS.md`; `docs/STATUS.md` |
+| `2026-11-19` | MP-012 | Implementación de Codex lista para revisión: `packages/movement` + ADR-0012; pipeline completo, cuatro estados/fuentes explícitos, flags topológicos y calibración. 90/90 tests en verde. Integración real read-only: 668→668 posiciones, 177 cerca del corredor, máximo salto map-matched 666,4 km/h; volumen final `668/484/3/120/0`. Tarea pasa a `REVIEW` para Claude Code | `packages/movement/`; `docs/adr/0012-movement-package-boundary.md` |
 
 ## Cómo usar este documento
 
