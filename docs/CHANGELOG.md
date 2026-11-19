@@ -4,6 +4,20 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 
 ## [Unreleased]
 
+### MP-010 — Topología GTFS C5
+
+#### Added
+- `packages/gtfs/`: parser en streaming de las seis tablas reales del GTFS estático, selección genérica por IDs/red/nombre corto, agrupación de variantes por `(network_id, short_name)` y API de resolución literal `trip_id` → `route_id` y `stop_id` → `stop_sequence`.
+- Validador de referencias, secuencias, shapes y patrones de recorrido; fixture real reducida y reproducible con checksum/licencia; 7 tests contra esa fixture.
+
+#### Found
+- La descarga oficial del `2026-11-19` contiene para C5 Madrid 5 rutas, 8.160 trips, 23 estaciones, 165.205 stop_times, 630 puntos de shape, 30 servicios y 14 patrones de recorrido. `10T0035C5` aporta 8 trips pero ningún stop_time.
+- `trips.txt` no contiene `direction_id`; la dirección real disponible se valida por el orden de `stop_sequence` y `shape_id`. No se inventó la columna ni recorrido para los huérfanos.
+
+#### Verified
+- 71/71 tests en verde: 7 GTFS nuevos + 64 regresiones (31 contratos, 6 fixtures GTFS-RT, 9 colector, 13 calidad, 5 snapshotter), incluidas 9 integraciones reales contra PostgreSQL. Parser ejecutado además contra el ZIP oficial completo: validación válida, 0 errores, 14 patrones y 8 huérfanos informados.
+- Las cinco variantes permanecen separadas y agrupables; los recorridos completos y cortos incluyen sus pares inversos reales. La lógica de parser/resolución no contiene el literal de la línea piloto.
+
 ### MP-009 — Exportador histórico (Parquet particionado)
 
 #### Added

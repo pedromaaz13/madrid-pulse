@@ -292,9 +292,9 @@ Cada tarea se trabaja en **un único worktree/rama** (`mp-00X-nombre-corto`), co
 - **Entregables:** parser de topología GTFS para C5, validación de que el recorrido de estaciones coincide con lo esperado (orden, direcciones).
 - **Criterios de aceptación:** topología validada contra el GTFS estático real, sin datos inventados.
 - **Pruebas necesarias:** tests de parseo de `routes`, `trips`, `stops`, `stop_times`, `shapes` para C5.
-- **Evidencia de verificación:** suite de tests de topología.
+- **Evidencia de verificación:** 71/71 tests en verde (7 GTFS nuevos + 64 de regresión: 31 contratos, 6 fixtures GTFS-RT, 9 colector, 13 calidad, 5 snapshotter), incluidas 9 integraciones reales contra PostgreSQL. Los 7 tests de topología usan una reducción trazable del GTFS real (SHA-256 y proceso en `tests/fixtures/gtfs_c5_real/MANIFEST.md`). Ejecución adicional directa contra el ZIP oficial completo del `2026-11-19`: 5 rutas, 8.160 trips, 23 estaciones, 165.205 stop_times, 630 puntos de shape, 30 servicios, 14 patrones de recorrido y 8 trips huérfanos de `10T0035C5`; validación estructural sin errores. Hallazgo de fuente: `trips.txt` no trae `direction_id`; la dirección se valida mediante los patrones ordenados de `stop_sequence`/`shape_id`, sin inventar columna.
 - **Nota de alcance (ADR-0011, `Propuesto`):** la resolución de `route_id`/`trip_id`/`stop_id` debe ser genérica (sin literales `"C5"` hardcodeados en la lógica), aunque Hito 2 solo pueble datos de C5 — ver `docs/adr/0011-public-scope-vs-technical-pilot.md`.
-- **Estado:** `IN_PROGRESS` — worktree `mp-010-gtfs-topology` abierto el 2026-11-19, ramificado desde `chore/hito-2-coordination` (MP-004, su única dependencia, ya es ancestro de `main`).
+- **Estado:** `REVIEW` — implementación de Codex terminada el 2026-11-19 y pendiente de auditoría independiente de Claude Code en este mismo worktree. El ZIP completo no se versiona por tamaño/volatilidad; DEC-023 registra la fixture real reducida y reproducible.
 
 ---
 

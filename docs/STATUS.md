@@ -71,26 +71,28 @@ Con Hito 1 ya fusionado a `main`, el caso concreto de MP-012 **deja de requerir 
 
 **MP-010 — Topología GTFS C5**
 
-Ejecutor: OpenAI Codex · Revisor: Claude Code · Estado: **IN_PROGRESS**
+Ejecutor: OpenAI Codex · Revisor: Claude Code · Estado: **REVIEW**
 
 Worktree/rama: `mp-010-gtfs-topology`, ramificada desde `chore/hito-2-coordination` (que a su vez parte de `main`, post-merge de Hito 1 — MP-004, su única dependencia directa, ya es ancestro de `main`).
 
 ### Checklist de MP-010
 
-- [ ] `packages/gtfs/`: parser de topología GTFS estático (routes/trips/stops/stop_times/shapes/calendar) sin inventar campos no observados.
-- [ ] Resolver las 5 variantes `source_route_id` de C5 Madrid (`10T0017C5`, `10T0018C5`, `10T0035C5`, `10T0047C5`, `10T0048C5`) agrupadas por `(network_id, short_name)`, nunca asumiendo un único `route.id` por línea comercial (ver `docs/DATA_MODEL.md`, ADR-0008/DEC-017).
-- [ ] Resolución genérica de `route_id`/`trip_id`/`stop_id` (ADR-0011, `Propuesto`): sin literales `"C5"` hardcodeados en la lógica de parseo/resolución — la app debe poder resolver cualquier línea del núcleo Madrid, aunque Hito 2 solo pueble C5.
-- [ ] Validación de recorrido: orden de estaciones y direcciones de cada variante contra el GTFS estático real (MP-003/MP-004).
-- [ ] Tests de parseo reales contra el GTFS estático capturado en MP-003/MP-004.
-- [ ] Actualizar `docs/TASKS.md`/`docs/STATUS.md`/`docs/CHANGELOG.md` con evidencia real de ejecución antes de delegar a revisión.
+- [x] `packages/gtfs/`: parser en streaming de topología GTFS estático (`routes`/`trips`/`stops`/`stop_times`/`shapes`/`calendar`) desde ZIP o directorio, con comprobación de esquema y sin campos inventados.
+- [x] Las 5 variantes `source_route_id` de C5 Madrid (`10T0017C5`, `10T0018C5`, `10T0035C5`, `10T0047C5`, `10T0048C5`) permanecen como rutas distintas y se agrupan por `(network_id, short_name)`.
+- [x] Resolución genérica de `route_id`/`trip_id`/`stop_id`: filtros parametrizados, JOIN literal de trip estático, fallback solo para `routeId` explícito de trips `ADDED`, rechazo de contradicciones y prueba que impide literales de línea en la lógica.
+- [x] Validación real de recorrido: 14 patrones ordenados, incluidos pares inversos completos y cortos. **Hallazgo:** el GTFS de Renfe no contiene `direction_id`; la dirección verificable es `stop_sequence` + `shape_id`, y no se fabrica una columna ausente.
+- [x] **Hallazgo real:** `10T0035C5` tiene 8 trips y cero `stop_times` en el ZIP completo. El validador los informa como huérfanos de fuente y no inventa recorrido.
+- [x] Fixture real reducida, reproducible y atribuida (`tests/fixtures/gtfs_c5_real/`): 5 rutas, 15 trips representativos, 23 estaciones, 168 stop_times, 630 puntos de shape y 4 servicios; URL/checksums/proceso en su `MANIFEST.md` (DEC-023).
+- [x] 71/71 tests en verde: 7 GTFS nuevos + 64 regresiones (31 contratos, 6 fixtures GTFS-RT, 9 colector, 13 calidad, 5 snapshotter), incluidas 9 integraciones reales contra PostgreSQL. Ejecución adicional contra el ZIP oficial completo: 5 rutas, 8.160 trips, 23 estaciones, 165.205 stop_times, 630 puntos, 30 servicios, 14 patrones, 8 huérfanos, 0 errores de validación.
+- [x] `docs/TASKS.md`/`docs/STATUS.md`/`docs/CHANGELOG.md` actualizados con evidencia real antes de delegar a revisión.
 
 ### Resultado y límites
 
-Pendiente de implementación.
+Topología C5 parseada y validada contra la descarga oficial del `2026-11-19`. La API queda disponible para MP-012/MP-013 mediante `Topology.resolve_trip_route_id`, `resolve_trip_route` y `resolve_stop_sequences`; opera sobre cualquier línea configurada. El fichero completo no se versiona: son ~15,7 MB comprimidos/~298 MB extraídos y cambia con upstream; se conserva una fixture real mínima reproducible con checksum (DEC-023).
 
 ### Bloqueos
 
-Ninguno conocido al inicio de la tarea.
+Ninguno de implementación. Pendiente la revisión cruzada de Claude Code. Los 8 trips huérfanos y la ausencia de `direction_id` son propiedades verificadas del upstream, preservadas explícitamente, no defectos ocultos ni datos suplidos.
 
 ### Siguiente paso
 
@@ -468,6 +470,7 @@ Esta rama se bifurcó de `chore/mp-001-foundation` en el commit `3e7b533`, **ant
 | `2026-11-19` | Hito 2 | DEC-015 resuelto: con Hito 1 ya en `main`, la convergencia de MP-012 (MP-008+MP-010+MP-011) no requiere `git merge` real — basta ramificar la cadena MP-010→MP-011 desde una rama que ya contenga a `main` (y por tanto a MP-008) como ancestro; mecanismo general documentado en `AGENTS.md` para casos futuros con divergencia real | este documento; `AGENTS.md` |
 | `2026-11-19` | Hito 2 | ADR-0011 (`Propuesto`) redactado: distingue el piloto técnico de Hito 2 (C5) del objetivo de primera versión pública (toda la red de Cercanías Madrid), sin reescribir ADR-0001 (`Aceptado`) — amplía su alcance de implementación sin contradecir su decisión ya aceptada | `docs/adr/0011-public-scope-vs-technical-pilot.md` |
 | `2026-11-19` | Hito 2 | Worktrees de MP-010 (ejecutor Codex) y, tras su cierre, MP-011 (ejecutor Claude Code) preparados ramificando desde esta rama de coordinación (`chore/hito-2-coordination`, a su vez ramificada desde `main`) | `docs/TASKS.md` |
+| `2026-11-19` | MP-010 | Parser/validador GTFS implementado; 71/71 tests (7 nuevos + 64 regresiones, 9 integraciones PostgreSQL reales) y ejecución adicional contra ZIP oficial completo (5 rutas, 8.160 trips, 165.205 stop_times, 14 patrones, 8 huérfanos, 0 errores). Hallazgos: upstream sin `direction_id` y variante `10T0035C5` sin stop_times. Compose Madrid Pulse detenido sin borrar volumen; `*-traza-app` intactos. Tarea pasa a `REVIEW` para Claude Code | `packages/gtfs/`; `tests/fixtures/gtfs_c5_real/MANIFEST.md`; DEC-023 |
 
 ## Cómo usar este documento
 
