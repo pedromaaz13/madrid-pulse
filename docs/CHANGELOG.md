@@ -24,6 +24,7 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 - 101/101 tests en verde: 11 API nuevos (fixture reducida sin red + PostgreSQL real + un caso sintético de extremo a extremo + 2 de regresión de la revisión de Codex) + 90 de regresión (11 movement, 7 GTFS, 8 geo, 31 contratos, 6 fixtures, 9 collector, 13 quality, 5 snapshotter), incluidas las integraciones reales contra PostgreSQL.
 - `/api/v1/live/vehicles` nunca fabrica `route_id`/`line`/`position` para un vehículo no resoluble (devuelve `null`), probado explícitamente. `/api/v1/health` calcula `data_age_s`/`unchanged_for_s` reales desde `source_ingestion_run`, nunca fabricados.
 - App arrancada de verdad con `uvicorn --reload` y probada con `curl` real (`/api/v1/lines` → `200`, `/docs` → `200`), no solo `TestClient`.
+- Revisión final independiente de Codex aprobada sobre `15170c4`: el único cambio desde `c82e62f` es la corrección del docstring residual con las 9 líneas no-C5 y el trip sin resolver; diff limpio, 11/11 tests API en verde, PostgreSQL `668/484/3/120/0` intacto e identidad Git correcta sin coautor. MP-013 pasa a `DONE`.
 
 #### Fixed after Codex review (first round, blocking)
 - `observation.age_s` solo se calculaba cuando el motor de movimiento resolvía una posición, dejando `null` para los 20/24 vehículos reales que no son C5 aunque su timestamp crudo sí era conocido. Corregido calculándola siempre desde `observation.reported_at`, independiente de si la ruta resuelve.

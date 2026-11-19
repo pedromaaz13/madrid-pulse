@@ -71,7 +71,7 @@ Con Hito 1 ya fusionado a `main`, el caso concreto de MP-012 **deja de requerir 
 
 **MP-013 — FastAPI v1**
 
-Ejecutor: Claude Code · Revisor: OpenAI Codex · Estado: **REVIEW**
+Ejecutor: Claude Code · Revisor: OpenAI Codex · Estado: **DONE**
 
 Worktree/rama: `mp-013-fastapi`, ramificada desde `mp-012-movement-engine` (MP-012 `DONE`). MP-005/MP-007 (sus otras dependencias) ya ancestros de `main`, confirmado con `git merge-base --is-ancestor origin/main HEAD`.
 
@@ -95,7 +95,7 @@ Worktree/rama: `mp-013-fastapi`, ramificada desde `mp-012-movement-engine` (MP-0
 
 API real conforme a `docs/DATA_CONTRACTS.md` para los endpoints `live`/`lines`/`stations`/`health`; `history`/`metrics` diferidos explícitamente (DEC-027) porque los agregados diarios siguen sin poblarse desde MP-009. Sin literales de línea en la lógica (ADR-0011): `network_id`/`short_name` son configuración.
 
-Ejecución final real (`.venv`, Python 3.12): 99/99 tests — API 9, movement 11, GTFS 7, geo 8, contratos 31, fixtures 6, collector 9, quality 13, snapshotter 5. Suites con PostgreSQL ejecutadas con el contenedor `madrid-pulse` levantado por mí mismo; recuentos finales `668/484/3/120/0` sin residuo.
+Ejecución final real (`.venv`, Python 3.12): 101/101 tests — API 11, movement 11, GTFS 7, geo 8, contratos 31, fixtures 6, collector 9, quality 13, snapshotter 5. Suites con PostgreSQL ejecutadas con el contenedor `madrid-pulse` levantado por el ejecutor; recuentos finales `668/484/3/120/0` sin residuo.
 
 **Revisión independiente de OpenAI Codex (`2026-11-19`): NO APROBADA en primera ronda.** Reprodujo de forma propia: PostgreSQL `route`/`station`/`trip`=0 y `trip_id` resuelto=0; volumen `668/484/3/120/0` antes/después; GTFS oficial descargado y verificado (15.717.009 bytes); DEC-028 confirmado en los 4 trips C5 reales; 9 API + 90 regresión en verde; servidor `uvicorn` real arrancado y probado con `curl` (`health`/`live/vehicles`/`docs` → `200`). Hallazgos:
 
@@ -109,15 +109,17 @@ Ejecución final real (`.venv`, Python 3.12): 99/99 tests — API 9, movement 11
 - **Bloqueante 2 corregido:** `service_date` se calcula ahora con conversión explícita a Europe/Madrid (`now.astimezone(ZoneInfo("Europe/Madrid")).date()`), no la fecha UTC. Verificado revirtiendo el fix: el nuevo test (`test_service_date_uses_europe_madrid_calendar_not_utc`, cubre borde de invierno CET y verano CEST) falla con `AttributeError` contra el código anterior y pasa con el fix restaurado.
 - **Menor corregido:** recruzados los 24 pares reales `(source_vehicle_id, source_trip_id)` contra `trips.txt` del GTFS completo. Cifra definitiva: 4 C5, 19 de otras 9 líneas (C1, C2, C3, C4, C4a, C4b, C8a, C8b, C10), 1 (`SPECIAL_10_91567C2`) sin resolver. DEC-029, `apps/api/README.md`, `docs/CHANGELOG.md` y este documento corregidos.
 
-101/101 tests en verde (99 + 2 de regresión nuevos). Reenviado a Codex para segunda verificación en este mismo worktree.
+101/101 tests en verde (99 + 2 de regresión nuevos). La segunda verificación de Codex confirmó funcionalmente ambos bloqueantes y el cruce GTFS completo; quedó únicamente un docstring residual con la lista anterior de 5 líneas.
+
+**Revisión final independiente de OpenAI Codex (`2026-11-19`): APROBADA, sin hallazgos abiertos.** El commit `15170c4` corrige exclusivamente ese docstring: ahora registra 19 vehículos de C1/C2/C3/C4/C4a/C4b/C8a/C8b/C10 más 1 trip de refuerzo sin resolver. `git diff --check c82e62f..15170c4` está limpio y el diff contiene solo 4 inserciones/3 borrados en `apps/api/tests/test_api_contract.py`. La suite contractual aislada se reejecutó contra PostgreSQL real: 11/11 `OK`, con recuentos finales `668/484/3/120/0`; el contenedor se bajó sin borrar el volumen. Autor y committer de `15170c4`: `Pedro Matute <pedromaaz13@gmail.com>`, sin coautor. MP-013 pasa a `DONE`.
 
 ### Bloqueos
 
-Ninguno de implementación. Pendiente la segunda revisión cruzada de OpenAI Codex.
+Ninguno.
 
 ### Siguiente paso
 
-Al completarse y ser aprobada por OpenAI Codex (revisor), MP-014 (Frontend React/MapLibre, ejecutor Codex) puede ramificar su worktree desde `mp-013-fastapi` sin esperar merge a `main`, conforme al hito autorizado y ADR-0007.
+MP-014 (Frontend React/MapLibre, ejecutor Codex) puede ramificar su worktree desde `mp-013-fastapi` sin esperar merge a `main`, conforme al hito autorizado y ADR-0007.
 
 ## Tareas cerradas de la cadena
 
@@ -621,6 +623,7 @@ Esta rama se bifurcó de `chore/mp-001-foundation` en el commit `3e7b533`, **ant
 | `2026-11-19` | MP-013 | API FastAPI real implementada (`apps/api/`): 7 endpoints (`health`/`live/vehicles`(`/{id}`)/`lines`(`/{id}`)/`stations`(`/{id}`)), `history`/`metrics` diferidos explícitamente (DEC-027). Hallazgo real: `route`/`station`/`trip` siguen vacías y `trip_id` sigue `NULL` en PostgreSQL — resolución vía `Topology` en memoria, no `JOIN` SQL. Hallazgos DEC-028 (un corredor basta para ambos sentidos) y DEC-029 (solo 4/24 vehículos del soak son C5, confirma DEC-020 con datos reales). App arrancada con `uvicorn` y probada con `curl` real. 99/99 tests en verde. Tarea pasa a `REVIEW` para OpenAI Codex | `apps/api/`; `apps/api/openapi.json`; DEC-027–030 |
 | `2026-11-19` | MP-013 | Primera revisión de Codex: no aprobada — 2 bloqueantes reales reproducidos (`age_s` `null` para vehículos sin ruta resuelta aunque calculable; `service_date` usaba fecha UTC en vez de Europe/Madrid, desplazando el horario cerca de medianoche) + 1 menor (recuento de líneas no-C5 incompleto en DEC-029) | dispatch `ctx_792a5fe349ba` |
 | `2026-11-19` | MP-013 | Corregido: `age_s` se calcula siempre desde `observation.reported_at`; `service_date` usa conversión explícita a Europe/Madrid (verificado revirtiendo ambos fixes — los tests nuevos fallan exactamente como describió Codex y pasan con el fix restaurado); DEC-029 corregido con el cruce completo (4 C5, 19 de 9 líneas distintas, 1 sin resolver). 101/101 tests en verde. Reenviado a Codex para segunda verificación | — |
+| `2026-11-19` | MP-013 | Revisión final independiente de Codex aprobada sobre `15170c4`: el único residuo documental ya enumera C1/C2/C3/C4/C4a/C4b/C8a/C8b/C10 y el trip de refuerzo sin resolver; diff mínimo y limpio, 11/11 tests API en verde, PostgreSQL `668/484/3/120/0`, identidad Git correcta y sin coautor. **APROBADA, sin hallazgos abiertos.** MP-013 pasa a `DONE` | dispatch `ctx_1235555422b3`; commit `15170c4` |
 
 ## Cómo usar este documento
 
