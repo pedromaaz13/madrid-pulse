@@ -1,5 +1,24 @@
 # tests/e2e
 
-Tests end-to-end: replay histórico completo, consumo de API real por el frontend, checklist de preparación de MVP.
+Replay end-to-end determinista (MP-015): un único test inyecta bytes de
+fixtures reales (congeladas en MP-004, mismo esquema real observado en
+MP-003) como respuesta del `fetcher` inyectable del colector, y recorre la
+cadena completa sin tocar red en vivo: JSON crudo con forma de Renfe →
+colector (parseo/normalización/calidad/persistencia) → PostgreSQL real →
+resolución de topología GTFS → respuesta de API real (`apps.api.service`, la
+misma capa que consume el frontend de MP-014).
 
-**Vacío intencionadamente.** Se implementa en **MP-015** (E2E + readiness MVP), que depende de MP-009, MP-012, MP-013 y MP-014. No añadir tests aquí antes de esa tarea — ver `docs/TASKS.md` y `docs/STATUS.md`.
+Dos escenarios, ambos con datos reales, nunca mocks de la lógica de negocio:
+
+1. La fixture de MP-004 tal cual: prueba que el pipeline nunca fabrica una
+   resolución cuando el `trip_id` no existe en la GTFS cargada (igual que
+   DEC-029 en producción).
+2. Un payload sintético con la forma real exacta de MP-003, pero con un
+   `trip_id`/`stopId` que sí existe en la GTFS reducida de MP-010: prueba la
+   resolución positiva de extremo a extremo.
+
+```sh
+python3 -m unittest tests.e2e.test_replay -v   # requiere PostgreSQL local
+```
+
+Checklist de preparación de MVP: ver `docs/MVP_READINESS.md`.

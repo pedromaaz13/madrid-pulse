@@ -1,0 +1,89 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Nunca llama a Renfe/CRTM/OSM en vivo: todos los tests usan las fixtures
+# reales congeladas en tests/fixtures/ (ver docs/DECISIONS.md DEC-023/DEC-024)
+# o el PostgreSQL de servicio levantado en este mismo workflow.
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgis/postgis:17-3.5
+        env:
+          POSTGRES_DB: madrid_pulse
+          POSTGRES_USER: madrid_pulse
+          POSTGRES_PASSWORD: madrid_pulse_local
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U madrid_pulse -d madrid_pulse"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 20
+    env:
+      MADRID_PULSE_DATABASE_URL: postgresql://madrid_pulse:madrid_pulse_local@127.0.0.1:5433/madrid_pulse
+      MADRID_PULSE_DATABASE_DSN: postgresql://madrid_pulse:madrid_pulse_local@127.0.0.1:5433/madrid_pulse
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Instalar dependencias
+        run: pip install -r requirements.txt
+
+      - name: Aplicar migraciones (infra/migrations)
+        run: |
+          for migration in infra/migrations/*.up.sql; do
+            PGPASSWORD=madrid_pulse_local psql -v ON_ERROR_STOP=1 \
+              -h 127.0.0.1 -p 5433 -U madrid_pulse -d madrid_pulse -f "$migration"
+          done
+
+      - name: Ejecutar la suite real de tests Python
+        run: |
+          python -m unittest \
+            apps.api.tests.test_api_contract \
+            packages.contracts.tests.test_canonical_normalization \
+            packages.contracts.tests.test_nucleo \
+            packages.contracts.tests.test_raw_parsing \
+            packages.contracts.tests.test_synthetic_schema \
+            packages.geo.tests.test_real_feed \
+            packages.gtfs.tests.test_real_feed \
+            packages.movement.tests.test_engine \
+            packages.movement.tests.test_real_soak_postgres \
+            packages.quality.tests.test_engine \
+            packages.quality.tests.test_persistence \
+            services.collector.tests.test_collector_cycle \
+            services.collector.tests.test_http_client \
+            services.snapshotter.tests.test_export \
+            services.snapshotter.tests.test_export_replay \
+            services.snapshotter.tests.test_gold \
+            tests.fixtures.test_parse_fixtures \
+            tests.e2e.test_replay \
+            -v
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22.13.1"
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build

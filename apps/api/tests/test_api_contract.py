@@ -39,6 +39,21 @@ class ApiContractTests(unittest.TestCase):
         self.client = TestClient(app)
         self.client.__enter__()
         self.addCleanup(self.client.__exit__, None, None, None)
+        # Hallazgo de MP-015: algunas aserciones de este fichero (contadores
+        # exactos del soak real de MP-007, 24 vehículos/DEC-029) dependen de
+        # ese histórico puntual, irrepetible, que solo existe en la base
+        # local de desarrollo -- nunca en una base fresca (CI). `skip`
+        # explícito en esos tests concretos, no en todo el fichero: el resto
+        # usa solo la fixture GTFS reducida y sí es reproducible en CI.
+        vehicles = self.client.get("/api/v1/live/vehicles").json()
+        self._has_real_soak_dataset = len(vehicles) == 24
+
+    def _require_real_soak_dataset(self) -> None:
+        if not self._has_real_soak_dataset:
+            raise unittest.SkipTest(
+                "soak real de MP-007 (24 vehículos, DEC-029) no presente en esta base "
+                "-- normal en una base fresca sin el histórico local de desarrollo"
+            )
 
     def test_stations_endpoint_matches_real_gtfs_fixture(self) -> None:
         response = self.client.get("/api/v1/stations")
@@ -82,6 +97,7 @@ class ApiContractTests(unittest.TestCase):
         self.assertEqual(response.status_code, 404)
 
     def test_health_endpoint_reports_real_feed_runs(self) -> None:
+        self._require_real_soak_dataset()
         response = self.client.get("/api/v1/health")
         self.assertEqual(response.status_code, 200)
         feeds = response.json()["feeds"]
@@ -97,6 +113,7 @@ class ApiContractTests(unittest.TestCase):
         `None` para los vehículos reales que no son C5 aunque sí sabemos
         cuándo se observaron. La edad de la observación cruda es siempre
         calculable a partir de su propio timestamp."""
+        self._require_real_soak_dataset()
         response = self.client.get("/api/v1/live/vehicles")
         vehicles = response.json()
         unresolved = [v for v in vehicles if v["route_id"] is None]
@@ -112,6 +129,7 @@ class ApiContractTests(unittest.TestCase):
         refuerzo sin resolver) y no resuelven contra la fixture reducida de
         C5. La API debe devolverlos con campos `None` honestos, nunca con un
         `route_id`/posición inventados."""
+        self._require_real_soak_dataset()
         response = self.client.get("/api/v1/live/vehicles")
         self.assertEqual(response.status_code, 200)
         vehicles = response.json()
@@ -134,6 +152,7 @@ class ApiContractTests(unittest.TestCase):
         self.assertEqual(response.status_code, 404)
 
     def test_live_vehicle_detail_matches_list_entry(self) -> None:
+        self._require_real_soak_dataset()
         listing = self.client.get("/api/v1/live/vehicles").json()
         sample = listing[0]
         detail = self.client.get(f"/api/v1/live/vehicles/{sample['vehicle_id']}")

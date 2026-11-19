@@ -92,23 +92,29 @@ Orden de trabajo elegido (cada paso se implementa, se prueba de verdad y se docu
 
 - [x] Resolución real `route_id`/`station_id` sobre datos exportados, con tests.
 - [x] **`daily_line_metrics`/`station_daily_metrics` calculadas de verdad (DEC-033/DEC-034):** `services/snapshotter/gold.py` extendido con `build_line_daily_metrics`/`build_station_daily_metrics` sobre `packages.gtfs.Topology`, en vez de dbt-duckdb literal — decisión documentada (DEC-034): la resolución es lógica Python que no encaja en SQL puro sin duplicarla, y DEC-021 ya fijó un único motor sin dependencias añadidas. 10 tests nuevos reales (fixture GTFS + PostgreSQL), corrida real contra el soak completo del `2026-11-19`: 3 filas en `daily_line_metrics`, 18 en `station_daily_metrics`.
-- [ ] CI real (GitHub Actions) ejecutando las suites Python + frontend existentes.
-- [ ] Replay E2E determinista sobre fixtures reales, sin red en vivo, pipeline completo.
+- [x] **CI real (DEC-035):** `.github/workflows/ci.yml` — job Python (PostgreSQL de servicio, migraciones desde cero, suite real) + job frontend (lint/typecheck/test/build). Verificado de verdad en ambos sentidos: 114/114 contra la base de desarrollo (sin `skip`), 109 + 5 `skip` explícitos contra un contenedor PostgreSQL fresco simulando CI exactamente. Hallazgo real corregido en el proceso: 5 tests usaban `CollectorConfig()` en vez de `.from_env()`, ignorando `MADRID_PULSE_DATABASE_URL` en silencio.
+- [x] **Replay E2E determinista (`tests/e2e/test_replay.py`):** inyecta bytes de fixtures reales como respuesta del `fetcher` del colector real — JSON crudo con forma de Renfe → colector → PostgreSQL real → resolución GTFS → API real, sin red en vivo. Dos escenarios reales: la fixture de MP-004 (nunca fabrica una resolución) y un payload sintético con forma real para un trip que sí existe en la GTFS reducida (resuelve `route_id`/posición de extremo a extremo).
 - [ ] Auditoría de contenido de los 12 ADRs vs. implementación real (sin cambiar `Estado`).
 - [ ] Checklist de preparación de MVP para aceptación del propietario.
 - [ ] `docs/TASKS.md`/`docs/STATUS.md`/`docs/CHANGELOG.md`/`docs/DATA_CONTRACTS.md`/`docs/DECISIONS.md` actualizados con evidencia real.
 
 ### Resultado y límites
 
-Fase 1 completa: `daily_line_metrics`/`station_daily_metrics` reales. Verificación
-ejecutada: 112/112 tests Python (102 previos + 10 nuevos: 9 puros en
-`test_gold.py` contra la fixture GTFS real con calendario de un solo día, 1
-de replay real contra PostgreSQL en `test_export_replay.py`). PostgreSQL
-restaurado exactamente a `668/484/3/120/0` tras el test de replay. Corrida
-real end-to-end (`python -m services.snapshotter 2026-11-19` contra el soak
-completo): 3 líneas, 18 estaciones, sin filas fabricadas. Límites
-documentados en DEC-033 (calendario sin excepciones, umbral de puntualidad
-calibrable, sin `data_quality_events_count` por estación).
+Fases 1-2 completas: métricas gold reales + CI + replay E2E. Verificación
+ejecutada: 114/114 tests Python contra la base de desarrollo (102 previos +
+10 de la fase 1 + 2 de E2E replay); contra un PostgreSQL recién creado
+(migraciones aplicadas desde cero, simulando CI) 109 en verde + 5 `skip`
+explícitos y documentados (dependen del soak real irrepetible de MP-007,
+DEC-035). Frontend: lint/typecheck/5 tests/build en verde. PostgreSQL
+restaurado exactamente a `668/484/3/120/0` en todos los casos. Corrida real
+end-to-end del exportador (`python -m services.snapshotter 2026-11-19`
+contra el soak completo): 3 líneas, 18 estaciones, sin filas fabricadas.
+Límites documentados en DEC-033 (calendario sin excepciones, umbral de
+puntualidad calibrable, sin `data_quality_events_count` por estación) y
+DEC-035 (alcance real de CI: la suite de replay/contrato es reproducible
+desde cero; los tests atados al histórico puntual de MP-007 no lo son por
+diseño y se saltan explícitamente, nunca fallan en silencio ni se declaran
+superados sin ejecutarse).
 
 ### Bloqueos
 

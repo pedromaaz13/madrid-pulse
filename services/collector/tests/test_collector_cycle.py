@@ -27,8 +27,12 @@ def _load_fixture_bytes(name: str) -> bytes:
 
 
 def _connect_or_skip() -> psycopg.Connection:
+    # `.from_env()`, no `CollectorConfig()` a secas -- ver hallazgo de MP-015
+    # en `services/snapshotter/tests/test_export_replay.py`.
     try:
-        return psycopg.connect(CollectorConfig().database_url, autocommit=False, connect_timeout=3)
+        return psycopg.connect(
+            CollectorConfig.from_env().database_url, autocommit=False, connect_timeout=3
+        )
     except psycopg.OperationalError as exc:
         raise unittest.SkipTest(
             f"PostgreSQL local no disponible (levantar infra/docker/docker-compose.yml): {exc}"

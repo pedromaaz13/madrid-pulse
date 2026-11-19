@@ -14,8 +14,17 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 #### Verified
 - Corrida real end-to-end (`python -m services.snapshotter 2026-11-19`) contra el soak completo ya existente en PostgreSQL: 3 filas en `daily_line_metrics` (una por variante de ruta C5 con trips programados ese día), 18 en `station_daily_metrics`, sin datos fabricados. PostgreSQL restaurado exactamente a `668/484/3/120/0` tras el test de replay.
 
+- `.github/workflows/ci.yml`: job Python (PostgreSQL de servicio, migraciones aplicadas desde cero, suite real) y job frontend (lint/typecheck/test/build); nunca toca Renfe/CRTM/OSM en vivo. Verificado de verdad contra un contenedor PostgreSQL recién creado, no solo contra la base de desarrollo (DEC-035).
+- `tests/e2e/test_replay.py`: replay E2E determinista — inyecta bytes de fixtures reales como respuesta del `fetcher` real del colector, recorriendo la cadena completa sin red en vivo (JSON crudo con forma de Renfe → colector → PostgreSQL real → resolución GTFS → API real). Dos escenarios: la fixture de MP-004 (nunca fabrica una resolución) y un payload sintético con forma real para un trip de la GTFS reducida (resuelve `route_id`/posición de extremo a extremo).
+
+#### Fixed
+- DEC-035: 5 tests (`test_export_replay.py`, `test_collector_cycle.py`, `test_persistence.py`, `test_real_soak_postgres.py`) usaban `CollectorConfig()` en vez de `CollectorConfig.from_env()`, ignorando silenciosamente `MADRID_PULSE_DATABASE_URL` — nunca se notaba porque el valor por defecto coincidía con el de desarrollo local. Encontrado al verificar la suite contra un PostgreSQL recién creado (no la base de desarrollo). Los tests atados al soak real irrepetible de MP-007 (668 filas/24 vehículos) ahora hacen `skip` explícito y documentado, no `fail`, cuando ese histórico puntual no está presente.
+
+#### Verified
+- 114/114 tests Python en verde contra la base de desarrollo real (sin ningún `skip`); 109 en verde + 5 `skip` explícitos contra un PostgreSQL recién creado con las migraciones aplicadas desde cero, simulando exactamente lo que hace CI. Frontend: lint/typecheck/5 tests/build en verde.
+
 #### In progress
-- Resto del checklist (CI, E2E replay, auditoría de ADRs, checklist de MVP) — ver `docs/STATUS.md`.
+- Resto del checklist (auditoría de ADRs, checklist de MVP) — ver `docs/STATUS.md`.
 
 ### MP-014 — Frontend React/MapLibre C5
 

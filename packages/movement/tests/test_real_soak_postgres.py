@@ -20,12 +20,24 @@ ROOT = Path(__file__).parents[3]
 class RealSoakMovementIntegrationTests(unittest.TestCase):
     def test_real_soak_rows_are_map_matched_read_only_without_changing_counts(self) -> None:
         try:
+            # `.from_env()`, no `CollectorConfig()` a secas -- ver hallazgo de
+            # MP-015 en `services/snapshotter/tests/test_export_replay.py`.
             conn = psycopg.connect(
-                CollectorConfig().database_url, autocommit=False, connect_timeout=3
+                CollectorConfig.from_env().database_url, autocommit=False, connect_timeout=3
             )
         except psycopg.OperationalError as exc:
             raise unittest.SkipTest(f"PostgreSQL local no disponible: {exc}")
         self.addCleanup(conn.close)
+        # El soak real de MP-007 (668 filas) es una captura puntual, irrepetible,
+        # de los feeds en vivo de Renfe -- solo existe en la base local de
+        # desarrollo, nunca en una base fresca (p. ej. CI, ver MP-015). `skip`,
+        # no `fail`, cuando no está presente: no es un fallo de este código.
+        before = conn.execute("SELECT count(*) FROM vehicle_position_observation").fetchone()[0]
+        if before != 668:
+            raise unittest.SkipTest(
+                f"soak real de MP-007 no presente en esta base ({before} filas, se esperaban 668) "
+                "-- normal en una base fresca sin el histórico local de desarrollo"
+            )
         topology = load_feed(
             ROOT / "tests" / "fixtures" / "gtfs_c5_real",
             network_id="10",
@@ -37,7 +49,6 @@ class RealSoakMovementIntegrationTests(unittest.TestCase):
             )
         )
         engine = MovementEngine(topology, corridor)
-        before = conn.execute("SELECT count(*) FROM vehicle_position_observation").fetchone()[0]
         rows = conn.execute(
             """
             SELECT source_vehicle_id, source_trip_id, observed_at, latitude, longitude,
