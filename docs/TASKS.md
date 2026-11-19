@@ -311,8 +311,8 @@ Cada tarea se trabaja en **un único worktree/rama** (`mp-00X-nombre-corto`), co
 - **Entregables:** geometría de la C5 entre estaciones consecutivas, atribución ODbL incluida, documentación de ambigüedades (vía doble, cambios de ancho, etc.) sin copiar la implementación de Via Península.
 - **Criterios de aceptación:** geometría renderizable y revisable visualmente contra el trazado real; atribución OSM presente.
 - **Pruebas necesarias:** test de continuidad geométrica (sin saltos) entre estaciones consecutivas de la C5.
-- **Evidencia de verificación:** salida de test de continuidad + capturas de geometría.
-- **Estado:** `TODO`
+- **Evidencia de verificación:** `packages/geo/` implementado (`overpass.py`, `corridor.py`, `geometry.py`) contra 4 relaciones OSM reales (`11331`/`3418148`/`3418149`/`3418150`, `ref=C-5`/`network=Cercanías Madrid`). 7 tests nuevos en verde + 71 de regresión (78/78 totales): las 4 relaciones encadenan sus `ways` de vía sin huecos; las 23 estaciones reales de la ruta larga (ambos sentidos) proyectan en orden monótono sobre su corredor con distancia máxima real de 63,7 m; la ruta corta (`10T0047C5`) se confirma como subsegmento contiguo real de la misma vía, sin geometría inventada. Renderizado y revisado visualmente en navegador (Chrome DevTools MCP, captura completa): forma real de la C5 reconocible, estaciones sobre la vía sin saltos — ver `packages/geo/README.md`. Atribución ODbL en `docs/legal/ATTRIBUTION.md`/`docs/legal/DATA_SOURCES.md` (DEC-024). Ambigüedades documentadas, no forzadas: ruta corta sin relación OSM propia, relaciones "Fuenlabrada→Atocha→Móstoles" sin coincidir con el patrón corto real, huérfano `10T0035C5` aún sin validar, trazado troncal (`usage=main`) vs. ramal (`usage=branch`) sin verificar qué otras líneas comparten el tramo (DEC-025).
+- **Estado:** `REVIEW` — implementación de Claude Code terminada el 2026-11-19 y pendiente de auditoría independiente de OpenAI Codex en este mismo worktree.
 
 ---
 

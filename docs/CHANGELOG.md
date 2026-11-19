@@ -4,6 +4,28 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 
 ## [Unreleased]
 
+### MP-011 — Prototipo de geometría ferroviaria sobre OSM
+
+#### Added
+- `packages/geo/overpass.py`: cliente Overpass API genérico (por id de relación o `ref`/`network`), solo `urllib`.
+- `packages/geo/corridor.py`: encadena los `ways` de vía de una relación OSM en el orden declarado, uniendo por nodo extremo compartido; registra huecos reales como `ChainGap` en vez de fabricar uniones.
+- `packages/geo/geometry.py`: Haversine real + proyección punto-polilínea sin `shapely`/`pyproj`.
+- `packages/geo/tools/fetch_fixture.py` y `tools/render_preview.py`: descarga/congela geometría real y genera un SVG de depuración reproducible.
+- Fixture real de 4 relaciones OSM de C5 Madrid con checksum y atribución ODbL; 7 tests contra ella.
+
+#### Found
+- La ruta corta del GTFS (`10T0047C5`/`48C5`) no tiene relación OSM propia: es un subsegmento contiguo real de la misma vía que usa la ruta larga, confirmado por proyección.
+- Las relaciones OSM `3418148`/`3418149` ("Fuenlabrada → Atocha → Móstoles-El Soto") son la ruta larga truncada en Fuenlabrada y no coinciden con el patrón real de 6 estaciones de la ruta corta — variante real documentada, no usada.
+- `usage=main` (30 `ways`) / `usage=branch` (60 `ways`) en la vía: trazado troncal potencialmente compartido con otras líneas de Cercanías vs. ramal específico de C5 — no verificado qué otras líneas comparten el tramo.
+- "C5"/"C-5" colisiona también en OSM entre núcleos (Asturias, Sevilla, Cantabria, Valencia, Madrid), igual que ya documentó ADR-0008/DEC-017 para el GTFS de Renfe.
+- El endpoint público de Overpass devolvió `502 Gateway Timeout` por capacidad varias veces durante la descarga real; reintentos con pocos segundos de espera tuvieron éxito.
+
+#### Verified
+- 78/78 tests en verde: 7 geo nuevos + 71 de regresión (7 GTFS, 31 contratos, 6 fixtures GTFS-RT, 9 colector, 13 calidad, 5 snapshotter), incluidas 9 integraciones reales contra PostgreSQL.
+- Las 4 relaciones direccionales encadenan sus `ways` de vía sin huecos; las 23 estaciones reales de la ruta larga (ambos sentidos) proyectan en orden monótono con distancia máxima real de 63,7 m.
+- Evidencia visual real: SVG renderizado y revisado en navegador (Chrome DevTools MCP, captura completa) — forma real de la C5 reconocible, estaciones sin saltos sobre la vía.
+- La lógica de `corridor.py`/`geometry.py`/`overpass.py` no contiene el literal de la línea piloto (test de regresión).
+
 ### MP-010 — Topología GTFS C5
 
 #### Added

@@ -69,6 +69,42 @@ Con Hito 1 ya fusionado a `main`, el caso concreto de MP-012 **deja de requerir 
 
 ## Tarea actual
 
+**MP-011 — Prototipo de geometría ferroviaria sobre OSM**
+
+Ejecutor: Claude Code · Revisor: OpenAI Codex · Estado: **REVIEW**
+
+Worktree/rama: `mp-011-osm-geometry`, ramificada desde `mp-010-gtfs-topology` (MP-010 `DONE`).
+
+### Checklist de MP-011
+
+- [x] `packages/geo/overpass.py`: cliente Overpass API genérico (relación por id o por `ref`/`network`), sin literales de línea en la lógica; solo `urllib` de la librería estándar.
+- [x] `packages/geo/corridor.py`: encadena los `ways` de vía (`role=""`) de una relación OSM en el orden declarado, uniendo por nodo extremo compartido; un hueco real se registra como `ChainGap`, nunca se fabrica una unión inexistente.
+- [x] `packages/geo/geometry.py`: Haversine real + proyección punto-polilínea (plano local equirrectangular por consulta), sin `shapely`/`pyproj`.
+- [x] Descarga real de las 4 relaciones direccionales OSM de C5 Madrid (`11331`/`3418148`/`3418149`/`3418150`, `ref=C-5`/`network=Cercanías Madrid`, agrupadas por el `route_master` `3418151`): las 4 encadenan sus `ways` de vía sin huecos.
+- [x] Las 23 estaciones reales de la ruta larga (ambos sentidos, GTFS `10T0017C5`/`10T0018C5`) proyectan en orden monótono sobre su corredor correspondiente, distancia máxima real 63,7 m.
+- [x] **Hallazgo:** la ruta corta (`10T0047C5`/`48C5`) no tiene relación OSM propia — confirmado por proyección que es un subsegmento contiguo real de la misma vía que la ruta larga; no se fabrica geometría separada.
+- [x] **Hallazgo:** las relaciones `3418148`/`3418149` ("Fuenlabrada→Atocha→Móstoles-El Soto") son la ruta larga truncada en Fuenlabrada, no coinciden con el patrón real de 6 estaciones de la ruta corta — documentado como variante real no usada (DEC-025).
+- [x] **Hallazgo:** `usage=main` (30 `ways`)/`usage=branch` (60 `ways`) en la vía — trazado troncal potencialmente compartido vs. ramal específico de C5; no verificado qué otras líneas comparten el tramo (DEC-025).
+- [x] "C5"/"C-5" colisiona también en OSM entre núcleos (Asturias, Sevilla, Cantabria, Valencia, Madrid) — mismo patrón que ADR-0008/DEC-017 ya documentó para el GTFS de Renfe.
+- [x] Fixture real congelada y atribuida (`tests/fixtures/osm_c5_real/`): 4 relaciones, checksums y proceso en `MANIFEST.md`; licencia ODbL de la base de datos derivada confirmada (DEC-024).
+- [x] Evidencia visual real: `packages/geo/tools/render_preview.py` genera un SVG del corredor + estaciones; renderizado y revisado en navegador (Chrome DevTools MCP, captura completa) — forma real de la C5 reconocible, estaciones sin saltos sobre la vía.
+- [x] 78/78 tests en verde: 7 geo nuevos + 71 de regresión (7 GTFS + 31 contratos + 6 fixtures GTFS-RT + 9 colector + 13 calidad + 5 snapshotter), incluidas 9 integraciones reales contra PostgreSQL.
+- [x] `docs/TASKS.md`/`docs/STATUS.md`/`docs/CHANGELOG.md`/`docs/DECISIONS.md`/`docs/legal/ATTRIBUTION.md`/`docs/legal/DATA_SOURCES.md` actualizados con evidencia real antes de delegar a revisión.
+
+### Resultado y límites
+
+Geometría real de la C5 Madrid derivada de 4 relaciones OSM reales, validada contra las 23 estaciones reales del GTFS con distancia máxima 63,7 m y orden monótono. La API (`Corridor.project_station`, `build_corridor`) queda disponible para MP-012/MP-013 sobre cualquier relación configurada, sin literales de línea en la lógica. Limitaciones documentadas, no ocultas: `10T0035C5` sigue sin validar (huérfano desde MP-010), el reparto exacto de trazado troncal compartido con otras líneas no se verificó, y la correspondencia OSM↔GTFS para la ruta corta se resuelve por subsegmento del corredor largo, no por una relación OSM dedicada (no existe una).
+
+### Bloqueos
+
+Ninguno de implementación. Pendiente la revisión cruzada de OpenAI Codex. El endpoint público de Overpass devolvió `502` por capacidad varias veces durante la descarga real; los reintentos con pocos segundos de espera tuvieron éxito — documentado, no oculto.
+
+### Siguiente paso
+
+Al completarse y ser aprobada por OpenAI Codex (revisor), **debe resolverse DEC-015 antes de abrir el worktree de MP-012** (depende de MP-008, MP-010 y MP-011): verificar con `git merge-base --is-ancestor` que MP-008 (ya en `main`) es ancestro de la rama de MP-011, y ramificar MP-012 directamente desde `mp-011-osm-geometry` sin fusión real, conforme al mecanismo documentado en `AGENTS.md`.
+
+## Tareas cerradas de la cadena
+
 **MP-010 — Topología GTFS C5**
 
 Ejecutor: OpenAI Codex · Revisor: Claude Code · Estado: **DONE** (aprobado el 2026-11-19)
@@ -98,9 +134,7 @@ Ninguno. Los 8 trips huérfanos y la ausencia de `direction_id` son propiedades 
 
 ### Siguiente paso
 
-MP-010 está `DONE`. MP-011 (Prototipo de geometría ferroviaria sobre OSM, ejecutor Claude Code, revisor Codex) puede ramificar su worktree desde `mp-010-gtfs-topology` sin esperar merge a `main`, conforme al hito autorizado y ADR-0007.
-
-## Tareas cerradas de la cadena
+MP-010 está `DONE`. MP-011 (Prototipo de geometría ferroviaria sobre OSM, ejecutor Claude Code, revisor Codex) ramificó su worktree desde `mp-010-gtfs-topology` sin esperar merge a `main`, conforme al hito autorizado y ADR-0007 — registrado arriba en "Tarea actual".
 
 **MP-009 — Exportador histórico (Parquet particionado)**
 
@@ -474,6 +508,7 @@ Esta rama se bifurcó de `chore/mp-001-foundation` en el commit `3e7b533`, **ant
 | `2026-11-19` | Hito 2 | Worktrees de MP-010 (ejecutor Codex) y, tras su cierre, MP-011 (ejecutor Claude Code) preparados ramificando desde esta rama de coordinación (`chore/hito-2-coordination`, a su vez ramificada desde `main`) | `docs/TASKS.md` |
 | `2026-11-19` | MP-010 | Parser/validador GTFS implementado; 71/71 tests (7 nuevos + 64 regresiones, 9 integraciones PostgreSQL reales) y ejecución adicional contra ZIP oficial completo (5 rutas, 8.160 trips, 165.205 stop_times, 14 patrones, 8 huérfanos, 0 errores). Hallazgos: upstream sin `direction_id` y variante `10T0035C5` sin stop_times. Compose Madrid Pulse detenido sin borrar volumen; `*-traza-app` intactos. Tarea pasa a `REVIEW` para Claude Code | `packages/gtfs/`; `tests/fixtures/gtfs_c5_real/MANIFEST.md`; DEC-023 |
 | `2026-11-19` | MP-010 | Revisión independiente de Claude Code: código íntegro leído, 71/71 tests reejecutados subiendo/bajando el contenedor propio, recuentos reales `668/484/3/120/0` confirmados idénticos antes/después, ausencia del literal `"C5"` en la lógica verificada, identidad Git y enlaces a ADR-0011/DEC-022/DEC-023 correctos. **APROBADA, sin hallazgos.** MP-010 pasa a `DONE` | commit `add8aa6`; este documento |
+| `2026-11-19` | MP-011 | Geometría OSM real implementada (`packages/geo/`): 4 relaciones direccionales de C5 Madrid descargadas y encadenadas sin huecos; 23 estaciones reales proyectadas en orden monótono (máx. 63,7 m); ruta corta confirmada como subsegmento del corredor largo. Evidencia visual real en navegador (Chrome DevTools MCP). 78/78 tests en verde. Hallazgos documentados como ambigüedades (DEC-025), no forzados: relaciones Fuenlabrada-truncadas sin coincidir con la ruta corta real, `usage=main`/`branch` sin verificar reparto exacto, huérfano `10T0035C5` aún sin validar. Overpass API devolvió `502` por capacidad varias veces; reintentos con pocos segundos de espera tuvieron éxito. Fixture ODbL congelada y atribuida (DEC-024). Tarea pasa a `REVIEW` para OpenAI Codex | `packages/geo/`; `tests/fixtures/osm_c5_real/MANIFEST.md`; DEC-024; DEC-025 |
 
 ## Cómo usar este documento
 
