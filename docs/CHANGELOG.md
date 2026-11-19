@@ -11,9 +11,10 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 - `requirements.txt` + `.venv`: primera dependencia de terceros del proyecto (`psycopg[binary]`) para escribir en PostgreSQL desde Python; Python 3.12 fijado como versión de desarrollo (DEC-019).
 
 #### Verified
-- 45 tests reales en verde (31 contratos, 6 fixtures, 8 colector — 4 de ellos integración real contra PostgreSQL, no mocks).
+- 46 tests reales en verde (31 contratos, 6 fixtures, 9 colector — 5 de ellos integración real contra PostgreSQL, no mocks).
 - Soak test real de 20 minutos contra los tres feeds en vivo: 40 ciclos, 0 errores, 1155 entidades insertadas, 304 deduplicadas, 2622 fuera de alcance; durabilidad confirmada con una conexión nueva tras el proceso.
 - Rechazo de duplicados y detección de cambios reales verificados contra PostgreSQL real (no simulado).
+- Segunda revisión independiente de Codex aprobada: test de regresión del empate y suite completa reejecutados contra PostgreSQL real; `id DESC` confirmado como desempate determinista en las tres consultas de deduplicación. MP-007 pasa a `DONE`.
 
 #### Fixed during verification
 - `packages/contracts/nucleo.py`: `nucleo_prefix()` no reconocía trip_id de refuerzo con formato `SPECIAL_<núcleo>_<resto>` (sin prefijo numérico directo) — hallazgo real del feed en vivo, corregido con una regex específica.
