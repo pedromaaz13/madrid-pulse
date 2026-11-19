@@ -81,7 +81,7 @@ Worktree/rama: `mp-014-frontend`, ramificada desde `mp-013-fastapi` (MP-013 `DON
 - [x] **Gap de geometría resuelto (DEC-031):** `LineOut.geometry` nullable expone cada `Corridor.segments` por separado y las 23 estaciones proyectadas/ordenadas; no conecta paradas ni asigna el único corredor a otra línea. Test real contra GTFS/OSM y OpenAPI regenerado.
 - [x] Los cuatro estados de posición (`observed`/`estimated`/`stale`/`scheduled`) tienen forma, color, opacidad y explicación textual diferentes (ADR-0004). Un ciclo real fresco los produjo simultáneamente: 24/2/4/1.
 - [x] Campos `null` honestos: 114 de 145 vehículos reales quedaron sin ubicar tras el smoke; se contabilizan y listan explícitamente, sin ruta/posición inventada. `delay.coverage=missing` se explica como ausencia de dato.
-- [ ] **Gate visual pendiente de tercera verificación:** Claude confirmó responsive/estados/nulls/controles/atribución y, en su segunda pasada, dev sin errores con corredor y 23 estaciones. Esa pasada descubrió que preview no emitía el worker; Codex lo corrigió como asset explícito y verificó MIME, tamaño y hash reales. Esta sesión sigue sin navegador, así que Claude debe repetir dev + build/preview visualmente antes de `DONE`; HTTP/build no se presentan como sustituto visual.
+- [ ] **Gate visual pendiente de cuarta verificación:** Claude reconstruyó la build, confirmó (preview, pestañas nuevas) que el worker de MapLibre ya se sirve correctamente — el hallazgo de la segunda ronda queda cerrado. Encontró un tercer hallazgo, de severidad menor porque se autocorrige solo: en carga en frío, el corredor/estaciones a veces no aparecen hasta el siguiente ciclo de poll (~20 s) porque `MapView.tsx` registra `map.once("load", update)` en el efecto de `line`, y el evento `load` de MapLibre solo se dispara una vez en la vida del mapa — si la API local resuelve antes que ese evento, el registro llega tarde y el callback nunca se ejecuta; sin `map.on("error", ...)` tampoco hay forma de verlo en consola. Reproducido 2/2 en pestañas nuevas, autocorregido tras recarga o el siguiente poll. Delegado a Codex (`ctx_180bdc48fbc5`) con sugerencia de usar un `mapReady` persistente en vez de reregistrar `once`. Esta sesión sigue sin navegador, así que Claude debe repetir dev + build/preview en varias pestañas nuevas antes de `DONE`; HTTP/build no se presentan como sustituto visual.
 - [x] Arquitectura preparada para más líneas (ADR-0011): selector y estado derivados de `(network_id, line_id)` de la API; ningún literal de línea en componentes, hooks ni lógica compartida (la única coincidencia textual en `package-lock.json` pertenece a hashes de integridad).
 - [x] Via Península/Valfiguer no se consumen ni se copia código/diseño; implementación independiente.
 - [x] Smoke real de consumo API: PostgreSQL + GTFS oficial completo + `uvicorn` + Vite; `/lines` devolvió el corredor real y `/live/vehicles` los cuatro modos simultáneos. La carga visual del mapa permanece incluida en el gate anterior.
@@ -127,10 +127,16 @@ build en verde. Falta la tercera confirmación visual de Claude.
 
 ### Bloqueos
 
-No queda un bloqueo técnico conocido tras emitir y verificar el worker real de
-producción. Permanece abierto el gate de tercera inspección visual dev +
-build/preview por Claude Code, porque Codex no dispone de navegador en esta
-sesión. La tarea sigue en `REVIEW`, nunca `DONE` por el ejecutor.
+El worker de MapLibre en producción queda confirmado: Claude reconstruyó la
+build y lo verificó en varias pestañas nuevas de navegador real. Encontró un
+tercer hallazgo, menor porque se autocorrige solo en ~20 s (siguiente ciclo de
+poll): en carga en frío, `MapView.tsx` puede perder el evento `load` de
+MapLibre si la API local resuelve antes que él, dejando el corredor/estaciones
+sin dibujar hasta el siguiente poll — sin `map.on("error", ...)`, el fallo es
+silencioso. Delegado a Codex (`ctx_180bdc48fbc5`). Permanece abierto el gate
+de cuarta inspección visual (dev + build/preview, varias pestañas nuevas) por
+Claude Code, porque Codex no dispone de navegador en esta sesión. La tarea
+sigue en `REVIEW`, nunca `DONE` por el ejecutor.
 
 ### Siguiente paso
 
