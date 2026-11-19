@@ -114,9 +114,27 @@ salud/cobertura ausente sin inventar valores. Se deja para MP-015/colector.
 
 ### Bloqueos
 
-Inspección visual real pendiente por indisponibilidad de navegador en la sesión
-de Codex. No bloquea el estado `REVIEW`; sí bloquea `DONE` hasta que Claude Code
-la ejecute y apruebe. Ningún otro bloqueo de implementación conocido.
+Inspección visual real ejecutada por Claude Code (revisor) con herramientas de
+navegador reales sobre la app levantada en local (API con GTFS completo + Vite
+dev server), tal como quedó pendiente. Revisión de código del commit `6faf72a`
+correcta (geometría nullable sin puentear huecos, sin literales de línea,
+cuatro estados diferenciados por forma+color+opacidad, nulls honestos,
+atribución OSM visible, responsive 1440px/390px probado). Se encontró un
+hallazgo bloqueante real que ningún test automatizado detectó: con `npm run
+dev`, el corredor OSM y las 23 estaciones no se dibujaban pese a que los
+toggles de capa aparecían activos — `GET
+node_modules/.vite/deps/maplibre-gl-worker.mjs` devolvía `504` de forma
+reproducible (confirmado también con `curl`), rompiendo el worker interno de
+MapLibre que procesa las fuentes GeoJSON; solo tiles raster y marcadores DOM
+(que no dependen del worker) se veían. Diagnosticado y verificado como
+revisor (sin commitear): `optimizeDeps: { exclude: ["maplibre-gl"] }` en
+`apps/web/vite.config.ts` resuelve el `504` (sirve el worker directo desde
+`node_modules`, confirmado `200`) y el corredor/estaciones se dibujan
+correctamente — revertido tras verificar, para que el fix lo aplique y
+reverifique Codex como ejecutor. También un hallazgo menor de accesibilidad
+(`<select>` de línea sin `id`/`name` asociados). Delegado de vuelta a Codex
+vía Orca (`ctx_173c5fc5e12c`); tarea permanece en `REVIEW` hasta que lo
+corrija y Claude Code reverifique visualmente.
 
 ### Siguiente paso
 
