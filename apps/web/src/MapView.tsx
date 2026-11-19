@@ -55,9 +55,27 @@ function fitLine(map: MapLibreMap, line: Line | null) {
   map.fitBounds(bounds, { padding: 54, duration: 700, maxZoom: 13 });
 }
 
+function applyLine(map: MapLibreMap, line: Line | null, fittedLineRef: { current: string | null }) {
+  (map.getSource(SOURCE_ID) as GeoJSONSource | undefined)?.setData(lineFeatures(line));
+  (map.getSource("stations") as GeoJSONSource | undefined)?.setData(stationFeatures(line));
+  if (line && fittedLineRef.current !== `${line.network_id}:${line.line_id}`) {
+    fittedLineRef.current = `${line.network_id}:${line.line_id}`;
+    fitLine(map, line);
+  }
+}
+
+function applyLayerVisibility(map: MapLibreMap, layers: LayerVisibility) {
+  map.setLayoutProperty("corridor", "visibility", layers.corridor ? "visible" : "none");
+  map.setLayoutProperty("corridor-shadow", "visibility", layers.corridor ? "visible" : "none");
+  map.setLayoutProperty("stations", "visibility", layers.stations ? "visible" : "none");
+}
+
 export function MapView({ line, vehicles, layers, recenterToken }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
+  const mapReadyRef = useRef(false);
+  const lineRef = useRef(line);
+  const layersRef = useRef(layers);
   const markersRef = useRef<maplibregl.Marker[]>([]);
   const fittedLineRef = useRef<string | null>(null);
 
@@ -109,34 +127,34 @@ export function MapView({ line, vehicles, layers, recenterToken }: Props) {
           "circle-stroke-width": 2,
         },
       });
+      mapReadyRef.current = true;
+      applyLine(map, lineRef.current, fittedLineRef);
+      applyLayerVisibility(map, layersRef.current);
+    });
+    map.on("error", (event) => {
+      console.error("MapLibre map error", event.error);
     });
     mapRef.current = map;
     return () => {
+      mapReadyRef.current = false;
+      fittedLineRef.current = null;
       map.remove();
       mapRef.current = null;
     };
   }, []);
 
   useEffect(() => {
+    lineRef.current = line;
     const map = mapRef.current;
-    if (!map) return;
-    const update = () => {
-      (map.getSource(SOURCE_ID) as GeoJSONSource | undefined)?.setData(lineFeatures(line));
-      (map.getSource("stations") as GeoJSONSource | undefined)?.setData(stationFeatures(line));
-      if (line && fittedLineRef.current !== `${line.network_id}:${line.line_id}`) {
-        fittedLineRef.current = `${line.network_id}:${line.line_id}`;
-        fitLine(map, line);
-      }
-    };
-    if (map.loaded()) update(); else map.once("load", update);
+    if (!map || !mapReadyRef.current) return;
+    applyLine(map, line, fittedLineRef);
   }, [line]);
 
   useEffect(() => {
+    layersRef.current = layers;
     const map = mapRef.current;
-    if (!map || !map.getLayer("corridor")) return;
-    map.setLayoutProperty("corridor", "visibility", layers.corridor ? "visible" : "none");
-    map.setLayoutProperty("corridor-shadow", "visibility", layers.corridor ? "visible" : "none");
-    map.setLayoutProperty("stations", "visibility", layers.stations ? "visible" : "none");
+    if (!map || !mapReadyRef.current) return;
+    applyLayerVisibility(map, layers);
   }, [layers]);
 
   useEffect(() => {
@@ -160,7 +178,7 @@ export function MapView({ line, vehicles, layers, recenterToken }: Props) {
   }, [vehicles, layers.vehicles]);
 
   useEffect(() => {
-    if (recenterToken > 0) fitLine(mapRef.current!, line);
+    if (recenterToken > 0 && mapRef.current && mapReadyRef.current) fitLine(mapRef.current, line);
   }, [recenterToken, line]);
 
   return (
