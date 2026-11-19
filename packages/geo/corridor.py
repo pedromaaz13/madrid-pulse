@@ -36,9 +36,18 @@ class Corridor:
     relation_id: int
     name: str
     node_chain: tuple[int, ...]
-    """Secuencia de ``node_id`` del corredor, en el orden real de la vía."""
+    """Secuencia de ``node_id`` de TODOS los ``ways`` de vía, en el orden
+    declarado por la relación. Solo para inspección/depuración: cuando hay
+    huecos, NO representa un recorrido físico continuo — usar ``segments``
+    para cualquier cálculo geométrico (proyección, longitud)."""
     polyline: tuple[tuple[float, float], ...]
-    """``(lat, lon)`` de ``node_chain``, mismo orden e índice."""
+    """``(lat, lon)`` de ``node_chain``, mismo orden e índice. Mismo aviso
+    que ``node_chain``: no usar para proyección/longitud si hay huecos."""
+    segments: tuple[tuple[tuple[float, float], ...], ...]
+    """Tramos realmente continuos del corredor (sin fabricar unión a través
+    de un hueco). Con ``gaps`` vacío, es una tupla de un único tramo igual
+    a ``polyline``. Toda proyección/longitud se calcula sobre ``segments``,
+    nunca interpolando entre dos tramos distintos."""
     gaps: tuple[ChainGap, ...]
     stop_node_ids: tuple[int, ...]
     """Nodos con ``role=stop`` en la relación, en el orden declarado."""
@@ -50,12 +59,22 @@ class Corridor:
     def project_station(self, lat: float, lon: float) -> tuple[Projection, float]:
         """Proyecta una coordenada real sobre el corredor.
 
-        Devuelve la proyección y su posición en metros desde el inicio del
-        corredor (longitud de arco), útil para comprobar que el orden de
-        estaciones de un GTFS coincide con el orden real de la vía.
+        Evalúa cada tramo continuo (``segments``) por separado y devuelve la
+        proyección de distancia real mínima junto con su longitud de arco
+        **local al tramo que la contiene** — nunca una distancia fabricada
+        atravesando un hueco real entre dos tramos desconectados.
         """
-        projection = project_point_to_polyline(lat, lon, list(self.polyline))
-        return projection, arc_length_to(list(self.polyline), projection)
+        best: Projection | None = None
+        best_segment: tuple[tuple[float, float], ...] | None = None
+        for segment in self.segments:
+            if len(segment) < 2:
+                continue
+            candidate = project_point_to_polyline(lat, lon, list(segment))
+            if best is None or candidate.distance_m < best.distance_m:
+                best, best_segment = candidate, segment
+        if best is None or best_segment is None:
+            raise ValueError("el corredor no tiene ningún tramo geométrico válido")
+        return best, arc_length_to(list(best_segment), best)
 
 
 def build_corridor(geometry: RelationGeometry) -> Corridor:
@@ -66,17 +85,18 @@ def build_corridor(geometry: RelationGeometry) -> Corridor:
         ref for (kind, ref, role) in geometry.member_refs if kind == "node" and role == TrackRole.STOP
     )
 
-    chain: list[int] = []
+    segments_nodes: list[list[int]] = []
     gaps: list[ChainGap] = []
+    current: list[int] = []
     previous_end: int | None = None
     for index, way_id in enumerate(track_way_ids):
         way_nodes = geometry.ways[way_id]
         if previous_end is None:
-            chain.extend(way_nodes)
+            current = list(way_nodes)
         elif way_nodes[0] == previous_end:
-            chain.extend(way_nodes[1:])
+            current.extend(way_nodes[1:])
         elif way_nodes[-1] == previous_end:
-            chain.extend(reversed(way_nodes[:-1]))
+            current.extend(reversed(way_nodes[:-1]))
         else:
             gaps.append(
                 ChainGap(
@@ -87,22 +107,33 @@ def build_corridor(geometry: RelationGeometry) -> Corridor:
                     way_end_node=way_nodes[-1],
                 )
             )
-            chain.extend(way_nodes)
-        previous_end = chain[-1] if chain else None
+            segments_nodes.append(current)
+            current = list(way_nodes)
+        previous_end = current[-1] if current else None
+    if current:
+        segments_nodes.append(current)
 
-    polyline = tuple(geometry.nodes[node_id] for node_id in chain)
+    full_chain = tuple(node_id for segment in segments_nodes for node_id in segment)
+    segments = tuple(
+        tuple(geometry.nodes[node_id] for node_id in segment) for segment in segments_nodes
+    )
+    polyline = tuple(geometry.nodes[node_id] for node_id in full_chain)
     return Corridor(
         relation_id=geometry.relation_id,
         name=geometry.tags.get("name", ""),
-        node_chain=tuple(chain),
+        node_chain=full_chain,
         polyline=polyline,
+        segments=segments,
         gaps=tuple(gaps),
         stop_node_ids=stop_node_ids,
     )
 
 
 def corridor_length_m(corridor: Corridor) -> float:
+    """Longitud real total: suma solo dentro de cada tramo continuo, nunca
+    a través de un hueco entre tramos distintos."""
     total = 0.0
-    for (lat1, lon1), (lat2, lon2) in zip(corridor.polyline, corridor.polyline[1:]):
-        total += haversine_m(lat1, lon1, lat2, lon2)
+    for segment in corridor.segments:
+        for (lat1, lon1), (lat2, lon2) in zip(segment, segment[1:]):
+            total += haversine_m(lat1, lon1, lat2, lon2)
     return total

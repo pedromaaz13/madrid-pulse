@@ -22,12 +22,14 @@ agrupadas por el `route_master` `3418151` ("Móstoles-El Soto ⇄ Atocha ⇄
 Fuenlabrada ⇄ Humanes") que no se descarga aquí porque no aporta geometría
 propia (solo agrupa a las cuatro siguientes):
 
-| Fichero | Relación | Nombre OSM | Nodos | `ways` |
-|---|---:|---|---:|---:|
-| `relation_11331.json` | 11331 | Tren C-5: Humanes → Atocha → Móstoles-El Soto | 753 | 106 |
-| `relation_3418148.json` | 3418148 | Tren C-5: Fuenlabrada → Atocha → Móstoles-El Soto | 713 | 102 |
-| `relation_3418149.json` | 3418149 | Tren C-5: Móstoles-El Soto → Atocha → Fuenlabrada | 760 | 94 |
-| `relation_3418150.json` | 3418150 | Tren C-5: Móstoles-El Soto → Atocha → Humanes | 803 | 98 |
+| Fichero | Relación | Nombre OSM | Nodos | `ways` | SHA-256 |
+|---|---:|---|---:|---:|---|
+| `relation_11331.json` | 11331 | Tren C-5: Humanes → Atocha → Móstoles-El Soto | 753 | 106 | `ec9d7decaf8d452b267df965d154c66abc7eb33d2e7cc4991db8f4dcbcab2948` |
+| `relation_3418148.json` | 3418148 | Tren C-5: Fuenlabrada → Atocha → Móstoles-El Soto | 713 | 102 | `60416292689abedfe3ff20fee855c0e0bfad5e05b79cd54c8d22db1ee579cc8b` |
+| `relation_3418149.json` | 3418149 | Tren C-5: Móstoles-El Soto → Atocha → Fuenlabrada | 760 | 94 | `4af4497190bbac1b08f924b8bb751294fd63698d2dcec5798a0d67bfb76bee93` |
+| `relation_3418150.json` | 3418150 | Tren C-5: Móstoles-El Soto → Atocha → Humanes | 803 | 98 | `79f9966b2b7f3fdcebf1f41083d13ff58de39a496eca80caeb274c9b9f4d375a` |
+
+Recalculables con `shasum -a 256 relation_*.json` desde este directorio.
 
 `ways` incluye tanto vía (`role=""`, 80-90 por relación) como andenes
 (`role="platform"`, hasta 16 por relación); la geometría del corredor solo

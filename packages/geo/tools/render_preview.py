@@ -38,7 +38,16 @@ def render(relation_path: Path, stops_path: Path, stop_ids: list[str], title: st
         y = pad + (1 - (lat - min_lat) / (max_lat - min_lat)) * (height - 2 * pad)
         return x, y
 
-    path_points = " ".join(f"{x:.1f},{y:.1f}" for x, y in (to_xy(lat, lon) for lat, lon in corridor.polyline))
+    # Un <polyline> POR TRAMO continuo: si hubiera un hueco real entre dos
+    # tramos, dibujar un único trazo con todos los puntos fabricaría
+    # visualmente la misma unión inexistente que corrigió el hallazgo de
+    # Codex en corridor.py (ChainGap registrado pero geometría fabricada).
+    segment_paths = "".join(
+        f'<polyline points="{" ".join(f"{x:.1f},{y:.1f}" for x, y in (to_xy(lat, lon) for lat, lon in segment))}" '
+        f'fill="none" stroke="#2c3e50" stroke-width="2.5"/>'
+        for segment in corridor.segments
+        if len(segment) >= 2
+    )
 
     markers = []
     labels = []

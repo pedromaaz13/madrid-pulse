@@ -25,14 +25,22 @@ projection, arc_m = corridor.project_station(lat=40.3502269, lon=-3.8317018)  # 
 
 `build_corridor` encadena los `ways` con `role=""` (vía) en el orden
 declarado por la relación, uniendo por nodo extremo compartido. Si dos
-`ways` consecutivos no comparten extremo, se registra como `ChainGap` en vez
-de fabricar una unión inexistente — ningún hueco real se oculta.
+`ways` consecutivos no comparten extremo, se registra como `ChainGap` **y**
+se cierra el tramo continuo en curso: `Corridor.segments` guarda cada tramo
+real por separado, nunca uno fabricado que atraviese el hueco. (Hallazgo de
+la revisión de Codex: una primera versión registraba el `ChainGap` pero
+seguía concatenando ambos `ways` en una única `polyline`, de modo que
+`project_station` devolvía una proyección fabricada sobre el hueco —
+corregido, con test de regresión sobre un hueco sintético.) `polyline`/
+`node_chain` se conservan solo para inspección; todo cálculo geométrico usa
+`segments`.
 
 `Corridor.project_station` proyecta una coordenada real (de una estación
-GTFS, por ejemplo) sobre la polilínea del corredor con distancia Haversine
-real, sin depender de `shapely`/`pyproj`: la proyección punto-segmento usa un
-plano local equirrectangular por consulta, suficiente para el margen de
-error (metros) que exige un prototipo de corredor de pocas decenas de km.
+GTFS, por ejemplo) sobre cada tramo continuo del corredor con distancia
+Haversine real, sin depender de `shapely`/`pyproj`: la proyección
+punto-segmento usa un plano local equirrectangular por consulta, suficiente
+para el margen de error (metros) que exige un prototipo de corredor de
+pocas decenas de km.
 
 ## Fuente real y hallazgos de MP-011
 
@@ -47,10 +55,16 @@ en `tests/fixtures/osm_c5_real/MANIFEST.md` (DEC-024, ODbL).
   distancia máxima de 63,7 m a la vía — compatible con el desplazamiento
   real del andén respecto al eje de la vía, no un error de correspondencia.
 - La ruta corta (`10T0047C5`/`10T0048C5`, Villaverde Alto↔Fuenlabrada) **no
-  tiene relación OSM propia**: sus estaciones son, en el orden real del
-  GTFS, un subsegmento contiguo de la misma vía que usa la ruta larga —
-  confirmado proyectando sobre el mismo corredor en vez de inventar una
-  geometría separada.
+  tiene relación OSM propia**. Su variante base de 6 estaciones (sin
+  Atocha) es, confirmado por comparación literal de IDs, una subsecuencia
+  **contigua** real de paradas de la ruta larga — no solo "proyecta en el
+  mismo corredor". Una variante real distinta del mismo `route_id` (7
+  estaciones, con Atocha antepuesta a Villaverde Alto) proyecta en orden
+  monótono sobre el mismo corredor pero **no** es contigua: omite las 4
+  paradas intermedias reales entre Atocha y Villaverde Alto (hallazgo de la
+  revisión de Codex — "monótono" y "subsegmento contiguo" no son lo mismo,
+  y se comprueban como afirmaciones separadas en los tests). En ningún caso
+  se fabrica una geometría separada para la ruta corta.
 - El `route_master` también agrupa `3418148`/`3418149` ("Fuenlabrada →
   Atocha → Móstoles-El Soto" y su inversa): topológicamente son la ruta
   larga truncada en Fuenlabrada (22 estaciones en vez de 23, sin llegar a
