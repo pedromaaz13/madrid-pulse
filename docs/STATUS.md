@@ -15,11 +15,13 @@ Gates activos: decisiones reales de licencia o coste, conforme a ADR-0007.
 
 MP-001 está `DONE`: Codex aprobó la revisión cruzada y, conforme a ADR-0007, no es necesario que la rama esté fusionada en `main` para que una tarea dependiente avance.
 
+**Hito 1 completado el `2026-11-19`: MP-002 → MP-009 están `DONE` tras revisión cruzada.** Queda pendiente que el propietario decida los siguientes pasos y autorice un nuevo hito; no debe iniciarse MP-010 ni ninguna tarea fuera del rango ya autorizado hasta recibir esa autorización.
+
 ## Tarea actual
 
 **MP-009 — Exportador histórico (Parquet particionado)**
 
-Ejecutor: Claude Code · Revisor: OpenAI Codex · Estado: **REVIEW**
+Ejecutor: Claude Code · Revisor: OpenAI Codex · Estado: **DONE** (aprobado el 2026-11-19)
 
 Worktree/rama: `mp-009-historical-export`, ramificada desde `mp-008-quality-engine` (MP-008 `DONE`)
 
@@ -36,6 +38,7 @@ Worktree/rama: `mp-009-historical-export`, ramificada desde `mp-008-quality-engi
 - [x] Identidad Git verificada; contenedor `madrid-pulse` detenido al finalizar la implementación (volumen real conservado); `*-traza-app` intactos.
 - [x] **Primera revisión independiente de Codex (dispatch `ctx_d2b95955a73a`): no aprobada** — reejecutó las 64 pruebas, confirmó la conversión Europe/Madrid y el export/gold reales, y encontró un bloqueante real: las 3 `service_alert` reales (ingeridas el 19-nov vía `ingestion_run` 78) desaparecían del export de ese día porque `export.py` particionaba `service_alert` por `active_period_start` (ventana de vigencia del aviso) en vez de por cuándo se observó — esa tabla no tiene columna propia de observación.
 - [x] Corregido uniendo `service_alert` a `source_ingestion_run` y usando `started_at` de esa ejecución; verificado revirtiendo el fix (el test ampliado falla `0 != 1` exactamente como reportó Codex) y restaurándolo (pasa). Reexportado el día real: `service_alert` pasa de 0 a 3 filas. Test de replay ampliado para cubrir las 5 tablas (antes solo 2).
+- [x] **Segunda revisión independiente de Codex (dispatch `ctx_095ae1499806`): APROBADA** — 2/2 tests de replay ampliados en verde contra PostgreSQL real; limpieza de las 5 tablas confirmada (`vp/tu/alert/dqe/run = 0` tras el test). Export real independiente: 668/484/**3**/120/0; los tres avisos esperados aparecen en Parquet ligados al run 78. Diff, identidad Git y aislamiento de contenedores correctos.
 
 ### Resultado y límites
 
@@ -43,11 +46,11 @@ El exportador mueve de verdad datos reales de PostgreSQL a Parquet particionado 
 
 ### Bloqueos
 
-Ninguno abierto: el bloqueante real de la primera revisión de Codex (semántica temporal de `service_alert`) está corregido y verificado; la limitación de alcance del agregado gold está documentada y no bloquea el criterio de aceptación real (replay sin pérdida de la capa raw).
+Ninguno: el bloqueante real de la primera revisión de Codex (semántica temporal de `service_alert`) está corregido y re-verificado independientemente; la limitación de alcance del agregado gold está documentada y no bloquea el criterio de aceptación real (replay sin pérdida de la capa raw).
 
 ### Siguiente paso
 
-Codex debe verificar de forma independiente que el fix de `service_alert` resuelve su hallazgo (puede reexportar el día real `2026-11-19` y confirmar 3 filas de alertas) antes de aprobar. Esta es la última tarea de Hito 1 (MP-002 → MP-009) — su cierre completa el hito autorizado.
+MP-009 y el Hito 1 (`MP-002` → `MP-009`) están completos. El worktree queda listo para revisión del propietario; no se inicia MP-010 ni otro hito hasta que el propietario lo autorice expresamente.
 
 ## Tareas cerradas de la cadena
 
@@ -381,6 +384,7 @@ Esta rama se bifurcó de `chore/mp-001-foundation` en el commit `3e7b533`, **ant
 | `2026-11-19` | MP-009 | Exportador DuckDB implementado; hallazgo real de huso horario (Europe/Madrid vs. UTC) encontrado y corregido antes de delegar; export real del 19-nov (1272 filas, ~76 KB ZSTD) y test de replay verificados; tarea pasa a `REVIEW`, delegada a Codex en este mismo worktree | `services/snapshotter/`; commit `0119c6a` |
 | `2026-11-19` | MP-009 | Primera revisión de Codex: no aprobada — bloqueante real reproducido (3 `service_alert` reales desaparecían del export por particionar por `active_period_start` en vez de por observación real vía `ingestion_run_id`) | dispatch `ctx_d2b95955a73a` |
 | `2026-11-19` | MP-009 | Corregido uniendo `service_alert` a `source_ingestion_run`; replay ampliado a las 5 tablas; verificado revirtiendo el fix (falla `0≠1` como reportó Codex) y restaurándolo; reexportado el día real: `service_alert` pasa de 0 a 3; reenviado a Codex para segunda verificación | — |
+| `2026-11-19` | MP-009 / Hito 1 | Segunda revisión independiente de Codex aprobada: replay ampliado 2/2, limpieza completa, export real 668/484/3/120/0 y tres alertas confirmadas en Parquet. MP-009 pasa a `DONE`; Hito 1 (`MP-002` → `MP-009`) completo, pendiente de decisión del propietario sobre el siguiente hito | dispatch `ctx_095ae1499806` |
 
 ## Cómo usar este documento
 

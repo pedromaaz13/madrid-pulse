@@ -23,6 +23,9 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 #### Fixed after Codex review (first round, blocking)
 - `services/snapshotter/export.py`: `service_alert` no tiene columna propia de observación/recepción; se particionaba por `active_period_start` (la ventana de VIGENCIA del aviso), por lo que 3 alertas reales ingeridas el 19-nov desaparecían de ese día si su vigencia caía en otra fecha. Corregido uniendo `service_alert` a `source_ingestion_run` (vía `ingestion_run_id`) y usando `started_at` de esa ejecución como el momento de observación real. `test_export_replay.py` ampliado para cubrir las 5 tablas (antes solo `vehicle_position_observation`/`trip_update_observation`); verificado revirtiendo el fix (falla `0 ≠ 1` exactamente como reportó Codex) y restaurándolo. Reexportado el día real: `service_alert` pasa de 0 a 3 filas.
 
+#### Independent review (second round, approved)
+- Codex auditó `a7b36b0`, ejecutó los 2 tests de replay ampliados contra PostgreSQL real y confirmó limpieza completa de las filas temporales en las 5 tablas. Reexportó independientemente `2026-11-19` (668 posiciones, 484 actualizaciones, 3 alertas, 120 ejecuciones, 0 eventos de calidad) y leyó las tres alertas esperadas desde Parquet. MP-009 queda `DONE` y completa el Hito 1 (`MP-002` → `MP-009`), pendiente de que el propietario autorice los siguientes pasos.
+
 #### Known limitation (documented, not blocking)
 - El resumen gold calcula por núcleo, no por `route_id`/`station_id` (`daily_line_metrics`/`station_daily_metrics`): esa resolución depende de MP-010 (GTFS estático), que no es dependencia de MP-009. Ver DEC-021.
 
