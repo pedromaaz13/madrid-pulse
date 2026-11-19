@@ -4,6 +4,11 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 
 ## [Unreleased]
 
+### MP-014 — Frontend React/MapLibre C5
+
+#### In progress
+- Worktree `mp-014-frontend` abierto (ramificado desde `mp-013-fastapi`); tarea delegada a Codex (ejecutor) vía Orca. Sin entregables todavía — ver `docs/STATUS.md` para el checklist.
+
 ### MP-013 — FastAPI v1
 
 #### Added

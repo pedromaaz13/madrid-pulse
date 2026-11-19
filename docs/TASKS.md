@@ -367,7 +367,7 @@ Cada tarea se trabaja en **un único worktree/rama** (`mp-00X-nombre-corto`), co
 - **Criterios de aceptación:** demo funcional contra API real (no mocks), estados de posición distinguibles por el usuario.
 - **Pruebas necesarias:** smoke test de carga de mapa y de consumo de API; verificación manual en navegador (no solo tests automatizados).
 - **Evidencia de verificación:** capturas/registro de la demo funcional + resultado de smoke tests.
-- **Estado:** `TODO`
+- **Estado:** `IN_PROGRESS` — worktree `mp-014-frontend` abierto el 2026-11-19, ramificado desde `mp-013-fastapi` (MP-013 `DONE`).
 
 ---
 

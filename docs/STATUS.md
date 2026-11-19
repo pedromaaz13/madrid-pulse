@@ -69,6 +69,38 @@ Con Hito 1 ya fusionado a `main`, el caso concreto de MP-012 **deja de requerir 
 
 ## Tarea actual
 
+**MP-014 — Frontend React/MapLibre C5**
+
+Ejecutor: OpenAI Codex · Revisor: Claude Code · Estado: **IN_PROGRESS**
+
+Worktree/rama: `mp-014-frontend`, ramificada desde `mp-013-fastapi` (MP-013 `DONE`).
+
+### Checklist de MP-014
+
+- [ ] `apps/web/`: React + TypeScript + MapLibre consumiendo `/api/v1/*` real (MP-013) — nunca Renfe/CRTM directamente, nunca mocks en la demo final.
+- [ ] Mapa con la geometría real de la C5 (vía `/api/v1/stations` + geometría embebida en las posiciones de `/api/v1/live/vehicles`, que ya llegan map-matched desde MP-012); atribución OSM (`© OpenStreetMap contributors`, ODbL) visible en la UI, no solo en el código.
+- [ ] Los cuatro estados de posición (`observed`/`estimated`/`stale`/`scheduled`) diferenciados visualmente de forma clara e intuitiva — nunca una posición `estimated`/`stale`/`scheduled` con la misma semántica visual que `observed` (ADR-0004, mismo principio que ya aplica el backend).
+- [ ] Manejar honestamente los campos `null` que la API ya devuelve a propósito: un vehículo con `route_id`/`position` en `null` (línea no resuelta, DEC-029) no debe ocultarse de forma confusa ni mostrarse con datos inventados.
+- [ ] Controles intuitivos, diseño moderno/responsive/accesible — la calidad visual es un requisito real, no secundario. Ejecutar la aplicación de verdad, inspeccionarla con las herramientas de navegador disponibles, comprobar interacciones y corregir defectos de interfaz antes de entregar.
+- [ ] Arquitectura preparada para todas las líneas de Cercanías Madrid (ADR-0011): sin literales `"C5"` en componentes/lógica compartida; el filtro de línea puede no tener UI todavía, pero el código no debe asumir una única línea para siempre.
+- [ ] Via Península/Valfiguer solo como referencia conceptual de producto — sin copiar código ni diseño literal (AGPL-3.0, ver `docs/adr/0006-licensing-policy.md`).
+- [ ] Smoke tests de carga de mapa y consumo de API real + verificación manual en navegador (capturas/registro), no solo tests automatizados.
+- [ ] Actualizar `docs/TASKS.md`/`docs/STATUS.md`/`docs/CHANGELOG.md` con evidencia real (capturas, resultado de smoke tests) antes de delegar a revisión.
+
+### Resultado y límites
+
+Pendiente de implementación.
+
+### Bloqueos
+
+Ninguno conocido al inicio de la tarea. Requiere la API real corriendo (`apps/api/`, MP-013) y, para vehículos C5 resueltos, el GTFS completo (`apps/api/tools/fetch_gtfs_static.py`) — la fixture reducida por sí sola no resuelve ningún trip real del feed en vivo.
+
+### Siguiente paso
+
+Al completarse y ser aprobada por Claude Code (revisor), MP-015 (E2E y readiness MVP, ejecutor Claude Code) puede ramificar su worktree desde `mp-014-frontend` sin esperar merge a `main`, conforme al hito autorizado y ADR-0007.
+
+## Tareas cerradas de la cadena
+
 **MP-013 — FastAPI v1**
 
 Ejecutor: Claude Code · Revisor: OpenAI Codex · Estado: **DONE**
@@ -119,9 +151,7 @@ Ninguno.
 
 ### Siguiente paso
 
-MP-014 (Frontend React/MapLibre, ejecutor Codex) puede ramificar su worktree desde `mp-013-fastapi` sin esperar merge a `main`, conforme al hito autorizado y ADR-0007.
-
-## Tareas cerradas de la cadena
+MP-014 (Frontend React/MapLibre, ejecutor Codex) ramificó su worktree desde `mp-013-fastapi` sin esperar merge a `main`, conforme al hito autorizado y ADR-0007 — registrado arriba en "Tarea actual".
 
 **MP-012 — Motor de movimiento v1**
 
@@ -624,6 +654,7 @@ Esta rama se bifurcó de `chore/mp-001-foundation` en el commit `3e7b533`, **ant
 | `2026-11-19` | MP-013 | Primera revisión de Codex: no aprobada — 2 bloqueantes reales reproducidos (`age_s` `null` para vehículos sin ruta resuelta aunque calculable; `service_date` usaba fecha UTC en vez de Europe/Madrid, desplazando el horario cerca de medianoche) + 1 menor (recuento de líneas no-C5 incompleto en DEC-029) | dispatch `ctx_792a5fe349ba` |
 | `2026-11-19` | MP-013 | Corregido: `age_s` se calcula siempre desde `observation.reported_at`; `service_date` usa conversión explícita a Europe/Madrid (verificado revirtiendo ambos fixes — los tests nuevos fallan exactamente como describió Codex y pasan con el fix restaurado); DEC-029 corregido con el cruce completo (4 C5, 19 de 9 líneas distintas, 1 sin resolver). 101/101 tests en verde. Reenviado a Codex para segunda verificación | — |
 | `2026-11-19` | MP-013 | Revisión final independiente de Codex aprobada sobre `15170c4`: el único residuo documental ya enumera C1/C2/C3/C4/C4a/C4b/C8a/C8b/C10 y el trip de refuerzo sin resolver; diff mínimo y limpio, 11/11 tests API en verde, PostgreSQL `668/484/3/120/0`, identidad Git correcta y sin coautor. **APROBADA, sin hallazgos abiertos.** MP-013 pasa a `DONE` | dispatch `ctx_1235555422b3`; commit `15170c4` |
+| `2026-11-19` | MP-014 | Worktree `mp-014-frontend` abierto, ramificado desde `mp-013-fastapi` (MP-013 `DONE`). Dispatchado a Codex (ejecutor) con énfasis explícito en calidad visual real (inspección en navegador, no solo tests), diferenciación clara de los cuatro estados de posición y arquitectura genérica multi-línea (ADR-0011) | `docs/TASKS.md`; `docs/STATUS.md` |
 
 ## Cómo usar este documento
 
