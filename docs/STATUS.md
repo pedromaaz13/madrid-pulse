@@ -81,7 +81,7 @@ Worktree/rama: `mp-014-frontend`, ramificada desde `mp-013-fastapi` (MP-013 `DON
 - [x] **Gap de geometría resuelto (DEC-031):** `LineOut.geometry` nullable expone cada `Corridor.segments` por separado y las 23 estaciones proyectadas/ordenadas; no conecta paradas ni asigna el único corredor a otra línea. Test real contra GTFS/OSM y OpenAPI regenerado.
 - [x] Los cuatro estados de posición (`observed`/`estimated`/`stale`/`scheduled`) tienen forma, color, opacidad y explicación textual diferentes (ADR-0004). Un ciclo real fresco los produjo simultáneamente: 24/2/4/1.
 - [x] Campos `null` honestos: 114 de 145 vehículos reales quedaron sin ubicar tras el smoke; se contabilizan y listan explícitamente, sin ruta/posición inventada. `delay.coverage=missing` se explica como ausencia de dato.
-- [ ] **Gate visual pendiente de revisor:** la UI incluye diseño responsive/accesible, controles de capa/centrado/zoom y estados de foco, pero esta sesión de Codex no tuvo navegador disponible (`getForUrl` → `No browser is available`; `agent.browsers.list()` → `[]`). El coordinador indicó no bloquear la entrega y asignó a Claude Code la inspección real desktop + viewport estrecho + consola + interacciones antes de aprobar `DONE`. `curl` no se presenta como sustituto.
+- [ ] **Gate visual pendiente de re-verificación:** Claude ejecutó la primera inspección real (1440/390 px) y confirmó responsive, estados visuales, nulls, controles y atribución, pero encontró que Vite dev devolvía `504` para el worker prebundled de MapLibre y no dibujaba corredor/estaciones. Codex aplicó `optimizeDeps.exclude = ["maplibre-gl"]` (mismo cambio diagnóstico con el que Claude ya vio ambas capas) y corrigió el selector sin `id/name`; esta sesión sigue sin navegador (`No browser is available`), así que Claude debe confirmar el fix y la build preview en su segunda pasada antes de `DONE`. HTTP/build no se presentan como sustituto visual.
 - [x] Arquitectura preparada para más líneas (ADR-0011): selector y estado derivados de `(network_id, line_id)` de la API; ningún literal de línea en componentes, hooks ni lógica compartida (la única coincidencia textual en `package-lock.json` pertenece a hashes de integridad).
 - [x] Via Península/Valfiguer no se consumen ni se copia código/diseño; implementación independiente.
 - [x] Smoke real de consumo API: PostgreSQL + GTFS oficial completo + `uvicorn` + Vite; `/lines` devolvió el corredor real y `/live/vehicles` los cuatro modos simultáneos. La carga visual del mapa permanece incluida en el gate anterior.
@@ -112,29 +112,26 @@ Hallazgo fuera del cambio frontend: el feed fresco de `trip_updates` trajo un
 rechazó. `vehicle_positions` sí se actualizó correctamente; la UI representa
 salud/cobertura ausente sin inventar valores. Se deja para MP-015/colector.
 
+Primera revisión visual de Claude: bloqueante reproducido en `npm run dev` —
+`GET /node_modules/.vite/deps/maplibre-gl-worker.mjs` respondía `504`, por lo
+que el worker no procesaba las fuentes GeoJSON. Corregido excluyendo MapLibre
+del prebundle: el módulo ESM directo responde `200`; `npm run build` empaqueta
+el worker dentro del chunk `MapView` y `npm run preview` sirve ese chunk más la
+API real (1 segmento/23 estaciones), sin depender de `.vite/deps`. También se
+añadieron `id`/`name`/`htmlFor` al selector. Frontend re-verificado: lint,
+typecheck, 3/3 tests y build en verde. Falta la confirmación visual de Claude.
+
 ### Bloqueos
 
-Inspección visual real ejecutada por Claude Code (revisor) con herramientas de
-navegador reales sobre la app levantada en local (API con GTFS completo + Vite
-dev server), tal como quedó pendiente. Revisión de código del commit `6faf72a`
-correcta (geometría nullable sin puentear huecos, sin literales de línea,
-cuatro estados diferenciados por forma+color+opacidad, nulls honestos,
-atribución OSM visible, responsive 1440px/390px probado). Se encontró un
-hallazgo bloqueante real que ningún test automatizado detectó: con `npm run
-dev`, el corredor OSM y las 23 estaciones no se dibujaban pese a que los
-toggles de capa aparecían activos — `GET
-node_modules/.vite/deps/maplibre-gl-worker.mjs` devolvía `504` de forma
-reproducible (confirmado también con `curl`), rompiendo el worker interno de
-MapLibre que procesa las fuentes GeoJSON; solo tiles raster y marcadores DOM
-(que no dependen del worker) se veían. Diagnosticado y verificado como
-revisor (sin commitear): `optimizeDeps: { exclude: ["maplibre-gl"] }` en
-`apps/web/vite.config.ts` resuelve el `504` (sirve el worker directo desde
-`node_modules`, confirmado `200`) y el corredor/estaciones se dibujan
-correctamente — revertido tras verificar, para que el fix lo aplique y
-reverifique Codex como ejecutor. También un hallazgo menor de accesibilidad
-(`<select>` de línea sin `id`/`name` asociados). Delegado de vuelta a Codex
-vía Orca (`ctx_173c5fc5e12c`); tarea permanece en `REVIEW` hasta que lo
-corrija y Claude Code reverifique visualmente.
+El bloqueante de la primera revisión está corregido por Codex: MapLibre queda
+fuera del prebundle de Vite dev, su ESM se sirve directo con `200` y se evita
+la ruta `maplibre-gl-worker.mjs` que respondía `504`. El selector ya tiene
+`id`/`name` y asociación explícita con su etiqueta. La build de producción
+incorpora el worker en el chunk `MapView` y no referencia `.vite/deps`; el
+preview local devuelve la API real con 1 segmento y 23 estaciones. La sesión
+de Codex volvió a carecer de navegador, por lo que permanece un único gate:
+segunda verificación visual de Claude en dev y preview (capas, consola e
+interacciones). La tarea sigue en `REVIEW`, nunca `DONE` por el ejecutor.
 
 ### Siguiente paso
 
@@ -697,6 +694,7 @@ Esta rama se bifurcó de `chore/mp-001-foundation` en el commit `3e7b533`, **ant
 | `2026-11-19` | MP-013 | Revisión final independiente de Codex aprobada sobre `15170c4`: el único residuo documental ya enumera C1/C2/C3/C4/C4a/C4b/C8a/C8b/C10 y el trip de refuerzo sin resolver; diff mínimo y limpio, 11/11 tests API en verde, PostgreSQL `668/484/3/120/0`, identidad Git correcta y sin coautor. **APROBADA, sin hallazgos abiertos.** MP-013 pasa a `DONE` | dispatch `ctx_1235555422b3`; commit `15170c4` |
 | `2026-11-19` | MP-014 | Worktree `mp-014-frontend` abierto, ramificado desde `mp-013-fastapi` (MP-013 `DONE`). Dispatchado a Codex (ejecutor) con énfasis explícito en calidad visual real (inspección en navegador, no solo tests), diferenciación clara de los cuatro estados de posición y arquitectura genérica multi-línea (ADR-0011) | `docs/TASKS.md`; `docs/STATUS.md` |
 | `2026-11-19` | MP-014 | Implementación de Codex lista para revisión: `LineOut.geometry` aditivo/nullable (DEC-031), `apps/web` React/TypeScript/MapLibre genérico multi-línea, nulls y cobertura ausente explícitos, atribución OSM visible. Regresión Python 102/102; frontend lint/typecheck/3 tests/build en verde. Smoke real con GTFS oficial y poll fresco: 145 vehículos, 31 map-matched y cuatro estados simultáneos (24/2/4/1); runs del smoke retirados y PostgreSQL restaurado a `668/484/3/120/0`. Browser indisponible en la sesión Codex; por instrucción del coordinador, Claude ejecutará el gate visual desktop/estrecho/consola/interacciones antes de aprobar. Tarea pasa a `REVIEW`, no `DONE` | `apps/api/`; `apps/web/`; DEC-031/032; dispatch `ctx_878dc753a9a8` |
+| `2026-11-19` | MP-014 | Primera revisión visual real de Claude: responsive/estados/nulls/atribución correctos, pero bloqueante en Vite dev (`maplibre-gl-worker.mjs` prebundled → `504`; corredor/estaciones invisibles) y menor de selector sin `id/name`. Codex aplica el fix confirmado diagnósticamente por Claude (`optimizeDeps.exclude: maplibre-gl`), añade `id`/`name`/`htmlFor`, comprueba módulo directo `200`, preview con API real (1 segmento/23 estaciones) y repite lint/typecheck/3 tests/build en verde. Producción no usa `.vite/deps`: worker empaquetado en chunk `MapView`. Queda en `REVIEW` para segunda pasada visual de Claude | `apps/web/vite.config.ts`; `apps/web/src/App.tsx`; dispatch `ctx_173c5fc5e12c` |
 
 ## Cómo usar este documento
 

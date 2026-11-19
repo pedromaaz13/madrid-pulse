@@ -92,9 +92,9 @@ export default function App() {
       <section className="workspace">
         <div className="map-column">
           <div className="toolbar" aria-label="Controles del mapa">
-            <label>
+            <label htmlFor="line-selector">
               <span>Línea</span>
-              <select value={lineKey} onChange={(event) => setLineKey(event.target.value)} disabled={!lines.length}>
+              <select id="line-selector" name="line" value={lineKey} onChange={(event) => setLineKey(event.target.value)} disabled={!lines.length}>
                 {lines.map((line) => <option key={`${line.network_id}:${line.line_id}`} value={`${line.network_id}:${line.line_id}`}>{line.line_id}</option>)}
               </select>
             </label>
