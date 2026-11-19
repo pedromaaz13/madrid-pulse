@@ -324,14 +324,14 @@ Cada tarea se trabaja en **un único worktree/rama** (`mp-00X-nombre-corto`), co
 - **Depende de:** MP-008, MP-010, MP-011
 - **Ejecutor:** OpenAI Codex
 - **Revisor:** Claude Code
-- **Nota de worktree (pendiente de resolver antes de empezar, sugerencia no bloqueante de Codex en la revisión de MP-001):** MP-012 es el primer punto de convergencia de ramas encadenadas — depende de tres tareas que pueden terminar en ramas distintas (MP-008 en la cadena MP-005→009, MP-010 y MP-011 en su propia rama paralela). `AGENTS.md` ("Modelo de autonomía por hito") describe cadenas y bifurcaciones, pero no especifica aún cómo una tarea con varias dependencias elige su rama base e integra las demás (p. ej. ramificar desde MP-011 y hacer `git merge`/rebase de MP-008 sobre ella, o viceversa). Debe decidirse y documentarse en `AGENTS.md` antes de abrir el worktree de MP-012.
+- **Nota de worktree (resuelta el 2026-11-19, DEC-015):** MP-012 depende de MP-008, MP-010 y MP-011. Con Hito 1 ya fusionado a `main`, MP-008 es ancestro de `main` (`git merge-base --is-ancestor origin/main HEAD` confirmado `true` desde `mp-011-osm-geometry`); al ramificar MP-012 desde `mp-011-osm-geometry` (que a su vez parte de MP-010), las tres dependencias quedan satisfechas sin ningún `git merge` real — ver mecanismo general en `AGENTS.md` y resolución aplicada en `docs/STATUS.md`.
 - **Archivos/componentes afectados:** `packages/geo/`, `packages/quality/`, lógica de movimiento (ubicación exacta a definir en ADR si no cabe en paquetes existentes).
 - **Entradas:** flags de calidad (MP-008), topología (MP-010), geometría (MP-011).
 - **Entregables:** motor de movimiento con los cuatro estados, `confidence`, `age_s`, umbrales parametrizados (no fijos) siguiendo `docs/DATA_QUALITY.md`.
 - **Criterios de aceptación:** tests deterministas cubren transición entre estados, saltos de estación y velocidades físicamente inverosímiles.
 - **Pruebas necesarias:** suite de tests deterministas del motor de movimiento.
 - **Evidencia de verificación:** suite de tests.
-- **Estado:** `TODO`
+- **Estado:** `IN_PROGRESS` — worktree `mp-012-movement-engine` abierto el 2026-11-19, ramificado desde `mp-011-osm-geometry` (MP-011 `DONE`).
 
 ---
 

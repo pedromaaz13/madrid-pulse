@@ -4,6 +4,11 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 
 ## [Unreleased]
 
+### MP-012 — Motor de movimiento v1
+
+#### In progress
+- Worktree `mp-012-movement-engine` abierto (ramificado desde `mp-011-osm-geometry`, resolviendo DEC-015 sin fusión real); tarea delegada a Codex (ejecutor) vía Orca. Sin entregables todavía — ver `docs/STATUS.md` para el checklist.
+
 ### MP-011 — Prototipo de geometría ferroviaria sobre OSM
 
 #### Added

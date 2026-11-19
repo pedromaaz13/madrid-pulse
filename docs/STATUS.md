@@ -69,6 +69,37 @@ Con Hito 1 ya fusionado a `main`, el caso concreto de MP-012 **deja de requerir 
 
 ## Tarea actual
 
+**MP-012 — Motor de movimiento v1**
+
+Ejecutor: OpenAI Codex · Revisor: Claude Code · Estado: **IN_PROGRESS**
+
+Worktree/rama: `mp-012-movement-engine`, ramificada desde `mp-011-osm-geometry` (MP-011 `DONE`). DEC-015 resuelto: `git merge-base --is-ancestor origin/main HEAD` confirmado `true` desde `mp-011-osm-geometry` — MP-008 (ancestro de `main`), MP-010 y MP-011 quedan todos satisfechos sin fusión real (ver `AGENTS.md`).
+
+### Checklist de MP-012
+
+- [ ] Motor de movimiento con los cuatro estados `OBSERVED` (0–60s) / `ESTIMATED` (60–180s) / `STALE` (>180s) / `SCHEDULED` (sin dato), conforme a ADR-0004 — umbrales parametrizados (no fijos), pendientes de calibración con datos reales, no verdad de diseño.
+- [ ] Pipeline de ADR-0004: GPS reciente y plausible → map-match al track (reutilizar `packages/geo.Corridor.project_station`, no reimplementar) → localizar distancia acumulada sobre shape (`arc_length_to`) → estimar progreso esperado por horario (GTFS `stop_times`, vía `packages/gtfs`) → calcular offset temporal → interpolar hasta siguiente observación → limitar aceleración/velocidad/retrocesos imposibles.
+- [ ] Cada posición expone `position_mode`, `confidence` (decreciente con la edad del dato), `age_s`, `source`.
+- [ ] Calibrar umbrales con datos reales: frecuencia de refresco medida en MP-003 (~20-22s `vehicle_positions`, ~42s `trip_updates`, ~20s `alerts`) y el hallazgo empírico de MP-008 (12/117 pares reales de posiciones consecutivas del soak test dispararon `implausible_speed` a 246-787 km/h — saltos reales de posición más gruesos que el cadencia de poll, no error de cálculo; considerar al definir el umbral de "retroceso/velocidad imposible").
+- [ ] Tests deterministas: transición entre los cuatro estados, saltos de estación, velocidades físicamente inverosímiles.
+- [ ] Validación contra datos reales: el volumen del soak test de MP-007 sigue en el volumen Docker (668 `vehicle_position_observation` reales, ~24 vehículos, 20 min) — usarlo para calibrar/validar, no solo fixtures sintéticas.
+- [ ] Decidir y documentar en ADR la ubicación exacta del motor si no cabe limpiamente en `packages/geo`/`packages/quality` existentes.
+- [ ] Actualizar `docs/TASKS.md`/`docs/STATUS.md`/`docs/CHANGELOG.md` con evidencia real antes de delegar a revisión.
+
+### Resultado y límites
+
+Pendiente de implementación.
+
+### Bloqueos
+
+Ninguno conocido al inicio de la tarea.
+
+### Siguiente paso
+
+Al completarse y ser aprobada por Claude Code (revisor), MP-013 (FastAPI v1, ejecutor Claude Code) puede ramificar su worktree desde `mp-012-movement-engine` sin esperar merge a `main`, conforme al hito autorizado y ADR-0007.
+
+## Tareas cerradas de la cadena
+
 **MP-011 — Prototipo de geometría ferroviaria sobre OSM**
 
 Ejecutor: Claude Code · Revisor: OpenAI Codex · Estado: **DONE**
@@ -120,9 +151,7 @@ Regresión propia: 71/71 en verde (7 GTFS + 31 contratos + 6 fixtures GTFS-RT + 
 
 ### Siguiente paso
 
-Al completarse y ser aprobada por OpenAI Codex (revisor), **debe resolverse DEC-015 antes de abrir el worktree de MP-012** (depende de MP-008, MP-010 y MP-011): verificar con `git merge-base --is-ancestor` que MP-008 (ya en `main`) es ancestro de la rama de MP-011, y ramificar MP-012 directamente desde `mp-011-osm-geometry` sin fusión real, conforme al mecanismo documentado en `AGENTS.md`.
-
-## Tareas cerradas de la cadena
+MP-011 está `DONE`. DEC-015 resuelto y aplicado: MP-012 (ejecutor Codex, revisor Claude Code) ramificó directamente desde `mp-011-osm-geometry` sin fusión real — registrado arriba en "Tarea actual".
 
 **MP-010 — Topología GTFS C5**
 
@@ -531,6 +560,7 @@ Esta rama se bifurcó de `chore/mp-001-foundation` en el commit `3e7b533`, **ant
 | `2026-11-19` | MP-011 | Primera revisión de Codex: no aprobada — bloqueante real reproducido (`ChainGap` registrado pero la geometría seguía fabricando una unión a través del hueco; repro sintética con `distance_m=0.0`) + 2 menores (recuento de tests incorrecto; una variante real de 7 estaciones de `10T0047C5` se documentó como "subsegmento contiguo" sin serlo) + checksums anunciados pero ausentes | dispatch `ctx_6b6ad999cdfe` |
 | `2026-11-19` | MP-011 | Corregido: `Corridor.segments` separa tramos reales (verificado revirtiendo el fix — el test de regresión falla exactamente como describió Codex y pasa con el fix restaurado); `render_preview.py` dibuja un `<polyline>` por tramo; ruta corta dividida en variante base contigua (6 estaciones, verificado por comparación literal de IDs) y variante con Atocha monótona-pero-no-contigua (7 estaciones); 4 SHA-256 añadidos y verificados en `MANIFEST.md`. 79/79 tests en verde (8 geo + 71 regresión). Reenviado a Codex para segunda verificación | — |
 | `2026-11-19` | MP-011 | Segunda verificación independiente de Codex aprobada sobre `f795036`: repro sintética propia a `2223,9 m` del tramo más cercano (sin geometría fabricada), 8 geo + 71 regresión en verde, PostgreSQL `668/484/3/120/0` antes/después, patrones corto base/variante comprobados literalmente, 4 SHA-256 coincidentes, diff limpio e identidad Git correcta. MP-011 pasa a `DONE` | dispatch `ctx_24d7ea61fba0` |
+| `2026-11-19` | MP-012 | DEC-015 resuelto y aplicado: `git merge-base --is-ancestor origin/main HEAD` confirmado desde `mp-011-osm-geometry`; worktree `mp-012-movement-engine` abierto sin fusión real. Dispatchado a Codex (ejecutor) con contexto de ADR-0004 (pipeline, cuatro estados), frecuencias reales medidas en MP-003 y el hallazgo de `implausible_speed` de MP-008 para calibración | `docs/TASKS.md`; `docs/STATUS.md` |
 
 ## Cómo usar este documento
 
