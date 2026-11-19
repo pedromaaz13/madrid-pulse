@@ -14,16 +14,22 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 
 #### Found
 - `route`/`station`/`trip`/`trip_stop` siguen vacías en PostgreSQL y `vehicle_position_observation.trip_id` sigue `NULL` en los 668 registros reales (confirmado por consulta directa) — la API resuelve vía `packages.gtfs.Topology` en memoria, nunca por `JOIN` SQL a esas tablas.
-- De los 24 vehículos distintos del soak real de MP-007, solo 4 pertenecen a C5 (`10T0017C5`/`10T0018C5`); el resto son otras líneas del núcleo Madrid (C1, C3, C4a, C4b, C8b), confirmado contra el GTFS estático completo — confirma empíricamente DEC-020 con datos reales (DEC-029).
+- De los 24 vehículos distintos del soak real de MP-007, solo 4 pertenecen a C5 (`10T0017C5`/`10T0018C5`); 19 son otras líneas del núcleo Madrid (C1, C2, C3, C4, C4a, C4b, C8a, C8b, C10) y 1 (`SPECIAL_10_91567C2`) no resuelve, confirmado contra el GTFS estático completo — confirma empíricamente DEC-020 con datos reales (DEC-029).
 - Un único corredor OSM (`relation_3418150`) basta para ambos sentidos reales de C5: `build_trip_schedule` detecta el sentido de cada trip comparando el orden de sus paradas contra el corredor, no hace falta un corredor por sentido (DEC-028).
 
 #### Deferred (documented, not silent)
 - `history/lines/{line_id}`, `history/trips/{trip_id}`, `metrics/lines/{line_id}`, `metrics/stations/{station_id}`: `daily_line_metrics`/`station_daily_metrics` siguen vacías desde que MP-009 las difirió (DEC-021); calcularlas de verdad es alcance propio, no una extensión trivial de esta tarea (DEC-027).
 
 #### Verified
-- 99/99 tests en verde: 9 API nuevos (fixture reducida sin red + PostgreSQL real + un caso sintético de extremo a extremo) + 90 de regresión (11 movement, 7 GTFS, 8 geo, 31 contratos, 6 fixtures, 9 collector, 13 quality, 5 snapshotter), incluidas las integraciones reales contra PostgreSQL.
+- 101/101 tests en verde: 11 API nuevos (fixture reducida sin red + PostgreSQL real + un caso sintético de extremo a extremo + 2 de regresión de la revisión de Codex) + 90 de regresión (11 movement, 7 GTFS, 8 geo, 31 contratos, 6 fixtures, 9 collector, 13 quality, 5 snapshotter), incluidas las integraciones reales contra PostgreSQL.
 - `/api/v1/live/vehicles` nunca fabrica `route_id`/`line`/`position` para un vehículo no resoluble (devuelve `null`), probado explícitamente. `/api/v1/health` calcula `data_age_s`/`unchanged_for_s` reales desde `source_ingestion_run`, nunca fabricados.
 - App arrancada de verdad con `uvicorn --reload` y probada con `curl` real (`/api/v1/lines` → `200`, `/docs` → `200`), no solo `TestClient`.
+
+#### Fixed after Codex review (first round, blocking)
+- `observation.age_s` solo se calculaba cuando el motor de movimiento resolvía una posición, dejando `null` para los 20/24 vehículos reales que no son C5 aunque su timestamp crudo sí era conocido. Corregido calculándola siempre desde `observation.reported_at`, independiente de si la ruta resuelve.
+- `service_date` se pasaba como la fecha UTC (`now.astimezone(timezone.utc).date()`) al motor de movimiento, que la interpreta como fecha de calendario Europe/Madrid (`docs/DATA_MODEL.md`). Cerca de medianoche ambas difieren un día real, desplazando el horario esperado — mismo tipo de hallazgo que MP-009 ya documentó (DEC-021). Corregido con conversión explícita a Europe/Madrid; test de regresión cubre el borde de invierno (CET) y verano (CEST).
+- Recuento de líneas no-C5 del soak corregido: el primero (DEC-029 inicial) listaba solo 5 líneas y omitía C2/C4/C8a/C10 y un trip de refuerzo (`SPECIAL_10_91567C2`) que no resuelve contra ningún `route_id` — recruzados los 24 pares reales contra el GTFS completo para la cifra definitiva (19 no-C5 + 1 sin resolver).
+- Ambos bugs verificados revirtiendo el fix: los nuevos tests fallan exactamente como describió Codex (`age_s` `None`/`AttributeError`) y pasan con el fix restaurado.
 
 ### MP-012 — Motor de movimiento v1
 

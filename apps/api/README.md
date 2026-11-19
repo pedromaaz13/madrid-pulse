@@ -31,7 +31,9 @@ sea cual sea.
 
 El colector de MP-007 filtra por núcleo (Madrid), no por línea (DEC-020). De
 los 24 vehículos distintos del soak real, solo 4 pertenecen a C5
-(`10T0017C5`/`10T0018C5`); el resto son C1/C3/C4a/C4b/C8b, confirmado
+(`10T0017C5`/`10T0018C5`); 19 son otras líneas del núcleo Madrid (C1, C2, C3,
+C4, C4a, C4b, C8a, C8b, C10) y 1 (`SPECIAL_10_91567C2`, refuerzo) no resuelve
+contra ningún `route_id`, confirmado
 contra el GTFS estático completo. `/api/v1/live/vehicles` devuelve los 24,
 con `route_id`/`line`/`position` en `null` para los que no resuelven contra
 la topología C5 cargada -- nunca se fabrica una línea o posición. Ver test

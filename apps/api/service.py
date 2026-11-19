@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import date, datetime
+from zoneinfo import ZoneInfo
 
 import psycopg
 
@@ -24,6 +25,22 @@ from .schemas import (
 )
 
 _MODE_VALUES = {mode.value for mode in PositionMode}
+_MADRID = ZoneInfo("Europe/Madrid")
+
+
+def _service_date(now: datetime) -> date:
+    """Fecha de servicio GTFS: calendario de Europe/Madrid, nunca UTC directo.
+
+    Hallazgo de la revisión de Codex: `packages.movement.schedule.service_seconds`
+    ya interpreta `service_date` como una fecha de calendario Europe/Madrid (ver
+    `docs/DATA_MODEL.md`: "service_date es la fecha de servicio en Europe/Madrid,
+    no UTC"), pero una versión anterior le pasaba `now.astimezone(timezone.utc).date()`
+    -- la fecha UTC. Cerca de medianoche (p. ej. `2026-11-19T23:30Z` = `2026-11-20
+    00:30` CET) ambas difieren en un día, desplazando el horario esperado. Mismo
+    tipo de hallazgo ya documentado para MP-009 (DEC-021, huso horario del
+    exportador histórico).
+    """
+    return now.astimezone(_MADRID).date()
 
 
 def _movement_position(
@@ -35,7 +52,7 @@ def _movement_position(
     try:
         return network.engine.position(
             trip_id=history.latest.position.source_trip_id,
-            service_date=now.astimezone(timezone.utc).date(),
+            service_date=_service_date(now),
             calculated_at=now,
             latest=history.latest.position,
             previous=history.previous.position if history.previous is not None else None,
@@ -63,8 +80,17 @@ def vehicle_to_out(
 
     movement = _movement_position(network, history, route_id, now) if route_id else None
 
+    # La edad de la OBSERVACIÓN cruda es siempre calculable a partir de su
+    # propio timestamp, se resuelva o no una posición -- hallazgo de la
+    # revisión de Codex: antes solo se rellenaba cuando `movement` existía,
+    # dejando `age_s=None` para los 20/24 vehículos reales que no son C5
+    # aunque sí conocemos cuándo se observaron. `movement.age_s` puede
+    # referirse a una muestra distinta (fallback recursivo a la última
+    # observación plausible en engine.py); `age_s` de la respuesta describe
+    # siempre `observation.reported_at`, no la posición mostrada.
+    age_s = max(0.0, (now - history.latest.position.observed_at).total_seconds())
+
     position_out: PositionOut | None = None
-    age_s: float | None = None
     stale = True
     flags: list[str] = []
     if movement is not None:
@@ -74,7 +100,6 @@ def vehicle_to_out(
             mode=movement.position_mode.value,
             confidence=movement.confidence,
         )
-        age_s = movement.age_s
         stale = movement.position_mode in (PositionMode.STALE, PositionMode.SCHEDULED)
         flags = [anomaly.flag for anomaly in movement.anomalies]
 

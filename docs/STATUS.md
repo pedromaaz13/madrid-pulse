@@ -82,7 +82,8 @@ Worktree/rama: `mp-013-fastapi`, ramificada desde `mp-012-movement-engine` (MP-0
 - [x] 7 endpoints reales: `health`, `live/vehicles`(`/{vehicle_id}`), `lines`(`/{line_id}`), `stations`(`/{station_id}`); `history`/`metrics` diferidos explícitamente (DEC-027, `docs/DATA_CONTRACTS.md`).
 - [x] `/api/v1/health` calcula `data_age_s`/`unchanged_for_s`/`status` reales desde `source_ingestion_run`, nunca fabricados.
 - [x] `/api/v1/live/vehicles` combina la última/penúltima observación real por vehículo con `MovementEngine.position()` (MP-012); nunca fabrica `route_id`/`line`/`position` cuando el `trip_id` no resuelve — devuelve `null` honesto.
-- [x] **Hallazgo real (DEC-029):** de los 24 vehículos distintos del soak real de MP-007, solo 4 son C5 (`10T0017C5`/`10T0018C5`); el resto son otras líneas del núcleo (C1/C3/C4a/C4b/C8b), confirmado contra el GTFS estático completo — confirma empíricamente DEC-020.
+- [x] **Hallazgo real (DEC-029):** de los 24 vehículos distintos del soak real de MP-007, solo 4 son C5 (`10T0017C5`/`10T0018C5`); 19 son otras líneas del núcleo (C1, C2, C3, C4, C4a, C4b, C8a, C8b, C10) y 1 (`SPECIAL_10_91567C2`) no resuelve, confirmado contra el GTFS estático completo — confirma empíricamente DEC-020.
+- [x] **Corregido tras la revisión de Codex (hallazgo documental):** el primer recuento listaba solo 5 líneas (C1/C3/C4a/C4b/C8b) y omitía C2/C4/C8a/C10 y el trip `SPECIAL_` sin resolver — recruzados los 24 pares reales contra `trips.txt` del ZIP completo para la cifra definitiva.
 - [x] **Hallazgo real (DEC-028):** un único corredor OSM (`relation_3418150`) basta para ambos sentidos reales de C5: `build_trip_schedule` detecta el sentido de cada trip comparando el orden de sus paradas contra el corredor.
 - [x] OpenAPI generado y congelado en `apps/api/openapi.json`.
 - [x] `apps/api/tools/fetch_gtfs_static.py`: descarga el GTFS completo real para que `/api/v1/live/vehicles` resuelva vehículos C5 en ejecución local (la fixture reducida de MP-010 solo tiene 15 trips representativos, insuficiente para el feed en vivo).
@@ -96,9 +97,23 @@ API real conforme a `docs/DATA_CONTRACTS.md` para los endpoints `live`/`lines`/`
 
 Ejecución final real (`.venv`, Python 3.12): 99/99 tests — API 9, movement 11, GTFS 7, geo 8, contratos 31, fixtures 6, collector 9, quality 13, snapshotter 5. Suites con PostgreSQL ejecutadas con el contenedor `madrid-pulse` levantado por mí mismo; recuentos finales `668/484/3/120/0` sin residuo.
 
+**Revisión independiente de OpenAI Codex (`2026-11-19`): NO APROBADA en primera ronda.** Reprodujo de forma propia: PostgreSQL `route`/`station`/`trip`=0 y `trip_id` resuelto=0; volumen `668/484/3/120/0` antes/después; GTFS oficial descargado y verificado (15.717.009 bytes); DEC-028 confirmado en los 4 trips C5 reales; 9 API + 90 regresión en verde; servidor `uvicorn` real arrancado y probado con `curl` (`health`/`live/vehicles`/`docs` → `200`). Hallazgos:
+
+- **Bloqueante 1:** `apps/api/service.py` solo calculaba `observation.age_s` cuando el motor de movimiento resolvía una posición — para los 20/24 vehículos reales que no son C5, `reported_at` era real pero `age_s` quedaba `null` aunque es calculable directamente desde el timestamp crudo.
+- **Bloqueante 2:** `_movement_position` pasaba `service_date=now.astimezone(timezone.utc).date()`, pero `packages.movement.schedule.service_seconds` interpreta esa fecha como calendario Europe/Madrid (`docs/DATA_MODEL.md`). Cerca de medianoche (p. ej. `2026-11-19T23:30Z` = `2026-11-20 00:30` CET) ambas fechas difieren en un día real, desplazando el horario esperado.
+- **Menor documental:** DEC-029 listaba solo 5 líneas no-C5 (C1/C3/C4a/C4b/C8b) y omitía C2/C4/C8a/C10 y un trip de refuerzo (`SPECIAL_10_91567C2`) que no resuelve contra ningún `route_id` — el cruce completo de Codex contra `trips.txt` dio la cifra real.
+
+**Corrección de Claude Code (`2026-11-19`), lista para re-verificación:**
+
+- **Bloqueante 1 corregido:** `age_s` ahora se calcula siempre como `(now - observation.reported_at)`, independiente de si la ruta/posición resuelve. Verificado revirtiendo el fix: el nuevo test (`test_live_vehicles_always_report_raw_observation_age`) falla con `age_s` `None` contra el código anterior y pasa con el fix restaurado.
+- **Bloqueante 2 corregido:** `service_date` se calcula ahora con conversión explícita a Europe/Madrid (`now.astimezone(ZoneInfo("Europe/Madrid")).date()`), no la fecha UTC. Verificado revirtiendo el fix: el nuevo test (`test_service_date_uses_europe_madrid_calendar_not_utc`, cubre borde de invierno CET y verano CEST) falla con `AttributeError` contra el código anterior y pasa con el fix restaurado.
+- **Menor corregido:** recruzados los 24 pares reales `(source_vehicle_id, source_trip_id)` contra `trips.txt` del GTFS completo. Cifra definitiva: 4 C5, 19 de otras 9 líneas (C1, C2, C3, C4, C4a, C4b, C8a, C8b, C10), 1 (`SPECIAL_10_91567C2`) sin resolver. DEC-029, `apps/api/README.md`, `docs/CHANGELOG.md` y este documento corregidos.
+
+101/101 tests en verde (99 + 2 de regresión nuevos). Reenviado a Codex para segunda verificación en este mismo worktree.
+
 ### Bloqueos
 
-Ninguno de implementación. Pendiente la revisión cruzada de OpenAI Codex.
+Ninguno de implementación. Pendiente la segunda revisión cruzada de OpenAI Codex.
 
 ### Siguiente paso
 
@@ -604,6 +619,8 @@ Esta rama se bifurcó de `chore/mp-001-foundation` en el commit `3e7b533`, **ant
 | `2026-11-19` | MP-012 | Implementación de Codex lista para revisión: `packages/movement` + ADR-0012; pipeline completo, cuatro estados/fuentes explícitos, flags topológicos y calibración. 90/90 tests en verde. Integración real read-only: 668→668 posiciones, 177 cerca del corredor, máximo salto map-matched 666,4 km/h; volumen final `668/484/3/120/0`. Tarea pasa a `REVIEW` para Claude Code | `packages/movement/`; `docs/adr/0012-movement-package-boundary.md` |
 | `2026-11-19` | MP-012 | Revisión independiente de Claude Code: código íntegro leído, 90/90 tests reejecutados subiendo/bajando el contenedor propio, integración real reproducida con resultados idénticos (668→668, 177 cerca del corredor, 666,4 km/h), pipeline verificado matemáticamente (offset bidireccional, límites velocidad/aceleración, fallback recursivo correcto), ausencia del literal `"C5"` confirmada, identidad Git y enlaces ADR-0012/DEC-026 correctos. Evaluada y descartada la escalada a Opus por no ser necesaria. **APROBADA, sin hallazgos.** MP-012 pasa a `DONE` | commit `1edfa14`; este documento |
 | `2026-11-19` | MP-013 | API FastAPI real implementada (`apps/api/`): 7 endpoints (`health`/`live/vehicles`(`/{id}`)/`lines`(`/{id}`)/`stations`(`/{id}`)), `history`/`metrics` diferidos explícitamente (DEC-027). Hallazgo real: `route`/`station`/`trip` siguen vacías y `trip_id` sigue `NULL` en PostgreSQL — resolución vía `Topology` en memoria, no `JOIN` SQL. Hallazgos DEC-028 (un corredor basta para ambos sentidos) y DEC-029 (solo 4/24 vehículos del soak son C5, confirma DEC-020 con datos reales). App arrancada con `uvicorn` y probada con `curl` real. 99/99 tests en verde. Tarea pasa a `REVIEW` para OpenAI Codex | `apps/api/`; `apps/api/openapi.json`; DEC-027–030 |
+| `2026-11-19` | MP-013 | Primera revisión de Codex: no aprobada — 2 bloqueantes reales reproducidos (`age_s` `null` para vehículos sin ruta resuelta aunque calculable; `service_date` usaba fecha UTC en vez de Europe/Madrid, desplazando el horario cerca de medianoche) + 1 menor (recuento de líneas no-C5 incompleto en DEC-029) | dispatch `ctx_792a5fe349ba` |
+| `2026-11-19` | MP-013 | Corregido: `age_s` se calcula siempre desde `observation.reported_at`; `service_date` usa conversión explícita a Europe/Madrid (verificado revirtiendo ambos fixes — los tests nuevos fallan exactamente como describió Codex y pasan con el fix restaurado); DEC-029 corregido con el cruce completo (4 C5, 19 de 9 líneas distintas, 1 sin resolver). 101/101 tests en verde. Reenviado a Codex para segunda verificación | — |
 
 ## Cómo usar este documento
 

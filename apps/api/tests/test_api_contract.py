@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import os
 import unittest
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 from fastapi.testclient import TestClient
@@ -74,6 +74,20 @@ class ApiContractTests(unittest.TestCase):
             self.assertGreaterEqual(feed["data_age_s"], 0)
             self.assertGreaterEqual(feed["rejected"], 0)
 
+    def test_live_vehicles_always_report_raw_observation_age(self) -> None:
+        """Hallazgo bloqueante de la revisión de Codex: antes `age_s` solo se
+        rellenaba cuando el motor de movimiento resolvía una posición, dejando
+        `None` para los vehículos reales que no son C5 aunque sí sabemos
+        cuándo se observaron. La edad de la observación cruda es siempre
+        calculable a partir de su propio timestamp."""
+        response = self.client.get("/api/v1/live/vehicles")
+        vehicles = response.json()
+        unresolved = [v for v in vehicles if v["route_id"] is None]
+        self.assertTrue(unresolved, "la fixture reducida debe dejar vehículos reales sin resolver")
+        for vehicle in unresolved:
+            self.assertIsNotNone(vehicle["observation"]["age_s"])
+            self.assertGreaterEqual(vehicle["observation"]["age_s"], 0)
+
     def test_live_vehicles_never_fabricates_route_for_unresolvable_trip(self) -> None:
         """Hallazgo real: la mayoría de los vehículos del soak de MP-007
         pertenecen a otras líneas del núcleo (DEC-020, confirmado con el GTFS
@@ -108,6 +122,31 @@ class ApiContractTests(unittest.TestCase):
         self.assertEqual(detail.status_code, 200)
         self.assertEqual(detail.json()["trip_id"], sample["trip_id"])
         self.assertEqual(detail.json()["route_id"], sample["route_id"])
+
+
+class ServiceDateTimezoneTests(unittest.TestCase):
+    """Regresión del segundo hallazgo bloqueante de la revisión de Codex:
+    una versión anterior pasaba la fecha UTC como ``service_date`` al motor
+    de movimiento, pero ``packages.movement.schedule.service_seconds`` la
+    interpreta como fecha de calendario Europe/Madrid (`docs/DATA_MODEL.md`).
+    Cerca de medianoche ambas difieren en un día real. Mismo tipo de hallazgo
+    que MP-009 ya documentó para el exportador histórico (DEC-021)."""
+
+    def test_service_date_uses_europe_madrid_calendar_not_utc(self) -> None:
+        # 2026-11-19T23:30Z = 2026-11-20T00:30 CET (invierno, UTC+1):
+        # la fecha de servicio real ya es el día siguiente en Madrid.
+        winter_utc = datetime(2026, 11, 19, 23, 30, tzinfo=timezone.utc)
+        self.assertEqual(service._service_date(winter_utc), date(2026, 11, 20))
+        self.assertNotEqual(service._service_date(winter_utc), winter_utc.date())
+
+        # 2026-06-15T22:30Z = 2026-06-16T00:30 CEST (verano, UTC+2): mismo caso.
+        summer_utc = datetime(2026, 6, 15, 22, 30, tzinfo=timezone.utc)
+        self.assertEqual(service._service_date(summer_utc), date(2026, 6, 16))
+        self.assertNotEqual(service._service_date(summer_utc), summer_utc.date())
+
+        # Lejos de medianoche, ambas fechas coinciden.
+        midday_utc = datetime(2026, 11, 19, 12, 0, tzinfo=timezone.utc)
+        self.assertEqual(service._service_date(midday_utc), date(2026, 11, 19))
 
 
 class ResolvedTripEndToEndTests(unittest.TestCase):
