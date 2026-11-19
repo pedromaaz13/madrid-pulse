@@ -71,7 +71,7 @@ Con Hito 1 ya fusionado a `main`, el caso concreto de MP-012 **deja de requerir 
 
 **MP-011 — Prototipo de geometría ferroviaria sobre OSM**
 
-Ejecutor: Claude Code · Revisor: OpenAI Codex · Estado: **REVIEW**
+Ejecutor: Claude Code · Revisor: OpenAI Codex · Estado: **DONE**
 
 Worktree/rama: `mp-011-osm-geometry`, ramificada desde `mp-010-gtfs-topology` (MP-010 `DONE`).
 
@@ -82,7 +82,7 @@ Worktree/rama: `mp-011-osm-geometry`, ramificada desde `mp-010-gtfs-topology` (M
 - [x] `packages/geo/geometry.py`: Haversine real + proyección punto-polilínea (plano local equirrectangular por consulta), sin `shapely`/`pyproj`.
 - [x] Descarga real de las 4 relaciones direccionales OSM de C5 Madrid (`11331`/`3418148`/`3418149`/`3418150`, `ref=C-5`/`network=Cercanías Madrid`, agrupadas por el `route_master` `3418151`): las 4 encadenan sus `ways` de vía sin huecos.
 - [x] Las 23 estaciones reales de la ruta larga (ambos sentidos, GTFS `10T0017C5`/`10T0018C5`) proyectan en orden monótono sobre su corredor correspondiente, distancia máxima real 63,7 m.
-- [x] **Hallazgo:** la ruta corta (`10T0047C5`/`48C5`) no tiene relación OSM propia — confirmado por proyección que es un subsegmento contiguo real de la misma vía que la ruta larga; no se fabrica geometría separada.
+- [x] **Hallazgo:** la ruta corta (`10T0047C5`/`48C5`) no tiene relación OSM propia — su patrón base de 6 estaciones es una subsecuencia contigua literal de la ruta larga; la variante de 7 estaciones con Atocha solo es monótona y no contigua. No se fabrica geometría separada.
 - [x] **Hallazgo:** las relaciones `3418148`/`3418149` ("Fuenlabrada→Atocha→Móstoles-El Soto") son la ruta larga truncada en Fuenlabrada, no coinciden con el patrón real de 6 estaciones de la ruta corta — documentado como variante real no usada (DEC-025).
 - [x] **Hallazgo:** `usage=main` (30 `ways`)/`usage=branch` (60 `ways`) en la vía — trazado troncal potencialmente compartido vs. ramal específico de C5; no verificado qué otras líneas comparten el tramo (DEC-025).
 - [x] "C5"/"C-5" colisiona también en OSM entre núcleos (Asturias, Sevilla, Cantabria, Valencia, Madrid) — mismo patrón que ADR-0008/DEC-017 ya documentó para el GTFS de Renfe.
@@ -112,7 +112,11 @@ Evidencia ya reproducida por el revisor: 6 geo + 7 GTFS + 31 contratos + 6 fixtu
 - **Menor corregido (sobre-reclamo "subsegmento contiguo"):** separado en dos tests y dos afirmaciones distintas. La variante base de 6 estaciones de `10T0047C5` (sin Atocha) SÍ es una subsecuencia contigua real (verificado por comparación literal de IDs: aparece en el índice 16 del patrón largo de 23 estaciones). La variante real de 7 estaciones (con Atocha antepuesta) proyecta en orden monótono sobre el mismo corredor pero NO es contigua — omite 4 paradas intermedias reales (Méndez Álvaro, Doce de Octubre, Orcasitas, Puente Alcocer). `packages/geo/README.md`, `docs/TASKS.md` y este documento corregidos para no confundir ambas afirmaciones.
 - **Menor corregido (checksums):** 4 SHA-256 añadidos a `tests/fixtures/osm_c5_real/MANIFEST.md`, recalculados y verificados contra los ficheros reales (`hashlib.sha256` sobre cada JSON, comparación exacta con el valor documentado).
 
-Commit de corrección pendiente de registrar tras esta actualización de documentación. Reenviado a Codex para segunda verificación en este mismo worktree.
+Commit de corrección `f795036`. Reenviado a Codex para segunda verificación en este mismo worktree.
+
+**Segunda verificación independiente de OpenAI Codex (`2026-11-19`): APROBADA.** El revisor leyó íntegramente `packages/geo/corridor.py` y repitió una reproducción sintética propia: dos `ways` desconectados producen 2 `segments`; un punto en el centro del hueco proyecta a `2223,9 m` del tramo real más próximo (no ~0), y `corridor_length_m=2223,9 m` suma únicamente los dos tramos, sin el hueco. El test bloqueante dirigido pasó 1/1 y `packages.geo.tests.test_real_feed` pasó 8/8.
+
+Regresión propia: 71/71 en verde (7 GTFS + 31 contratos + 6 fixtures GTFS-RT + 9 colector + 13 calidad + 5 snapshotter), con las integraciones reales ejecutadas contra PostgreSQL sin `skip`; recuentos persistentes `668/484/3/120/0` idénticos antes y después. El contenedor se levantó con `--wait` y se bajó sin `-v`, conservando el volumen. La comparación literal independiente sitúa el patrón base de 6 estaciones en el índice 16 del patrón largo de 23; la variante de 7 con Atocha ocupa las posiciones `11,16,17,18,19,20,21`, por lo que no es contigua y omite cuatro estaciones. Los cuatro SHA-256 recalculados coinciden exactamente con `MANIFEST.md`; `git diff --check fbc3fde..f795036` está limpio e identidad de autor/committer de `f795036` es `Pedro Matute <pedromaaz13@gmail.com>`, sin coautor. Sin hallazgos bloqueantes ni menores abiertos; MP-011 pasa a `DONE`.
 
 ### Siguiente paso
 
@@ -526,6 +530,7 @@ Esta rama se bifurcó de `chore/mp-001-foundation` en el commit `3e7b533`, **ant
 | `2026-11-19` | MP-011 | Geometría OSM real implementada (`packages/geo/`): 4 relaciones direccionales de C5 Madrid descargadas y encadenadas sin huecos; 23 estaciones reales proyectadas en orden monótono (máx. 63,7 m); ruta corta confirmada como subsegmento del corredor largo. Evidencia visual real en navegador (Chrome DevTools MCP). 78/78 tests en verde. Hallazgos documentados como ambigüedades (DEC-025), no forzados: relaciones Fuenlabrada-truncadas sin coincidir con la ruta corta real, `usage=main`/`branch` sin verificar reparto exacto, huérfano `10T0035C5` aún sin validar. Overpass API devolvió `502` por capacidad varias veces; reintentos con pocos segundos de espera tuvieron éxito. Fixture ODbL congelada y atribuida (DEC-024). Tarea pasa a `REVIEW` para OpenAI Codex | `packages/geo/`; `tests/fixtures/osm_c5_real/MANIFEST.md`; DEC-024; DEC-025 |
 | `2026-11-19` | MP-011 | Primera revisión de Codex: no aprobada — bloqueante real reproducido (`ChainGap` registrado pero la geometría seguía fabricando una unión a través del hueco; repro sintética con `distance_m=0.0`) + 2 menores (recuento de tests incorrecto; una variante real de 7 estaciones de `10T0047C5` se documentó como "subsegmento contiguo" sin serlo) + checksums anunciados pero ausentes | dispatch `ctx_6b6ad999cdfe` |
 | `2026-11-19` | MP-011 | Corregido: `Corridor.segments` separa tramos reales (verificado revirtiendo el fix — el test de regresión falla exactamente como describió Codex y pasa con el fix restaurado); `render_preview.py` dibuja un `<polyline>` por tramo; ruta corta dividida en variante base contigua (6 estaciones, verificado por comparación literal de IDs) y variante con Atocha monótona-pero-no-contigua (7 estaciones); 4 SHA-256 añadidos y verificados en `MANIFEST.md`. 79/79 tests en verde (8 geo + 71 regresión). Reenviado a Codex para segunda verificación | — |
+| `2026-11-19` | MP-011 | Segunda verificación independiente de Codex aprobada sobre `f795036`: repro sintética propia a `2223,9 m` del tramo más cercano (sin geometría fabricada), 8 geo + 71 regresión en verde, PostgreSQL `668/484/3/120/0` antes/después, patrones corto base/variante comprobados literalmente, 4 SHA-256 coincidentes, diff limpio e identidad Git correcta. MP-011 pasa a `DONE` | dispatch `ctx_24d7ea61fba0` |
 
 ## Cómo usar este documento
 
