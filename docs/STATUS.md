@@ -71,7 +71,7 @@ Con Hito 1 ya fusionado a `main`, el caso concreto de MP-012 **deja de requerir 
 
 **MP-014 — Frontend React/MapLibre C5**
 
-Ejecutor: OpenAI Codex · Revisor: Claude Code · Estado: **REVIEW**
+Ejecutor: OpenAI Codex · Revisor: Claude Code · Estado: **DONE**
 
 Worktree/rama: `mp-014-frontend`, ramificada desde `mp-013-fastapi` (MP-013 `DONE`).
 
@@ -81,7 +81,7 @@ Worktree/rama: `mp-014-frontend`, ramificada desde `mp-013-fastapi` (MP-013 `DON
 - [x] **Gap de geometría resuelto (DEC-031):** `LineOut.geometry` nullable expone cada `Corridor.segments` por separado y las 23 estaciones proyectadas/ordenadas; no conecta paradas ni asigna el único corredor a otra línea. Test real contra GTFS/OSM y OpenAPI regenerado.
 - [x] Los cuatro estados de posición (`observed`/`estimated`/`stale`/`scheduled`) tienen forma, color, opacidad y explicación textual diferentes (ADR-0004). Un ciclo real fresco los produjo simultáneamente: 24/2/4/1.
 - [x] Campos `null` honestos: 114 de 145 vehículos reales quedaron sin ubicar tras el smoke; se contabilizan y listan explícitamente, sin ruta/posición inventada. `delay.coverage=missing` se explica como ausencia de dato.
-- [ ] **Gate visual pendiente de cuarta verificación:** Claude reconstruyó la build y confirmó que el worker de producción ya funciona. Su tercera pasada encontró una carrera menor de carga en frío: el corredor/estaciones podían esperar al siguiente poll porque el efecto de `line` registraba un `once("load")` tardío. Codex lo corrigió con un readiness persistente y aplicación del último estado desde el único handler inicial de `load`; también expuso errores de MapLibre en consola y añadió una regresión del orden `load`-antes-de-línea. Esta sesión sigue sin navegador, así que Claude debe repetir dev + build/preview en varias pestañas nuevas antes de `DONE`; tests/build no se presentan como sustituto visual.
+- [x] **Gate visual aprobado (cuarta verificación):** Claude reconstruyó la build de producción y, en navegador real, cargó el preview en tres pestañas nuevas e independientes (carga en frío) — las tres mostraron el corredor y las 23 estaciones de inmediato, sin errores de consola, confirmando la corrección de la carrera de `load`. Dev reverificado sin regresión. Interacción comprobada: el toggle "Trazado" oculta/muestra el corredor correctamente sin afectar estaciones ni vehículos.
 - [x] Arquitectura preparada para más líneas (ADR-0011): selector y estado derivados de `(network_id, line_id)` de la API; ningún literal de línea en componentes, hooks ni lógica compartida (la única coincidencia textual en `package-lock.json` pertenece a hashes de integridad).
 - [x] Via Península/Valfiguer no se consumen ni se copia código/diseño; implementación independiente.
 - [x] Smoke real de consumo API: PostgreSQL + GTFS oficial completo + `uvicorn` + Vite; `/lines` devolvió el corredor real y `/live/vehicles` los cuatro modos simultáneos. La carga visual del mapa permanece incluida en el gate anterior.
@@ -127,15 +127,17 @@ worker, pero detectó una carrera de carga en frío. `MapView` ya no registra
 listeners `once("load")` por cada línea: el handler inicial marca readiness y
 aplica los últimos datos/capas; los cambios posteriores consultan ese estado.
 Los errores de MapLibre se registran explícitamente. Frontend re-verificado:
-lint, typecheck, 5/5 tests y build en verde. Falta la cuarta confirmación visual
-de Claude en varias pestañas nuevas.
+lint, typecheck, 5/5 tests y build en verde. Cuarta revisión visual de Claude:
+build de producción reconstruida, preview en tres pestañas nuevas e
+independientes (carga en frío) — 3/3 mostraron el corredor/23 estaciones de
+inmediato, sin errores de consola. Dev revalidado sin regresión; interacción
+del toggle "Trazado" comprobada. MP-014 aprobada como `DONE` por el revisor.
 
 ### Bloqueos
 
-No queda un bloqueo técnico conocido tras corregir la carrera de carga en frío.
-Permanece abierto el gate de cuarta inspección visual (dev + build/preview,
-varias pestañas nuevas) por Claude Code, porque Codex no dispone de navegador
-en esta sesión. La tarea sigue en `REVIEW`, nunca `DONE` por el ejecutor.
+Ninguno. Las cuatro rondas de revisión (geometría/arquitectura, worker de
+Vite dev, worker de build de producción, carrera de carga en frío) quedaron
+corregidas y verificadas con navegador real. MP-014 cerrada como `DONE`.
 
 ### Siguiente paso
 
@@ -701,6 +703,7 @@ Esta rama se bifurcó de `chore/mp-001-foundation` en el commit `3e7b533`, **ant
 | `2026-11-19` | MP-014 | Primera revisión visual real de Claude: responsive/estados/nulls/atribución correctos, pero bloqueante en Vite dev (`maplibre-gl-worker.mjs` prebundled → `504`; corredor/estaciones invisibles) y menor de selector sin `id/name`. Codex aplica el fix confirmado diagnósticamente por Claude (`optimizeDeps.exclude: maplibre-gl`), añade `id`/`name`/`htmlFor`, comprueba módulo directo `200`, preview con API real (1 segmento/23 estaciones) y repite lint/typecheck/3 tests/build en verde. Producción no usa `.vite/deps`: worker empaquetado en chunk `MapView`. Queda en `REVIEW` para segunda pasada visual de Claude | `apps/web/vite.config.ts`; `apps/web/src/App.tsx`; dispatch `ctx_173c5fc5e12c` |
 | `2026-11-19` | MP-014 | Segunda revisión visual de Claude confirma dev correcto y descubre el worker ausente en build/preview (la ruta devolvía fallback HTML). Codex emite el worker como asset explícito, fija su URL solo en producción y añade verificación byte a byte al build; lint/typecheck/3 tests/build en verde. Preview comprobado con worker `text/javascript` de 550.754 bytes y SHA-256 idéntico a la dependencia; API real devuelve el corredor. Queda en `REVIEW` para tercera pasada visual dev + preview de Claude | `apps/web/vite.config.ts`; `apps/web/src/MapView.tsx`; `apps/web/scripts/verify-build.mjs`; dispatch `ctx_2ce422035b3e` |
 | `2026-11-19` | MP-014 | Tercera revisión visual de Claude confirma worker/dev, pero reproduce 2/2 una carrera menor de carga en frío que retrasa corredor/estaciones al siguiente poll. Codex sustituye listeners `once("load")` tardíos por readiness persistente y aplicación del último estado desde el handler inicial, registra errores MapLibre y añade regresiones jsdom; lint/typecheck/5 tests/build en verde y worker validado (550.754 bytes). Queda en `REVIEW` para cuarta pasada visual en varias pestañas nuevas de Claude | `apps/web/src/MapView.tsx`; `apps/web/src/MapView.test.tsx`; dispatch `ctx_180bdc48fbc5` |
+| `2026-11-19` | MP-014 | Cuarta revisión visual de Claude: build de producción reconstruida, preview en tres pestañas nuevas e independientes (carga en frío) — 3/3 mostraron corredor/23 estaciones de inmediato, sin errores de consola. Dev revalidado, interacción del toggle "Trazado" comprobada. Las cuatro rondas de hallazgos quedan cerradas; MP-014 aprobada `DONE` por el revisor | commit `d4abedb`; `docs/TASKS.md`; `docs/STATUS.md` |
 
 ## Cómo usar este documento
 
