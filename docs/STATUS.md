@@ -90,8 +90,8 @@ Orden de trabajo elegido (cada paso se implementa, se prueba de verdad y se docu
 
 ### Checklist de MP-015
 
-- [ ] Resolución real `route_id`/`station_id` sobre datos exportados, con tests.
-- [ ] `daily_line_metrics`/`station_daily_metrics` calculadas de verdad vía dbt-duckdb, `dbt test` en verde.
+- [x] Resolución real `route_id`/`station_id` sobre datos exportados, con tests.
+- [x] **`daily_line_metrics`/`station_daily_metrics` calculadas de verdad (DEC-033/DEC-034):** `services/snapshotter/gold.py` extendido con `build_line_daily_metrics`/`build_station_daily_metrics` sobre `packages.gtfs.Topology`, en vez de dbt-duckdb literal — decisión documentada (DEC-034): la resolución es lógica Python que no encaja en SQL puro sin duplicarla, y DEC-021 ya fijó un único motor sin dependencias añadidas. 10 tests nuevos reales (fixture GTFS + PostgreSQL), corrida real contra el soak completo del `2026-11-19`: 3 filas en `daily_line_metrics`, 18 en `station_daily_metrics`.
 - [ ] CI real (GitHub Actions) ejecutando las suites Python + frontend existentes.
 - [ ] Replay E2E determinista sobre fixtures reales, sin red en vivo, pipeline completo.
 - [ ] Auditoría de contenido de los 12 ADRs vs. implementación real (sin cambiar `Estado`).
@@ -100,11 +100,19 @@ Orden de trabajo elegido (cada paso se implementa, se prueba de verdad y se docu
 
 ### Resultado y límites
 
-Pendiente de implementación.
+Fase 1 completa: `daily_line_metrics`/`station_daily_metrics` reales. Verificación
+ejecutada: 112/112 tests Python (102 previos + 10 nuevos: 9 puros en
+`test_gold.py` contra la fixture GTFS real con calendario de un solo día, 1
+de replay real contra PostgreSQL en `test_export_replay.py`). PostgreSQL
+restaurado exactamente a `668/484/3/120/0` tras el test de replay. Corrida
+real end-to-end (`python -m services.snapshotter 2026-11-19` contra el soak
+completo): 3 líneas, 18 estaciones, sin filas fabricadas. Límites
+documentados en DEC-033 (calendario sin excepciones, umbral de puntualidad
+calibrable, sin `data_quality_events_count` por estación).
 
 ### Bloqueos
 
-Ninguno conocido al inicio de la tarea.
+Ninguno conocido hasta ahora.
 
 ### Siguiente paso
 

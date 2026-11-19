@@ -6,8 +6,16 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 
 ### MP-015 — E2E y readiness MVP
 
+#### Added
+- `services/snapshotter/gold.py`: `build_line_daily_metrics`/`build_station_daily_metrics` calculan de verdad `daily_line_metrics`/`station_daily_metrics` (diferidas desde MP-009/DEC-021), resolviendo `trip_id`→`route_id`/`stop_id`→`station_id` contra `packages.gtfs.Topology`. `_scheduled_trip_ids_by_route` resuelve trips programados por `service_date` vía `calendar.txt` (día de la semana + rango de fechas). `GoldThresholds.on_time_threshold_seconds` (300s, calibrable). `SnapshotterConfig` ampliado con `network_id`/`short_name`/`gtfs_source` (mismas variables que `apps/api`). Ver DEC-033 para los tres límites documentados.
+- `services/snapshotter/tests/test_gold.py` (9 tests, sin PostgreSQL, fixture GTFS real con calendario de un solo día) y una extensión real de `test_export_replay.py` (PostgreSQL real). 112/112 tests Python en verde.
+- DEC-034: decisión documentada de no introducir dbt-core/dbt-duckdb como herramienta literal — `gold.py` ya aplica la disciplina dbt (capas, tests, documentación) sin el motor dbt, consistente con DEC-021. `analytics/dbt/README.md`/`analytics/duckdb/README.md` actualizados para reflejar esto.
+
+#### Verified
+- Corrida real end-to-end (`python -m services.snapshotter 2026-11-19`) contra el soak completo ya existente en PostgreSQL: 3 filas en `daily_line_metrics` (una por variante de ruta C5 con trips programados ese día), 18 en `station_daily_metrics`, sin datos fabricados. PostgreSQL restaurado exactamente a `668/484/3/120/0` tras el test de replay.
+
 #### In progress
-- Worktree `mp-015-e2e-readiness` abierto (ramificado desde `mp-014-frontend`, MP-014 `DONE`). Sin entregables todavía — ver `docs/STATUS.md` para el checklist y el orden de trabajo elegido (resolución route/station real → dbt-duckdb → CI → E2E replay → auditoría de ADRs → checklist de MVP).
+- Resto del checklist (CI, E2E replay, auditoría de ADRs, checklist de MVP) — ver `docs/STATUS.md`.
 
 ### MP-014 — Frontend React/MapLibre C5
 

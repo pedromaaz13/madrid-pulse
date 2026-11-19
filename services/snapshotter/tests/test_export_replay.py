@@ -26,11 +26,18 @@ import duckdb
 import psycopg
 
 from packages.contracts.canonical import ServiceAlert
+from packages.gtfs import load_feed
 from services.collector import db as collector_db
 from services.collector.config import CollectorConfig
 from services.snapshotter.config import SnapshotterConfig
 from services.snapshotter.export import export_service_date
-from services.snapshotter.gold import build_nucleo_daily_summary
+from services.snapshotter.gold import (
+    build_line_daily_metrics,
+    build_nucleo_daily_summary,
+    build_station_daily_metrics,
+)
+
+FIXTURE_DIR = Path(__file__).resolve().parents[3] / "tests" / "fixtures" / "gtfs_c5_real"
 
 TEST_SERVICE_DATE = date(2099, 1, 1)
 # 10:00 UTC del 1-enero-2099 cae en el mismo día en Europe/Madrid (CET, sin
@@ -251,6 +258,105 @@ class ExportReplayTests(unittest.TestCase):
         finally:
             con.close()
         self.assertEqual(row, ("10", 2, 2, 1))
+
+    def test_line_and_station_daily_metrics_resolve_against_real_export(self) -> None:
+        """Replay real de `build_line_daily_metrics`/`build_station_daily_metrics`
+        (MP-015). Usa una `Topology` sintética mínima -- no la fixture real
+        completa -- para que el calendario resuelva contra `TEST_SERVICE_DATE`
+        (2099-01-01), deliberadamente alejada de cualquier fecha real, en vez
+        de insertar filas sintéticas en la partición real de 2026 (ver nota
+        del módulo sobre por qué este fichero nunca usa una fecha real)."""
+        from packages.gtfs import CalendarService, Route, Stop, Trip, Topology
+
+        topology = Topology(
+            routes=(Route("10T0017C5", "C5", "Humanes-Atocha", 2, "", ""),),
+            trips=(Trip("10T0017C5", "replay-cal", "replay-test-trip-0", "", 2, "", ""),),
+            stops=(Stop("replay-stop-0", "Estación de prueba", 40.4, -3.7, 1),),
+            stop_times=(),
+            shape_points=(),
+            calendar=(
+                CalendarService(
+                    service_id="replay-cal",
+                    monday=True, tuesday=True, wednesday=True, thursday=True,
+                    friday=True, saturday=True, sunday=True,
+                    start_date="20981231", end_date="20990102",
+                ),
+            ),
+        )
+
+        with self.conn.transaction():
+            run_id = collector_db.insert_ingestion_run(
+                self.conn,
+                feed_name="vehicle_positions",
+                source_timestamp=TEST_OBSERVED_AT,
+                started_at=TEST_OBSERVED_AT,
+                finished_at=TEST_OBSERVED_AT,
+                status="ok",
+                entity_count=1,
+                payload_hash="4" * 64,
+            )
+            self._cleanup_queries.append(
+                ("DELETE FROM source_ingestion_run WHERE id = %s", (run_id,))
+            )
+            self.conn.execute(
+                """
+                INSERT INTO vehicle_position_observation
+                    (observed_at, received_at, source_vehicle_id, source_trip_id,
+                     latitude, longitude, current_stop_id, raw_vehicle_label,
+                     nucleo_prefix, nucleo_name, payload_hash, ingestion_run_id)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                """,
+                (
+                    TEST_OBSERVED_AT, TEST_OBSERVED_AT, "replay-test-vehicle-gold",
+                    "replay-test-trip-0", 40.4, -3.7, "replay-stop-0",
+                    "replay gold test", "10", "Madrid", "5" * 64, run_id,
+                ),
+            )
+            self._cleanup_queries.append(
+                (
+                    "DELETE FROM vehicle_position_observation WHERE ingestion_run_id = %s",
+                    (run_id,),
+                )
+            )
+            self.conn.execute(
+                """
+                INSERT INTO trip_update_observation
+                    (observed_at, received_at, source_trip_id, delay_seconds,
+                     delay_coverage, nucleo_prefix, payload_hash, ingestion_run_id)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                """,
+                (
+                    TEST_OBSERVED_AT, TEST_OBSERVED_AT, "replay-test-trip-0", 45,
+                    "reported", "10", "6" * 64, run_id,
+                ),
+            )
+            self._cleanup_queries.append(
+                ("DELETE FROM trip_update_observation WHERE ingestion_run_id = %s", (run_id,))
+            )
+
+        config = SnapshotterConfig.from_env()
+        export_service_date(config.database_url, TEST_SERVICE_DATE, self.output_dir)
+
+        line_gold = build_line_daily_metrics(self.output_dir, TEST_SERVICE_DATE, self.output_dir, topology)
+        station_gold = build_station_daily_metrics(
+            self.output_dir, TEST_SERVICE_DATE, self.output_dir, topology
+        )
+
+        con = duckdb.connect()
+        try:
+            line_row = con.execute(
+                f"SELECT route_id, trips_scheduled, trips_with_delay_data, on_time_pct_of_covered "
+                f"FROM read_parquet('{line_gold.output_path}/part.parquet')"
+            ).fetchone()
+            station_row = con.execute(
+                f"SELECT station_id, observations_count "
+                f"FROM read_parquet('{station_gold.output_path}/part.parquet')"
+            ).fetchone()
+        finally:
+            con.close()
+
+        self.assertEqual(line_row, ("10T0017C5", 1, 1, 1.0))
+        self.assertEqual(station_row, ("replay-stop-0", 1))
 
 
 if __name__ == "__main__":
