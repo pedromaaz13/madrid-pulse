@@ -1,0 +1,108 @@
+{
+  "header": {
+    "gtfsRealtimeVersion": "2.0",
+    "timestamp": "1795017709"
+  },
+  "entity": [
+    {
+      "id": "AVISO_525129",
+      "alert": {
+        "activePeriod": [
+          {
+            "start": "1794219780"
+          }
+        ],
+        "informedEntity": [
+          {
+            "routeId": "10T0017C5"
+          },
+          {
+            "routeId": "10T0018C5"
+          },
+          {
+            "routeId": "10T0035C5"
+          },
+          {
+            "routeId": "10T0047C5"
+          },
+          {
+            "routeId": "10T0048C5"
+          }
+        ],
+        "descriptionText": {
+          "translation": [
+            {
+              "text": "#MadC5 Por obras de mejora en la infraestructura, los días 14, 15, 21 y 22 de noviembre, entre las 00:30h y las 08:30h, los trenes de la línea C-5 circularán con frecuencias de paso modificadas. Se recomienda consultar los horarios antes de viajar.",
+              "language": "es"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "AVISO_483553",
+      "alert": {
+        "activePeriod": [
+          {
+            "start": "1774611420"
+          }
+        ],
+        "informedEntity": [
+          {
+            "routeId": "10T0026C9"
+          },
+          {
+            "routeId": "10T0110C9"
+          },
+          {
+            "routeId": "10T0111C9"
+          },
+          {
+            "routeId": "10T0025C9"
+          }
+        ],
+        "descriptionText": {
+          "translation": [
+            {
+              "text": "#MadC9 Por obras de reforma integral en la línea C-9, se encuentra suspendido el servicio de trenes entre las estaciones de Cercedilla-Puerto de Navacerrada-Los Cotos. Se ha establecido un servicio especial de autobuses con reserva de plaza.",
+              "language": "es"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "AVISO_467462",
+      "alert": {
+        "activePeriod": [
+          {
+            "start": "1765528080"
+          }
+        ],
+        "informedEntity": [
+          {
+            "routeId": "10T0026C9"
+          },
+          {
+            "routeId": "10T0110C9"
+          },
+          {
+            "routeId": "10T0111C9"
+          },
+          {
+            "routeId": "10T0025C9"
+          }
+        ],
+        "descriptionText": {
+          "translation": [
+            {
+              "text": "#MadC9 Debido a las obras que se están realizando en la línea C-9, los aseos públicos de la estación de Cercedilla permanecen temporalmente inoperativos. ",
+              "language": "es"
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
+

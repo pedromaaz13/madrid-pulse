@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Node / JS / TS
+node_modules/
+dist/
+build/
+.turbo/
+*.tsbuildinfo
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# Databases / local state
+*.duckdb
+*.sqlite3
+pgdata/
+
+# Data artifacts (never commit raw/collected data)
+*.parquet
+*.ndjson
+/data/
+/tmp/
+
+# Docker
+.docker/
+
+# OS / editor
+.DS_Store
+*.swp
+.vscode/
+.idea/
+
+# Logs
+*.log

@@ -1,0 +1,51 @@
+# DECISIONS.md — Registro de decisiones
+
+Las decisiones arquitectónicas con detalle completo de alternativas viven como ADR en `docs/adr/`. Este documento es el índice y resumen ejecutivo de estado: qué está **aceptado**, qué está **propuesto** (viable pero sujeto a validación posterior) y qué está **pendiente** (requiere decisión del propietario o datos que todavía no existen).
+
+## Aceptadas
+
+| ID | Decisión | ADR | Justificación resumida |
+|---|---|---|---|
+| DEC-001 | MVP limitado a la línea C5 de Cercanías Madrid, antes de expandir a toda la red | [ADR-0001](adr/0001-project-scope-c5.md) | Validar identificación de trenes, geometría y calidad de datos a escala manejable antes de escalar. |
+| DEC-005 | Arquitectura monorepo + modular monolith para el MVP; evitar microservicios prematuros | [ADR-0003](adr/0003-storage-strategy.md) | Simplicidad operativa; los procesos se separan físicamente solo donde aportan aislamiento real (collector, API, frontend). |
+| DEC-006 | Las fuentes primarias de datos son Renfe (GTFS/GTFS-RT) y CRTM directamente, no APIs de terceros como Valfiguer | [ADR-0002](adr/0002-data-sources.md) | Reproducibilidad, control de licencia y evitar dependencia de una capa intermedia no garantizada. |
+| DEC-007 | Timestamps internos siempre en UTC (`timestamptz`); `Europe/Madrid` solo en presentación y calendario de servicio GTFS | [ADR-0004](adr/0004-position-model.md) | Evita errores de DST en históricos, especialmente en cambios de hora y de día de servicio. |
+| DEC-008 | No copiar código AGPL-3.0 de Via Península; solo estudio conceptual y reimplementación independiente | [ADR-0006](adr/0006-licensing-policy.md) | Evitar obligaciones AGPL no deseadas sobre el código propio sin que exista ADR explícito que las acepte. |
+| DEC-009 | No se publican métricas de puntualidad sin exponer su cobertura (qué fracción de los viajes tenía dato disponible) | — (principio transversal, ver `AGENTS.md`) | Evitar presentar una muestra parcial como si representara todo el servicio. |
+| DEC-014 | Modelo de autonomía acotada: autorización por hito (no por tarea individual), commits de iteración permitidos dentro del worktree de la tarea (nunca push/PR/merge), gates de pausa en tiempo real limitados a decisiones de licencia/coste | [ADR-0007](adr/0007-autonomy-model.md) | Decisión explícita del propietario (2026-11-18) para permitir avanzar el backlog MP-002 en adelante sin supervisión constante, preservando el control sobre lo irreversible (historial de Git compartido, licencia, coste). |
+| DEC-016 | Valfiguer se mantiene exclusivamente como benchmark: sus datos/API normalizados declaran `CC BY 4.0`, pero no se localizó un repositorio público verificable ni una licencia para el código de la aplicación | [ADR-0002](adr/0002-data-sources.md) | Verificación formal MP-002 del 2026-11-18: artículo, servicio, aviso legal, página de datos/API y repositorios públicos de la cuenta oficial inspeccionados. Una licencia de datos no permite inferir la licencia del código; no afecta a la viabilidad porque Valfiguer no es upstream de producción. |
+
+## Propuestas (viables, pendientes de validación empírica)
+
+| ID | Decisión | ADR | Qué falta para aceptarla |
+|---|---|---|---|
+| DEC-017 | `route.source_route_id` debe ser el `route_id` completo de Renfe (p. ej. `10T0047C5`), nunca el código de línea en solitario (`"C5"`); el prefijo numérico de dos cifras identifica el núcleo de Cercanías | [ADR-0008](adr/0008-route-identity.md) (`Propuesto`) | Probe real de MP-003 del 2026-11-18: la línea "C5" existe también en Asturias (`20T0011C5`) y Andalucía (`30T0009C5`) en el mismo feed nacional. Filtrar por texto de línea mezclaría trenes de tres núcleos distintos. Afecta a `docs/DATA_MODEL.md`, `services/collector` (MP-007) y `packages/contracts` (MP-005). Falta: revisión y promoción del propietario (ADR-0007) en el cierre de Hito 1. |
+| DEC-018 | `speed_kmh`/`bearing` nullable (no observados en ningún payload real), `current_stop_id` en vez de `current_stop_sequence` (el feed da stopId, no posición de secuencia), y se elimina `effect`/`cause`/`header_text` de `service_alert` (no observados) | [ADR-0009](adr/0009-unobserved-raw-fields.md) (`Propuesto`) | Construcción del contrato canónico en MP-005 contra las fixtures reales de MP-003/MP-004 (~800 entidades combinadas): ninguna trae estos campos. Mantenerlos habría sido inventar comportamiento de la fuente. Afecta a `docs/DATA_MODEL.md`, `packages/contracts/`, y la futura migración de MP-006. |
+| DEC-010 | Modelo de posición en cuatro estados: `OBSERVED / ESTIMATED / STALE / SCHEDULED` | [ADR-0004](adr/0004-position-model.md) | Calibrar umbrales de transición (`0–60s`, `60–180s`, `>180s`) con datos reales de MP-003/MP-012. |
+| DEC-011 | Modelo de almacenamiento híbrido: PostgreSQL/PostGIS (hot, retención corta) + Parquet particionado diario en object storage (histórico frío) + agregados permanentes | [ADR-0003](adr/0003-storage-strategy.md) | Medir volumen real de ingesta de la C5 (MP-007) para confirmar los supuestos de tamaño extrapolados de Valfiguer. |
+| DEC-012 | Contratos de API propios versionados bajo `/api/v1/*`, con campos de frescura/calidad en cada respuesta relevante | [ADR-0005](adr/0005-api-contract.md) | Reconciliar la propuesta de endpoints del informe completo con la del brief inicial (ver `docs/DATA_CONTRACTS.md` — discrepancia documentada) antes de MP-013. |
+| DEC-013 | Deduplicación de observaciones por hash canónico de payload, comparado contra la última fila almacenada para la misma clave de entidad de origen; sin `seen_count` (deliberadamente fuera de alcance) | [ADR-0010](adr/0010-dedup-strategy.md) (`Propuesto`) | Implementado y validado en MP-007: el hash se calcula sobre el volcado completo de la entidad bruta (incluido su `timestamp` propio), por lo que no excluye ningún campo observado. Falta: revisión y promoción del propietario (ADR-0007) en el cierre de Hito 1. |
+| DEC-019 | Dependencia nueva `psycopg[binary]` (vía `requirements.txt` + `venv` local, sin gestor adicional) para que el colector escriba en PostgreSQL; Python 3.12 fijado como versión de desarrollo | — (ver `docs/DEVELOPMENT.md`) | `docs/DEVELOPMENT.md` dejaba la versión de Python "a fijar en MP-005/ADR correspondiente" sin resolver; MP-005/MP-006 no necesitaron ninguna dependencia de terceros (solo `pydantic`, ya asumida). MP-007 es la primera tarea que escribe en PostgreSQL desde Python y necesita un driver real; se eligió el gestor más simple posible (mismo criterio que la elección de SQL plano sobre un framework de migraciones en MP-006) en vez de introducir Poetry/pip-tools sin que exista aún una necesidad concreta de los mismos. |
+| DEC-015 | Mecánica de convergencia de ramas encadenadas para una tarea con varias dependencias (p. ej. MP-012 = MP-008 + MP-010 + MP-011): qué rama se usa como base y cómo se integran las demás | [ADR-0007](adr/0007-autonomy-model.md) | Sugerencia no bloqueante de Codex en la 4ª revisión de MP-001: decidir y documentar el mecanismo exacto en `AGENTS.md` antes de abrir el worktree de MP-012. No bloquea Hito 1 (MP-002→MP-009), que es una cadena sin convergencias. |
+| DEC-020 | El colector de MP-007 filtra la ingesta por núcleo (`nucleo_prefix == "10"`, Madrid), pero **no** acota todavía a la línea C5 específicamente | [ADR-0008](adr/0008-route-identity.md) (adenda MP-007) | ADR-0001 (`Aceptado`) exige MVP limitado a C5, no a todo el núcleo de Madrid; ADR-0009 asigna explícitamente la resolución `trip_id` → `route_id` (necesaria para filtrar por C5 sin inventar un heurístico de subcadena no verificado) a MP-010. Falta: decidir si MP-010 debe adelantarse antes de un colector sostenido en producción, o si el filtro por núcleo es aceptable como paso intermedio hasta entonces. |
+| DEC-021 | El exportador histórico de MP-009 usa DuckDB como único motor (lee PostgreSQL vía su extensión `postgres`, escribe Parquet particionado nativamente) en vez de añadir `pandas`/`pyarrow`; el agregado gold inicial se calcula **por núcleo**, no por `route_id`/`station_id` | — (ver `services/snapshotter/README.md` y `docs/DATA_MODEL.md`) | `docs/DEVELOPMENT.md` ya listaba DuckDB como herramienta disponible desde MP-001 ("embebido, sin servicio"); MP-009 solo fija la versión (`duckdb==2.0.0`) y confirma que cubre ambas necesidades (lectura Postgres + escritura Parquet) sin dependencias adicionales. El agregado por núcleo (no por línea/estación) es deliberado: `daily_line_metrics`/`station_daily_metrics` requieren la resolución `trip_id`→`route_id`/`stop_id`→`station_id` que ADR-0009 asigna a MP-010, no a MP-009 — calcularlos ahora exigiría inventar un join no verificado. |
+
+## Pendientes (requieren decisión del propietario, no bloquean MP-001)
+
+| ID | Pregunta | Opciones | Cuándo decidir |
+|---|---|---|---|
+| DEC-002 | Licencia del código propio de Madrid Pulse | MIT · Apache-2.0 · otra | Antes de hacer público el repositorio o de aceptar contribuciones externas. No bloquea MP-001 a MP-006 (desarrollo local). |
+| DEC-003 | Visibilidad del repositorio en GitHub | Público · Privado inicialmente | Puede decidirse en cualquier momento antes de invitar colaboradores externos. |
+| DEC-004 | Retención definitiva del histórico detallado en almacenamiento frío | Permanente · 12 meses · 24 meses | Debe fijarse después de medir volumen/coste real con 24–72 h de ingesta (MP-007/MP-009), no antes. El brief inicial propone 12 meses con compresión ZSTD como punto de partida revisable. |
+
+## No-Go explícitos (del informe de investigación)
+
+| ID | Decisión | Razón |
+|---|---|---|
+| NOGO-001 | No implementar ocupación en tiempo real inferida | Sin fuente legítima de sensores; solo viable con fuente real o capa colaborativa futura con política de privacidad explícita. |
+| NOGO-002 | No copiar código AGPL-3.0 de Via Península en un producto con licencia potencialmente incompatible | Ver DEC-008 / ADR-0006. |
+| NOGO-003 | No almacenar indefinidamente cada poll de posición en PostgreSQL | Insostenible en coste y rendimiento; modelo hot + Parquet diario + agregados permanentes es la alternativa aceptada (DEC-011). |
+
+## Relación con ADRs
+
+Cada decisión con alternativas y trade-offs documentados tiene su propio ADR en `docs/adr/`. Este índice no sustituye la lectura del ADR correspondiente antes de proponer un cambio.
