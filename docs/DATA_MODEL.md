@@ -201,3 +201,5 @@ UNIQUE(route.network_id, route.source_route_id)
 | Detalle crudo exportado | 12 meses (propuesta inicial, revisable) | Parquet / R2 |
 
 Estos números son puntos de partida de la investigación, **no compromisos fijos**: deben confirmarse tras medir volumen real de ingesta (MP-007) y coste (MP-009).
+
+**Estado real de la capa gold tras MP-009 (DEC-021):** `daily_line_metrics`/`station_daily_metrics` (por `route_id`/`station_id`) siguen sin implementar — dependen de la resolución `trip_id`→`route_id`/`stop_id`→`station_id` del GTFS estático, asignada a MP-010 (ADR-0009), que no es dependencia de MP-009. El exportador (`services/snapshotter/gold.py`) calcula en su lugar un resumen diario **por núcleo** (`nucleo_prefix`), como paso inicial real sin inventar un join no verificado. Volumen real medido en MP-009 (día `2026-11-19`, soak test de MP-007): 1272 filas crudas (668 posiciones + 484 actualizaciones de viaje + 120 ejecuciones de ingesta) comprimen a ~76 KB en Parquet ZSTD particionado.

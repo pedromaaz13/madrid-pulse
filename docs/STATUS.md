@@ -19,9 +19,33 @@ MP-001 está `DONE`: Codex aprobó la revisión cruzada y, conforme a ADR-0007, 
 
 **MP-009 — Exportador histórico (Parquet particionado)**
 
-Ejecutor: Claude Code · Revisor: OpenAI Codex · Estado: **TODO** (pendiente de dispatch)
+Ejecutor: Claude Code · Revisor: OpenAI Codex · Estado: **REVIEW**
 
-Worktree/rama: a crear como `mp-009-historical-export`, ramificada desde `mp-008-quality-engine` (MP-008 `DONE`)
+Worktree/rama: `mp-009-historical-export`, ramificada desde `mp-008-quality-engine` (MP-008 `DONE`)
+
+### Checklist de MP-009
+
+- [x] `services/snapshotter/export.py`: DuckDB como único motor (lee PostgreSQL vía `ATTACH ... TYPE POSTGRES`, escribe Parquet nativo); sin `pandas`/`pyarrow` adicionales (DEC-021).
+- [x] Partición `date=YYYY-MM-DD/hour=HH` siempre calculada sobre Europe/Madrid, nunca UTC directo — ver hallazgo real abajo.
+- [x] **Hallazgo real:** los datos del soak test de MP-007 (`23:31:42 UTC` 18-nov) pertenecen al día de servicio **19-nov** en Europe/Madrid (CET, UTC+1) — exactamente el error que `docs/DATA_MODEL.md` ya advertía. 3 tests de regresión puros (incluido CEST/verano) en `test_export.py`.
+- [x] Test de replay real (`test_export_replay.py`): día de prueba conocido, COMPROMETIDO (no `rollback()`, DuckDB usa conexión `libpq` propia), exportado y verificado sin pérdida; limpieza explícita en `finally`.
+- [x] Exportación real completa del día `2026-11-19` (datos reales, no fixtures): 1272 filas (668+484+120+0+0), ~76 KB ZSTD particionado; releído con consulta DuckDB independiente, recuento exacto.
+- [x] `services/snapshotter/gold.py`: resumen diario por núcleo (1 fila para Madrid: 668 posiciones/24 vehículos, 484 actualizaciones/24 viajes). **Limitación deliberada documentada:** no calcula `daily_line_metrics`/`station_daily_metrics` (requieren resolución `route_id`/`station_id` diferida a MP-010, ADR-0009) — ver DEC-021.
+- [x] CLI (`python -m services.snapshotter YYYY-MM-DD`) probado de punta a punta contra PostgreSQL real.
+- [x] 64 tests reales en verde: 31 contratos + 6 fixtures + 9 colector + 13 calidad + 5 snapshotter.
+- [x] Identidad Git verificada; contenedor `madrid-pulse` detenido al finalizar la implementación (volumen real conservado); `*-traza-app` intactos.
+
+### Resultado y límites
+
+El exportador mueve de verdad datos reales de PostgreSQL a Parquet particionado sin pérdida, con la trampa de huso horario (Europe/Madrid vs. UTC) encontrada y corregida con evidencia real, no solo teórica. El agregado gold queda deliberadamente acotado a núcleo (no a línea/estación) hasta que MP-010 resuelva las FK necesarias — documentado, no improvisado.
+
+### Bloqueos
+
+Ninguno. La limitación de alcance del agregado gold está documentada y no bloquea el criterio de aceptación real (replay sin pérdida de la capa raw).
+
+### Siguiente paso
+
+Codex debe auditar el diff y reejecutar la suite (incluido el test de replay) contra el mismo PostgreSQL antes de aprobar MP-009. Esta es la última tarea de Hito 1 (MP-002 → MP-009) — su cierre completa el hito autorizado.
 
 ## Tareas cerradas de la cadena
 

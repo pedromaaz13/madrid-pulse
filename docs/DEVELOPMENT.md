@@ -18,7 +18,7 @@ Docker Desktop / Docker Engine
 Python 3.12 (fijado en MP-007/DEC-019; sin gestor adicional: venv + requirements.txt)
 Node.js (versión a fijar en MP-014/ADR correspondiente)
 PostgreSQL + PostGIS (local, vía docker-compose en infra/docker/)
-DuckDB (embebido, sin servicio)
+DuckDB (embebido, sin servicio; versión fijada en MP-009/DEC-021, `requirements.txt`)
 ```
 
 El colector (`services/collector/`, MP-007) es el primer componente que escribe en

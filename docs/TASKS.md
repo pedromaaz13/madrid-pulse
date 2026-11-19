@@ -235,8 +235,45 @@ Cada tarea se trabaja en **un único worktree/rama** (`mp-00X-nombre-corto`), co
 - **Entregables:** exportador con particionado `date=YYYY-MM-DD/hour=HH` (raw) y `date=YYYY-MM-DD` (silver/gold), compresión ZSTD.
 - **Criterios de aceptación:** un día exportado puede reconstruirse (*replay*) reproduciendo el estado observado sin pérdida de eventos relevantes.
 - **Pruebas necesarias:** test de replay de un día completo de fixtures.
-- **Evidencia de verificación:** resultado del test de replay.
-- **Estado:** `TODO`
+- **Evidencia de verificación:**
+  - `services/snapshotter/` (nuevo): DuckDB como único motor para leer PostgreSQL
+    (`ATTACH ... TYPE POSTGRES`) y escribir Parquet particionado nativamente
+    (`COPY ... FORMAT PARQUET, COMPRESSION ZSTD, PARTITION_BY`); sin
+    `pandas`/`pyarrow` adicionales (DEC-021).
+  - **Hallazgo real durante la implementación:** los datos reales del soak
+    test de MP-007 (`23:31:42 UTC` del 18-nov-2026) pertenecen al día de
+    servicio **19-nov** en Europe/Madrid (CET, UTC+1 en noviembre) — leer la
+    fecha UTC directamente habría exportado esas filas al día equivocado,
+    exactamente el error que `docs/DATA_MODEL.md` ya advertía. Corregido con
+    conversión explícita a `Europe/Madrid` antes de calcular límites de día
+    y partición; 3 tests de regresión puros (incluido un caso de horario de
+    verano, CEST) en `services/snapshotter/tests/test_export.py`.
+  - **Test de replay real** (`test_export_replay.py`): inserta un día de
+    prueba conocido (`2099-01-01`, sin colisión con datos reales),
+    COMPROMETIDO (no `rollback()` — DuckDB usa su propia conexión `libpq` y
+    no vería una transacción sin comprometer), lo exporta y confirma que el
+    Parquet reproduce exactamente las filas insertadas sin pérdida; limpia
+    sus propias filas en `finally`. 2 tests (exportación raw + resumen
+    gold).
+  - **Exportación real completa** del día `2026-11-19` (datos reales del
+    soak test de MP-007, no fixtures): 668 posiciones + 484 actualizaciones
+    de viaje + 120 ejecuciones de ingesta + 0 alertas/eventos de calidad
+    (ninguno en esa ventana) = 1272 filas, ~76 KB comprimidos en Parquet
+    ZSTD particionado `date=2026-11-19/hour=HH`. Verificado leyendo de
+    vuelta con una consulta DuckDB independiente: recuento exacto, sin
+    pérdida.
+  - **Resumen gold inicial por núcleo** (`gold.py`): para el día real,
+    produce 1 fila (`nucleo_prefix=10`, Madrid): 668 posiciones, 24
+    vehículos distintos, 484 actualizaciones, 24 viajes distintos. **No**
+    calcula `daily_line_metrics`/`station_daily_metrics` (requieren
+    `route_id`/`station_id`, diferido explícitamente a MP-010 — DEC-021, sin
+    inventar un join no verificado).
+  - CLI real probado: `python -m services.snapshotter 2026-11-19` ejecuta
+    export + resumen gold de punta a punta contra el PostgreSQL real.
+  - 64 tests reales en verde: 31 contratos + 6 fixtures + 9 colector + 13
+    calidad + 5 snapshotter (3 puros de huso horario + 2 de replay real).
+- **Estado:** `REVIEW` — implementado por Claude Code el 2026-11-19;
+  pendiente de revisión independiente de OpenAI Codex en este mismo worktree.
 
 ---
 

@@ -4,6 +4,25 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 
 ## [Unreleased]
 
+### MP-009 — Exportador histórico (Parquet particionado)
+
+#### Added
+- `services/snapshotter/export.py`: DuckDB como único motor para exportar las cinco tablas "hot" de PostgreSQL a Parquet particionado `date=YYYY-MM-DD/hour=HH`, comprimido ZSTD. Sin `pandas`/`pyarrow` adicionales (DEC-021).
+- `services/snapshotter/gold.py`: resumen diario inicial por núcleo (`nucleo_prefix`), partición `date=YYYY-MM-DD`.
+- `services/snapshotter/__main__.py`: CLI `python -m services.snapshotter YYYY-MM-DD`.
+- 5 tests nuevos: 3 puros de límites de día de servicio (incluido CEST/verano) y 2 de replay real contra PostgreSQL.
+
+#### Found
+- Los datos reales del soak test de MP-007 (`23:31:42 UTC` del 18-nov-2026) pertenecen al día de servicio **19-nov** en Europe/Madrid (CET, UTC+1 en noviembre) — leer la fecha UTC directamente habría exportado esas filas al día equivocado, exactamente el error que `docs/DATA_MODEL.md` ya advertía. Corregido convirtiendo siempre a `Europe/Madrid` antes de calcular los límites del día de servicio y la partición.
+
+#### Verified
+- Exportación real completa del día `2026-11-19` (datos reales del soak test, no fixtures): 1272 filas (668 posiciones + 484 actualizaciones + 120 ejecuciones de ingesta), ~76 KB comprimidos; releído con una consulta DuckDB independiente, recuento exacto sin pérdida.
+- Test de replay real: día de prueba conocido insertado y COMPROMETIDO (no `rollback()` — DuckDB usa su propia conexión `libpq`), exportado, verificado fila a fila, y limpiado explícitamente (`finally`).
+- Suite completa: 64/64 pruebas en verde (31 contratos + 6 fixtures + 9 colector + 13 calidad + 5 snapshotter).
+
+#### Known limitation (documented, not blocking)
+- El resumen gold calcula por núcleo, no por `route_id`/`station_id` (`daily_line_metrics`/`station_daily_metrics`): esa resolución depende de MP-010 (GTFS estático), que no es dependencia de MP-009. Ver DEC-021.
+
 ### MP-008 — Quality engine
 
 #### Added
