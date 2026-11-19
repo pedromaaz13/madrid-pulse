@@ -71,7 +71,7 @@ Con Hito 1 ya fusionado a `main`, el caso concreto de MP-012 **deja de requerir 
 
 **MP-012 — Motor de movimiento v1**
 
-Ejecutor: OpenAI Codex · Revisor: Claude Code · Estado: **REVIEW**
+Ejecutor: OpenAI Codex · Revisor: Claude Code · Estado: **DONE** (aprobado el 2026-11-19)
 
 Worktree/rama: `mp-012-movement-engine`, ramificada desde `mp-011-osm-geometry` (MP-011 `DONE`). DEC-015 resuelto: `git merge-base --is-ancestor origin/main HEAD` confirmado `true` desde `mp-011-osm-geometry` — MP-008 (ancestro de `main`), MP-010 y MP-011 quedan todos satisfechos sin fusión real (ver `AGENTS.md`).
 
@@ -93,13 +93,15 @@ Motor genérico implementado en `packages/movement/`, sin literal de la línea p
 
 Ejecución final real (`.venv`, Python 3.12): 90/90 tests en verde — movement 11, GTFS 7, geo 8, contratos 31, fixtures 6, collector 9, quality 13, snapshotter 5. Las suites con PostgreSQL se ejecutaron con el contenedor `madrid-pulse` levantado por el ejecutor; recuentos finales `668/484/3/120/0`. `compileall` y `git diff --check` sin errores.
 
+- [x] **Revisión independiente de Claude Code (2026-11-19): APROBADA.** `packages/movement/model.py`, `schedule.py`, `engine.py` leídos íntegros. 90/90 tests reejecutados de forma propia (10 deterministas movement + 1 integración real + 79 de regresión GTFS/geo/contratos/fixtures/collector/quality/snapshotter), subiendo y bajando el contenedor `madrid-pulse` yo mismo; integración de solo lectura reproducida con los mismos resultados exactos (668→668 posiciones, 177 a ≤200 m del corredor, máximo map-matched `666,4 km/h`). Verificado matemáticamente: `directed_progress`/`physical_arc` correctos en ambos sentidos del corredor; la estimación nunca retrocede y queda acotada por velocidad (160 km/h) y aceleración (1,2 m/s²); el fallback a la última observación plausible reaplica la clasificación de estado completa por recursión en vez de forzar `OBSERVED` de forma artificial; la separación entre límite físico (160 km/h) y filtro de discontinuidad de fuente (900 km/h) es coherente con los hallazgos reales de MP-008/MP-012. Confirmado por lectura directa que `engine.py`/`model.py`/`schedule.py` no contienen el literal `"C5"`. Identidad Git de `1edfa14` correcta (`Pedro Matute <pedromaaz13@gmail.com>`, sin coautor), `git diff --check` limpio, sin secretos. Evalué si esta revisión requería escalar a Opus (candidato explícito del propietario para revisiones algorítmicas complejas) y no fue necesario: todas las decisiones de diseño se pudieron verificar directamente con razonamiento estándar. Sin hallazgos bloqueantes ni menores.
+
 ### Bloqueos
 
-Ningún bloqueo de implementación. Pendiente exclusivamente la auditoría independiente de Claude Code. ADR-0012 permanece `Propuesto` hasta revisión formal del propietario al cierre de Hito 2.
+Ninguno. ADR-0012 permanece `Propuesto` hasta revisión formal del propietario al cierre de Hito 2.
 
 ### Siguiente paso
 
-Claude Code debe auditar el diff y reejecutar las comprobaciones pertinentes en este mismo worktree. Solo tras su aprobación MP-012 pasa a `DONE` y MP-013 puede ramificar desde `mp-012-movement-engine` sin esperar merge a `main`, conforme al hito autorizado y ADR-0007.
+MP-012 está `DONE`. MP-013 (FastAPI v1, ejecutor Claude Code, revisor Codex) puede ramificar su worktree desde `mp-012-movement-engine` sin esperar merge a `main`, conforme al hito autorizado y ADR-0007.
 
 ## Tareas cerradas de la cadena
 
@@ -565,6 +567,7 @@ Esta rama se bifurcó de `chore/mp-001-foundation` en el commit `3e7b533`, **ant
 | `2026-11-19` | MP-011 | Segunda verificación independiente de Codex aprobada sobre `f795036`: repro sintética propia a `2223,9 m` del tramo más cercano (sin geometría fabricada), 8 geo + 71 regresión en verde, PostgreSQL `668/484/3/120/0` antes/después, patrones corto base/variante comprobados literalmente, 4 SHA-256 coincidentes, diff limpio e identidad Git correcta. MP-011 pasa a `DONE` | dispatch `ctx_24d7ea61fba0` |
 | `2026-11-19` | MP-012 | DEC-015 resuelto y aplicado: `git merge-base --is-ancestor origin/main HEAD` confirmado desde `mp-011-osm-geometry`; worktree `mp-012-movement-engine` abierto sin fusión real. Dispatchado a Codex (ejecutor) con contexto de ADR-0004 (pipeline, cuatro estados), frecuencias reales medidas en MP-003 y el hallazgo de `implausible_speed` de MP-008 para calibración | `docs/TASKS.md`; `docs/STATUS.md` |
 | `2026-11-19` | MP-012 | Implementación de Codex lista para revisión: `packages/movement` + ADR-0012; pipeline completo, cuatro estados/fuentes explícitos, flags topológicos y calibración. 90/90 tests en verde. Integración real read-only: 668→668 posiciones, 177 cerca del corredor, máximo salto map-matched 666,4 km/h; volumen final `668/484/3/120/0`. Tarea pasa a `REVIEW` para Claude Code | `packages/movement/`; `docs/adr/0012-movement-package-boundary.md` |
+| `2026-11-19` | MP-012 | Revisión independiente de Claude Code: código íntegro leído, 90/90 tests reejecutados subiendo/bajando el contenedor propio, integración real reproducida con resultados idénticos (668→668, 177 cerca del corredor, 666,4 km/h), pipeline verificado matemáticamente (offset bidireccional, límites velocidad/aceleración, fallback recursivo correcto), ausencia del literal `"C5"` confirmada, identidad Git y enlaces ADR-0012/DEC-026 correctos. Evaluada y descartada la escalada a Opus por no ser necesaria. **APROBADA, sin hallazgos.** MP-012 pasa a `DONE` | commit `1edfa14`; este documento |
 
 ## Cómo usar este documento
 

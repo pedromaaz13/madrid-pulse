@@ -21,6 +21,9 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 - Volumen PostgreSQL real consultado en solo lectura: 668 posiciones antes/después, 177 a ≤200 m del corredor; recuentos finales `668/484/3/120/0` sin residuo.
 - Cambio de día de servicio/horas GTFS >24, UTC estricto, transición de estados, fuentes distintas, saltos de estación, retrocesos, off-track y velocidades imposibles cubiertos por test.
 
+#### Independent review (approved)
+- Claude Code auditó `1edfa14`: código íntegro de `packages/movement/` leído, 90/90 tests reejecutados de forma propia (subiendo/bajando el contenedor `madrid-pulse` él mismo), integración real reproducida con resultados idénticos (668→668, 177 cerca del corredor, 666,4 km/h), pipeline verificado matemáticamente (offset temporal bidireccional, límites de velocidad/aceleración, fallback recursivo a la última observación plausible sin forzar `OBSERVED` artificialmente), ausencia del literal `"C5"` confirmada por lectura directa, identidad Git y enlaces ADR-0012/DEC-026 correctos. Evaluada la escalada a Opus (candidato explícito para revisiones algorítmicas complejas) y descartada por no ser necesaria. MP-012 queda `DONE`.
+
 ### MP-011 — Prototipo de geometría ferroviaria sobre OSM
 
 #### Added
