@@ -4,6 +4,27 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 
 ## [Unreleased]
 
+### MP-013 — FastAPI v1
+
+#### Added
+- `apps/api/`: FastAPI real bajo `/api/v1/*` — `health`, `live/vehicles`(`/{vehicle_id}`), `lines`(`/{line_id}`), `stations`(`/{station_id}`). Nunca pasa a través de Renfe/CRTM; siempre lee PostgreSQL + topología/geometría/movimiento ya resueltos en memoria.
+- `apps/api/tools/fetch_gtfs_static.py`: descarga el GTFS completo real (reutilizando el endpoint verificado en MP-003) para que el feed en vivo resuelva contra la topología completa, no solo la fixture reducida de 15 trips de MP-010.
+- OpenAPI generado y congelado en `apps/api/openapi.json`.
+- Dependencias nuevas `fastapi==0.121.2`, `uvicorn[standard]==0.38.0`, `httpx==0.28.1` (DEC-030), versiones reales verificadas por instalación, no inventadas.
+
+#### Found
+- `route`/`station`/`trip`/`trip_stop` siguen vacías en PostgreSQL y `vehicle_position_observation.trip_id` sigue `NULL` en los 668 registros reales (confirmado por consulta directa) — la API resuelve vía `packages.gtfs.Topology` en memoria, nunca por `JOIN` SQL a esas tablas.
+- De los 24 vehículos distintos del soak real de MP-007, solo 4 pertenecen a C5 (`10T0017C5`/`10T0018C5`); el resto son otras líneas del núcleo Madrid (C1, C3, C4a, C4b, C8b), confirmado contra el GTFS estático completo — confirma empíricamente DEC-020 con datos reales (DEC-029).
+- Un único corredor OSM (`relation_3418150`) basta para ambos sentidos reales de C5: `build_trip_schedule` detecta el sentido de cada trip comparando el orden de sus paradas contra el corredor, no hace falta un corredor por sentido (DEC-028).
+
+#### Deferred (documented, not silent)
+- `history/lines/{line_id}`, `history/trips/{trip_id}`, `metrics/lines/{line_id}`, `metrics/stations/{station_id}`: `daily_line_metrics`/`station_daily_metrics` siguen vacías desde que MP-009 las difirió (DEC-021); calcularlas de verdad es alcance propio, no una extensión trivial de esta tarea (DEC-027).
+
+#### Verified
+- 99/99 tests en verde: 9 API nuevos (fixture reducida sin red + PostgreSQL real + un caso sintético de extremo a extremo) + 90 de regresión (11 movement, 7 GTFS, 8 geo, 31 contratos, 6 fixtures, 9 collector, 13 quality, 5 snapshotter), incluidas las integraciones reales contra PostgreSQL.
+- `/api/v1/live/vehicles` nunca fabrica `route_id`/`line`/`position` para un vehículo no resoluble (devuelve `null`), probado explícitamente. `/api/v1/health` calcula `data_age_s`/`unchanged_for_s` reales desde `source_ingestion_run`, nunca fabricados.
+- App arrancada de verdad con `uvicorn --reload` y probada con `curl` real (`/api/v1/lines` → `200`, `/docs` → `200`), no solo `TestClient`.
+
 ### MP-012 — Motor de movimiento v1
 
 #### Added

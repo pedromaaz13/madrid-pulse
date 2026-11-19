@@ -69,6 +69,43 @@ Con Hito 1 ya fusionado a `main`, el caso concreto de MP-012 **deja de requerir 
 
 ## Tarea actual
 
+**MP-013 — FastAPI v1**
+
+Ejecutor: Claude Code · Revisor: OpenAI Codex · Estado: **REVIEW**
+
+Worktree/rama: `mp-013-fastapi`, ramificada desde `mp-012-movement-engine` (MP-012 `DONE`). MP-005/MP-007 (sus otras dependencias) ya ancestros de `main`, confirmado con `git merge-base --is-ancestor origin/main HEAD`.
+
+### Checklist de MP-013
+
+- [x] `apps/api/`: FastAPI real (`fastapi==0.121.2`, `uvicorn[standard]==0.38.0`, `httpx==0.28.1` para tests — DEC-030), sin reimplementar resolución GTFS/geometría/movimiento.
+- [x] **Hallazgo real:** `route`/`station`/`trip`/`trip_stop` siguen vacías en PostgreSQL y `vehicle_position_observation.trip_id` sigue `NULL` en los 668 registros reales — confirmado por consulta directa. La API resuelve `trip_id`→`route_id`/`stop_id` vía `packages.gtfs.Topology` en memoria, nunca por `JOIN` SQL a esas tablas.
+- [x] 7 endpoints reales: `health`, `live/vehicles`(`/{vehicle_id}`), `lines`(`/{line_id}`), `stations`(`/{station_id}`); `history`/`metrics` diferidos explícitamente (DEC-027, `docs/DATA_CONTRACTS.md`).
+- [x] `/api/v1/health` calcula `data_age_s`/`unchanged_for_s`/`status` reales desde `source_ingestion_run`, nunca fabricados.
+- [x] `/api/v1/live/vehicles` combina la última/penúltima observación real por vehículo con `MovementEngine.position()` (MP-012); nunca fabrica `route_id`/`line`/`position` cuando el `trip_id` no resuelve — devuelve `null` honesto.
+- [x] **Hallazgo real (DEC-029):** de los 24 vehículos distintos del soak real de MP-007, solo 4 son C5 (`10T0017C5`/`10T0018C5`); el resto son otras líneas del núcleo (C1/C3/C4a/C4b/C8b), confirmado contra el GTFS estático completo — confirma empíricamente DEC-020.
+- [x] **Hallazgo real (DEC-028):** un único corredor OSM (`relation_3418150`) basta para ambos sentidos reales de C5: `build_trip_schedule` detecta el sentido de cada trip comparando el orden de sus paradas contra el corredor.
+- [x] OpenAPI generado y congelado en `apps/api/openapi.json`.
+- [x] `apps/api/tools/fetch_gtfs_static.py`: descarga el GTFS completo real para que `/api/v1/live/vehicles` resuelva vehículos C5 en ejecución local (la fixture reducida de MP-010 solo tiene 15 trips representativos, insuficiente para el feed en vivo).
+- [x] App arrancada de verdad con `uvicorn` y probada con `curl` real (`/api/v1/lines`, `/docs`), no solo `TestClient`.
+- [x] 9 tests de contrato nuevos (fixture reducida + PostgreSQL real + un caso sintético de extremo a extremo con un trip real) + regresión completa: **99/99 en verde**.
+- [x] `docs/TASKS.md`/`docs/STATUS.md`/`docs/CHANGELOG.md`/`docs/DATA_CONTRACTS.md`/ADR-0005/DECISIONES actualizados con evidencia real.
+
+### Resultado y límites
+
+API real conforme a `docs/DATA_CONTRACTS.md` para los endpoints `live`/`lines`/`stations`/`health`; `history`/`metrics` diferidos explícitamente (DEC-027) porque los agregados diarios siguen sin poblarse desde MP-009. Sin literales de línea en la lógica (ADR-0011): `network_id`/`short_name` son configuración.
+
+Ejecución final real (`.venv`, Python 3.12): 99/99 tests — API 9, movement 11, GTFS 7, geo 8, contratos 31, fixtures 6, collector 9, quality 13, snapshotter 5. Suites con PostgreSQL ejecutadas con el contenedor `madrid-pulse` levantado por mí mismo; recuentos finales `668/484/3/120/0` sin residuo.
+
+### Bloqueos
+
+Ninguno de implementación. Pendiente la revisión cruzada de OpenAI Codex.
+
+### Siguiente paso
+
+Al completarse y ser aprobada por OpenAI Codex (revisor), MP-014 (Frontend React/MapLibre, ejecutor Codex) puede ramificar su worktree desde `mp-013-fastapi` sin esperar merge a `main`, conforme al hito autorizado y ADR-0007.
+
+## Tareas cerradas de la cadena
+
 **MP-012 — Motor de movimiento v1**
 
 Ejecutor: OpenAI Codex · Revisor: Claude Code · Estado: **DONE** (aprobado el 2026-11-19)
@@ -101,9 +138,7 @@ Ninguno. ADR-0012 permanece `Propuesto` hasta revisión formal del propietario a
 
 ### Siguiente paso
 
-MP-012 está `DONE`. MP-013 (FastAPI v1, ejecutor Claude Code, revisor Codex) puede ramificar su worktree desde `mp-012-movement-engine` sin esperar merge a `main`, conforme al hito autorizado y ADR-0007.
-
-## Tareas cerradas de la cadena
+MP-012 está `DONE`. MP-013 (FastAPI v1, ejecutor Claude Code, revisor Codex) ramificó su worktree desde `mp-012-movement-engine` sin esperar merge a `main`, conforme al hito autorizado y ADR-0007 — registrado arriba en "Tarea actual".
 
 **MP-011 — Prototipo de geometría ferroviaria sobre OSM**
 
@@ -568,6 +603,7 @@ Esta rama se bifurcó de `chore/mp-001-foundation` en el commit `3e7b533`, **ant
 | `2026-11-19` | MP-012 | DEC-015 resuelto y aplicado: `git merge-base --is-ancestor origin/main HEAD` confirmado desde `mp-011-osm-geometry`; worktree `mp-012-movement-engine` abierto sin fusión real. Dispatchado a Codex (ejecutor) con contexto de ADR-0004 (pipeline, cuatro estados), frecuencias reales medidas en MP-003 y el hallazgo de `implausible_speed` de MP-008 para calibración | `docs/TASKS.md`; `docs/STATUS.md` |
 | `2026-11-19` | MP-012 | Implementación de Codex lista para revisión: `packages/movement` + ADR-0012; pipeline completo, cuatro estados/fuentes explícitos, flags topológicos y calibración. 90/90 tests en verde. Integración real read-only: 668→668 posiciones, 177 cerca del corredor, máximo salto map-matched 666,4 km/h; volumen final `668/484/3/120/0`. Tarea pasa a `REVIEW` para Claude Code | `packages/movement/`; `docs/adr/0012-movement-package-boundary.md` |
 | `2026-11-19` | MP-012 | Revisión independiente de Claude Code: código íntegro leído, 90/90 tests reejecutados subiendo/bajando el contenedor propio, integración real reproducida con resultados idénticos (668→668, 177 cerca del corredor, 666,4 km/h), pipeline verificado matemáticamente (offset bidireccional, límites velocidad/aceleración, fallback recursivo correcto), ausencia del literal `"C5"` confirmada, identidad Git y enlaces ADR-0012/DEC-026 correctos. Evaluada y descartada la escalada a Opus por no ser necesaria. **APROBADA, sin hallazgos.** MP-012 pasa a `DONE` | commit `1edfa14`; este documento |
+| `2026-11-19` | MP-013 | API FastAPI real implementada (`apps/api/`): 7 endpoints (`health`/`live/vehicles`(`/{id}`)/`lines`(`/{id}`)/`stations`(`/{id}`)), `history`/`metrics` diferidos explícitamente (DEC-027). Hallazgo real: `route`/`station`/`trip` siguen vacías y `trip_id` sigue `NULL` en PostgreSQL — resolución vía `Topology` en memoria, no `JOIN` SQL. Hallazgos DEC-028 (un corredor basta para ambos sentidos) y DEC-029 (solo 4/24 vehículos del soak son C5, confirma DEC-020 con datos reales). App arrancada con `uvicorn` y probada con `curl` real. 99/99 tests en verde. Tarea pasa a `REVIEW` para OpenAI Codex | `apps/api/`; `apps/api/openapi.json`; DEC-027–030 |
 
 ## Cómo usar este documento
 

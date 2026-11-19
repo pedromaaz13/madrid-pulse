@@ -348,8 +348,8 @@ Cada tarea se trabaja en **un único worktree/rama** (`mp-00X-nombre-corto`), co
 - **Entregables:** API FastAPI conforme a `docs/DATA_CONTRACTS.md`, OpenAPI publicado.
 - **Criterios de aceptación:** endpoints responden con los campos de frescura/calidad exigidos; sin inventar datos ausentes como ceros.
 - **Pruebas necesarias:** tests de contrato de API (schema de respuesta, casos de borde de frescura).
-- **Evidencia de verificación:** suite de tests de contrato + OpenAPI generado.
-- **Estado:** `TODO`
+- **Evidencia de verificación:** `apps/api/` implementado (FastAPI real, `psycopg` directo, resolución vía `packages.gtfs`/`packages.geo`/`packages.movement`, sin SQL a `route`/`station`/`trip` porque esas tablas siguen vacías y `vehicle_position_observation.trip_id` sigue `NULL` en los datos reales — verificado empíricamente contra PostgreSQL, consistente con el diferimiento de esa resolución a MP-010 ya documentado en ADR-0008/DEC-020). 7 endpoints reales: `health`, `live/vehicles`(`/{id}`), `lines`(`/{id}`), `stations`(`/{id}`); `history`/`metrics` diferidos explícitamente (DEC-027, DATA_CONTRACTS.md). OpenAPI generado y congelado en `apps/api/openapi.json`. 9 tests de contrato nuevos + regresión completa, **99/99 en verde**: 11 movement + 7 GTFS + 8 geo + 31 contratos + 6 fixtures + 9 colector + 13 calidad + 5 snapshotter + 9 API, incluidas las integraciones reales contra PostgreSQL. App arrancada de verdad con `uvicorn` y probada con `curl` real (`/api/v1/lines`, `/docs`). Hallazgos reales: de los 24 vehículos distintos del soak de MP-007 solo 4 son C5 (resto de otras líneas del núcleo, confirma DEC-020 — DEC-029); un único corredor OSM basta para ambos sentidos de C5 porque el horario detecta el sentido automáticamente (DEC-028); la API nunca fabrica `route_id`/posición para un vehículo no resoluble, devuelve `null` honesto (probado explícitamente). Nueva dependencia `fastapi`/`uvicorn`/`httpx` documentada (DEC-030).
+- **Estado:** `REVIEW` — implementación de Claude Code lista para auditoría independiente de OpenAI Codex en este mismo worktree; no marcar `DONE` hasta su aprobación.
 
 ---
 
