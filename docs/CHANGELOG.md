@@ -18,6 +18,9 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 - 71/71 tests en verde: 7 GTFS nuevos + 64 regresiones (31 contratos, 6 fixtures GTFS-RT, 9 colector, 13 calidad, 5 snapshotter), incluidas 9 integraciones reales contra PostgreSQL. Parser ejecutado además contra el ZIP oficial completo: validación válida, 0 errores, 14 patrones y 8 huérfanos informados.
 - Las cinco variantes permanecen separadas y agrupables; los recorridos completos y cortos incluyen sus pares inversos reales. La lógica de parser/resolución no contiene el literal de la línea piloto.
 
+#### Independent review (approved)
+- Claude Code auditó `add8aa6`: código íntegro de `packages/gtfs/` leído, 71/71 tests reejecutados de forma propia (subiendo/bajando el contenedor `madrid-pulse` él mismo), recuentos reales `668/484/3/120/0` confirmados idénticos antes y después de los tests, ausencia del literal `"C5"` en `parser.py`/`topology.py` verificada por lectura directa (reforzada por el test de regresión que lo impone), identidad Git y enlaces a ADR-0011/DEC-022/DEC-023 correctos. MP-010 queda `DONE`.
+
 ### MP-009 — Exportador histórico (Parquet particionado)
 
 #### Added

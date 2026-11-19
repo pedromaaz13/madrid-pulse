@@ -71,7 +71,7 @@ Con Hito 1 ya fusionado a `main`, el caso concreto de MP-012 **deja de requerir 
 
 **MP-010 — Topología GTFS C5**
 
-Ejecutor: OpenAI Codex · Revisor: Claude Code · Estado: **REVIEW**
+Ejecutor: OpenAI Codex · Revisor: Claude Code · Estado: **DONE** (aprobado el 2026-11-19)
 
 Worktree/rama: `mp-010-gtfs-topology`, ramificada desde `chore/hito-2-coordination` (que a su vez parte de `main`, post-merge de Hito 1 — MP-004, su única dependencia directa, ya es ancestro de `main`).
 
@@ -90,13 +90,15 @@ Worktree/rama: `mp-010-gtfs-topology`, ramificada desde `chore/hito-2-coordinati
 
 Topología C5 parseada y validada contra la descarga oficial del `2026-11-19`. La API queda disponible para MP-012/MP-013 mediante `Topology.resolve_trip_route_id`, `resolve_trip_route` y `resolve_stop_sequences`; opera sobre cualquier línea configurada. El fichero completo no se versiona: son ~15,7 MB comprimidos/~298 MB extraídos y cambia con upstream; se conserva una fixture real mínima reproducible con checksum (DEC-023).
 
+- [x] **Revisión independiente de Claude Code (2026-11-19): APROBADA.** Código íntegro de `packages/gtfs/` leído (parser, topology, tests, tool de reducción). 71/71 tests reejecutados de forma propia: 7 GTFS + 31 contratos + 6 fixtures GTFS-RT + 9 colector + 13 calidad + 5 snapshotter — subiendo y bajando el contenedor `madrid-pulse` yo mismo (no reutilizando solo el reporte de Codex) y confirmando los recuentos reales `668/484/3/120/0` idénticos antes y después, sin residuo. Confirmado con lectura directa que `parser.py`/`topology.py` no contienen el literal `"C5"` y que la resolución es genérica por `route_ids`/`network_id`/`short_name` (ADR-0011) — reforzado por un test de regresión que falla si se reintroduce el literal. `git diff --check` limpio, sin secretos en el diff, identidad Git (`Pedro Matute <pedromaaz13@gmail.com>`, sin coautor) y enlaces a ADR-0011/DEC-022/DEC-023 verificados. Fixture reducida (52 KB) con checksum, atribución `CC BY 4.0` y proceso reproducible documentado en su `MANIFEST.md`. Sin hallazgos bloqueantes ni menores.
+
 ### Bloqueos
 
-Ninguno de implementación. Pendiente la revisión cruzada de Claude Code. Los 8 trips huérfanos y la ausencia de `direction_id` son propiedades verificadas del upstream, preservadas explícitamente, no defectos ocultos ni datos suplidos.
+Ninguno. Los 8 trips huérfanos y la ausencia de `direction_id` son propiedades verificadas del upstream, preservadas explícitamente y confirmadas de forma independiente, no defectos ocultos ni datos suplidos.
 
 ### Siguiente paso
 
-Al completarse y ser aprobada por Claude Code (revisor), MP-011 (Prototipo de geometría ferroviaria sobre OSM, ejecutor Claude Code) puede ramificar su worktree desde `mp-010-gtfs-topology` sin esperar merge a `main`, conforme al hito autorizado y ADR-0007.
+MP-010 está `DONE`. MP-011 (Prototipo de geometría ferroviaria sobre OSM, ejecutor Claude Code, revisor Codex) puede ramificar su worktree desde `mp-010-gtfs-topology` sin esperar merge a `main`, conforme al hito autorizado y ADR-0007.
 
 ## Tareas cerradas de la cadena
 
@@ -471,6 +473,7 @@ Esta rama se bifurcó de `chore/mp-001-foundation` en el commit `3e7b533`, **ant
 | `2026-11-19` | Hito 2 | ADR-0011 (`Propuesto`) redactado: distingue el piloto técnico de Hito 2 (C5) del objetivo de primera versión pública (toda la red de Cercanías Madrid), sin reescribir ADR-0001 (`Aceptado`) — amplía su alcance de implementación sin contradecir su decisión ya aceptada | `docs/adr/0011-public-scope-vs-technical-pilot.md` |
 | `2026-11-19` | Hito 2 | Worktrees de MP-010 (ejecutor Codex) y, tras su cierre, MP-011 (ejecutor Claude Code) preparados ramificando desde esta rama de coordinación (`chore/hito-2-coordination`, a su vez ramificada desde `main`) | `docs/TASKS.md` |
 | `2026-11-19` | MP-010 | Parser/validador GTFS implementado; 71/71 tests (7 nuevos + 64 regresiones, 9 integraciones PostgreSQL reales) y ejecución adicional contra ZIP oficial completo (5 rutas, 8.160 trips, 165.205 stop_times, 14 patrones, 8 huérfanos, 0 errores). Hallazgos: upstream sin `direction_id` y variante `10T0035C5` sin stop_times. Compose Madrid Pulse detenido sin borrar volumen; `*-traza-app` intactos. Tarea pasa a `REVIEW` para Claude Code | `packages/gtfs/`; `tests/fixtures/gtfs_c5_real/MANIFEST.md`; DEC-023 |
+| `2026-11-19` | MP-010 | Revisión independiente de Claude Code: código íntegro leído, 71/71 tests reejecutados subiendo/bajando el contenedor propio, recuentos reales `668/484/3/120/0` confirmados idénticos antes/después, ausencia del literal `"C5"` en la lógica verificada, identidad Git y enlaces a ADR-0011/DEC-022/DEC-023 correctos. **APROBADA, sin hallazgos.** MP-010 pasa a `DONE` | commit `add8aa6`; este documento |
 
 ## Cómo usar este documento
 
