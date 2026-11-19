@@ -385,7 +385,7 @@ Cada tarea se trabaja en **un único worktree/rama** (`mp-00X-nombre-corto`), co
 - **Criterios de aceptación:** checklist de MVP superado y aceptado por el propietario; ningún ADR describe algo distinto de lo implementado.
 - **Pruebas necesarias:** suite E2E completa + CI.
 - **Evidencia de verificación:** resultado de CI + checklist firmado.
-- **Estado:** `TODO`
+- **Estado:** `IN_PROGRESS` — worktree `mp-015-e2e-readiness` abierto (ramificado desde `mp-014-frontend`, MP-014 `DONE`); dependencias MP-009/MP-012/MP-013 confirmadas como ancestros. Ver `docs/STATUS.md` → "Tarea actual" para el checklist y el orden de trabajo elegido.
 
 ---
 

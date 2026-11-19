@@ -69,6 +69,49 @@ Con Hito 1 ya fusionado a `main`, el caso concreto de MP-012 **deja de requerir 
 
 ## Tarea actual
 
+**MP-015 — E2E y readiness MVP**
+
+Ejecutor: Claude Code · Revisor: OpenAI Codex · Estado: **IN_PROGRESS**
+
+Worktree/rama: `mp-015-e2e-readiness`, ramificada desde `mp-014-frontend` (MP-014 `DONE`). Dependencias MP-009/MP-012/MP-013 confirmadas como ancestros de `mp-014-frontend` con `git merge-base --is-ancestor` antes de ramificar (mismo mecanismo que DEC-015).
+
+### Alcance real (decisión de secuenciación, no reducción de alcance)
+
+`docs/TASKS.md`/`docs/PLAN.md` (F9) definen MP-015 como: replay E2E, pipeline DuckDB/dbt de métricas con cobertura, CI verde, checklist de MVP, ADRs reconciliados. Hallazgo antes de empezar: `analytics/dbt/` y `analytics/duckdb/` siguen vacíos (solo README) — su README decía que se implementarían "como parte de MP-009", pero MP-009 (DEC-021) deliberadamente difirió `daily_line_metrics`/`station_daily_metrics` por `route_id`/`station_id` porque esa resolución (`trip_id`→`route_id`, `stop_id`→`station_id`) dependía de MP-010, que no era su dependencia. Con MP-010→MP-014 ya `DONE`, esa resolución existe de verdad (`packages.gtfs.Topology`) — MP-015 es la primera tarea que puede construir esas métricas sin inventar un join no verificado.
+
+Orden de trabajo elegido (cada paso se implementa, se prueba de verdad y se documenta antes de pasar al siguiente, igual que el resto del hito):
+
+1. Resolución Python real `trip_id`→`route_id`/`stop_id`→`station_id` sobre el Parquet raw ya exportado por MP-009, extendiendo `services/snapshotter/gold.py` (seguir usando DuckDB como único motor, conforme DEC-021 — no se añaden `pandas`/`pyarrow`).
+2. Proyecto `dbt-duckdb` real sobre esa capa resuelta (`analytics/dbt/`) que calcula `daily_line_metrics`/`station_daily_metrics` con tests de esquema y `dbt test` ejecutado de verdad — no una promesa de estructura.
+3. CI (`.github/workflows/`) que ejecute las suites reales (Python + frontend) en cada push/PR.
+4. Replay E2E determinista en `tests/e2e/` sobre fixtures reales ya existentes (sin llamadas de red en vivo, para que CI no dependa de Renfe/OSM/CRTM) que ejercite el pipeline completo: ingestión canónica → PostgreSQL → motor de movimiento → API → build de frontend.
+5. Auditoría de contenido de los 12 ADRs contra la implementación real — se corrige redacción/contenido que ya no coincide con lo implementado; **la promoción de `Propuesto` a `Aceptado` sigue siendo decisión exclusiva del propietario** (ADR-0007), no se cambia ningún `Estado` sin su aprobación explícita.
+6. Checklist de preparación de MVP (documento nuevo) resumiendo el estado real de Hito 2 para la aceptación del propietario.
+
+### Checklist de MP-015
+
+- [ ] Resolución real `route_id`/`station_id` sobre datos exportados, con tests.
+- [ ] `daily_line_metrics`/`station_daily_metrics` calculadas de verdad vía dbt-duckdb, `dbt test` en verde.
+- [ ] CI real (GitHub Actions) ejecutando las suites Python + frontend existentes.
+- [ ] Replay E2E determinista sobre fixtures reales, sin red en vivo, pipeline completo.
+- [ ] Auditoría de contenido de los 12 ADRs vs. implementación real (sin cambiar `Estado`).
+- [ ] Checklist de preparación de MVP para aceptación del propietario.
+- [ ] `docs/TASKS.md`/`docs/STATUS.md`/`docs/CHANGELOG.md`/`docs/DATA_CONTRACTS.md`/`docs/DECISIONS.md` actualizados con evidencia real.
+
+### Resultado y límites
+
+Pendiente de implementación.
+
+### Bloqueos
+
+Ninguno conocido al inicio de la tarea.
+
+### Siguiente paso
+
+Al completarse y ser aprobada por Codex (revisor), MP-015 cierra la cadena del Hito 2. El propietario decide la auditoría de integración final y el momento de fusionar a `main`.
+
+## Tareas cerradas de la cadena
+
 **MP-014 — Frontend React/MapLibre C5**
 
 Ejecutor: OpenAI Codex · Revisor: Claude Code · Estado: **DONE**
@@ -141,9 +184,7 @@ corregidas y verificadas con navegador real. MP-014 cerrada como `DONE`.
 
 ### Siguiente paso
 
-Al completarse y ser aprobada por Claude Code (revisor), MP-015 (E2E y readiness MVP, ejecutor Claude Code) puede ramificar su worktree desde `mp-014-frontend` sin esperar merge a `main`, conforme al hito autorizado y ADR-0007.
-
-## Tareas cerradas de la cadena
+Completado: MP-015 ya ramificó su worktree desde `mp-014-frontend` (ver "Tarea actual" arriba) sin esperar merge a `main`, conforme al hito autorizado y ADR-0007.
 
 **MP-013 — FastAPI v1**
 

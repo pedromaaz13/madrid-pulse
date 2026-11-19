@@ -4,6 +4,11 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 
 ## [Unreleased]
 
+### MP-015 — E2E y readiness MVP
+
+#### In progress
+- Worktree `mp-015-e2e-readiness` abierto (ramificado desde `mp-014-frontend`, MP-014 `DONE`). Sin entregables todavía — ver `docs/STATUS.md` para el checklist y el orden de trabajo elegido (resolución route/station real → dbt-duckdb → CI → E2E replay → auditoría de ADRs → checklist de MVP).
+
 ### MP-014 — Frontend React/MapLibre C5
 
 #### Added
