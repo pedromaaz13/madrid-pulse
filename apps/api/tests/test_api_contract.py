@@ -60,6 +60,23 @@ class ApiContractTests(unittest.TestCase):
         self.assertEqual(lines[0]["line_id"], "C5")
         self.assertEqual(len(lines[0]["route_ids"]), 5)
 
+    def test_line_exposes_real_segmented_corridor_and_projected_station_order(self) -> None:
+        line = self.client.get("/api/v1/lines/C5").json()
+        geometry = line["geometry"]
+        self.assertIsNotNone(geometry)
+        network = load_network(ApiConfig.from_env())
+        self.assertEqual(len(geometry["segments"]), len(network.corridor.segments))
+        self.assertEqual(
+            sum(len(segment) for segment in geometry["segments"]),
+            sum(len(segment) for segment in network.corridor.segments),
+        )
+        self.assertTrue(all(len(segment) >= 2 for segment in geometry["segments"]))
+        self.assertEqual(len(geometry["stations"]), 23)
+        distances = [station["distance_along_m"] for station in geometry["stations"]]
+        self.assertEqual(distances, sorted(distances))
+        self.assertEqual(geometry["stations"][0]["name"], "Móstoles-El Soto")
+        self.assertEqual(geometry["stations"][-1]["name"], "Humanes")
+
     def test_line_detail_404_for_unknown_id(self) -> None:
         response = self.client.get("/api/v1/lines/C9")
         self.assertEqual(response.status_code, 404)

@@ -13,10 +13,13 @@ from packages.movement import MovementPosition, PositionMode
 from . import db
 from .gtfs_source import LoadedNetwork
 from .schemas import (
+    CoordinateOut,
     DelayOut,
     FeedHealthOut,
     HealthOut,
+    LineGeometryOut,
     LineOut,
+    LineStationOut,
     ObservationOut,
     PositionOut,
     QualityOut,
@@ -188,9 +191,49 @@ def list_lines(network: LoadedNetwork) -> list[LineOut]:
             line_id=short_name,
             network_id=network_id or "",
             route_ids=sorted(route.route_id for route in routes),
+            geometry=_line_geometry(network, network_id or "", short_name),
         )
         for (network_id, short_name), routes in sorted(network.topology.route_groups().items())
     ]
+
+
+def _line_geometry(
+    network: LoadedNetwork, network_id: str, line_id: str
+) -> LineGeometryOut | None:
+    """Expone únicamente el corredor realmente asociado a la línea cargada.
+
+    ``LoadedNetwork`` tiene un solo corredor en MP-014. No se reutiliza para
+    otra línea del catálogo ni se fabrica una geometría a partir de paradas.
+    """
+    if (
+        network_id != network.corridor_network_id
+        or line_id != network.corridor_line_id
+    ):
+        return None
+
+    ordered_stations: list[LineStationOut] = []
+    for stop in network.topology.stops:
+        _, distance_along_m = network.corridor.project_station(
+            stop.latitude, stop.longitude
+        )
+        ordered_stations.append(
+            LineStationOut(
+                station_id=stop.stop_id,
+                name=stop.name,
+                lat=stop.latitude,
+                lon=stop.longitude,
+                distance_along_m=distance_along_m,
+            )
+        )
+    ordered_stations.sort(key=lambda station: station.distance_along_m)
+
+    return LineGeometryOut(
+        segments=[
+            [CoordinateOut(lat=lat, lon=lon) for lat, lon in segment]
+            for segment in network.corridor.segments
+        ],
+        stations=ordered_stations,
+    )
 
 
 def get_line(network: LoadedNetwork, line_id: str) -> LineOut | None:

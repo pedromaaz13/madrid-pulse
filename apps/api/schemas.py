@@ -62,10 +62,35 @@ class HealthOut(BaseModel):
     feeds: list[FeedHealthOut]
 
 
+class CoordinateOut(BaseModel):
+    lat: float
+    lon: float
+
+
+class LineStationOut(BaseModel):
+    station_id: str
+    name: str
+    lat: float
+    lon: float
+    distance_along_m: float
+
+
+class LineGeometryOut(BaseModel):
+    """Corredor OSM real: cada elemento de ``segments`` es continuo.
+
+    Los tramos nunca deben concatenarse en el cliente, porque una separación
+    entre ellos representa un hueco real de la geometría cargada.
+    """
+
+    segments: list[list[CoordinateOut]]
+    stations: list[LineStationOut]
+
+
 class LineOut(BaseModel):
     line_id: str
     network_id: str
     route_ids: list[str]
+    geometry: LineGeometryOut | None
 
 
 class StationOut(BaseModel):

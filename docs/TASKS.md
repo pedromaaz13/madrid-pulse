@@ -366,8 +366,8 @@ Cada tarea se trabaja en **un único worktree/rama** (`mp-00X-nombre-corto`), co
 - **Entregables:** mapa React/TypeScript/MapLibre consumiendo la API real, con diferenciación visual de los cuatro estados de posición y atribución OSM visible en UI.
 - **Criterios de aceptación:** demo funcional contra API real (no mocks), estados de posición distinguibles por el usuario.
 - **Pruebas necesarias:** smoke test de carga de mapa y de consumo de API; verificación manual en navegador (no solo tests automatizados).
-- **Evidencia de verificación:** capturas/registro de la demo funcional + resultado de smoke tests.
-- **Estado:** `IN_PROGRESS` — worktree `mp-014-frontend` abierto el 2026-11-19, ramificado desde `mp-013-fastapi` (MP-013 `DONE`).
+- **Evidencia de verificación:** API real + GTFS oficial completo + PostgreSQL + un ciclo fresco de `vehicle_positions`: `/api/v1/live/vehicles` devolvió 145 vehículos, 31 map-matched sobre el corredor de la línea y los cuatro estados simultáneamente (`observed` 24, `estimated` 2, `stale` 4, `scheduled` 1); los 114 restantes permanecen visibles como no ubicables, sin ruta/posición fabricada. Regresión Python completa 102/102 (12 API + 90 previos); frontend lint, typecheck, 3/3 tests y build en verde. Los cuatro runs del smoke se retiraron por ID y el volumen PostgreSQL quedó restaurado exactamente a `668/484/3/120/0`. Inspección visual real (desktop + estrecho, consola e interacciones) pendiente y asignada explícitamente a Claude Code durante la revisión porque esta sesión de Codex no expuso ningún navegador (`agent.browsers.list() = []`); no se considera satisfecha ni se sustituye por `curl`.
+- **Estado:** `REVIEW` — implementación de Codex lista para auditoría independiente de Claude Code en el mismo worktree; no se marca `DONE` hasta superar también la inspección visual real.
 
 ---
 

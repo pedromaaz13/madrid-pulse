@@ -17,6 +17,13 @@ GET /api/v1/stations
 GET /api/v1/stations/{station_id}
 ```
 
+Desde MP-014, cada `LineOut` incluye `geometry` nullable (DEC-031): los
+`Corridor.segments` OSM reales permanecen separados para no puentear huecos y
+las estaciones se proyectan con `Corridor.project_station` y se ordenan por
+longitud de arco. La asociación se hace por el `network_id`/`short_name`
+configurado; para cualquier línea sin corredor cargado se devuelve `null`,
+nunca una geometría inventada conectando paradas.
+
 OpenAPI generado y congelado en `apps/api/openapi.json` (regenerar con
 `python -c "import json; from apps.api.main import app; json.dump(app.openapi(), open('apps/api/openapi.json','w'), indent=2, sort_keys=True)"`).
 

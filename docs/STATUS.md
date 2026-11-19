@@ -71,29 +71,52 @@ Con Hito 1 ya fusionado a `main`, el caso concreto de MP-012 **deja de requerir 
 
 **MP-014 — Frontend React/MapLibre C5**
 
-Ejecutor: OpenAI Codex · Revisor: Claude Code · Estado: **IN_PROGRESS**
+Ejecutor: OpenAI Codex · Revisor: Claude Code · Estado: **REVIEW**
 
 Worktree/rama: `mp-014-frontend`, ramificada desde `mp-013-fastapi` (MP-013 `DONE`).
 
 ### Checklist de MP-014
 
-- [ ] `apps/web/`: React + TypeScript + MapLibre consumiendo `/api/v1/*` real (MP-013) — nunca Renfe/CRTM directamente, nunca mocks en la demo final.
-- [ ] **Hallazgo pre-dispatch (corrige un error de este mismo checklist en su primera redacción):** la API de MP-013 NO expone geometría de corredor ni orden de estaciones por línea — `LineOut` solo trae `route_ids`, `StationOut` solo trae `lat`/`lon` sueltos sin secuencia ni asociación a línea. `VehicleOut.position` es un único punto map-matched, no el corredor completo. Dibujar la línea conectando estaciones con rectas sería geometría inventada (prohibido por `AGENTS.md`). Se autoriza una extensión aditiva, pequeña y con tests de `apps/api` dentro de esta misma tarea: exponer la geometría real del corredor (`packages.geo.Corridor.segments`, respetando los huecos reales — nunca un único polyline que los puentee, mismo criterio que el fix de MP-011) y el orden de estaciones a lo largo de la línea (proyectando cada parada con `Corridor.project_station` y ordenando por longitud de arco), como campo nuevo en `LineOut` o endpoint dedicado (`GET /api/v1/lines/{line_id}/geometry`) — a elección de Codex. Debe seguir sin literales de línea (ADR-0011) y ser `null`/ausente para cualquier línea sin corredor cargado, nunca fabricada. Documentar la decisión como entrada nueva en `docs/DECISIONS.md` (DEC, no ADR, salvo que Codex considere que de verdad es una decisión arquitectónica nueva) y actualizar `docs/DATA_CONTRACTS.md`. Atribución OSM (`© OpenStreetMap contributors`, ODbL) visible en la UI, no solo en el código.
-- [ ] Los cuatro estados de posición (`observed`/`estimated`/`stale`/`scheduled`) diferenciados visualmente de forma clara e intuitiva — nunca una posición `estimated`/`stale`/`scheduled` con la misma semántica visual que `observed` (ADR-0004, mismo principio que ya aplica el backend).
-- [ ] Manejar honestamente los campos `null` que la API ya devuelve a propósito: un vehículo con `route_id`/`position` en `null` (línea no resuelta, DEC-029) no debe ocultarse de forma confusa ni mostrarse con datos inventados.
-- [ ] Controles intuitivos, diseño moderno/responsive/accesible — la calidad visual es un requisito real, no secundario. Ejecutar la aplicación de verdad, inspeccionarla con las herramientas de navegador disponibles, comprobar interacciones y corregir defectos de interfaz antes de entregar.
-- [ ] Arquitectura preparada para todas las líneas de Cercanías Madrid (ADR-0011): sin literales `"C5"` en componentes/lógica compartida; el filtro de línea puede no tener UI todavía, pero el código no debe asumir una única línea para siempre.
-- [ ] Via Península/Valfiguer solo como referencia conceptual de producto — sin copiar código ni diseño literal (AGPL-3.0, ver `docs/adr/0006-licensing-policy.md`).
-- [ ] Smoke tests de carga de mapa y consumo de API real + verificación manual en navegador (capturas/registro), no solo tests automatizados.
-- [ ] Actualizar `docs/TASKS.md`/`docs/STATUS.md`/`docs/CHANGELOG.md` con evidencia real (capturas, resultado de smoke tests) antes de delegar a revisión.
+- [x] `apps/web/`: React + TypeScript + MapLibre consumiendo `/api/v1/*` real (MP-013) — nunca Renfe/CRTM directamente, nunca mocks en la demo final.
+- [x] **Gap de geometría resuelto (DEC-031):** `LineOut.geometry` nullable expone cada `Corridor.segments` por separado y las 23 estaciones proyectadas/ordenadas; no conecta paradas ni asigna el único corredor a otra línea. Test real contra GTFS/OSM y OpenAPI regenerado.
+- [x] Los cuatro estados de posición (`observed`/`estimated`/`stale`/`scheduled`) tienen forma, color, opacidad y explicación textual diferentes (ADR-0004). Un ciclo real fresco los produjo simultáneamente: 24/2/4/1.
+- [x] Campos `null` honestos: 114 de 145 vehículos reales quedaron sin ubicar tras el smoke; se contabilizan y listan explícitamente, sin ruta/posición inventada. `delay.coverage=missing` se explica como ausencia de dato.
+- [ ] **Gate visual pendiente de revisor:** la UI incluye diseño responsive/accesible, controles de capa/centrado/zoom y estados de foco, pero esta sesión de Codex no tuvo navegador disponible (`getForUrl` → `No browser is available`; `agent.browsers.list()` → `[]`). El coordinador indicó no bloquear la entrega y asignó a Claude Code la inspección real desktop + viewport estrecho + consola + interacciones antes de aprobar `DONE`. `curl` no se presenta como sustituto.
+- [x] Arquitectura preparada para más líneas (ADR-0011): selector y estado derivados de `(network_id, line_id)` de la API; ningún literal de línea en componentes, hooks ni lógica compartida (la única coincidencia textual en `package-lock.json` pertenece a hashes de integridad).
+- [x] Via Península/Valfiguer no se consumen ni se copia código/diseño; implementación independiente.
+- [x] Smoke real de consumo API: PostgreSQL + GTFS oficial completo + `uvicorn` + Vite; `/lines` devolvió el corredor real y `/live/vehicles` los cuatro modos simultáneos. La carga visual del mapa permanece incluida en el gate anterior.
+- [x] `docs/TASKS.md`/`docs/STATUS.md`/`docs/CHANGELOG.md`/`docs/DATA_CONTRACTS.md`/`docs/DECISIONS.md` actualizados con evidencia y límites reales.
 
 ### Resultado y límites
 
-Pendiente de implementación.
+Implementación completa y en revisión: frontend estático genérico multi-línea,
+contrato aditivo de geometría real y pruebas reproducibles. Comandos de la demo:
+
+```sh
+docker compose -p madrid-pulse -f infra/docker/docker-compose.yml up -d
+.venv/bin/python -m apps.api.tools.fetch_gtfs_static
+MADRID_PULSE_GTFS_SOURCE=data/gtfs_static/fomento_transit.zip .venv/bin/uvicorn apps.api.main:app --host 127.0.0.1 --port 8000
+cd apps/web && npm ci && npm run dev
+```
+
+Verificación ejecutada: regresión Python 102/102 (12 API + 90 previos);
+frontend `npm run lint`, `npm run typecheck`, Vitest 3/3 y `npm run build`,
+todo en verde. Smoke vivo tras un poll real:
+145 vehículos, 31 map-matched (`observed` 24, `estimated` 2, `stale` 4,
+`scheduled` 1). Esto confirma contrato/datos, no el gate visual pendiente.
+Los runs `585–588` creados por el smoke y sus eventos derivados se retiraron
+por ID/timestamp; PostgreSQL quedó restaurado a `668/484/3/120/0`.
+
+Hallazgo fuera del cambio frontend: el feed fresco de `trip_updates` trajo un
+`stopTimeUpdate` `SKIPPED` sin `arrival` y el contrato crudo del colector lo
+rechazó. `vehicle_positions` sí se actualizó correctamente; la UI representa
+salud/cobertura ausente sin inventar valores. Se deja para MP-015/colector.
 
 ### Bloqueos
 
-Ninguno conocido al inicio de la tarea. Requiere la API real corriendo (`apps/api/`, MP-013) y, para vehículos C5 resueltos, el GTFS completo (`apps/api/tools/fetch_gtfs_static.py`) — la fixture reducida por sí sola no resuelve ningún trip real del feed en vivo.
+Inspección visual real pendiente por indisponibilidad de navegador en la sesión
+de Codex. No bloquea el estado `REVIEW`; sí bloquea `DONE` hasta que Claude Code
+la ejecute y apruebe. Ningún otro bloqueo de implementación conocido.
 
 ### Siguiente paso
 
@@ -655,6 +678,7 @@ Esta rama se bifurcó de `chore/mp-001-foundation` en el commit `3e7b533`, **ant
 | `2026-11-19` | MP-013 | Corregido: `age_s` se calcula siempre desde `observation.reported_at`; `service_date` usa conversión explícita a Europe/Madrid (verificado revirtiendo ambos fixes — los tests nuevos fallan exactamente como describió Codex y pasan con el fix restaurado); DEC-029 corregido con el cruce completo (4 C5, 19 de 9 líneas distintas, 1 sin resolver). 101/101 tests en verde. Reenviado a Codex para segunda verificación | — |
 | `2026-11-19` | MP-013 | Revisión final independiente de Codex aprobada sobre `15170c4`: el único residuo documental ya enumera C1/C2/C3/C4/C4a/C4b/C8a/C8b/C10 y el trip de refuerzo sin resolver; diff mínimo y limpio, 11/11 tests API en verde, PostgreSQL `668/484/3/120/0`, identidad Git correcta y sin coautor. **APROBADA, sin hallazgos abiertos.** MP-013 pasa a `DONE` | dispatch `ctx_1235555422b3`; commit `15170c4` |
 | `2026-11-19` | MP-014 | Worktree `mp-014-frontend` abierto, ramificado desde `mp-013-fastapi` (MP-013 `DONE`). Dispatchado a Codex (ejecutor) con énfasis explícito en calidad visual real (inspección en navegador, no solo tests), diferenciación clara de los cuatro estados de posición y arquitectura genérica multi-línea (ADR-0011) | `docs/TASKS.md`; `docs/STATUS.md` |
+| `2026-11-19` | MP-014 | Implementación de Codex lista para revisión: `LineOut.geometry` aditivo/nullable (DEC-031), `apps/web` React/TypeScript/MapLibre genérico multi-línea, nulls y cobertura ausente explícitos, atribución OSM visible. Regresión Python 102/102; frontend lint/typecheck/3 tests/build en verde. Smoke real con GTFS oficial y poll fresco: 145 vehículos, 31 map-matched y cuatro estados simultáneos (24/2/4/1); runs del smoke retirados y PostgreSQL restaurado a `668/484/3/120/0`. Browser indisponible en la sesión Codex; por instrucción del coordinador, Claude ejecutará el gate visual desktop/estrecho/consola/interacciones antes de aprobar. Tarea pasa a `REVIEW`, no `DONE` | `apps/api/`; `apps/web/`; DEC-031/032; dispatch `ctx_878dc753a9a8` |
 
 ## Cómo usar este documento
 

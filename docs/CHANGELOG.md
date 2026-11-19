@@ -6,8 +6,21 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 
 ### MP-014 — Frontend React/MapLibre C5
 
-#### In progress
-- Worktree `mp-014-frontend` abierto (ramificado desde `mp-013-fastapi`); tarea delegada a Codex (ejecutor) vía Orca. Sin entregables todavía — ver `docs/STATUS.md` para el checklist.
+#### Added
+- `apps/web/`: cliente estático React/TypeScript/MapLibre, responsive y accesible, con selector derivado de `/api/v1/lines`, polling HTTP cada 20 s, controles de capas/centrado/zoom, trazado OSM real, estaciones y vehículos.
+- Diferenciación visual de `observed`/`estimated`/`stale`/`scheduled` por forma, color y opacidad, más leyenda textual que explica su semántica. Vehículos sin línea/posición resoluble permanecen contabilizados y consultables, sin coordenadas fabricadas; `delay.coverage=missing` se rotula como ausencia de dato, nunca como cero.
+- Atribución visible `© OpenStreetMap contributors · ODbL` sobre el mapa.
+- Extensión aditiva `LineOut.geometry` (DEC-031): `Corridor.segments` reales separados y estaciones GTFS proyectadas/ordenadas; `null` cuando no existe corredor asociado. OpenAPI regenerado y test de contrato contra fixtures GTFS/OSM reales.
+- Dependencias frontend verificadas y lockfile npm reproducible (DEC-032).
+
+#### Verified
+- PostgreSQL/PostGIS, API (`uvicorn`) y Vite levantados de verdad con el GTFS oficial completo descargado (15.717.009 bytes). Smoke HTTP: 145 vehículos reales tras refrescar `vehicle_positions`; 31 resolvieron posición y exhibieron simultáneamente los cuatro estados (`observed` 24, `estimated` 2, `stale` 4, `scheduled` 1); 114 quedaron explícitamente no ubicables.
+- Regresión Python completa 102/102 en verde (12 API + 90 previos), incluido el corredor real (636 puntos en 1 segmento continuo), 23 estaciones ordenadas de Móstoles-El Soto a Humanes e integraciones PostgreSQL. Los cuatro runs del smoke vivo y sus tres eventos de calidad se limpiaron por ID/timestamp; volumen final restaurado a `668/484/3/120/0`.
+- Frontend con Node 22.13.1: ESLint sin avisos, TypeScript en verde, Vitest 3/3 y build Vite de producción completada.
+- La inspección visual real no pudo ejecutarse en la sesión de Codex: Browser devolvió `No browser is available` y lista vacía. Por instrucción del coordinador, queda pendiente como gate explícito de la revisión de Claude Code (desktop + viewport estrecho + consola + interacciones); la evidencia HTTP confirma datos, no sustituye esa inspección.
+
+#### Found
+- El feed vivo de `trip_updates` incorporó un caso nuevo `stopTimeUpdate.arrival` ausente con `scheduleRelationship=SKIPPED`; el colector actual lo rechazó por validación. Queda registrado para MP-015/una tarea de colector; no impidió refrescar `vehicle_positions`, y la UI comunica estados de fuente y cobertura ausente sin inventar retrasos.
 
 ### MP-013 — FastAPI v1
 

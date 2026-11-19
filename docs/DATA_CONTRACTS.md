@@ -43,6 +43,45 @@ GET /api/v1/stations
 GET /api/v1/stations/{station_id}
 ```
 
+### Geometría real de línea (extensión aditiva MP-014)
+
+`LineOut` incorpora `geometry`, nullable. Cuando el proceso tiene un corredor
+OSM asociado exactamente al par `(network_id, line_id)`, contiene:
+
+- `segments`: lista de polilíneas continuas, cada coordenada como `{lat, lon}`.
+  Los segmentos permanecen separados: nunca se concatenan atravesando un hueco
+  real de `packages.geo.Corridor.segments`.
+- `stations`: paradas GTFS proyectadas con `Corridor.project_station`, ordenadas
+  por `distance_along_m` sobre el corredor cargado.
+
+Si no hay corredor asociado a una línea, `geometry` es `null`; la API nunca
+fabrica una forma conectando estaciones. La asociación actual sigue siendo
+honesta con `LoadedNetwork`: un único corredor configurado mediante
+`network_id`/`short_name`, sin literales de línea en la lógica (DEC-031).
+
+Forma abreviada del contrato (valores omitidos deliberadamente):
+
+```json
+{
+  "line_id": "<short_name resuelto>",
+  "network_id": "<network_id resuelto>",
+  "route_ids": ["<route_id completo>"],
+  "geometry": {
+    "segments": [[{"lat": 0.0, "lon": 0.0}]],
+    "stations": [{
+      "station_id": "<stop_id>",
+      "name": "<stop_name>",
+      "lat": 0.0,
+      "lon": 0.0,
+      "distance_along_m": 0.0
+    }]
+  }
+}
+```
+
+Este ejemplo describe únicamente la forma del contrato; no representa una
+geometría, estación ni identificador reales.
+
 ## Endpoints diferidos (propuesta, no implementada)
 
 ```text

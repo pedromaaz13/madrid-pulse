@@ -1,6 +1,24 @@
 {
   "components": {
     "schemas": {
+      "CoordinateOut": {
+        "properties": {
+          "lat": {
+            "title": "Lat",
+            "type": "number"
+          },
+          "lon": {
+            "title": "Lon",
+            "type": "number"
+          }
+        },
+        "required": [
+          "lat",
+          "lon"
+        ],
+        "title": "CoordinateOut",
+        "type": "object"
+      },
       "DelayOut": {
         "properties": {
           "coverage": {
@@ -137,8 +155,46 @@
         "title": "HealthOut",
         "type": "object"
       },
+      "LineGeometryOut": {
+        "description": "Corredor OSM real: cada elemento de ``segments`` es continuo.\n\nLos tramos nunca deben concatenarse en el cliente, porque una separaci\u00f3n\nentre ellos representa un hueco real de la geometr\u00eda cargada.",
+        "properties": {
+          "segments": {
+            "items": {
+              "items": {
+                "$ref": "#/components/schemas/CoordinateOut"
+              },
+              "type": "array"
+            },
+            "title": "Segments",
+            "type": "array"
+          },
+          "stations": {
+            "items": {
+              "$ref": "#/components/schemas/LineStationOut"
+            },
+            "title": "Stations",
+            "type": "array"
+          }
+        },
+        "required": [
+          "segments",
+          "stations"
+        ],
+        "title": "LineGeometryOut",
+        "type": "object"
+      },
       "LineOut": {
         "properties": {
+          "geometry": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LineGeometryOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "line_id": {
             "title": "Line Id",
             "type": "string"
@@ -158,9 +214,43 @@
         "required": [
           "line_id",
           "network_id",
-          "route_ids"
+          "route_ids",
+          "geometry"
         ],
         "title": "LineOut",
+        "type": "object"
+      },
+      "LineStationOut": {
+        "properties": {
+          "distance_along_m": {
+            "title": "Distance Along M",
+            "type": "number"
+          },
+          "lat": {
+            "title": "Lat",
+            "type": "number"
+          },
+          "lon": {
+            "title": "Lon",
+            "type": "number"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "station_id": {
+            "title": "Station Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "station_id",
+          "name",
+          "lat",
+          "lon",
+          "distance_along_m"
+        ],
+        "title": "LineStationOut",
         "type": "object"
       },
       "ObservationOut": {

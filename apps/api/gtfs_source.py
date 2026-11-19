@@ -16,6 +16,8 @@ class LoadedNetwork:
     topology: Topology
     corridor: Corridor
     engine: MovementEngine
+    corridor_network_id: str
+    corridor_line_id: str
 
 
 def load_network(config: ApiConfig) -> LoadedNetwork:
@@ -25,4 +27,10 @@ def load_network(config: ApiConfig) -> LoadedNetwork:
     geometry = load_relation_geometry_json(config.osm_relation_path)
     corridor = build_corridor(geometry)
     engine = MovementEngine(topology, corridor)
-    return LoadedNetwork(topology=topology, corridor=corridor, engine=engine)
+    return LoadedNetwork(
+        topology=topology,
+        corridor=corridor,
+        engine=engine,
+        corridor_network_id=config.network_id,
+        corridor_line_id=config.short_name,
+    )
