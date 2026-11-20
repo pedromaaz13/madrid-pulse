@@ -71,7 +71,7 @@ Con Hito 1 ya fusionado a `main`, el caso concreto de MP-012 **deja de requerir 
 
 **MP-015 — E2E y readiness MVP**
 
-Ejecutor: Claude Code · Revisor: OpenAI Codex · Estado: **REVIEW**
+Ejecutor: Claude Code · Revisor: OpenAI Codex · Estado: **DONE**
 
 Worktree/rama: `mp-015-e2e-readiness`, ramificada desde `mp-014-frontend` (MP-014 `DONE`). Dependencias MP-009/MP-012/MP-013 confirmadas como ancestros de `mp-014-frontend` con `git merge-base --is-ancestor` antes de ramificar (mismo mecanismo que DEC-015).
 
@@ -202,12 +202,33 @@ completa (conforme a la propia indicación de Codex); se verificó
 referencias cruzadas vía `rg` sobre DEC-034/ADR-0003/ADR-0013 en todo el
 repositorio.
 
+### Aprobación final de Codex
+
+**APROBADA el `2026-11-20`.** Codex inspeccionó el diff completo de MP-015,
+validó la justificación de `station_daily_metrics` contra
+`packages/quality/engine.py`, revisó críticamente los ADRs y comparó
+`docs/HITO_3_BACKLOG.md` con su versión original en
+`chore/hito-2-coordination`. Ejecutó de forma independiente 114/114 tests
+Python contra la base de desarrollo, 109 en verde + 5 `skip` contra un
+PostgreSQL fresco con migraciones desde cero, y frontend
+lint/typecheck/5 tests/build; después de la primera corrección re-ejecutó
+13/13 tests gold+replay, incluido el guard de porcentajes `0..100`. Los
+contenedores temporales se eliminaron y la base de desarrollo conservó sus
+recuentos.
+
+La revisión encontró seis problemas reales en la primera ronda y tres
+incoherencias de gobernanza/documentación en la segunda. Todos quedaron
+corregidos en `267d072` y `9e5efe1`, respectivamente, y re-verificados. El
+diff final pasa `git diff --check`; ADR-0013 queda correctamente
+`Propuesto`, pendiente de la decisión exclusiva del propietario. No quedan
+bloqueantes técnicos ni documentales para cerrar MP-015.
+
 ### Siguiente paso
 
-Re-delegado a Codex (revisor) para re-verificación de la segunda ronda en
-este mismo worktree. Al aprobarse, MP-015 cierra la cadena del Hito 2. El
-propietario decide la auditoría de integración final y el momento de
-fusionar a `main`.
+MP-015 cierra funcionalmente la cadena del Hito 2. No se inicia Hito 3 sin
+autorización explícita. El propietario decide ahora la auditoría de
+integración final, la revisión/promoción de los ADRs `Propuesto` y el
+momento de fusionar a `main`.
 
 ## Tareas cerradas de la cadena
 
