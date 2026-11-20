@@ -59,6 +59,188 @@ Evidencia reproducida de forma independiente:
 
 **Veredicto de integración:** `mp-009-historical-export` está preparada para que el propietario la integre en `main`; no se identificaron omisiones, pérdida documental, problemas de autoría ni bloqueantes técnicos. Los tres avisos de whitespace en fixtures son los únicos hallazgos abiertos y no son bloqueantes.
 
+## Auditoría independiente de preparación para integración (Hito 2)
+
+**OpenAI Codex — `2026-11-20`: APROBADA, sin bloqueantes reales para integrar
+`mp-015-e2e-readiness` en `main`.** El estado auditado es `a6ade4e` (antes
+de registrar esta sección) y el rango es `origin/main..HEAD`, desde
+`f567d3c`: 33 commits lineales que contienen MP-010 → MP-015 completos.
+
+### Parte 1 — Evidencia de integración reproducida
+
+- **Ancestría y linealidad.** Se comprobaron todas las referencias, no solo
+  la base y el tip:
+
+  ```text
+  $ for ref in origin/main mp-010-gtfs-topology mp-011-osm-geometry mp-012-movement-engine mp-013-fastapi mp-014-frontend; do git merge-base --is-ancestor "$ref" HEAD; ...; done
+  origin/main -> exit 0 (f567d3c)
+  mp-010-gtfs-topology -> exit 0 (0a31640)
+  mp-011-osm-geometry -> exit 0 (da5f5e1)
+  mp-012-movement-engine -> exit 0 (1c1529d)
+  mp-013-fastapi -> exit 0 (2e883aa)
+  mp-014-frontend -> exit 0 (a1067b2)
+  $ git rev-list --count origin/main..HEAD
+  33
+  $ git rev-list --merges origin/main..HEAD --oneline
+  [sin salida]
+  ```
+
+  Por tanto, el tip contiene todos los tips intermedios y puede integrarse por
+  fast-forward desde el `origin/main` auditado; no hay merge commits ocultos.
+
+- **Autoría.** El recorrido individual mostró los 33 commits con autor y
+  committer de Pedro. La reducción de identidades y la búsqueda de trailers
+  dieron:
+
+  ```text
+  $ git log origin/main..HEAD --format='%an <%ae>|%cn <%ce>' | sort | uniq -c
+       33 Pedro Matute <pedromaaz13@gmail.com>|Pedro Matute <pedromaaz13@gmail.com>
+  $ git log origin/main..HEAD --format='%H%n%B%n---' | rg -in '^Co-authored-by:'
+  [sin salida]
+  ```
+
+- **Diff real.** `git diff --stat origin/main..HEAD` enumera 109 ficheros,
+  `31280 insertions(+), 99 deletions(-)`; la clasificación independiente por
+  `--name-status` da `A=74 M=35 R=0 total=109`. Incluye la CI, API, frontend,
+  topología/geometría/movimiento, gold/replay, fixtures GTFS/OSM y su
+  documentación. No hay cachés, entornos, builds ni temporales rastreados:
+
+  ```text
+  $ git ls-files | rg '(^|/)(node_modules|dist|build|\.venv|venv|__pycache__|\.pytest_cache|\.mypy_cache|\.ruff_cache)(/|$)|(^|/)(\.DS_Store|.*\.pyc|.*\.pyo)$'
+  [sin salida]
+  $ git diff --check origin/main..HEAD
+  [sin salida]
+  ```
+
+  A diferencia de la auditoría de Hito 1, este rango no deja ni siquiera
+  avisos cosméticos de whitespace. El build sí emitió el aviso informativo de
+  Vite por chunks mayores de 500 kB; no es un fallo del build ni un artefacto
+  versionado.
+
+- **Suite Python contra la base real de desarrollo.** Antes y después se
+  consultaron las cinco tablas en el orden
+  `vehicle_position_observation/trip_update_observation/service_alert/source_ingestion_run/data_quality_event`:
+
+  ```text
+  $ docker exec madrid-pulse-postgres-1 psql ... -c 'SELECT (SELECT count(*) ...);'
+  668|484|3|120|0
+  $ MADRID_PULSE_DATABASE_URL=...:5433/... MADRID_PULSE_DATABASE_DSN=...:5433/... .venv/bin/python -m unittest <las 18 suites de CI> -v
+  Ran 115 tests in 12.835s
+  OK
+  real soak read-only: rows=668, near_corridor=177, max_map_matched_jump_kmh=666.4, after=668
+  $ docker exec madrid-pulse-postgres-1 psql ... -c 'SELECT (SELECT count(*) ...);'
+  668|484|3|120|0
+  ```
+
+  Resultado real: **115 passed, 0 failed, 0 skip**; la base conservó
+  exactamente `668/484/3/120/0`.
+
+- **Suite Python desde cero.** Se creó el contenedor desechable aislado
+  `madrid-pulse-audit-hito2-task0687344` sobre `postgis/postgis:17-3.5`, en
+  `127.0.0.1:55433` (distinto de desarrollo), se esperó `pg_isready`, y se
+  aplicó `infra/migrations/0001_init.up.sql` con `ON_ERROR_STOP=1`. La salida
+  confirmó `CREATE EXTENSION`, 14 `CREATE TABLE`, 5 `CREATE INDEX` y `COMMIT`.
+  Después:
+
+  ```text
+  $ MADRID_PULSE_DATABASE_URL=...:55433/... MADRID_PULSE_DATABASE_DSN=...:55433/... .venv/bin/python -m unittest <las 18 suites de CI> -v
+  Ran 115 tests in 4.746s
+  OK (skipped=5)
+  $ docker exec madrid-pulse-audit-hito2-task0687344 psql ... -c 'SELECT (SELECT count(*) ...);'
+  0|0|0|0|0
+  $ docker stop madrid-pulse-audit-hito2-task0687344
+  madrid-pulse-audit-hito2-task0687344
+  ```
+
+  Resultado real: **110 passed, 0 failed, 5 skip** explícitos, todos ligados
+  al soak local irrepetible de MP-007; replay, persistencia y contratos
+  reproducibles sí se ejecutaron. Las pruebas limpiaron sus filas y el
+  contenedor se autoeliminó.
+
+- **Frontend con la versión de CI (`Node 22.13.1`).** Se ejecutaron por
+  separado los cuatro gates:
+
+  ```text
+  $ fnm exec --using=22.13.1 npm run lint
+  eslint . --max-warnings 0                         [exit 0]
+  $ fnm exec --using=22.13.1 npm run typecheck
+  tsc -b --pretty false                             [exit 0]
+  $ fnm exec --using=22.13.1 npm test
+  Test Files  2 passed (2); Tests  5 passed (5)
+  $ fnm exec --using=22.13.1 npm run build
+  ✓ built in 231ms
+  Verified production MapLibre worker (550754 bytes)
+  ```
+
+- **Secretos y artefactos sensibles.** La búsqueda sobre ficheros rastreados
+  de cabeceras de llave privada y formatos comunes (`AKIA`, tokens GitHub,
+  `sk-`, `AIza`) no devolvió coincidencias; tampoco hay `.env`, `.pem`,
+  `.key`, `.p12`, `.pfx`, `id_rsa` o `id_ed25519` versionados. La búsqueda de
+  credenciales embebidas devuelve únicamente:
+
+  ```text
+  .github/workflows/ci.yml:29: ...madrid_pulse:madrid_pulse_local@127.0.0.1:5433...
+  .github/workflows/ci.yml:30: ...madrid_pulse:madrid_pulse_local@127.0.0.1:5433...
+  apps/api/config.py:26: ...madrid_pulse:madrid_pulse_local@127.0.0.1:5433...
+  services/collector/config.py:34: ...madrid_pulse:madrid_pulse_local@127.0.0.1:5433...
+  services/snapshotter/config.py:16: ...madrid_pulse:madrid_pulse_local@127.0.0.1:5433...
+  ```
+
+  Es la única contraseña encontrada y está limitada a la credencial local
+  esperada; no hay claves, tokens ni ficheros de entorno reales.
+
+- **Enlaces Markdown.** Un comprobador resolvió los enlaces relativos de los
+  `docs/*.md` y `docs/adr/*.md` añadidos o tocados en el rango:
+
+  ```text
+  files=21 relative_links=50 broken=0
+  ```
+
+  Las referencias a `adr/0013-no-literal-dbt-engine.md` resuelven desde
+  `ARCHITECTURE`, `CHANGELOG`, `DECISIONS`, `PLAN`, `STATUS` y el índice de
+  ADRs; no hay enlaces rotos.
+
+- **Cierre documental.** `docs/TASKS.md` marca individualmente MP-010,
+  MP-011, MP-012, MP-013, MP-014 y MP-015 como `DONE`; la sección "Tarea
+  actual" de este documento marca MP-015 `DONE` y las cinco secciones de
+  tareas cerradas hacen lo mismo con sus predecesoras. `docs/CHANGELOG.md`
+  conserva las seis tareas y, en particular, no oculta los hallazgos: registra
+  las dos rondas de MP-015, las cuatro rondas visuales de MP-014 y las
+  correcciones de MP-011/MP-013. Los recuentos históricos `114/114` y
+  `109+5` permanecen donde describen ejecuciones anteriores, seguidos por la
+  corrección verificable a `115/115` y `110+5`; esta auditoría vuelve a
+  confirmar estos últimos recuentos.
+
+**Veredicto de integración:** `mp-015-e2e-readiness` está lista para que el
+propietario la integre en `main` por fast-forward desde `f567d3c`. No se
+identificaron pérdidas documentales, problemas de autoría, residuos de
+pruebas, secretos, enlaces rotos ni bloqueantes técnicos. El warning de
+tamaño de chunks de Vite es una oportunidad de optimización futura, no un
+fallo de readiness.
+
+### Parte 2 — Revisión de ADRs pendientes de promoción
+
+La recomendación se contrastó con el código y el esquema reales, no solo con
+la auto-descripción de cada ADR:
+
+| ADR | Evidencia de implementación al cierre de Hito 2 | Veredicto |
+|---|---|---|
+| ADR-0002 — fuentes | Renfe tiene licencia, disponibilidad, esquema e integración reales verificados. CRTM solo tiene licencia `VERIFIED`; `docs/legal/DATA_SOURCES.md` conserva disponibilidad técnica `PENDING MP-003` y ningún componente lo integra. DEC-006 todavía nombra ambas como fuentes primarias. | **Apto, pero requiere actualizar antes de dar por cerrada la verificación.** No se debe borrar simplemente "pendiente": cambiar `Estado` por **`Aceptado (fuentes): Renfe verificada e integrada; CRTM con licencia verificada, disponibilidad técnica e integración pendientes`**. Para evitar drift, DEC-006 debe distinguir Renfe como fuente primaria implementada y CRTM como fuente complementaria evaluada/licenciada pero aún no integrada. |
+| ADR-0005 — contrato API | `apps/api/main.py` publica siete rutas reales bajo `/api/v1`; `schemas.py` expone `position.mode/confidence`, `observation.age_s`, `delay.coverage` y `quality.flags`; `openapi.json` coincide. Las tablas gold ya se calculan, pero los cuatro endpoints history/metrics siguen diferidos y el propio ADR lo dice. | **Apto para promoción a `Aceptado` sin cambios.** Los endpoints pendientes son alcance funcional futuro y no contradicen la decisión arquitectónica de contrato propio versionado. |
+| ADR-0008 — identidad de ruta | `Topology` conserva los cinco `route_id` completos como rutas distintas, `route_groups()` agrupa por `(network_id, short_name)`, la resolución de trip es literal, el colector filtra núcleo `10` y el esquema exige `UNIQUE(network_id, source_route_id)`. La tabla `route` local sigue sin poblarse, pero no se colapsa identidad en ninguna capa implementada. | **Apto para promoción a `Aceptado` sin cambios.** La ausencia de un loader persistente de `route` no invalida la identidad adoptada y ya aplicada en topología/API. |
+| ADR-0009 — campos no observados | Contratos y migración mantienen `speed_kmh`/`bearing` nullable, usan `current_stop_id`, omiten `effect/cause/header_text` y conservan `description_language`; `packages.gtfs` resuelve `stop_id`/secuencia sin alterar el raw. Los tests de parseo y normalización pasan. | **Apto para promoción a `Aceptado` sin cambios.** |
+| ADR-0010 — deduplicación | El hash cubre el `model_dump` bruto completo; el colector compara por clave de entidad y no implementa `seen_count`. Sin embargo, el SQL real desempata timestamps repetidos con `id DESC`, corrección bloqueante de MP-007 que el ADR no recoge. | **Apto, pero requiere actualizar antes de promover.** Sustituir la frase **``ORDER BY observed_at DESC LIMIT 1``** por **``ORDER BY observed_at DESC, id DESC LIMIT 1`` (y `active_period_start DESC, id DESC` para alertas)**, explicando que `id DESC` hace determinista el último poll cuando el timestamp de fuente empata. |
+| ADR-0011 — piloto frente a producto | La lógica de GTFS, geo y movimiento no contiene el literal de la línea piloto; API y frontend derivan líneas/IDs de topología. Los defaults `C5` de `ApiConfig`/`SnapshotterConfig` son configuración sustituible, no filtros hardcodeados. | **Apto para promoción a `Aceptado` sin cambios.** |
+| ADR-0012 — frontera de movement | `packages/movement` es puro y sin persistencia en producción; depende de contracts/geo/gtfs, recibe topología/corredor/umbrales, devuelve `MovementPosition` tipado con modo, confianza, edad, fuente y anomalías. FastAPI lo consume sin incorporar el algoritmo a HTTP. | **Apto para promoción a `Aceptado` sin cambios.** |
+| ADR-0013 — sin motor dbt literal | `requirements.txt` incluye DuckDB pero no `dbt-core`/`dbt-duckdb`; `gold.py` implementa y prueba las capas por núcleo/línea/estación y `analytics/dbt/` solo documenta la disciplina y la decisión reversible. ADR-0003 permanece intacto. | **Apto para promoción a `Aceptado` sin cambios.** |
+
+**Balance de promoción recomendado:** seis ADRs (`0005`, `0008`, `0009`,
+`0011`, `0012`, `0013`) pueden promoverse sin cambios; ADR-0010 necesita una
+corrección textual precisa antes de promoverse; ADR-0002 ya está aceptado a
+nivel de fuentes, pero su coletilla no está completamente resuelta y debe
+reformularse —no eliminarse— para distinguir el estado real de Renfe y CRTM.
+No se cambió el campo `Estado` de ningún ADR durante esta auditoría.
+
 ## Resolución de DEC-015 (mecánica de convergencia de ramas, antes de MP-012)
 
 **Resuelto el `2026-11-19`, documentado aquí y en `docs/DECISIONS.md`/`AGENTS.md`.** La pregunta abierta era qué rama usar como base y cómo integrar las demás cuando una tarea depende de varias ramas potencialmente distintas (caso previsto: MP-012 depende de MP-008, MP-010 y MP-011).
