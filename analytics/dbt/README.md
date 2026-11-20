@@ -1,7 +1,11 @@
 # analytics/dbt
 
-**Decisión de alcance (DEC-034):** este directorio no contiene un proyecto
-`dbt-core`/`dbt-duckdb` literal. La transformación silver → gold con
+**Decisión de alcance ([ADR-0013](../../docs/adr/0013-no-literal-dbt-engine.md),
+`Propuesto`; resumida como DEC-034 en `docs/DECISIONS.md`):** este directorio
+no contiene un proyecto `dbt-core`/`dbt-duckdb` literal. Esta decisión no
+modifica [ADR-0003](../../docs/adr/0003-storage-strategy.md) (`Aceptado`), que
+sigue mencionando DuckDB/dbt como ecosistema de consumo de la capa fría a
+nivel de principio. La transformación silver → gold con
 disciplina dbt (staging/intermediate/marts, grain explícito, tests,
 documentación, lineage — ver `CLAUDE.md`: "Apply dbt principles even if dbt
 is not the exact stack") se implementa en `services/snapshotter/gold.py`:

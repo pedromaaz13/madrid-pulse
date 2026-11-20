@@ -55,7 +55,7 @@ El MVP **no empieza por el frontend**. La capa visual solo se construye cuando e
 
 ### F9 — Histórico / Explore y endurecimiento (MP-015)
 **Objetivo:** E2E completo, CI verde, checklist de preparación de MVP.
-**Entregables:** replay end-to-end, pipeline DuckDB para métricas con cobertura (disciplina dbt sin el motor literal, ver DEC-034), CI configurado, ADRs actualizados a la realidad implementada.
+**Entregables:** replay end-to-end, pipeline DuckDB para métricas con cobertura (disciplina dbt sin el motor literal — ver [ADR-0013](adr/0013-no-literal-dbt-engine.md) y DEC-034), CI configurado, ADRs actualizados a la realidad implementada.
 **Exit gate:** checklist de MVP superado y aceptado por el propietario; sin deuda de documentación pendiente.
 
 ### F10 — Expansión (fuera de alcance de MP-001 a MP-015)

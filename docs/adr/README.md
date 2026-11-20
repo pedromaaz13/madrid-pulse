@@ -14,6 +14,7 @@
 | [0010](0010-dedup-strategy.md) | Deduplicación por hash canónico de payload completo comparado contra la última fila almacenada por clave de entidad de origen; sin `seen_count` | `Propuesto` — pendiente de revisión del propietario en cierre de Hito 2 (corregido en MP-015: el cierre real de Hito 1 pasó sin promoción) |
 | [0011](0011-public-scope-vs-technical-pilot.md) | C5 es el piloto técnico de Hito 2; el objetivo de primera versión pública es toda la red de Cercanías Madrid — complementa ADR-0001 sin reescribirlo | `Propuesto` — pendiente de revisión del propietario en cierre de Hito 2 |
 | [0012](0012-movement-package-boundary.md) | Motor de movimiento como capa independiente entre geometría, topología, calidad y API | `Propuesto` — pendiente de revisión del propietario en cierre de Hito 2 |
+| [0013](0013-no-literal-dbt-engine.md) | No se introduce dbt-core/dbt-duckdb como motor literal para la capa gold; la disciplina dbt se aplica directamente en `services/snapshotter/gold.py` — ADR-0003 permanece intacto, esta decisión no lo reescribe | `Propuesto` — pendiente de revisión del propietario en cierre de Hito 2 |
 
 Ver `docs/DECISIONS.md` para el resumen ejecutivo de estado de todas las decisiones (aceptadas, propuestas, pendientes y no-go), con enlaces de vuelta a estos ADRs.
 

@@ -82,7 +82,7 @@ Worktree/rama: `mp-015-e2e-readiness`, ramificada desde `mp-014-frontend` (MP-01
 Orden de trabajo elegido (cada paso se implementa, se prueba de verdad y se documenta antes de pasar al siguiente, igual que el resto del hito):
 
 1. Resolución Python real `trip_id`→`route_id`/`stop_id`→`station_id` sobre el Parquet raw ya exportado por MP-009, extendiendo `services/snapshotter/gold.py` (seguir usando DuckDB como único motor, conforme DEC-021 — no se añaden `pandas`/`pyarrow`), calculando `daily_line_metrics`/`station_daily_metrics` reales directamente ahí.
-2. **Corrección tras ejecutar el paso 1:** no se introduce un proyecto dbt-core/dbt-duckdb literal (decisión tomada y documentada como DEC-034, no la planificación original de esta misma lista) — la resolución `route_id`/`station_id` es lógica Python que no encaja en SQL puro sin duplicarla, y DEC-021 ya fijó un único motor sin dependencias añadidas. `services/snapshotter/gold.py` ya aplica la disciplina dbt (capas, tests, documentación) sin el motor dbt.
+2. **Corrección tras ejecutar el paso 1:** no se introduce un proyecto dbt-core/dbt-duckdb literal (decisión tomada y documentada como [ADR-0013](adr/0013-no-literal-dbt-engine.md)/DEC-034, no la planificación original de esta misma lista) — la resolución `route_id`/`station_id` es lógica Python que no encaja en SQL puro sin duplicarla, y DEC-021 ya fijó un único motor sin dependencias añadidas. `services/snapshotter/gold.py` ya aplica la disciplina dbt (capas, tests, documentación) sin el motor dbt.
 3. CI (`.github/workflows/`) que ejecute las suites reales (Python + frontend) en cada push/PR.
 4. Replay E2E determinista en `tests/e2e/` sobre fixtures reales ya existentes (sin llamadas de red en vivo, para que CI no dependa de Renfe/OSM/CRTM) que ejercite el pipeline completo: ingestión canónica → PostgreSQL → motor de movimiento → API → build de frontend.
 5. Auditoría de contenido de los 12 ADRs contra la implementación real — se corrige redacción/contenido que ya no coincide con lo implementado; **la promoción de `Propuesto` a `Aceptado` sigue siendo decisión exclusiva del propietario** (ADR-0007), no se cambia ningún `Estado` sin su aprobación explícita.
@@ -91,10 +91,10 @@ Orden de trabajo elegido (cada paso se implementa, se prueba de verdad y se docu
 ### Checklist de MP-015
 
 - [x] Resolución real `route_id`/`station_id` sobre datos exportados, con tests.
-- [x] **`daily_line_metrics`/`station_daily_metrics` calculadas de verdad (DEC-033/DEC-034):** `services/snapshotter/gold.py` extendido con `build_line_daily_metrics`/`build_station_daily_metrics` sobre `packages.gtfs.Topology`, en vez de dbt-duckdb literal — decisión documentada (DEC-034): la resolución es lógica Python que no encaja en SQL puro sin duplicarla, y DEC-021 ya fijó un único motor sin dependencias añadidas. 10 tests nuevos reales (fixture GTFS + PostgreSQL), corrida real contra el soak completo del `2026-11-19`: 3 filas en `daily_line_metrics`, 18 en `station_daily_metrics`.
-- [x] **CI real (DEC-035):** `.github/workflows/ci.yml` — job Python (PostgreSQL de servicio, migraciones desde cero, suite real) + job frontend (lint/typecheck/test/build). Verificado de verdad en ambos sentidos: 114/114 contra la base de desarrollo (sin `skip`), 109 + 5 `skip` explícitos contra un contenedor PostgreSQL fresco simulando CI exactamente. Hallazgo real corregido en el proceso: 5 tests usaban `CollectorConfig()` en vez de `.from_env()`, ignorando `MADRID_PULSE_DATABASE_URL` en silencio.
+- [x] **`daily_line_metrics`/`station_daily_metrics` calculadas de verdad (DEC-033/DEC-034):** `services/snapshotter/gold.py` extendido con `build_line_daily_metrics`/`build_station_daily_metrics` sobre `packages.gtfs.Topology`, en vez de dbt-duckdb literal — decisión documentada ([ADR-0013](adr/0013-no-literal-dbt-engine.md)/DEC-034): la resolución es lógica Python que no encaja en SQL puro sin duplicarla, y DEC-021 ya fijó un único motor sin dependencias añadidas. 10 tests nuevos reales (fixture GTFS + PostgreSQL), corrida real contra el soak completo del `2026-11-19`: 3 filas en `daily_line_metrics`, 18 en `station_daily_metrics`.
+- [x] **CI real (DEC-035):** `.github/workflows/ci.yml` — job Python (PostgreSQL de servicio, migraciones desde cero, suite real) + job frontend (lint/typecheck/test/build). Verificado de verdad en ambos sentidos: 114/114 contra la base de desarrollo (sin `skip`), 110 en verde + 5 `skip` explícitos (de 115) contra un contenedor PostgreSQL fresco simulando CI exactamente. Hallazgo real corregido en el proceso: 5 tests usaban `CollectorConfig()` en vez de `.from_env()`, ignorando `MADRID_PULSE_DATABASE_URL` en silencio.
 - [x] **Replay E2E determinista (`tests/e2e/test_replay.py`):** inyecta bytes de fixtures reales como respuesta del `fetcher` del colector real — JSON crudo con forma de Renfe → colector → PostgreSQL real → resolución GTFS → API real, sin red en vivo. Dos escenarios reales: la fixture de MP-004 (nunca fabrica una resolución) y un payload sintético con forma real para un trip que sí existe en la GTFS reducida (resuelve `route_id`/posición de extremo a extremo).
-- [x] **Auditoría de contenido de los 12 ADRs completa (sin cambiar ningún `Estado` a `Aceptado`):** 6 ADRs corregidos. ADR-0002: aclara que CRTM quedó verificado por licencia pero nunca integrado (solo Renfe se implementó). ADR-0003/ADR-0004: eliminan la implicación de dbt-core literal / corrigen la nomenclatura real de campos (`position.mode`, no `position_mode`; sin `source` público). ADR-0008/0009/0010: corrigen la referencia obsoleta "pendiente... en el cierre de Hito 1" (ese cierre ya ocurrió el 2026-11-19 sin promoción) a "cierre de Hito 2", igual que `docs/adr/README.md` y `docs/DECISIONS.md` (DEC-017/DEC-013). `docs/ARCHITECTURE.md`/`docs/PLAN.md` también corregidos para no implicar dbt-core literal (DEC-034). Los otros 6 ADRs (0001, 0005, 0006, 0007, 0011, 0012) se verificaron contra la implementación real sin encontrar drift.
+- [x] **Auditoría de contenido de los 12 ADRs completa (sin cambiar ningún `Estado` a `Aceptado`):** balance final tras dos rondas de revisión de Codex. ADR-0002: aclara que CRTM quedó verificado por licencia pero nunca integrado (solo Renfe se implementó). ADR-0004: corrige la nomenclatura real de campos (`position.mode`, no `position_mode`; sin `source` público). ADR-0005: nota de drift real añadida (las tablas gold por línea/estación ya se calculan desde MP-015/DEC-033; los endpoints history/metrics siguen sin implementar). ADR-0008/0009/0010: corrigen la referencia obsoleta "pendiente... en el cierre de Hito 1" (ese cierre ya ocurrió el 2026-11-19 sin promoción) a "cierre de Hito 2", igual que `docs/adr/README.md` y `docs/DECISIONS.md` (DEC-017/DEC-013). **ADR-0003 permanece intacto, sin modificación de su texto** — una primera ronda lo había editado para eliminar la implicación de dbt-core literal, lo que violaba el proceso de ADR (regla 8, `AGENTS.md`); revertido, y esa decisión se documenta ahora en el nuevo [ADR-0013](adr/0013-no-literal-dbt-engine.md) (`Propuesto`), referenciado también desde `docs/ARCHITECTURE.md`/`docs/PLAN.md`/`analytics/dbt/README.md`/DEC-034. Los otros ADRs (0001, 0006, 0007, 0011, 0012) se verificaron contra la implementación real sin encontrar drift.
 - [x] **Checklist de preparación de MVP (`docs/MVP_READINESS.md`):** resumen ejecutivo del cumplimiento del objetivo de Hito 2, demo local reproducible, estado real de tests, principios de datos verificados, hallazgos clave, límites conocidos documentados y pendientes exclusivos de gobernanza del propietario. También recuperado `docs/HITO_3_BACKLOG.md` (Sección 7 de la autorización) desde la rama `chore/hito-2-coordination`, que había divergido de la cadena `mp-010`→`mp-015` y se habría perdido al fusionar a `main` sin traerlo explícitamente.
 - [x] `docs/TASKS.md`/`docs/STATUS.md`/`docs/CHANGELOG.md`/`docs/DATA_CONTRACTS.md`/`docs/DECISIONS.md` actualizados con evidencia real.
 
@@ -163,14 +163,51 @@ la base de desarrollo y contra su propio contenedor PostgreSQL fresco,
 
 Los seis se corrigieron en este mismo worktree; 115/115 tests (114 + 1
 nuevo de regresión) verificados de nuevo contra la base de desarrollo y
-contra un segundo contenedor PostgreSQL fresco desechable (109/115 + 5
-`skip`).
+contra un segundo contenedor PostgreSQL fresco desechable (110 en verde +
+5 `skip`, de 115).
+
+### Segunda revisión de Codex — tres hallazgos reales, todos corregidos
+
+Codex re-verificó la corrección funcional de la primera ronda (13/13 tests
+de `services.snapshotter.tests.test_gold` + `test_export_replay`, guard
+`0..100` correcto) y encontró tres incoherencias documentales/de gobernanza
+nuevas, introducidas por la propia corrección de la primera ronda:
+
+1. **Mismatch ADR-0003 vs. resto de la documentación:** revertir solo el
+   texto de ADR-0003 (hallazgo #4 de la primera ronda) dejó una
+   contradicción nueva: ADR-0003 (`Aceptado`) vuelve a decir "consumido vía
+   DuckDB/dbt", pero `docs/ARCHITECTURE.md` (diagrama y sección DuckDB),
+   `docs/PLAN.md` (F9), `analytics/dbt/README.md` y DEC-034 seguían
+   afirmando que dbt-core/dbt-duckdb literal no forma parte del stack —
+   `docs/ARCHITECTURE.md` incluso decía "decidido en MP-015", asentando una
+   decisión de arquitectura sin el proceso de ADR. Corregido creando
+   [ADR-0013](adr/0013-no-literal-dbt-engine.md) (`Propuesto`, conforme a
+   ADR-0007): ADR-0003 permanece intacto; ADR-0013 documenta formalmente
+   que MP-015 no introduce el motor dbt-core. Las cuatro referencias ahora
+   apuntan a ADR-0013 en vez de asentar la decisión sin respaldo.
+2. `docs/STATUS.md:166` decía "109/115 + 5 skip"; el resultado real es
+   "110 en verde + 5 `skip`" (de 115) — corregido (ya constaba bien en
+   `docs/CHANGELOG.md`).
+3. El checklist de esta misma sección y `docs/CHANGELOG.md` seguían
+   describiendo "6 ADRs corregidos" incluyendo ADR-0003 y sin mencionar
+   drift en ADR-0005 — tras el revertido, el balance final es el inverso:
+   ADR-0003 quedó intacto (no corregido) y ADR-0005 sí recibió una nota de
+   drift real (tablas gold ya no vacías desde MP-015/DEC-033). Ambas
+   descripciones actualizadas para reflejar el balance final.
+
+Los tres se corrigieron en este mismo worktree, en esta ronda puramente
+documental — sin cambios de código, por lo que no se repitió la suite
+completa (conforme a la propia indicación de Codex); se verificó
+`git diff --check` (sin problemas de espacio en blanco) y coherencia de
+referencias cruzadas vía `rg` sobre DEC-034/ADR-0003/ADR-0013 en todo el
+repositorio.
 
 ### Siguiente paso
 
-Re-delegado a Codex (revisor) para re-verificación en este mismo worktree.
-Al aprobarse, MP-015 cierra la cadena del Hito 2. El propietario decide la
-auditoría de integración final y el momento de fusionar a `main`.
+Re-delegado a Codex (revisor) para re-verificación de la segunda ronda en
+este mismo worktree. Al aprobarse, MP-015 cierra la cadena del Hito 2. El
+propietario decide la auditoría de integración final y el momento de
+fusionar a `main`.
 
 ## Tareas cerradas de la cadena
 

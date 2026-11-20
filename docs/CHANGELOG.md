@@ -16,7 +16,7 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 
 #### Fixed
 - DEC-035: 5 tests (`test_export_replay.py`, `test_collector_cycle.py`, `test_persistence.py`, `test_real_soak_postgres.py`) usaban `CollectorConfig()` en vez de `CollectorConfig.from_env()`, ignorando silenciosamente `MADRID_PULSE_DATABASE_URL` — nunca se notaba porque el valor por defecto coincidía con el de desarrollo local. Encontrado al verificar la suite contra un PostgreSQL recién creado (no la base de desarrollo). Los tests atados al soak real irrepetible de MP-007 (668 filas/24 vehículos) ahora hacen `skip` explícito y documentado, no `fail`, cuando ese histórico puntual no está presente.
-- Auditoría de contenido de los 12 ADRs contra la implementación real (ningún `Estado` cambiado — esa promoción sigue siendo decisión exclusiva del propietario). 6 corregidos: ADR-0002 (CRTM verificado por licencia pero nunca integrado — solo Renfe se implementó), ADR-0003/ADR-0004 (eliminan la implicación de dbt-core literal y corrigen la nomenclatura real de campos de posición: `position.mode`, no `position_mode`; sin `source` público), ADR-0008/0009/0010 (la referencia "pendiente... en el cierre de Hito 1" ya pasó sin promoción el 2026-11-19 — corregida a "cierre de Hito 2", igual que `docs/adr/README.md` y `docs/DECISIONS.md`). `docs/ARCHITECTURE.md`/`docs/PLAN.md` corregidos para no implicar dbt-core literal (DEC-034).
+- Auditoría de contenido de los 12 ADRs contra la implementación real (ningún `Estado` cambiado — esa promoción sigue siendo decisión exclusiva del propietario). 5 corregidos en esta primera pasada: ADR-0002 (CRTM verificado por licencia pero nunca integrado — solo Renfe se implementó), ADR-0004 (corrige la nomenclatura real de campos de posición: `position.mode`, no `position_mode`; sin `source` público), ADR-0008/0009/0010 (la referencia "pendiente... en el cierre de Hito 1" ya pasó sin promoción el 2026-11-19 — corregida a "cierre de Hito 2", igual que `docs/adr/README.md` y `docs/DECISIONS.md`). Esta misma pasada editó también la "Decisión" de ADR-0003 (`Aceptado`) para eliminar la implicación de dbt-core literal — **esto violaba el proceso de ADR (regla 8, `AGENTS.md`) y se revirtió en la revisión de Codex**: ver sección "Fixed after Codex review" más abajo, donde ADR-0003 vuelve a su texto original y la decisión se formaliza como [ADR-0013](adr/0013-no-literal-dbt-engine.md) (`Propuesto`). `docs/ARCHITECTURE.md`/`docs/PLAN.md` corregidos para no implicar dbt-core literal (DEC-034).
 
 #### Verified
 - 114/114 tests Python en verde contra la base de desarrollo real (sin ningún `skip`); 109 en verde + 5 `skip` explícitos contra un PostgreSQL recién creado con las migraciones aplicadas desde cero, simulando exactamente lo que hace CI. Frontend: lint/typecheck/5 tests/build en verde. Corrida real end-to-end del exportador (`python -m services.snapshotter 2026-11-19`) contra el soak completo: 3 filas en `daily_line_metrics`, 18 en `station_daily_metrics`, sin datos fabricados. PostgreSQL restaurado exactamente a `668/484/3/120/0` en todos los casos.
@@ -33,10 +33,18 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 - `docs/HITO_3_BACKLOG.md` (área 5): corregido el dato obsoleto "~24 vehículos C5" con el desglose real de DEC-029.
 
 #### Verified
-- 115/115 tests Python (114 + 1 de regresión nuevo) contra la base de desarrollo; 110/115 + 5 `skip` contra un segundo contenedor PostgreSQL fresco desechable. PostgreSQL restaurado exactamente a `668/484/3/120/0`.
+- 115/115 tests Python (114 + 1 de regresión nuevo) contra la base de desarrollo; 110 en verde + 5 `skip` (de 115) contra un segundo contenedor PostgreSQL fresco desechable. PostgreSQL restaurado exactamente a `668/484/3/120/0`.
+
+#### Fixed after Codex review (second round)
+- El revertido de ADR-0003 (ronda anterior) dejó una incoherencia nueva: ADR-0003 (`Aceptado`) volvía a decir "consumido vía DuckDB/dbt", pero `docs/ARCHITECTURE.md`, `docs/PLAN.md` (F9), `analytics/dbt/README.md` y DEC-034 seguían afirmando que dbt-core/dbt-duckdb literal no forma parte del stack, y `docs/ARCHITECTURE.md` incluso decía "decidido en MP-015" — una decisión de arquitectura asentada sin ADR. Corregido creando [ADR-0013](adr/0013-no-literal-dbt-engine.md) (`Propuesto`, conforme a ADR-0007): ADR-0003 permanece intacto y sin reinterpretación; ADR-0013 documenta formalmente que MP-015 no introduce el motor dbt-core. `docs/ARCHITECTURE.md`/`docs/PLAN.md`/`analytics/dbt/README.md`/DEC-034 ahora referencian ADR-0013 en vez de asentar la decisión sin respaldo de ADR.
+- `docs/STATUS.md:166` decía "109/115 + 5 skip" — corregido a "110 en verde + 5 `skip` (de 115)", el resultado real ya reflejado correctamente en este CHANGELOG.
+- Las descripciones de "6 ADRs corregidos" en `docs/STATUS.md` (checklist) y en este CHANGELOG (ver arriba) no reflejaban el balance final tras el revertido de ADR-0003: quedó intacto (no fue uno de los corregidos) y ADR-0005 sí recibió una nota de drift real (tablas gold ya no vacías) que no estaba contemplada en el recuento original. Ambas descripciones actualizadas.
+
+#### Verified
+- Sin re-ejecución completa de la suite (cambio puramente documental de esta ronda); `git diff --check` sin problemas de espacio en blanco; coherencia re-verificada con `rg` sobre todas las referencias cruzadas a DEC-034/ADR-0003/ADR-0013.
 
 #### In progress
-- MP-015 re-delegado a Codex (revisor) para re-verificación — ver `docs/STATUS.md`.
+- MP-015 re-delegado a Codex (revisor) para re-verificación de la segunda ronda — ver `docs/STATUS.md`.
 
 ### MP-014 — Frontend React/MapLibre C5
 
