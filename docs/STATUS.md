@@ -209,8 +209,8 @@ validó la justificación de `station_daily_metrics` contra
 `packages/quality/engine.py`, revisó críticamente los ADRs y comparó
 `docs/HITO_3_BACKLOG.md` con su versión original en
 `chore/hito-2-coordination`. Ejecutó de forma independiente 114/114 tests
-Python contra la base de desarrollo, 109 en verde + 5 `skip` contra un
-PostgreSQL fresco con migraciones desde cero, y frontend
+Python contra la base de desarrollo, 110 en verde + 5 `skip` (de 115)
+contra un PostgreSQL fresco con migraciones desde cero, y frontend
 lint/typecheck/5 tests/build; después de la primera corrección re-ejecutó
 13/13 tests gold+replay, incluido el guard de porcentajes `0..100`. Los
 contenedores temporales se eliminaron y la base de desarrollo conservó sus

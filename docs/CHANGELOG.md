@@ -44,7 +44,7 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 - Sin re-ejecución completa de la suite (cambio puramente documental de esta ronda); `git diff --check` sin problemas de espacio en blanco; coherencia re-verificada con `rg` sobre todas las referencias cruzadas a DEC-034/ADR-0003/ADR-0013.
 
 #### Approved after cross-review
-- OpenAI Codex aprobó MP-015 como `DONE` tras auditar el diff completo y re-verificar las dos rondas de correcciones. Evidencia independiente: 114/114 tests Python contra la base de desarrollo, 109 en verde + 5 `skip` contra PostgreSQL fresco, frontend lint/typecheck/5 tests/build, y 13/13 tests gold+replay tras corregir la escala de porcentajes. ADR-0013 permanece `Propuesto` para decisión del propietario; no quedan bloqueantes técnicos o documentales para el cierre funcional de Hito 2.
+- OpenAI Codex aprobó MP-015 como `DONE` tras auditar el diff completo y re-verificar las dos rondas de correcciones. Evidencia independiente: 114/114 tests Python contra la base de desarrollo, 110 en verde + 5 `skip` (de 115) contra PostgreSQL fresco, frontend lint/typecheck/5 tests/build, y 13/13 tests gold+replay tras corregir la escala de porcentajes. ADR-0013 permanece `Propuesto` para decisión del propietario; no quedan bloqueantes técnicos o documentales para el cierre funcional de Hito 2.
 
 ### MP-014 — Frontend React/MapLibre C5
 
