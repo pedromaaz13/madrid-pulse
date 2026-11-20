@@ -1,0 +1,5 @@
+service_id,monday,tuesday,wednesday,thursday,friday,saturday,sunday,start_date,end_date
+1022J,0,0,0,1,0,0,0,20261119,20261119
+1024S,0,0,0,0,0,1,0,20261121,20261121
+1031S,0,0,0,0,0,1,0,20261128,20261128
+1039D,0,0,0,0,0,0,1,20261206,20261206

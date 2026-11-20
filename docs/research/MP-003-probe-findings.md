@@ -191,3 +191,24 @@ Al ejecutar el colector de MP-007 contra los tres feeds en vivo (fuera de la mue
 - Su `stopTimeUpdate[].arrival` solo trae `time`, sin `delay` — campo que `raw.py` declaraba obligatorio basándose en la muestra de MP-004 (que no incluía este caso). Corregido a `Optional`.
 
 Pendiente explícito: capturar `routeId` cuando viene explícito en `trip_update` (hoy se ignora por `extra="ignore"`) queda fuera de alcance de MP-007 — anotado para quien resuelva la resolución `trip_id` → `route_id`/`stop_sequence` (MP-010).
+
+## 11. Cierre de pendientes por MP-010 (2026-11-19)
+
+MP-010 descargó de nuevo el GTFS oficial y ejecutó el parser contra el ZIP
+completo (SHA-256 `58ac554356acddfffb2411f48ada26b5ff4655549e6957372906cf7a38e4ba4e`).
+Para las cinco variantes C5 Madrid se observaron 8.160 trips, 165.205
+stop_times, 23 estaciones, 630 puntos de shape, 30 servicios y 14 patrones de
+paradas. Los recorridos completos `10T0017C5`/`10T0018C5` y cortos
+`10T0047C5`/`10T0048C5` contienen pares ordenados inversos reales.
+
+Dos hallazgos corrigen cualquier expectativa previa más fuerte que el fichero:
+
+- `trips.txt` no incluye la columna GTFS opcional `direction_id`; no puede
+  validarse ni poblarse sin inventar. La dirección de fuente se representa por
+  `stop_sequence` ordenado y `shape_id` (`10_C5`/`10_C5_INV`).
+- Los 8 trips de `10T0035C5` no tienen ninguna fila en `stop_times.txt`; el
+  validador los conserva como huérfanos y no fabrica estaciones.
+
+La resolución normal en vivo queda implementada como igualdad literal de
+`trip_id`; los trips `ADDED` ausentes del estático solo se resuelven cuando el
+GTFS-RT aporta un `routeId` explícito presente en el catálogo.

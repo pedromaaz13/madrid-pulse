@@ -1,7 +1,7 @@
 # ADR-0005: Contrato de API propio versionado
 
-- **Estado:** Propuesto — lista de endpoints de trabajo sujeta a confirmación en MP-013
-- **Fecha:** 2026-11-18
+- **Estado:** `Aceptado` — confirmado en MP-013, promovido por el propietario en el cierre de Hito 2 (`2026-11-20`). Los endpoints `history`/`metrics` siguen diferidos (ver nota de MP-015 más abajo); eso es alcance funcional futuro, no una objeción a la decisión arquitectónica de tener contrato propio versionado.
+- **Fecha:** 2026-11-18 (actualizado 2026-11-19, promovido 2026-11-20)
 - **Decisores:** Propietario del repositorio, con fundamento en `docs/research/deep-research-report.md` y `docs/research/MADRID_PULSE_BRIEF_INICIAL.md`
 
 ## Contexto
@@ -21,3 +21,28 @@ Madrid Pulse expone una API propia bajo `/api/v1/*`, con la lista de endpoints d
 
 - MP-013 debe resolver formalmente la discrepancia de nomenclatura (`vehicles` vs `trains`, fusión de `health` + `quality/feeds`) documentada en `docs/DATA_CONTRACTS.md` antes de implementar, y actualizar este ADR con la decisión final.
 - Cualquier consumidor externo de la API (incluido el propio frontend) depende de `/api/v1/*` como contrato estable hasta que se publique una v2.
+
+## Confirmación de MP-013 (2026-11-19)
+
+Implementados y publicados en OpenAPI (`apps/api/openapi.json`): `health`,
+`live/vehicles`, `live/vehicles/{vehicle_id}`, `lines`, `lines/{line_id}`,
+`stations`, `stations/{station_id}` — nomenclatura `vehicles` confirmada
+(no `trains`), `health` fusiona el propósito de observabilidad de
+`quality/feeds` tal como proponía la decisión de trabajo original.
+
+**Deliberadamente no implementados en esta tarea, no silenciados:**
+`history/lines/{line_id}`, `history/trips/{trip_id}`, `metrics/lines/
+{line_id}`, `metrics/stations/{station_id}`. `daily_line_metrics`/
+`station_daily_metrics` siguen vacías (diferidas desde MP-009, DEC-021, y
+ninguna tarea posterior las ha poblado); calcularlas de verdad es un
+alcance propio, no una extensión trivial de MP-013. Quedan documentadas
+como pendientes explícitos en `docs/DATA_CONTRACTS.md` para MP-015/Hito 3.
+
+## Nota de MP-015 (2026-11-20, DEC-033)
+
+`daily_line_metrics`/`station_daily_metrics` ya se calculan de verdad
+(`services/snapshotter/gold.py`), cerrando la dependencia que bloqueaba su
+cálculo desde MP-009. Los cuatro endpoints `history`/`metrics` de arriba
+siguen sin implementarse en esta API — las tablas existen y se calculan,
+pero exponerlas vía HTTP no era parte del alcance de MP-015; queda como
+trabajo de Hito 3 si el propietario lo prioriza.

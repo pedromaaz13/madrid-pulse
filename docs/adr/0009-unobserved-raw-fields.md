@@ -1,8 +1,8 @@
 # ADR-0009: Campos del modelo candidato no observados en el feed real de Renfe
 
-- **Estado:** `Propuesto` — aplicado provisionalmente en MP-005 bajo el régimen de autonomía de ADR-0007. Codex (revisor de MP-005) audita y aprueba o rechaza su contenido técnico como parte de la revisión de la tarea; eso no equivale a promoverlo a `Aceptado` — **solo el propietario** puede hacerlo, en el cierre de Hito 1 (ver `docs/adr/README.md` y `AGENTS.md`). Corregido tras la revisión de Codex: una redacción anterior sugería erróneamente que Codex podía promoverlo.
-- **Fecha:** 2026-11-18
-- **Decisores (propuesta):** Claude Code (ejecutor de MP-005); auditado por Codex como revisor de MP-005; promoción a `Aceptado` pendiente exclusivamente del propietario.
+- **Estado:** `Aceptado` — promovido por el propietario en el cierre de Hito 2 (`2026-11-20`), tras la auditoría de integración de Hito 2 (`docs/STATUS.md`), que confirmó contra el código real (contratos, migración, `packages.gtfs`) que los campos declarados no observados siguen sin fabricarse en ninguna capa.
+- **Fecha:** 2026-11-18 (promovido 2026-11-20)
+- **Decisores:** Claude Code (ejecutor de MP-005); auditado por Codex en la revisión de MP-005 y en la auditoría de integración de Hito 2; promovido por el propietario (Pedro Matute).
 
 ## Contexto
 
@@ -31,7 +31,7 @@ Mantener estos campos en el modelo candidato como si estuvieran garantizados hab
 - `packages/contracts/raw.py` y `canonical.py` reflejan exactamente estos hallazgos, con comentarios explicando por qué cada campo ausente no se modela o se modela como opcional.
 - MP-006 (esquema PostgreSQL) debe definir `speed_kmh`/`bearing`/`geom` como columnas `NULL`-ables, y `current_stop_id` (no `current_stop_sequence`) como la columna de ingesta cruda.
 - MP-010 es responsable de la resolución `stop_id` → `stop_sequence` vía el GTFS estático, no MP-007.
-- Pendiente: Codex (revisor de MP-005) audita el contenido técnico de este ADR como parte de la revisión de la tarea; **solo el propietario** puede promoverlo a `Aceptado`, en el cierre de Hito 1.
+- Pendiente: Codex (revisor de MP-005) audita el contenido técnico de este ADR como parte de la revisión de la tarea; **solo el propietario** puede promoverlo a `Aceptado` — en el cierre de Hito 2 (ver corrección en el campo `Estado`).
 
 ## Adenda (MP-007, 2026-11-18): dos hallazgos adicionales en vivo
 

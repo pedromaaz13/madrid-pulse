@@ -12,6 +12,8 @@ En toda vista que use datos OSM debe aparecer, visible y legible:
 
 En web, `OpenStreetMap` debe enlazar a `https://www.openstreetmap.org/copyright`, lo que identifica también la ODbL. En una distribución de datos, nombrar y enlazar directamente la licencia ODbL y ofrecer una base derivada conforme a sus términos. En mapas interactivos, seguir la [guía de atribución de la OSMF](https://osmfoundation.org/wiki/Licence/Attribution_Guidelines): crédito legible cerca del mapa o presentación inicial conforme a su *safe harbour*, y licencia siempre localizable.
 
+**MP-011 — fixture de geometría ferroviaria (`tests/fixtures/osm_c5_real/`):** es una base de datos derivada de OSM en el sentido de la ODbL (extracto estructurado de nodos/`ways`/relación, no una imagen renderizada). Se distribuye bajo `ODbL-1.0` con la atribución de arriba, independientemente de la licencia de código del repositorio (`DEC-002`, todavía pendiente) — ver DEC-024 en `docs/DECISIONS.md` y `tests/fixtures/osm_c5_real/MANIFEST.md` para el detalle de fuente, fecha y checksums.
+
 ## Renfe Data (`CC BY 4.0` + condiciones del portal)
 
 Texto base para UI o pie persistente:

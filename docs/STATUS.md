@@ -4,7 +4,7 @@
 
 ## Hito autorizado actualmente
 
-**Hito 1 autorizado por el propietario el `2026-11-18`: `MP-002` → `MP-009`.**
+**Hito 1 — `MP-002` → `MP-009`: completado, aprobado por revisión cruzada el `2026-11-19`, y fusionado a `main` por el propietario (`pedromaaz13`) el `2026-11-19`.** PR #1 (`mp-009-historical-export` → `main`), commit de merge `f567d3c`. Confirmado: `git merge-base --is-ancestor 8be1272 f567d3c` → `0` (el último commit de la cadena MP-009 es ancestro de `main`; nada quedó sin integrar).
 
 ```text
 Cobertura: F1 (factibilidad) + F2 (contratos) + F3 (persistencia/colector) + F4 (calidad/histórico)
@@ -13,9 +13,36 @@ Cadena: MP-002 → MP-003 → MP-004 → MP-005 → MP-006 → MP-007 → MP-008
 Gates activos: decisiones reales de licencia o coste, conforme a ADR-0007.
 ```
 
-MP-001 está `DONE`: Codex aprobó la revisión cruzada y, conforme a ADR-0007, no es necesario que la rama esté fusionada en `main` para que una tarea dependiente avance.
+MP-001 está `DONE`: Codex aprobó la revisión cruzada y, conforme a ADR-0007, no fue necesario que la rama estuviera fusionada en `main` para que una tarea dependiente avanzara. La rama paralela `chore/mp-001-foundation` (bitácora administrativa parcial, superada por el registro completo de la cadena `mp-00X`, ver nota de proceso más abajo) y los 9 worktrees `mp-002` a `mp-009` se conservan intactos tal como exige el propietario — ninguno se ha borrado.
 
-**Hito 1 completado el `2026-11-19`: MP-002 → MP-009 están `DONE` tras revisión cruzada.** Queda pendiente que el propietario decida los siguientes pasos y autorice un nuevo hito; no debe iniciarse MP-010 ni ninguna tarea fuera del rango ya autorizado hasta recibir esa autorización.
+**Hito 2 autorizado por el propietario el `2026-11-19`: `MP-010` → `MP-015` ("Live Railway MVP").**
+
+```text
+Cobertura: F5 (geometría y topología) + F6 (motor de movimiento) + F7 (API) + F8 (frontend) + F9 (E2E/readiness)
+Objetivo de salida: primera app local funcional mostrando la C5 en vivo — topología GTFS real, geometría OSM,
+  motor de movimiento con cuatro estados, API /api/v1 propia, frontend React/MapLibre, E2E + CI.
+Tabla ejecutor/revisor (fijada por el propietario, coherente con docs/TASKS.md):
+  MP-010 Topología GTFS      → Ejecutor Codex   · Revisor Claude
+  MP-011 Geometrías OSM      → Ejecutor Claude   · Revisor Codex
+  MP-012 Motor de movimiento → Ejecutor Codex   · Revisor Claude
+  MP-013 FastAPI             → Ejecutor Claude   · Revisor Codex
+  MP-014 React/MapLibre      → Ejecutor Codex   · Revisor Claude
+  MP-015 E2E y MVP readiness → Ejecutor Claude   · Revisor Codex
+Gates activos: decisiones reales de licencia o coste, conforme a ADR-0007. Además, por instrucción explícita
+  del propietario para este hito: ningún push/PR/merge se ejecuta sin solicitar autorización en el momento
+  (revierte, para Hito 2, la autorización puntual ya consumida en el cierre de Hito 1 — ver AGENTS.md).
+No se avanza fuera de MP-010→MP-015 sin nueva autorización explícita (p. ej. no se implementa la red completa
+  de Cercanías Madrid en este hito — eso es Hito 3, solo backlog de planificación, ver docs/PLAN.md F10 y la
+  bitácora de este documento).
+```
+
+### Política de selección de modelo (Hito 2, fijada por el propietario)
+
+- **Modelo principal: Claude Sonnet, esfuerzo de razonamiento alto** — por defecto para coordinación en Orca, implementación ordinaria, desarrollo de API/frontend, tests automatizados y revisiones cruzadas rutinarias.
+- **Escalado: Claude Opus, esfuerzo de razonamiento alto** — solo con justificación técnica concreta (geometría/arquitectura geoespacial compleja, resolución ambigua de topología ferroviaria, algoritmos de map-matching/movimiento, errores persistentes que Sonnet no resuelve, decisiones arquitectónicas de alto impacto, revisión avanzada de UX/rendimiento/arquitectura frontend). Nunca se escala solo porque una tarea "parece importante" sin evaluar primero si Sonnet basta.
+- **Verificación empírica realizada el `2026-11-19` (no se asumió ni inventó ningún identificador):** `orca orchestration worker-start --help` confirma que `--model`/`--effort` son parámetros reales y soportados para lanzar un agente Claude (`--model` acepta "opaque provider model ids"; `--effort` requiere `--model`). El identificador verificado empíricamente para "Sonnet" es `sonnet` y para "Opus" es `opus` (documentado como ejemplo real por Orca: `--model opus --effort high`); el esfuerzo de razonamiento se pasa como `--effort high`.
+- **Discrepancia señalada al propietario:** el encargo nombra "Claude Sonnet 5.5" / "Claude Opus 5.5 High" como modelos. El contexto de entorno de esta sesión solo confirma la existencia de **Sonnet 5** y **Opus 5** (además de Haiku 4.5) como los modelos Claude más recientes disponibles — no se ha podido verificar ningún identificador "5.5". Siguiendo la instrucción explícita de no inventar identificadores, los workers de Hito 2 se lanzan con `--model sonnet --effort high` (por defecto) y `--model opus --effort high` (escalado), que son los identificadores reales confirmados, no una invención de "5.5".
+- Codex: se usa el modelo/nivel de razonamiento disponible más adecuado, priorizando razonamiento alto para geometría, movimiento, contratos e integración, conforme a los roles ya fijados en `docs/TASKS.md`.
 
 ## Auditoría independiente de preparación para integración
 
@@ -32,7 +59,604 @@ Evidencia reproducida de forma independiente:
 
 **Veredicto de integración:** `mp-009-historical-export` está preparada para que el propietario la integre en `main`; no se identificaron omisiones, pérdida documental, problemas de autoría ni bloqueantes técnicos. Los tres avisos de whitespace en fixtures son los únicos hallazgos abiertos y no son bloqueantes.
 
+## Auditoría independiente de preparación para integración (Hito 2)
+
+**OpenAI Codex — `2026-11-20`: APROBADA, sin bloqueantes reales para integrar
+`mp-015-e2e-readiness` en `main`.** El estado auditado es `a6ade4e` (antes
+de registrar esta sección) y el rango es `origin/main..HEAD`, desde
+`f567d3c`: 33 commits lineales que contienen MP-010 → MP-015 completos.
+
+### Parte 1 — Evidencia de integración reproducida
+
+- **Ancestría y linealidad.** Se comprobaron todas las referencias, no solo
+  la base y el tip:
+
+  ```text
+  $ for ref in origin/main mp-010-gtfs-topology mp-011-osm-geometry mp-012-movement-engine mp-013-fastapi mp-014-frontend; do git merge-base --is-ancestor "$ref" HEAD; ...; done
+  origin/main -> exit 0 (f567d3c)
+  mp-010-gtfs-topology -> exit 0 (0a31640)
+  mp-011-osm-geometry -> exit 0 (da5f5e1)
+  mp-012-movement-engine -> exit 0 (1c1529d)
+  mp-013-fastapi -> exit 0 (2e883aa)
+  mp-014-frontend -> exit 0 (a1067b2)
+  $ git rev-list --count origin/main..HEAD
+  33
+  $ git rev-list --merges origin/main..HEAD --oneline
+  [sin salida]
+  ```
+
+  Por tanto, el tip contiene todos los tips intermedios y puede integrarse por
+  fast-forward desde el `origin/main` auditado; no hay merge commits ocultos.
+
+- **Autoría.** El recorrido individual mostró los 33 commits con autor y
+  committer de Pedro. La reducción de identidades y la búsqueda de trailers
+  dieron:
+
+  ```text
+  $ git log origin/main..HEAD --format='%an <%ae>|%cn <%ce>' | sort | uniq -c
+       33 Pedro Matute <pedromaaz13@gmail.com>|Pedro Matute <pedromaaz13@gmail.com>
+  $ git log origin/main..HEAD --format='%H%n%B%n---' | rg -in '^Co-authored-by:'
+  [sin salida]
+  ```
+
+- **Diff real.** `git diff --stat origin/main..HEAD` enumera 109 ficheros,
+  `31280 insertions(+), 99 deletions(-)`; la clasificación independiente por
+  `--name-status` da `A=74 M=35 R=0 total=109`. Incluye la CI, API, frontend,
+  topología/geometría/movimiento, gold/replay, fixtures GTFS/OSM y su
+  documentación. No hay cachés, entornos, builds ni temporales rastreados:
+
+  ```text
+  $ git ls-files | rg '(^|/)(node_modules|dist|build|\.venv|venv|__pycache__|\.pytest_cache|\.mypy_cache|\.ruff_cache)(/|$)|(^|/)(\.DS_Store|.*\.pyc|.*\.pyo)$'
+  [sin salida]
+  $ git diff --check origin/main..HEAD
+  [sin salida]
+  ```
+
+  A diferencia de la auditoría de Hito 1, este rango no deja ni siquiera
+  avisos cosméticos de whitespace. El build sí emitió el aviso informativo de
+  Vite por chunks mayores de 500 kB; no es un fallo del build ni un artefacto
+  versionado.
+
+- **Suite Python contra la base real de desarrollo.** Antes y después se
+  consultaron las cinco tablas en el orden
+  `vehicle_position_observation/trip_update_observation/service_alert/source_ingestion_run/data_quality_event`:
+
+  ```text
+  $ docker exec madrid-pulse-postgres-1 psql ... -c 'SELECT (SELECT count(*) ...);'
+  668|484|3|120|0
+  $ MADRID_PULSE_DATABASE_URL=...:5433/... MADRID_PULSE_DATABASE_DSN=...:5433/... .venv/bin/python -m unittest <las 18 suites de CI> -v
+  Ran 115 tests in 12.835s
+  OK
+  real soak read-only: rows=668, near_corridor=177, max_map_matched_jump_kmh=666.4, after=668
+  $ docker exec madrid-pulse-postgres-1 psql ... -c 'SELECT (SELECT count(*) ...);'
+  668|484|3|120|0
+  ```
+
+  Resultado real: **115 passed, 0 failed, 0 skip**; la base conservó
+  exactamente `668/484/3/120/0`.
+
+- **Suite Python desde cero.** Se creó el contenedor desechable aislado
+  `madrid-pulse-audit-hito2-task0687344` sobre `postgis/postgis:17-3.5`, en
+  `127.0.0.1:55433` (distinto de desarrollo), se esperó `pg_isready`, y se
+  aplicó `infra/migrations/0001_init.up.sql` con `ON_ERROR_STOP=1`. La salida
+  confirmó `CREATE EXTENSION`, 14 `CREATE TABLE`, 5 `CREATE INDEX` y `COMMIT`.
+  Después:
+
+  ```text
+  $ MADRID_PULSE_DATABASE_URL=...:55433/... MADRID_PULSE_DATABASE_DSN=...:55433/... .venv/bin/python -m unittest <las 18 suites de CI> -v
+  Ran 115 tests in 4.746s
+  OK (skipped=5)
+  $ docker exec madrid-pulse-audit-hito2-task0687344 psql ... -c 'SELECT (SELECT count(*) ...);'
+  0|0|0|0|0
+  $ docker stop madrid-pulse-audit-hito2-task0687344
+  madrid-pulse-audit-hito2-task0687344
+  ```
+
+  Resultado real: **110 passed, 0 failed, 5 skip** explícitos, todos ligados
+  al soak local irrepetible de MP-007; replay, persistencia y contratos
+  reproducibles sí se ejecutaron. Las pruebas limpiaron sus filas y el
+  contenedor se autoeliminó.
+
+- **Frontend con la versión de CI (`Node 22.13.1`).** Se ejecutaron por
+  separado los cuatro gates:
+
+  ```text
+  $ fnm exec --using=22.13.1 npm run lint
+  eslint . --max-warnings 0                         [exit 0]
+  $ fnm exec --using=22.13.1 npm run typecheck
+  tsc -b --pretty false                             [exit 0]
+  $ fnm exec --using=22.13.1 npm test
+  Test Files  2 passed (2); Tests  5 passed (5)
+  $ fnm exec --using=22.13.1 npm run build
+  ✓ built in 231ms
+  Verified production MapLibre worker (550754 bytes)
+  ```
+
+- **Secretos y artefactos sensibles.** La búsqueda sobre ficheros rastreados
+  de cabeceras de llave privada y formatos comunes (`AKIA`, tokens GitHub,
+  `sk-`, `AIza`) no devolvió coincidencias; tampoco hay `.env`, `.pem`,
+  `.key`, `.p12`, `.pfx`, `id_rsa` o `id_ed25519` versionados. La búsqueda de
+  credenciales embebidas devuelve únicamente:
+
+  ```text
+  .github/workflows/ci.yml:29: ...madrid_pulse:madrid_pulse_local@127.0.0.1:5433...
+  .github/workflows/ci.yml:30: ...madrid_pulse:madrid_pulse_local@127.0.0.1:5433...
+  apps/api/config.py:26: ...madrid_pulse:madrid_pulse_local@127.0.0.1:5433...
+  services/collector/config.py:34: ...madrid_pulse:madrid_pulse_local@127.0.0.1:5433...
+  services/snapshotter/config.py:16: ...madrid_pulse:madrid_pulse_local@127.0.0.1:5433...
+  ```
+
+  Es la única contraseña encontrada y está limitada a la credencial local
+  esperada; no hay claves, tokens ni ficheros de entorno reales.
+
+- **Enlaces Markdown.** Un comprobador resolvió los enlaces relativos de los
+  `docs/*.md` y `docs/adr/*.md` añadidos o tocados en el rango:
+
+  ```text
+  files=21 relative_links=50 broken=0
+  ```
+
+  Las referencias a `adr/0013-no-literal-dbt-engine.md` resuelven desde
+  `ARCHITECTURE`, `CHANGELOG`, `DECISIONS`, `PLAN`, `STATUS` y el índice de
+  ADRs; no hay enlaces rotos.
+
+- **Cierre documental.** `docs/TASKS.md` marca individualmente MP-010,
+  MP-011, MP-012, MP-013, MP-014 y MP-015 como `DONE`; la sección "Tarea
+  actual" de este documento marca MP-015 `DONE` y las cinco secciones de
+  tareas cerradas hacen lo mismo con sus predecesoras. `docs/CHANGELOG.md`
+  conserva las seis tareas y, en particular, no oculta los hallazgos: registra
+  las dos rondas de MP-015, las cuatro rondas visuales de MP-014 y las
+  correcciones de MP-011/MP-013. Los recuentos históricos `114/114` y
+  `109+5` permanecen donde describen ejecuciones anteriores, seguidos por la
+  corrección verificable a `115/115` y `110+5`; esta auditoría vuelve a
+  confirmar estos últimos recuentos.
+
+**Veredicto de integración:** `mp-015-e2e-readiness` está lista para que el
+propietario la integre en `main` por fast-forward desde `f567d3c`. No se
+identificaron pérdidas documentales, problemas de autoría, residuos de
+pruebas, secretos, enlaces rotos ni bloqueantes técnicos. El warning de
+tamaño de chunks de Vite es una oportunidad de optimización futura, no un
+fallo de readiness.
+
+### Parte 2 — Revisión de ADRs pendientes de promoción
+
+La recomendación se contrastó con el código y el esquema reales, no solo con
+la auto-descripción de cada ADR:
+
+| ADR | Evidencia de implementación al cierre de Hito 2 | Veredicto |
+|---|---|---|
+| ADR-0002 — fuentes | Renfe tiene licencia, disponibilidad, esquema e integración reales verificados. CRTM solo tiene licencia `VERIFIED`; `docs/legal/DATA_SOURCES.md` conserva disponibilidad técnica `PENDING MP-003` y ningún componente lo integra. DEC-006 todavía nombra ambas como fuentes primarias. | **Apto, pero requiere actualizar antes de dar por cerrada la verificación.** No se debe borrar simplemente "pendiente": cambiar `Estado` por **`Aceptado (fuentes): Renfe verificada e integrada; CRTM con licencia verificada, disponibilidad técnica e integración pendientes`**. Para evitar drift, DEC-006 debe distinguir Renfe como fuente primaria implementada y CRTM como fuente complementaria evaluada/licenciada pero aún no integrada. |
+| ADR-0005 — contrato API | `apps/api/main.py` publica siete rutas reales bajo `/api/v1`; `schemas.py` expone `position.mode/confidence`, `observation.age_s`, `delay.coverage` y `quality.flags`; `openapi.json` coincide. Las tablas gold ya se calculan, pero los cuatro endpoints history/metrics siguen diferidos y el propio ADR lo dice. | **Apto para promoción a `Aceptado` sin cambios.** Los endpoints pendientes son alcance funcional futuro y no contradicen la decisión arquitectónica de contrato propio versionado. |
+| ADR-0008 — identidad de ruta | `Topology` conserva los cinco `route_id` completos como rutas distintas, `route_groups()` agrupa por `(network_id, short_name)`, la resolución de trip es literal, el colector filtra núcleo `10` y el esquema exige `UNIQUE(network_id, source_route_id)`. La tabla `route` local sigue sin poblarse, pero no se colapsa identidad en ninguna capa implementada. | **Apto para promoción a `Aceptado` sin cambios.** La ausencia de un loader persistente de `route` no invalida la identidad adoptada y ya aplicada en topología/API. |
+| ADR-0009 — campos no observados | Contratos y migración mantienen `speed_kmh`/`bearing` nullable, usan `current_stop_id`, omiten `effect/cause/header_text` y conservan `description_language`; `packages.gtfs` resuelve `stop_id`/secuencia sin alterar el raw. Los tests de parseo y normalización pasan. | **Apto para promoción a `Aceptado` sin cambios.** |
+| ADR-0010 — deduplicación | El hash cubre el `model_dump` bruto completo; el colector compara por clave de entidad y no implementa `seen_count`. Sin embargo, el SQL real desempata timestamps repetidos con `id DESC`, corrección bloqueante de MP-007 que el ADR no recoge. | **Apto, pero requiere actualizar antes de promover.** Sustituir la frase **``ORDER BY observed_at DESC LIMIT 1``** por **``ORDER BY observed_at DESC, id DESC LIMIT 1`` (y `active_period_start DESC, id DESC` para alertas)**, explicando que `id DESC` hace determinista el último poll cuando el timestamp de fuente empata. |
+| ADR-0011 — piloto frente a producto | La lógica de GTFS, geo y movimiento no contiene el literal de la línea piloto; API y frontend derivan líneas/IDs de topología. Los defaults `C5` de `ApiConfig`/`SnapshotterConfig` son configuración sustituible, no filtros hardcodeados. | **Apto para promoción a `Aceptado` sin cambios.** |
+| ADR-0012 — frontera de movement | `packages/movement` es puro y sin persistencia en producción; depende de contracts/geo/gtfs, recibe topología/corredor/umbrales, devuelve `MovementPosition` tipado con modo, confianza, edad, fuente y anomalías. FastAPI lo consume sin incorporar el algoritmo a HTTP. | **Apto para promoción a `Aceptado` sin cambios.** |
+| ADR-0013 — sin motor dbt literal | `requirements.txt` incluye DuckDB pero no `dbt-core`/`dbt-duckdb`; `gold.py` implementa y prueba las capas por núcleo/línea/estación y `analytics/dbt/` solo documenta la disciplina y la decisión reversible. ADR-0003 permanece intacto. | **Apto para promoción a `Aceptado` sin cambios.** |
+
+**Balance de promoción recomendado:** seis ADRs (`0005`, `0008`, `0009`,
+`0011`, `0012`, `0013`) pueden promoverse sin cambios; ADR-0010 necesita una
+corrección textual precisa antes de promoverse; ADR-0002 ya está aceptado a
+nivel de fuentes, pero su coletilla no está completamente resuelta y debe
+reformularse —no eliminarse— para distinguir el estado real de Renfe y CRTM.
+No se cambió el campo `Estado` de ningún ADR durante esta auditoría.
+
+## Resolución de DEC-015 (mecánica de convergencia de ramas, antes de MP-012)
+
+**Resuelto el `2026-11-19`, documentado aquí y en `docs/DECISIONS.md`/`AGENTS.md`.** La pregunta abierta era qué rama usar como base y cómo integrar las demás cuando una tarea depende de varias ramas potencialmente distintas (caso previsto: MP-012 depende de MP-008, MP-010 y MP-011).
+
+Con Hito 1 ya fusionado a `main`, el caso concreto de MP-012 **deja de requerir una fusión real de ramas divergentes**: MP-008 ya es ancestro de `main` (se fusionó como parte de la cadena MP-002→MP-009). Si MP-010 y MP-011 se ramifican a partir de `main` (o de una rama que a su vez parte de `main`, como esta misma `chore/hito-2-coordination`), entonces la cadena resultante — `main → MP-010 → MP-011` — ya contiene a MP-008 de forma transitiva. MP-012 puede ramificar simplemente desde la rama de MP-011 sin ningún `git merge` real: sus tres dependencias (MP-008, MP-010, MP-011) son todas ancestros de ese punto.
+
+**Mecanismo general (para este y futuros casos de convergencia múltiple), registrado en `AGENTS.md`:** antes de abrir el worktree de una tarea con varias dependencias directas, comprobar con `git merge-base --is-ancestor <dependencia> <candidata-a-base>` si cada dependencia ya es ancestro de la rama candidata a base (normalmente la más "profunda" en la cadena). Si todas lo son, se ramifica directamente desde esa rama — no hace falta fusión. Solo si una dependencia **no** es ancestro de la otra (p. ej. dos ramas que de verdad divergieron sin que ninguna absorbiera a la otra vía `main`) se necesita una fusión real (`git merge` de la rama no-ancestro sobre la rama base elegida, documentando el resultado y cualquier conflicto en `docs/STATUS.md` antes de continuar). Este hito no necesita ese caso general porque la estructura tras el merge de Hito 1 ya lo evita.
+
 ## Tarea actual
+
+**MP-015 — E2E y readiness MVP**
+
+Ejecutor: Claude Code · Revisor: OpenAI Codex · Estado: **DONE**
+
+Worktree/rama: `mp-015-e2e-readiness`, ramificada desde `mp-014-frontend` (MP-014 `DONE`). Dependencias MP-009/MP-012/MP-013 confirmadas como ancestros de `mp-014-frontend` con `git merge-base --is-ancestor` antes de ramificar (mismo mecanismo que DEC-015).
+
+### Alcance real (decisión de secuenciación, no reducción de alcance)
+
+`docs/TASKS.md`/`docs/PLAN.md` (F9) definen MP-015 como: replay E2E, pipeline DuckDB/dbt de métricas con cobertura, CI verde, checklist de MVP, ADRs reconciliados. Hallazgo antes de empezar: `analytics/dbt/` y `analytics/duckdb/` siguen vacíos (solo README) — su README decía que se implementarían "como parte de MP-009", pero MP-009 (DEC-021) deliberadamente difirió `daily_line_metrics`/`station_daily_metrics` por `route_id`/`station_id` porque esa resolución (`trip_id`→`route_id`, `stop_id`→`station_id`) dependía de MP-010, que no era su dependencia. Con MP-010→MP-014 ya `DONE`, esa resolución existe de verdad (`packages.gtfs.Topology`) — MP-015 es la primera tarea que puede construir esas métricas sin inventar un join no verificado.
+
+Orden de trabajo elegido (cada paso se implementa, se prueba de verdad y se documenta antes de pasar al siguiente, igual que el resto del hito):
+
+1. Resolución Python real `trip_id`→`route_id`/`stop_id`→`station_id` sobre el Parquet raw ya exportado por MP-009, extendiendo `services/snapshotter/gold.py` (seguir usando DuckDB como único motor, conforme DEC-021 — no se añaden `pandas`/`pyarrow`), calculando `daily_line_metrics`/`station_daily_metrics` reales directamente ahí.
+2. **Corrección tras ejecutar el paso 1:** no se introduce un proyecto dbt-core/dbt-duckdb literal (decisión tomada y documentada como [ADR-0013](adr/0013-no-literal-dbt-engine.md)/DEC-034, no la planificación original de esta misma lista) — la resolución `route_id`/`station_id` es lógica Python que no encaja en SQL puro sin duplicarla, y DEC-021 ya fijó un único motor sin dependencias añadidas. `services/snapshotter/gold.py` ya aplica la disciplina dbt (capas, tests, documentación) sin el motor dbt.
+3. CI (`.github/workflows/`) que ejecute las suites reales (Python + frontend) en cada push/PR.
+4. Replay E2E determinista en `tests/e2e/` sobre fixtures reales ya existentes (sin llamadas de red en vivo, para que CI no dependa de Renfe/OSM/CRTM) que ejercite el pipeline completo: ingestión canónica → PostgreSQL → motor de movimiento → API → build de frontend.
+5. Auditoría de contenido de los 12 ADRs contra la implementación real — se corrige redacción/contenido que ya no coincide con lo implementado; **la promoción de `Propuesto` a `Aceptado` sigue siendo decisión exclusiva del propietario** (ADR-0007), no se cambia ningún `Estado` sin su aprobación explícita.
+6. Checklist de preparación de MVP (documento nuevo) resumiendo el estado real de Hito 2 para la aceptación del propietario.
+
+### Checklist de MP-015
+
+- [x] Resolución real `route_id`/`station_id` sobre datos exportados, con tests.
+- [x] **`daily_line_metrics`/`station_daily_metrics` calculadas de verdad (DEC-033/DEC-034):** `services/snapshotter/gold.py` extendido con `build_line_daily_metrics`/`build_station_daily_metrics` sobre `packages.gtfs.Topology`, en vez de dbt-duckdb literal — decisión documentada ([ADR-0013](adr/0013-no-literal-dbt-engine.md)/DEC-034): la resolución es lógica Python que no encaja en SQL puro sin duplicarla, y DEC-021 ya fijó un único motor sin dependencias añadidas. 10 tests nuevos reales (fixture GTFS + PostgreSQL), corrida real contra el soak completo del `2026-11-19`: 3 filas en `daily_line_metrics`, 18 en `station_daily_metrics`.
+- [x] **CI real (DEC-035):** `.github/workflows/ci.yml` — job Python (PostgreSQL de servicio, migraciones desde cero, suite real) + job frontend (lint/typecheck/test/build). Verificado de verdad en ambos sentidos: 114/114 contra la base de desarrollo (sin `skip`), 110 en verde + 5 `skip` explícitos (de 115) contra un contenedor PostgreSQL fresco simulando CI exactamente. Hallazgo real corregido en el proceso: 5 tests usaban `CollectorConfig()` en vez de `.from_env()`, ignorando `MADRID_PULSE_DATABASE_URL` en silencio.
+- [x] **Replay E2E determinista (`tests/e2e/test_replay.py`):** inyecta bytes de fixtures reales como respuesta del `fetcher` del colector real — JSON crudo con forma de Renfe → colector → PostgreSQL real → resolución GTFS → API real, sin red en vivo. Dos escenarios reales: la fixture de MP-004 (nunca fabrica una resolución) y un payload sintético con forma real para un trip que sí existe en la GTFS reducida (resuelve `route_id`/posición de extremo a extremo).
+- [x] **Auditoría de contenido de los 12 ADRs completa (sin cambiar ningún `Estado` a `Aceptado`):** balance final tras dos rondas de revisión de Codex. ADR-0002: aclara que CRTM quedó verificado por licencia pero nunca integrado (solo Renfe se implementó). ADR-0004: corrige la nomenclatura real de campos (`position.mode`, no `position_mode`; sin `source` público). ADR-0005: nota de drift real añadida (las tablas gold por línea/estación ya se calculan desde MP-015/DEC-033; los endpoints history/metrics siguen sin implementar). ADR-0008/0009/0010: corrigen la referencia obsoleta "pendiente... en el cierre de Hito 1" (ese cierre ya ocurrió el 2026-11-19 sin promoción) a "cierre de Hito 2", igual que `docs/adr/README.md` y `docs/DECISIONS.md` (DEC-017/DEC-013). **ADR-0003 permanece intacto, sin modificación de su texto** — una primera ronda lo había editado para eliminar la implicación de dbt-core literal, lo que violaba el proceso de ADR (regla 8, `AGENTS.md`); revertido, y esa decisión se documenta ahora en el nuevo [ADR-0013](adr/0013-no-literal-dbt-engine.md) (`Propuesto`), referenciado también desde `docs/ARCHITECTURE.md`/`docs/PLAN.md`/`analytics/dbt/README.md`/DEC-034. Los otros ADRs (0001, 0006, 0007, 0011, 0012) se verificaron contra la implementación real sin encontrar drift.
+- [x] **Checklist de preparación de MVP (`docs/MVP_READINESS.md`):** resumen ejecutivo del cumplimiento del objetivo de Hito 2, demo local reproducible, estado real de tests, principios de datos verificados, hallazgos clave, límites conocidos documentados y pendientes exclusivos de gobernanza del propietario. También recuperado `docs/HITO_3_BACKLOG.md` (Sección 7 de la autorización) desde la rama `chore/hito-2-coordination`, que había divergido de la cadena `mp-010`→`mp-015` y se habría perdido al fusionar a `main` sin traerlo explícitamente.
+- [x] `docs/TASKS.md`/`docs/STATUS.md`/`docs/CHANGELOG.md`/`docs/DATA_CONTRACTS.md`/`docs/DECISIONS.md` actualizados con evidencia real.
+
+### Resultado y límites
+
+Implementación completa, lista para revisión cruzada de Codex. Resumen de
+las seis fases: (1) `daily_line_metrics`/`station_daily_metrics` reales
+(DEC-033); (2) CI real + replay E2E determinista, con un hallazgo real
+corregido en el proceso (DEC-035, 5 tests ignoraban
+`MADRID_PULSE_DATABASE_URL`); (3) auditoría de contenido de los 12 ADRs, 6
+corregidos, ningún `Estado` cambiado; (4) `docs/MVP_READINESS.md` y
+recuperación de `docs/HITO_3_BACKLOG.md` desde una rama divergente que se
+habría perdido al fusionar.
+
+Verificación ejecutada: 114/114 tests Python contra la base de desarrollo
+(102 previos + 10 de la fase 1 + 2 de E2E replay); contra un PostgreSQL
+recién creado (migraciones aplicadas desde cero, simulando CI) 109 en verde
++ 5 `skip` explícitos y documentados (dependen del soak real irrepetible de
+MP-007, DEC-035). Frontend: lint/typecheck/5 tests/build en verde.
+PostgreSQL restaurado exactamente a `668/484/3/120/0` en todos los casos.
+Corrida real end-to-end del exportador (`python -m services.snapshotter
+2026-11-19` contra el soak completo): 3 líneas, 18 estaciones, sin filas
+fabricadas. Límites documentados en DEC-033 (calendario sin excepciones,
+umbral de puntualidad calibrable, sin `data_quality_events_count` por
+estación) y DEC-035 (alcance real de CI: la suite de replay/contrato es
+reproducible desde cero; los tests atados al histórico puntual de MP-007 no
+lo son por diseño y se saltan explícitamente, nunca fallan en silencio ni se
+declaran superados sin ejecutarse).
+
+### Bloqueos
+
+Ninguno tras la corrección de la primera ronda de revisión de Codex (ver
+abajo). Pendiente de re-verificación real de Codex antes de `DONE`.
+
+### Primera revisión de Codex — seis hallazgos reales, todos corregidos
+
+Codex verificó de forma independiente (re-ejecutó la suite completa contra
+la base de desarrollo y contra su propio contenedor PostgreSQL fresco,
+114/109+5 confirmados) y encontró seis problemas reales:
+
+1. **Escala de porcentaje incorrecta:** `build_line_daily_metrics` calculaba
+   `delay_coverage_pct`/`on_time_pct_of_covered` como fracción `0..1`, pero
+   `infra/migrations/0001_init.up.sql` (`numeric(5,2) CHECK BETWEEN 0 AND 100`)
+   y `docs/DATA_CONTRACTS.md` (ejemplo `78.3`/`87.2`) exigen `0..100`.
+   Corregido (`* 100`, redondeado a 2 decimales); añadido un test de
+   regresión explícito (`test_percentages_match_the_real_0_100_schema_not_a_0_1_fraction`).
+2. `docs/DATA_CONTRACTS.md`/`apps/api/README.md`/ADR-0005 seguían diciendo
+   que las tablas gold "siguen vacías" — corregido: ya se calculan
+   (DEC-033), lo que falta es solo exponerlas vía endpoint.
+3. `docs/MVP_READINESS.md` describía mal la semántica `NULL` real —
+   corregido: `delay_coverage_pct` nunca es `NULL` para una fila emitida
+   (toda fila tiene `trips_scheduled >= 1` por construcción);
+   `on_time_pct_of_covered` sí, cuando `trips_with_delay_data = 0`.
+4. **Hallazgo de proceso real:** DEC-034 había reescrito la "Decisión" de
+   [ADR-0003](adr/0003-storage-strategy.md) (`Aceptado`) sin pasar por el
+   proceso de ADR (regla 8, `AGENTS.md`). Corregido: revertido el texto de
+   ADR-0003 a su redacción original; DEC-034 queda como nota de
+   implementación a nivel `DECISIONS.md`, sin tocar la Decisión aceptada.
+5. `docs/HITO_3_BACKLOG.md` (área 5) repetía el dato obsoleto "~24
+   vehículos C5" — corregido con el desglose real de DEC-029 (4 C5 + 19
+   otras líneas + 1 refuerzo sin resolver).
+6. `docs/MVP_READINESS.md` decía "cada push/PR" cuando el `on:` real de
+   `ci.yml` es `push` a `main` + `pull_request` — corregido con la
+   redacción precisa (los worktrees de tarea nunca se empujan a `origin`
+   directamente).
+
+Los seis se corrigieron en este mismo worktree; 115/115 tests (114 + 1
+nuevo de regresión) verificados de nuevo contra la base de desarrollo y
+contra un segundo contenedor PostgreSQL fresco desechable (110 en verde +
+5 `skip`, de 115).
+
+### Segunda revisión de Codex — tres hallazgos reales, todos corregidos
+
+Codex re-verificó la corrección funcional de la primera ronda (13/13 tests
+de `services.snapshotter.tests.test_gold` + `test_export_replay`, guard
+`0..100` correcto) y encontró tres incoherencias documentales/de gobernanza
+nuevas, introducidas por la propia corrección de la primera ronda:
+
+1. **Mismatch ADR-0003 vs. resto de la documentación:** revertir solo el
+   texto de ADR-0003 (hallazgo #4 de la primera ronda) dejó una
+   contradicción nueva: ADR-0003 (`Aceptado`) vuelve a decir "consumido vía
+   DuckDB/dbt", pero `docs/ARCHITECTURE.md` (diagrama y sección DuckDB),
+   `docs/PLAN.md` (F9), `analytics/dbt/README.md` y DEC-034 seguían
+   afirmando que dbt-core/dbt-duckdb literal no forma parte del stack —
+   `docs/ARCHITECTURE.md` incluso decía "decidido en MP-015", asentando una
+   decisión de arquitectura sin el proceso de ADR. Corregido creando
+   [ADR-0013](adr/0013-no-literal-dbt-engine.md) (`Propuesto`, conforme a
+   ADR-0007): ADR-0003 permanece intacto; ADR-0013 documenta formalmente
+   que MP-015 no introduce el motor dbt-core. Las cuatro referencias ahora
+   apuntan a ADR-0013 en vez de asentar la decisión sin respaldo.
+2. `docs/STATUS.md:166` decía "109/115 + 5 skip"; el resultado real es
+   "110 en verde + 5 `skip`" (de 115) — corregido (ya constaba bien en
+   `docs/CHANGELOG.md`).
+3. El checklist de esta misma sección y `docs/CHANGELOG.md` seguían
+   describiendo "6 ADRs corregidos" incluyendo ADR-0003 y sin mencionar
+   drift en ADR-0005 — tras el revertido, el balance final es el inverso:
+   ADR-0003 quedó intacto (no corregido) y ADR-0005 sí recibió una nota de
+   drift real (tablas gold ya no vacías desde MP-015/DEC-033). Ambas
+   descripciones actualizadas para reflejar el balance final.
+
+Los tres se corrigieron en este mismo worktree, en esta ronda puramente
+documental — sin cambios de código, por lo que no se repitió la suite
+completa (conforme a la propia indicación de Codex); se verificó
+`git diff --check` (sin problemas de espacio en blanco) y coherencia de
+referencias cruzadas vía `rg` sobre DEC-034/ADR-0003/ADR-0013 en todo el
+repositorio.
+
+### Aprobación final de Codex
+
+**APROBADA el `2026-11-20`.** Codex inspeccionó el diff completo de MP-015,
+validó la justificación de `station_daily_metrics` contra
+`packages/quality/engine.py`, revisó críticamente los ADRs y comparó
+`docs/HITO_3_BACKLOG.md` con su versión original en
+`chore/hito-2-coordination`. Ejecutó de forma independiente 114/114 tests
+Python contra la base de desarrollo, 110 en verde + 5 `skip` (de 115)
+contra un PostgreSQL fresco con migraciones desde cero, y frontend
+lint/typecheck/5 tests/build; después de la primera corrección re-ejecutó
+13/13 tests gold+replay, incluido el guard de porcentajes `0..100`. Los
+contenedores temporales se eliminaron y la base de desarrollo conservó sus
+recuentos.
+
+La revisión encontró seis problemas reales en la primera ronda y tres
+incoherencias de gobernanza/documentación en la segunda. Todos quedaron
+corregidos en `267d072` y `9e5efe1`, respectivamente, y re-verificados. El
+diff final pasa `git diff --check`; ADR-0013 queda correctamente
+`Propuesto`, pendiente de la decisión exclusiva del propietario. No quedan
+bloqueantes técnicos ni documentales para cerrar MP-015.
+
+### Siguiente paso
+
+MP-015 cierra funcionalmente la cadena del Hito 2. No se inicia Hito 3 sin
+autorización explícita. El propietario decide ahora la auditoría de
+integración final, la revisión/promoción de los ADRs `Propuesto` y el
+momento de fusionar a `main`.
+
+## Tareas cerradas de la cadena
+
+**MP-014 — Frontend React/MapLibre C5**
+
+Ejecutor: OpenAI Codex · Revisor: Claude Code · Estado: **DONE**
+
+Worktree/rama: `mp-014-frontend`, ramificada desde `mp-013-fastapi` (MP-013 `DONE`).
+
+### Checklist de MP-014
+
+- [x] `apps/web/`: React + TypeScript + MapLibre consumiendo `/api/v1/*` real (MP-013) — nunca Renfe/CRTM directamente, nunca mocks en la demo final.
+- [x] **Gap de geometría resuelto (DEC-031):** `LineOut.geometry` nullable expone cada `Corridor.segments` por separado y las 23 estaciones proyectadas/ordenadas; no conecta paradas ni asigna el único corredor a otra línea. Test real contra GTFS/OSM y OpenAPI regenerado.
+- [x] Los cuatro estados de posición (`observed`/`estimated`/`stale`/`scheduled`) tienen forma, color, opacidad y explicación textual diferentes (ADR-0004). Un ciclo real fresco los produjo simultáneamente: 24/2/4/1.
+- [x] Campos `null` honestos: 114 de 145 vehículos reales quedaron sin ubicar tras el smoke; se contabilizan y listan explícitamente, sin ruta/posición inventada. `delay.coverage=missing` se explica como ausencia de dato.
+- [x] **Gate visual aprobado (cuarta verificación):** Claude reconstruyó la build de producción y, en navegador real, cargó el preview en tres pestañas nuevas e independientes (carga en frío) — las tres mostraron el corredor y las 23 estaciones de inmediato, sin errores de consola, confirmando la corrección de la carrera de `load`. Dev reverificado sin regresión. Interacción comprobada: el toggle "Trazado" oculta/muestra el corredor correctamente sin afectar estaciones ni vehículos.
+- [x] Arquitectura preparada para más líneas (ADR-0011): selector y estado derivados de `(network_id, line_id)` de la API; ningún literal de línea en componentes, hooks ni lógica compartida (la única coincidencia textual en `package-lock.json` pertenece a hashes de integridad).
+- [x] Via Península/Valfiguer no se consumen ni se copia código/diseño; implementación independiente.
+- [x] Smoke real de consumo API: PostgreSQL + GTFS oficial completo + `uvicorn` + Vite; `/lines` devolvió el corredor real y `/live/vehicles` los cuatro modos simultáneos. La carga visual del mapa permanece incluida en el gate anterior.
+- [x] `docs/TASKS.md`/`docs/STATUS.md`/`docs/CHANGELOG.md`/`docs/DATA_CONTRACTS.md`/`docs/DECISIONS.md` actualizados con evidencia y límites reales.
+
+### Resultado y límites
+
+Implementación completa y en revisión: frontend estático genérico multi-línea,
+contrato aditivo de geometría real y pruebas reproducibles. Comandos de la demo:
+
+```sh
+docker compose -p madrid-pulse -f infra/docker/docker-compose.yml up -d
+.venv/bin/python -m apps.api.tools.fetch_gtfs_static
+MADRID_PULSE_GTFS_SOURCE=data/gtfs_static/fomento_transit.zip .venv/bin/uvicorn apps.api.main:app --host 127.0.0.1 --port 8000
+cd apps/web && npm ci && npm run dev
+```
+
+Verificación ejecutada: regresión Python 102/102 (12 API + 90 previos);
+frontend `npm run lint`, `npm run typecheck`, Vitest 5/5 y `npm run build`,
+todo en verde. Smoke vivo tras un poll real:
+145 vehículos, 31 map-matched (`observed` 24, `estimated` 2, `stale` 4,
+`scheduled` 1). Esto confirma contrato/datos, no el gate visual pendiente.
+Los runs `585–588` creados por el smoke y sus eventos derivados se retiraron
+por ID/timestamp; PostgreSQL quedó restaurado a `668/484/3/120/0`.
+
+Hallazgo fuera del cambio frontend: el feed fresco de `trip_updates` trajo un
+`stopTimeUpdate` `SKIPPED` sin `arrival` y el contrato crudo del colector lo
+rechazó. `vehicle_positions` sí se actualizó correctamente; la UI representa
+salud/cobertura ausente sin inventar valores. Se deja para MP-015/colector.
+
+Primera revisión visual de Claude: bloqueante reproducido en `npm run dev` —
+`GET /node_modules/.vite/deps/maplibre-gl-worker.mjs` respondía `504`, por lo
+que el worker no procesaba las fuentes GeoJSON. Corregido excluyendo MapLibre
+del prebundle: el módulo ESM directo responde `200`. También se añadieron
+`id`/`name`/`htmlFor` al selector, y Claude confirmó el flujo dev correcto en
+su segunda pasada. Esa revisión detectó un fallo independiente de producción:
+el worker no se emitía y la ruta devolvía el fallback HTML. Corregido con un
+asset explícito y `setWorkerUrl` solo en producción. `npm run build` valida
+ahora igualdad byte a byte; preview devolvió `text/javascript`, 550.754 bytes y
+el mismo SHA-256 que dependencia/dist, mientras `/api/v1/lines` siguió sirviendo
+1 segmento/23 estaciones. La tercera revisión visual de Claude confirmó el
+worker, pero detectó una carrera de carga en frío. `MapView` ya no registra
+listeners `once("load")` por cada línea: el handler inicial marca readiness y
+aplica los últimos datos/capas; los cambios posteriores consultan ese estado.
+Los errores de MapLibre se registran explícitamente. Frontend re-verificado:
+lint, typecheck, 5/5 tests y build en verde. Cuarta revisión visual de Claude:
+build de producción reconstruida, preview en tres pestañas nuevas e
+independientes (carga en frío) — 3/3 mostraron el corredor/23 estaciones de
+inmediato, sin errores de consola. Dev revalidado sin regresión; interacción
+del toggle "Trazado" comprobada. MP-014 aprobada como `DONE` por el revisor.
+
+### Bloqueos
+
+Ninguno. Las cuatro rondas de revisión (geometría/arquitectura, worker de
+Vite dev, worker de build de producción, carrera de carga en frío) quedaron
+corregidas y verificadas con navegador real. MP-014 cerrada como `DONE`.
+
+### Siguiente paso
+
+Completado: MP-015 ya ramificó su worktree desde `mp-014-frontend` (ver "Tarea actual" arriba) sin esperar merge a `main`, conforme al hito autorizado y ADR-0007.
+
+**MP-013 — FastAPI v1**
+
+Ejecutor: Claude Code · Revisor: OpenAI Codex · Estado: **DONE**
+
+Worktree/rama: `mp-013-fastapi`, ramificada desde `mp-012-movement-engine` (MP-012 `DONE`). MP-005/MP-007 (sus otras dependencias) ya ancestros de `main`, confirmado con `git merge-base --is-ancestor origin/main HEAD`.
+
+### Checklist de MP-013
+
+- [x] `apps/api/`: FastAPI real (`fastapi==0.121.2`, `uvicorn[standard]==0.38.0`, `httpx==0.28.1` para tests — DEC-030), sin reimplementar resolución GTFS/geometría/movimiento.
+- [x] **Hallazgo real:** `route`/`station`/`trip`/`trip_stop` siguen vacías en PostgreSQL y `vehicle_position_observation.trip_id` sigue `NULL` en los 668 registros reales — confirmado por consulta directa. La API resuelve `trip_id`→`route_id`/`stop_id` vía `packages.gtfs.Topology` en memoria, nunca por `JOIN` SQL a esas tablas.
+- [x] 7 endpoints reales: `health`, `live/vehicles`(`/{vehicle_id}`), `lines`(`/{line_id}`), `stations`(`/{station_id}`); `history`/`metrics` diferidos explícitamente (DEC-027, `docs/DATA_CONTRACTS.md`).
+- [x] `/api/v1/health` calcula `data_age_s`/`unchanged_for_s`/`status` reales desde `source_ingestion_run`, nunca fabricados.
+- [x] `/api/v1/live/vehicles` combina la última/penúltima observación real por vehículo con `MovementEngine.position()` (MP-012); nunca fabrica `route_id`/`line`/`position` cuando el `trip_id` no resuelve — devuelve `null` honesto.
+- [x] **Hallazgo real (DEC-029):** de los 24 vehículos distintos del soak real de MP-007, solo 4 son C5 (`10T0017C5`/`10T0018C5`); 19 son otras líneas del núcleo (C1, C2, C3, C4, C4a, C4b, C8a, C8b, C10) y 1 (`SPECIAL_10_91567C2`) no resuelve, confirmado contra el GTFS estático completo — confirma empíricamente DEC-020.
+- [x] **Corregido tras la revisión de Codex (hallazgo documental):** el primer recuento listaba solo 5 líneas (C1/C3/C4a/C4b/C8b) y omitía C2/C4/C8a/C10 y el trip `SPECIAL_` sin resolver — recruzados los 24 pares reales contra `trips.txt` del ZIP completo para la cifra definitiva.
+- [x] **Hallazgo real (DEC-028):** un único corredor OSM (`relation_3418150`) basta para ambos sentidos reales de C5: `build_trip_schedule` detecta el sentido de cada trip comparando el orden de sus paradas contra el corredor.
+- [x] OpenAPI generado y congelado en `apps/api/openapi.json`.
+- [x] `apps/api/tools/fetch_gtfs_static.py`: descarga el GTFS completo real para que `/api/v1/live/vehicles` resuelva vehículos C5 en ejecución local (la fixture reducida de MP-010 solo tiene 15 trips representativos, insuficiente para el feed en vivo).
+- [x] App arrancada de verdad con `uvicorn` y probada con `curl` real (`/api/v1/lines`, `/docs`), no solo `TestClient`.
+- [x] 9 tests de contrato nuevos (fixture reducida + PostgreSQL real + un caso sintético de extremo a extremo con un trip real) + regresión completa: **99/99 en verde**.
+- [x] `docs/TASKS.md`/`docs/STATUS.md`/`docs/CHANGELOG.md`/`docs/DATA_CONTRACTS.md`/ADR-0005/DECISIONES actualizados con evidencia real.
+
+### Resultado y límites
+
+API real conforme a `docs/DATA_CONTRACTS.md` para los endpoints `live`/`lines`/`stations`/`health`; `history`/`metrics` diferidos explícitamente (DEC-027) porque los agregados diarios siguen sin poblarse desde MP-009. Sin literales de línea en la lógica (ADR-0011): `network_id`/`short_name` son configuración.
+
+Ejecución final real (`.venv`, Python 3.12): 101/101 tests — API 11, movement 11, GTFS 7, geo 8, contratos 31, fixtures 6, collector 9, quality 13, snapshotter 5. Suites con PostgreSQL ejecutadas con el contenedor `madrid-pulse` levantado por el ejecutor; recuentos finales `668/484/3/120/0` sin residuo.
+
+**Revisión independiente de OpenAI Codex (`2026-11-19`): NO APROBADA en primera ronda.** Reprodujo de forma propia: PostgreSQL `route`/`station`/`trip`=0 y `trip_id` resuelto=0; volumen `668/484/3/120/0` antes/después; GTFS oficial descargado y verificado (15.717.009 bytes); DEC-028 confirmado en los 4 trips C5 reales; 9 API + 90 regresión en verde; servidor `uvicorn` real arrancado y probado con `curl` (`health`/`live/vehicles`/`docs` → `200`). Hallazgos:
+
+- **Bloqueante 1:** `apps/api/service.py` solo calculaba `observation.age_s` cuando el motor de movimiento resolvía una posición — para los 20/24 vehículos reales que no son C5, `reported_at` era real pero `age_s` quedaba `null` aunque es calculable directamente desde el timestamp crudo.
+- **Bloqueante 2:** `_movement_position` pasaba `service_date=now.astimezone(timezone.utc).date()`, pero `packages.movement.schedule.service_seconds` interpreta esa fecha como calendario Europe/Madrid (`docs/DATA_MODEL.md`). Cerca de medianoche (p. ej. `2026-11-19T23:30Z` = `2026-11-20 00:30` CET) ambas fechas difieren en un día real, desplazando el horario esperado.
+- **Menor documental:** DEC-029 listaba solo 5 líneas no-C5 (C1/C3/C4a/C4b/C8b) y omitía C2/C4/C8a/C10 y un trip de refuerzo (`SPECIAL_10_91567C2`) que no resuelve contra ningún `route_id` — el cruce completo de Codex contra `trips.txt` dio la cifra real.
+
+**Corrección de Claude Code (`2026-11-19`), lista para re-verificación:**
+
+- **Bloqueante 1 corregido:** `age_s` ahora se calcula siempre como `(now - observation.reported_at)`, independiente de si la ruta/posición resuelve. Verificado revirtiendo el fix: el nuevo test (`test_live_vehicles_always_report_raw_observation_age`) falla con `age_s` `None` contra el código anterior y pasa con el fix restaurado.
+- **Bloqueante 2 corregido:** `service_date` se calcula ahora con conversión explícita a Europe/Madrid (`now.astimezone(ZoneInfo("Europe/Madrid")).date()`), no la fecha UTC. Verificado revirtiendo el fix: el nuevo test (`test_service_date_uses_europe_madrid_calendar_not_utc`, cubre borde de invierno CET y verano CEST) falla con `AttributeError` contra el código anterior y pasa con el fix restaurado.
+- **Menor corregido:** recruzados los 24 pares reales `(source_vehicle_id, source_trip_id)` contra `trips.txt` del GTFS completo. Cifra definitiva: 4 C5, 19 de otras 9 líneas (C1, C2, C3, C4, C4a, C4b, C8a, C8b, C10), 1 (`SPECIAL_10_91567C2`) sin resolver. DEC-029, `apps/api/README.md`, `docs/CHANGELOG.md` y este documento corregidos.
+
+101/101 tests en verde (99 + 2 de regresión nuevos). La segunda verificación de Codex confirmó funcionalmente ambos bloqueantes y el cruce GTFS completo; quedó únicamente un docstring residual con la lista anterior de 5 líneas.
+
+**Revisión final independiente de OpenAI Codex (`2026-11-19`): APROBADA, sin hallazgos abiertos.** El commit `15170c4` corrige exclusivamente ese docstring: ahora registra 19 vehículos de C1/C2/C3/C4/C4a/C4b/C8a/C8b/C10 más 1 trip de refuerzo sin resolver. `git diff --check c82e62f..15170c4` está limpio y el diff contiene solo 4 inserciones/3 borrados en `apps/api/tests/test_api_contract.py`. La suite contractual aislada se reejecutó contra PostgreSQL real: 11/11 `OK`, con recuentos finales `668/484/3/120/0`; el contenedor se bajó sin borrar el volumen. Autor y committer de `15170c4`: `Pedro Matute <pedromaaz13@gmail.com>`, sin coautor. MP-013 pasa a `DONE`.
+
+### Bloqueos
+
+Ninguno.
+
+### Siguiente paso
+
+MP-014 (Frontend React/MapLibre, ejecutor Codex) ramificó su worktree desde `mp-013-fastapi` sin esperar merge a `main`, conforme al hito autorizado y ADR-0007 — registrado arriba en "Tarea actual".
+
+**MP-012 — Motor de movimiento v1**
+
+Ejecutor: OpenAI Codex · Revisor: Claude Code · Estado: **DONE** (aprobado el 2026-11-19)
+
+Worktree/rama: `mp-012-movement-engine`, ramificada desde `mp-011-osm-geometry` (MP-011 `DONE`). DEC-015 resuelto: `git merge-base --is-ancestor origin/main HEAD` confirmado `true` desde `mp-011-osm-geometry` — MP-008 (ancestro de `main`), MP-010 y MP-011 quedan todos satisfechos sin fusión real (ver `AGENTS.md`).
+
+### Checklist de MP-012
+
+- [x] Motor de movimiento con los cuatro estados `OBSERVED` (0–60s) / `ESTIMATED` (>60–180s) / `STALE` (>180s) / `SCHEDULED` (sin observación plausible), conforme a ADR-0004; defaults parametrizados en `MovementThresholds`.
+- [x] Pipeline de ADR-0004 completo: resolución GTFS → `Corridor.project_station` → progreso acumulado → perfil de `stop_times` → offset temporal → interpolación → límites de aceleración/velocidad/retroceso; una muestra imposible no borra la anterior plausible.
+- [x] `MovementPosition` expone `position_mode`, `confidence` decreciente, `age_s`, `source`, timestamps, progreso y anomalías; fuentes distintas impiden confundir estimado/stale/scheduled con observado.
+- [x] Calibración real: `60s/180s` mantenidos porque la cadencia ~20–22s equivale a ~3/~8 polls perdidos. Separados `max_estimated_speed_kmh=160` (trayectoria fabricada) y `unusable_jump_speed_kmh=900` (discontinuidad del feed): MP-008 midió 246–787 km/h crudos y MP-012 666,4 km/h map-matched en el volumen real.
+- [x] Tests deterministas: cuatro transiciones, confianza/fuente, offset horario, velocidad/aceleración, salto de estación, retroceso, off-track, salto imposible, rango empírico 700 km/h aceptado, UTC y cambio de día/horas GTFS >24.
+- [x] Validación real PostgreSQL de solo lectura: 668 observaciones antes y después, 177 a ≤200 m del corredor, máximo salto map-matched 666,4 km/h; volumen completo `668/484/3/120/0` intacto tras toda la regresión.
+- [x] Ubicación decidida en ADR-0012 (`Propuesto`): `packages/movement` orquesta las capas existentes sin contaminar `geo` con horarios ni `quality` con generación de posiciones.
+- [x] `off_track`/`backward_jump`/`station_skip_anomaly` calculados y expuestos. Persistencia diferida explícitamente: el `CHECK`/modelo v1 de `data_quality_event` pertenece a observaciones crudas y MP-012 no crea una tabla de derivados; cualquier persistencia futura requiere migración con dueño/clave claros.
+- [x] `docs/TASKS.md`/`docs/STATUS.md`/`docs/CHANGELOG.md`/`docs/DATA_QUALITY.md`/ADR-0004/ADR-0012/DEC-026 actualizados con evidencia real.
+
+### Resultado y límites
+
+Motor genérico implementado en `packages/movement/`, sin literal de la línea piloto en la lógica. `point_at_arc_length` completa la API geométrica genérica como inversa de `arc_length_to`. El motor exige un corredor continuo por trip y rechaza explícitamente geometrías con huecos en vez de fabricar distancia. La topología huérfana sin `stop_times` sigue produciendo error explícito, no un recorrido inventado.
+
+Ejecución final real (`.venv`, Python 3.12): 90/90 tests en verde — movement 11, GTFS 7, geo 8, contratos 31, fixtures 6, collector 9, quality 13, snapshotter 5. Las suites con PostgreSQL se ejecutaron con el contenedor `madrid-pulse` levantado por el ejecutor; recuentos finales `668/484/3/120/0`. `compileall` y `git diff --check` sin errores.
+
+- [x] **Revisión independiente de Claude Code (2026-11-19): APROBADA.** `packages/movement/model.py`, `schedule.py`, `engine.py` leídos íntegros. 90/90 tests reejecutados de forma propia (10 deterministas movement + 1 integración real + 79 de regresión GTFS/geo/contratos/fixtures/collector/quality/snapshotter), subiendo y bajando el contenedor `madrid-pulse` yo mismo; integración de solo lectura reproducida con los mismos resultados exactos (668→668 posiciones, 177 a ≤200 m del corredor, máximo map-matched `666,4 km/h`). Verificado matemáticamente: `directed_progress`/`physical_arc` correctos en ambos sentidos del corredor; la estimación nunca retrocede y queda acotada por velocidad (160 km/h) y aceleración (1,2 m/s²); el fallback a la última observación plausible reaplica la clasificación de estado completa por recursión en vez de forzar `OBSERVED` de forma artificial; la separación entre límite físico (160 km/h) y filtro de discontinuidad de fuente (900 km/h) es coherente con los hallazgos reales de MP-008/MP-012. Confirmado por lectura directa que `engine.py`/`model.py`/`schedule.py` no contienen el literal `"C5"`. Identidad Git de `1edfa14` correcta (`Pedro Matute <pedromaaz13@gmail.com>`, sin coautor), `git diff --check` limpio, sin secretos. Evalué si esta revisión requería escalar a Opus (candidato explícito del propietario para revisiones algorítmicas complejas) y no fue necesario: todas las decisiones de diseño se pudieron verificar directamente con razonamiento estándar. Sin hallazgos bloqueantes ni menores.
+
+### Bloqueos
+
+Ninguno. ADR-0012 permanece `Propuesto` hasta revisión formal del propietario al cierre de Hito 2.
+
+### Siguiente paso
+
+MP-012 está `DONE`. MP-013 (FastAPI v1, ejecutor Claude Code, revisor Codex) ramificó su worktree desde `mp-012-movement-engine` sin esperar merge a `main`, conforme al hito autorizado y ADR-0007 — registrado arriba en "Tarea actual".
+
+**MP-011 — Prototipo de geometría ferroviaria sobre OSM**
+
+Ejecutor: Claude Code · Revisor: OpenAI Codex · Estado: **DONE**
+
+Worktree/rama: `mp-011-osm-geometry`, ramificada desde `mp-010-gtfs-topology` (MP-010 `DONE`).
+
+### Checklist de MP-011
+
+- [x] `packages/geo/overpass.py`: cliente Overpass API genérico (relación por id o por `ref`/`network`), sin literales de línea en la lógica; solo `urllib` de la librería estándar.
+- [x] `packages/geo/corridor.py`: encadena los `ways` de vía (`role=""`) de una relación OSM en el orden declarado, uniendo por nodo extremo compartido; un hueco real se registra como `ChainGap`, nunca se fabrica una unión inexistente.
+- [x] `packages/geo/geometry.py`: Haversine real + proyección punto-polilínea (plano local equirrectangular por consulta), sin `shapely`/`pyproj`.
+- [x] Descarga real de las 4 relaciones direccionales OSM de C5 Madrid (`11331`/`3418148`/`3418149`/`3418150`, `ref=C-5`/`network=Cercanías Madrid`, agrupadas por el `route_master` `3418151`): las 4 encadenan sus `ways` de vía sin huecos.
+- [x] Las 23 estaciones reales de la ruta larga (ambos sentidos, GTFS `10T0017C5`/`10T0018C5`) proyectan en orden monótono sobre su corredor correspondiente, distancia máxima real 63,7 m.
+- [x] **Hallazgo:** la ruta corta (`10T0047C5`/`48C5`) no tiene relación OSM propia — su patrón base de 6 estaciones es una subsecuencia contigua literal de la ruta larga; la variante de 7 estaciones con Atocha solo es monótona y no contigua. No se fabrica geometría separada.
+- [x] **Hallazgo:** las relaciones `3418148`/`3418149` ("Fuenlabrada→Atocha→Móstoles-El Soto") son la ruta larga truncada en Fuenlabrada, no coinciden con el patrón real de 6 estaciones de la ruta corta — documentado como variante real no usada (DEC-025).
+- [x] **Hallazgo:** `usage=main` (30 `ways`)/`usage=branch` (60 `ways`) en la vía — trazado troncal potencialmente compartido vs. ramal específico de C5; no verificado qué otras líneas comparten el tramo (DEC-025).
+- [x] "C5"/"C-5" colisiona también en OSM entre núcleos (Asturias, Sevilla, Cantabria, Valencia, Madrid) — mismo patrón que ADR-0008/DEC-017 ya documentó para el GTFS de Renfe.
+- [x] Fixture real congelada y atribuida (`tests/fixtures/osm_c5_real/`): 4 relaciones, checksums y proceso en `MANIFEST.md`; licencia ODbL de la base de datos derivada confirmada (DEC-024).
+- [x] Evidencia visual real: `packages/geo/tools/render_preview.py` genera un SVG del corredor + estaciones; renderizado y revisado en navegador (Chrome DevTools MCP, captura completa) — forma real de la C5 reconocible, estaciones sin saltos sobre la vía.
+- [x] 79/79 tests en verde: 8 geo nuevos + 71 de regresión (7 GTFS + 31 contratos + 6 fixtures GTFS-RT + 9 colector + 13 calidad + 5 snapshotter), incluidas 9 integraciones reales contra PostgreSQL.
+- [x] `docs/TASKS.md`/`docs/STATUS.md`/`docs/CHANGELOG.md`/`docs/DECISIONS.md`/`docs/legal/ATTRIBUTION.md`/`docs/legal/DATA_SOURCES.md` actualizados con evidencia real antes de delegar a revisión.
+
+### Resultado y límites
+
+Geometría real de la C5 Madrid derivada de 4 relaciones OSM reales, validada contra las 23 estaciones reales del GTFS con distancia máxima 63,7 m y orden monótono. La API (`Corridor.project_station`, `build_corridor`) queda disponible para MP-012/MP-013 sobre cualquier relación configurada, sin literales de línea en la lógica. Limitaciones documentadas, no ocultas: `10T0035C5` sigue sin validar (huérfano desde MP-010), el reparto exacto de trazado troncal compartido con otras líneas no se verificó, y la correspondencia OSM↔GTFS para la ruta corta se resuelve por subsegmento del corredor largo, no por una relación OSM dedicada (no existe una).
+
+### Bloqueos
+
+**Revisión independiente de OpenAI Codex (`2026-11-19`): NO APROBADA en primera ronda.** Hallazgos devueltos al ejecutor en este mismo worktree:
+
+- **Bloqueante — `ChainGap` se registra pero la geometría aún fabrica la unión.** Con dos `ways` sintéticos desconectados, `build_corridor` produce correctamente un `ChainGap`, pero concatena ambos en una única `polyline`; `project_station` y `corridor_length_m` interpretan entonces el par de extremos alrededor del hueco como un segmento real. Reproducción independiente: una consulta situada en el centro del hueco proyectó con `distance_m=0.0`. Debe representarse/ignorarse explícitamente la discontinuidad en los cálculos y añadirse una prueba que falle con el comportamiento actual.
+- **Menor — evidencia y documentación cuentan mal la suite y la ruta corta.** `python3 -m unittest packages.geo.tests.test_real_feed -v` ejecuta 6 tests, no 7; el total real es 77 (6 geo + 71 regresión), no 78. La fixture GTFS contiene 7 estaciones para `10T0047C5`, no 6. Las 7 sí proyectan monótonamente sobre el mismo corredor de `10T0017C5` (máximo independiente: 37,3 m), pero no son una subsecuencia contigua de paradas de la ruta larga: omiten cuatro paradas intermedias. Debe reservarse “subsegmento contiguo” para la geometría de vía y corregirse el recuento en `docs/TASKS.md`, `docs/STATUS.md`, `docs/CHANGELOG.md`, `docs/DECISIONS.md`, `packages/geo/README.md`, fixture/manifiesto y comentarios/tests afectados.
+- **Menor — checksums anunciados pero ausentes.** `packages/geo/README.md` afirma que el manifiesto contiene checksums, pero `tests/fixtures/osm_c5_real/MANIFEST.md` no lista ninguno. Añadir los cuatro SHA-256 o retirar la afirmación; la opción preferible es añadirlos para preservar trazabilidad.
+
+Evidencia ya reproducida por el revisor: 6 geo + 7 GTFS + 31 contratos + 6 fixtures + 9 colector + 13 calidad + 5 snapshotter, todos en verde; PostgreSQL `668/484/3/120/0` antes y después; render documentado generado como HTML/SVG real; identidad Git de `fbc3fde` correcta y `git diff --check` limpio. Pendiente corrección y re-verificación antes de aprobar.
+
+**Corrección de Claude Code (`2026-11-19`), lista para re-verificación de Codex:**
+
+- **Bloqueante corregido:** `Corridor` ahora tiene `segments` (tramos realmente continuos, separados en cada `ChainGap`); `project_station`/`corridor_length_m` solo operan dentro de un tramo, nunca interpolando a través de un hueco. Verificado revirtiendo el fix: el nuevo test de regresión (`test_gap_between_disconnected_ways_is_not_fabricated_as_track`, dos `ways` sintéticos desconectados) falla con `AttributeError: 'Corridor' object has no attribute 'segments'` contra el código anterior, y pasa con el fix restaurado. `render_preview.py` corregido en paralelo: dibuja un `<polyline>` por tramo, no uno solo que uniría visualmente un hueco real.
+- **Menor corregido (recuento):** 8 tests geo (no 7), 79 totales (no 78) — contado de nuevo con un venv fresco (`python3 -m venv` + `pip install -r requirements.txt`), subiendo/bajando el contenedor yo mismo y confirmando `668/484/3/120/0` antes y después.
+- **Menor corregido (sobre-reclamo "subsegmento contiguo"):** separado en dos tests y dos afirmaciones distintas. La variante base de 6 estaciones de `10T0047C5` (sin Atocha) SÍ es una subsecuencia contigua real (verificado por comparación literal de IDs: aparece en el índice 16 del patrón largo de 23 estaciones). La variante real de 7 estaciones (con Atocha antepuesta) proyecta en orden monótono sobre el mismo corredor pero NO es contigua — omite 4 paradas intermedias reales (Méndez Álvaro, Doce de Octubre, Orcasitas, Puente Alcocer). `packages/geo/README.md`, `docs/TASKS.md` y este documento corregidos para no confundir ambas afirmaciones.
+- **Menor corregido (checksums):** 4 SHA-256 añadidos a `tests/fixtures/osm_c5_real/MANIFEST.md`, recalculados y verificados contra los ficheros reales (`hashlib.sha256` sobre cada JSON, comparación exacta con el valor documentado).
+
+Commit de corrección `f795036`. Reenviado a Codex para segunda verificación en este mismo worktree.
+
+**Segunda verificación independiente de OpenAI Codex (`2026-11-19`): APROBADA.** El revisor leyó íntegramente `packages/geo/corridor.py` y repitió una reproducción sintética propia: dos `ways` desconectados producen 2 `segments`; un punto en el centro del hueco proyecta a `2223,9 m` del tramo real más próximo (no ~0), y `corridor_length_m=2223,9 m` suma únicamente los dos tramos, sin el hueco. El test bloqueante dirigido pasó 1/1 y `packages.geo.tests.test_real_feed` pasó 8/8.
+
+Regresión propia: 71/71 en verde (7 GTFS + 31 contratos + 6 fixtures GTFS-RT + 9 colector + 13 calidad + 5 snapshotter), con las integraciones reales ejecutadas contra PostgreSQL sin `skip`; recuentos persistentes `668/484/3/120/0` idénticos antes y después. El contenedor se levantó con `--wait` y se bajó sin `-v`, conservando el volumen. La comparación literal independiente sitúa el patrón base de 6 estaciones en el índice 16 del patrón largo de 23; la variante de 7 con Atocha ocupa las posiciones `11,16,17,18,19,20,21`, por lo que no es contigua y omite cuatro estaciones. Los cuatro SHA-256 recalculados coinciden exactamente con `MANIFEST.md`; `git diff --check fbc3fde..f795036` está limpio e identidad de autor/committer de `f795036` es `Pedro Matute <pedromaaz13@gmail.com>`, sin coautor. Sin hallazgos bloqueantes ni menores abiertos; MP-011 pasa a `DONE`.
+
+### Siguiente paso
+
+MP-011 está `DONE`. DEC-015 resuelto y aplicado: MP-012 (ejecutor Codex, revisor Claude Code) ramificó directamente desde `mp-011-osm-geometry` sin fusión real — registrado arriba en "Tarea actual".
+
+**MP-010 — Topología GTFS C5**
+
+Ejecutor: OpenAI Codex · Revisor: Claude Code · Estado: **DONE** (aprobado el 2026-11-19)
+
+Worktree/rama: `mp-010-gtfs-topology`, ramificada desde `chore/hito-2-coordination` (que a su vez parte de `main`, post-merge de Hito 1 — MP-004, su única dependencia directa, ya es ancestro de `main`).
+
+### Checklist de MP-010
+
+- [x] `packages/gtfs/`: parser en streaming de topología GTFS estático (`routes`/`trips`/`stops`/`stop_times`/`shapes`/`calendar`) desde ZIP o directorio, con comprobación de esquema y sin campos inventados.
+- [x] Las 5 variantes `source_route_id` de C5 Madrid (`10T0017C5`, `10T0018C5`, `10T0035C5`, `10T0047C5`, `10T0048C5`) permanecen como rutas distintas y se agrupan por `(network_id, short_name)`.
+- [x] Resolución genérica de `route_id`/`trip_id`/`stop_id`: filtros parametrizados, JOIN literal de trip estático, fallback solo para `routeId` explícito de trips `ADDED`, rechazo de contradicciones y prueba que impide literales de línea en la lógica.
+- [x] Validación real de recorrido: 14 patrones ordenados, incluidos pares inversos completos y cortos. **Hallazgo:** el GTFS de Renfe no contiene `direction_id`; la dirección verificable es `stop_sequence` + `shape_id`, y no se fabrica una columna ausente.
+- [x] **Hallazgo real:** `10T0035C5` tiene 8 trips y cero `stop_times` en el ZIP completo. El validador los informa como huérfanos de fuente y no inventa recorrido.
+- [x] Fixture real reducida, reproducible y atribuida (`tests/fixtures/gtfs_c5_real/`): 5 rutas, 15 trips representativos, 23 estaciones, 168 stop_times, 630 puntos de shape y 4 servicios; URL/checksums/proceso en su `MANIFEST.md` (DEC-023).
+- [x] 71/71 tests en verde: 7 GTFS nuevos + 64 regresiones (31 contratos, 6 fixtures GTFS-RT, 9 colector, 13 calidad, 5 snapshotter), incluidas 9 integraciones reales contra PostgreSQL. Ejecución adicional contra el ZIP oficial completo: 5 rutas, 8.160 trips, 23 estaciones, 165.205 stop_times, 630 puntos, 30 servicios, 14 patrones, 8 huérfanos, 0 errores de validación.
+- [x] `docs/TASKS.md`/`docs/STATUS.md`/`docs/CHANGELOG.md` actualizados con evidencia real antes de delegar a revisión.
+
+### Resultado y límites
+
+Topología C5 parseada y validada contra la descarga oficial del `2026-11-19`. La API queda disponible para MP-012/MP-013 mediante `Topology.resolve_trip_route_id`, `resolve_trip_route` y `resolve_stop_sequences`; opera sobre cualquier línea configurada. El fichero completo no se versiona: son ~15,7 MB comprimidos/~298 MB extraídos y cambia con upstream; se conserva una fixture real mínima reproducible con checksum (DEC-023).
+
+- [x] **Revisión independiente de Claude Code (2026-11-19): APROBADA.** Código íntegro de `packages/gtfs/` leído (parser, topology, tests, tool de reducción). 71/71 tests reejecutados de forma propia: 7 GTFS + 31 contratos + 6 fixtures GTFS-RT + 9 colector + 13 calidad + 5 snapshotter — subiendo y bajando el contenedor `madrid-pulse` yo mismo (no reutilizando solo el reporte de Codex) y confirmando los recuentos reales `668/484/3/120/0` idénticos antes y después, sin residuo. Confirmado con lectura directa que `parser.py`/`topology.py` no contienen el literal `"C5"` y que la resolución es genérica por `route_ids`/`network_id`/`short_name` (ADR-0011) — reforzado por un test de regresión que falla si se reintroduce el literal. `git diff --check` limpio, sin secretos en el diff, identidad Git (`Pedro Matute <pedromaaz13@gmail.com>`, sin coautor) y enlaces a ADR-0011/DEC-022/DEC-023 verificados. Fixture reducida (52 KB) con checksum, atribución `CC BY 4.0` y proceso reproducible documentado en su `MANIFEST.md`. Sin hallazgos bloqueantes ni menores.
+
+### Bloqueos
+
+Ninguno. Los 8 trips huérfanos y la ausencia de `direction_id` son propiedades verificadas del upstream, preservadas explícitamente y confirmadas de forma independiente, no defectos ocultos ni datos suplidos.
+
+### Siguiente paso
+
+MP-010 está `DONE`. MP-011 (Prototipo de geometría ferroviaria sobre OSM, ejecutor Claude Code, revisor Codex) ramificó su worktree desde `mp-010-gtfs-topology` sin esperar merge a `main`, conforme al hito autorizado y ADR-0007 — registrado arriba en "Tarea actual".
 
 **MP-009 — Exportador histórico (Parquet particionado)**
 
@@ -65,9 +689,7 @@ Ninguno: el bloqueante real de la primera revisión de Codex (semántica tempora
 
 ### Siguiente paso
 
-MP-009 y el Hito 1 (`MP-002` → `MP-009`) están completos. El worktree queda listo para revisión del propietario; no se inicia MP-010 ni otro hito hasta que el propietario lo autorice expresamente.
-
-## Tareas cerradas de la cadena
+MP-009 y el Hito 1 (`MP-002` → `MP-009`) están completos. El worktree queda listo para revisión del propietario; no se inicia MP-010 ni otro hito hasta que el propietario lo autorice expresamente. **Nota añadida al preparar Hito 2 (`2026-11-19`):** el propietario autorizó y fusionó Hito 1 a `main`; MP-010 arrancó en su propio worktree, registrado arriba en "Tarea actual".
 
 **MP-008 — Quality engine**
 
@@ -400,6 +1022,31 @@ Esta rama se bifurcó de `chore/mp-001-foundation` en el commit `3e7b533`, **ant
 | `2026-11-19` | MP-009 | Primera revisión de Codex: no aprobada — bloqueante real reproducido (3 `service_alert` reales desaparecían del export por particionar por `active_period_start` en vez de por observación real vía `ingestion_run_id`) | dispatch `ctx_d2b95955a73a` |
 | `2026-11-19` | MP-009 | Corregido uniendo `service_alert` a `source_ingestion_run`; replay ampliado a las 5 tablas; verificado revirtiendo el fix (falla `0≠1` como reportó Codex) y restaurándolo; reexportado el día real: `service_alert` pasa de 0 a 3; reenviado a Codex para segunda verificación | — |
 | `2026-11-19` | MP-009 / Hito 1 | Segunda revisión independiente de Codex aprobada: replay ampliado 2/2, limpieza completa, export real 668/484/3/120/0 y tres alertas confirmadas en Parquet. MP-009 pasa a `DONE`; Hito 1 (`MP-002` → `MP-009`) completo, pendiente de decisión del propietario sobre el siguiente hito | dispatch `ctx_095ae1499806` |
+| `2026-11-19` | Hito 1 | Auditoría independiente de Codex (dispatch no registrado como `ctx_` en esta rama, ver worktree `mp-009-historical-export`): **APROBADA**, sin bloqueantes. Propietario crea PR #1 (`mp-009-historical-export` → `main`) y lo fusiona él mismo | PR #1; commit de merge `f567d3c` |
+| `2026-11-19` | Hito 2 | Propietario autoriza explícitamente `MP-010` → `MP-015` ("Live Railway MVP"), fija la tabla ejecutor/revisor, la política de selección de modelo y los límites de autonomía (sin push/PR/merge sin autorización puntual; identidad Git exclusiva del propietario; sin coautores de agente) | mensaje de autorización del propietario, `2026-11-19` |
+| `2026-11-19` | Hito 2 | Sincronización inicial: `git fetch`/`git pull --ff-only` confirma `main` local al día con `origin/main`; verificado que `8be1272` (tope de `mp-009-historical-export`) es ancestro de `f567d3c`, sin commits perdidos. Verificación empírica (no asumida) de que `orca orchestration worker-start --model/--effort` son parámetros reales para Claude; identificadores confirmados `sonnet`/`opus` (no existe un "5.5" verificable en este entorno) | `agent-context.json`; `worker-start --help` |
+| `2026-11-19` | Hito 2 | DEC-015 resuelto: con Hito 1 ya en `main`, la convergencia de MP-012 (MP-008+MP-010+MP-011) no requiere `git merge` real — basta ramificar la cadena MP-010→MP-011 desde una rama que ya contenga a `main` (y por tanto a MP-008) como ancestro; mecanismo general documentado en `AGENTS.md` para casos futuros con divergencia real | este documento; `AGENTS.md` |
+| `2026-11-19` | Hito 2 | ADR-0011 (`Propuesto`) redactado: distingue el piloto técnico de Hito 2 (C5) del objetivo de primera versión pública (toda la red de Cercanías Madrid), sin reescribir ADR-0001 (`Aceptado`) — amplía su alcance de implementación sin contradecir su decisión ya aceptada | `docs/adr/0011-public-scope-vs-technical-pilot.md` |
+| `2026-11-19` | Hito 2 | Worktrees de MP-010 (ejecutor Codex) y, tras su cierre, MP-011 (ejecutor Claude Code) preparados ramificando desde esta rama de coordinación (`chore/hito-2-coordination`, a su vez ramificada desde `main`) | `docs/TASKS.md` |
+| `2026-11-19` | MP-010 | Parser/validador GTFS implementado; 71/71 tests (7 nuevos + 64 regresiones, 9 integraciones PostgreSQL reales) y ejecución adicional contra ZIP oficial completo (5 rutas, 8.160 trips, 165.205 stop_times, 14 patrones, 8 huérfanos, 0 errores). Hallazgos: upstream sin `direction_id` y variante `10T0035C5` sin stop_times. Compose Madrid Pulse detenido sin borrar volumen; `*-traza-app` intactos. Tarea pasa a `REVIEW` para Claude Code | `packages/gtfs/`; `tests/fixtures/gtfs_c5_real/MANIFEST.md`; DEC-023 |
+| `2026-11-19` | MP-010 | Revisión independiente de Claude Code: código íntegro leído, 71/71 tests reejecutados subiendo/bajando el contenedor propio, recuentos reales `668/484/3/120/0` confirmados idénticos antes/después, ausencia del literal `"C5"` en la lógica verificada, identidad Git y enlaces a ADR-0011/DEC-022/DEC-023 correctos. **APROBADA, sin hallazgos.** MP-010 pasa a `DONE` | commit `add8aa6`; este documento |
+| `2026-11-19` | MP-011 | Geometría OSM real implementada (`packages/geo/`): 4 relaciones direccionales de C5 Madrid descargadas y encadenadas sin huecos; 23 estaciones reales proyectadas en orden monótono (máx. 63,7 m); ruta corta confirmada como subsegmento del corredor largo. Evidencia visual real en navegador (Chrome DevTools MCP). 78/78 tests en verde. Hallazgos documentados como ambigüedades (DEC-025), no forzados: relaciones Fuenlabrada-truncadas sin coincidir con la ruta corta real, `usage=main`/`branch` sin verificar reparto exacto, huérfano `10T0035C5` aún sin validar. Overpass API devolvió `502` por capacidad varias veces; reintentos con pocos segundos de espera tuvieron éxito. Fixture ODbL congelada y atribuida (DEC-024). Tarea pasa a `REVIEW` para OpenAI Codex | `packages/geo/`; `tests/fixtures/osm_c5_real/MANIFEST.md`; DEC-024; DEC-025 |
+| `2026-11-19` | MP-011 | Primera revisión de Codex: no aprobada — bloqueante real reproducido (`ChainGap` registrado pero la geometría seguía fabricando una unión a través del hueco; repro sintética con `distance_m=0.0`) + 2 menores (recuento de tests incorrecto; una variante real de 7 estaciones de `10T0047C5` se documentó como "subsegmento contiguo" sin serlo) + checksums anunciados pero ausentes | dispatch `ctx_6b6ad999cdfe` |
+| `2026-11-19` | MP-011 | Corregido: `Corridor.segments` separa tramos reales (verificado revirtiendo el fix — el test de regresión falla exactamente como describió Codex y pasa con el fix restaurado); `render_preview.py` dibuja un `<polyline>` por tramo; ruta corta dividida en variante base contigua (6 estaciones, verificado por comparación literal de IDs) y variante con Atocha monótona-pero-no-contigua (7 estaciones); 4 SHA-256 añadidos y verificados en `MANIFEST.md`. 79/79 tests en verde (8 geo + 71 regresión). Reenviado a Codex para segunda verificación | — |
+| `2026-11-19` | MP-011 | Segunda verificación independiente de Codex aprobada sobre `f795036`: repro sintética propia a `2223,9 m` del tramo más cercano (sin geometría fabricada), 8 geo + 71 regresión en verde, PostgreSQL `668/484/3/120/0` antes/después, patrones corto base/variante comprobados literalmente, 4 SHA-256 coincidentes, diff limpio e identidad Git correcta. MP-011 pasa a `DONE` | dispatch `ctx_24d7ea61fba0` |
+| `2026-11-19` | MP-012 | DEC-015 resuelto y aplicado: `git merge-base --is-ancestor origin/main HEAD` confirmado desde `mp-011-osm-geometry`; worktree `mp-012-movement-engine` abierto sin fusión real. Dispatchado a Codex (ejecutor) con contexto de ADR-0004 (pipeline, cuatro estados), frecuencias reales medidas en MP-003 y el hallazgo de `implausible_speed` de MP-008 para calibración | `docs/TASKS.md`; `docs/STATUS.md` |
+| `2026-11-19` | MP-012 | Implementación de Codex lista para revisión: `packages/movement` + ADR-0012; pipeline completo, cuatro estados/fuentes explícitos, flags topológicos y calibración. 90/90 tests en verde. Integración real read-only: 668→668 posiciones, 177 cerca del corredor, máximo salto map-matched 666,4 km/h; volumen final `668/484/3/120/0`. Tarea pasa a `REVIEW` para Claude Code | `packages/movement/`; `docs/adr/0012-movement-package-boundary.md` |
+| `2026-11-19` | MP-012 | Revisión independiente de Claude Code: código íntegro leído, 90/90 tests reejecutados subiendo/bajando el contenedor propio, integración real reproducida con resultados idénticos (668→668, 177 cerca del corredor, 666,4 km/h), pipeline verificado matemáticamente (offset bidireccional, límites velocidad/aceleración, fallback recursivo correcto), ausencia del literal `"C5"` confirmada, identidad Git y enlaces ADR-0012/DEC-026 correctos. Evaluada y descartada la escalada a Opus por no ser necesaria. **APROBADA, sin hallazgos.** MP-012 pasa a `DONE` | commit `1edfa14`; este documento |
+| `2026-11-19` | MP-013 | API FastAPI real implementada (`apps/api/`): 7 endpoints (`health`/`live/vehicles`(`/{id}`)/`lines`(`/{id}`)/`stations`(`/{id}`)), `history`/`metrics` diferidos explícitamente (DEC-027). Hallazgo real: `route`/`station`/`trip` siguen vacías y `trip_id` sigue `NULL` en PostgreSQL — resolución vía `Topology` en memoria, no `JOIN` SQL. Hallazgos DEC-028 (un corredor basta para ambos sentidos) y DEC-029 (solo 4/24 vehículos del soak son C5, confirma DEC-020 con datos reales). App arrancada con `uvicorn` y probada con `curl` real. 99/99 tests en verde. Tarea pasa a `REVIEW` para OpenAI Codex | `apps/api/`; `apps/api/openapi.json`; DEC-027–030 |
+| `2026-11-19` | MP-013 | Primera revisión de Codex: no aprobada — 2 bloqueantes reales reproducidos (`age_s` `null` para vehículos sin ruta resuelta aunque calculable; `service_date` usaba fecha UTC en vez de Europe/Madrid, desplazando el horario cerca de medianoche) + 1 menor (recuento de líneas no-C5 incompleto en DEC-029) | dispatch `ctx_792a5fe349ba` |
+| `2026-11-19` | MP-013 | Corregido: `age_s` se calcula siempre desde `observation.reported_at`; `service_date` usa conversión explícita a Europe/Madrid (verificado revirtiendo ambos fixes — los tests nuevos fallan exactamente como describió Codex y pasan con el fix restaurado); DEC-029 corregido con el cruce completo (4 C5, 19 de 9 líneas distintas, 1 sin resolver). 101/101 tests en verde. Reenviado a Codex para segunda verificación | — |
+| `2026-11-19` | MP-013 | Revisión final independiente de Codex aprobada sobre `15170c4`: el único residuo documental ya enumera C1/C2/C3/C4/C4a/C4b/C8a/C8b/C10 y el trip de refuerzo sin resolver; diff mínimo y limpio, 11/11 tests API en verde, PostgreSQL `668/484/3/120/0`, identidad Git correcta y sin coautor. **APROBADA, sin hallazgos abiertos.** MP-013 pasa a `DONE` | dispatch `ctx_1235555422b3`; commit `15170c4` |
+| `2026-11-19` | MP-014 | Worktree `mp-014-frontend` abierto, ramificado desde `mp-013-fastapi` (MP-013 `DONE`). Dispatchado a Codex (ejecutor) con énfasis explícito en calidad visual real (inspección en navegador, no solo tests), diferenciación clara de los cuatro estados de posición y arquitectura genérica multi-línea (ADR-0011) | `docs/TASKS.md`; `docs/STATUS.md` |
+| `2026-11-19` | MP-014 | Implementación de Codex lista para revisión: `LineOut.geometry` aditivo/nullable (DEC-031), `apps/web` React/TypeScript/MapLibre genérico multi-línea, nulls y cobertura ausente explícitos, atribución OSM visible. Regresión Python 102/102; frontend lint/typecheck/3 tests/build en verde. Smoke real con GTFS oficial y poll fresco: 145 vehículos, 31 map-matched y cuatro estados simultáneos (24/2/4/1); runs del smoke retirados y PostgreSQL restaurado a `668/484/3/120/0`. Browser indisponible en la sesión Codex; por instrucción del coordinador, Claude ejecutará el gate visual desktop/estrecho/consola/interacciones antes de aprobar. Tarea pasa a `REVIEW`, no `DONE` | `apps/api/`; `apps/web/`; DEC-031/032; dispatch `ctx_878dc753a9a8` |
+| `2026-11-19` | MP-014 | Primera revisión visual real de Claude: responsive/estados/nulls/atribución correctos, pero bloqueante en Vite dev (`maplibre-gl-worker.mjs` prebundled → `504`; corredor/estaciones invisibles) y menor de selector sin `id/name`. Codex aplica el fix confirmado diagnósticamente por Claude (`optimizeDeps.exclude: maplibre-gl`), añade `id`/`name`/`htmlFor`, comprueba módulo directo `200`, preview con API real (1 segmento/23 estaciones) y repite lint/typecheck/3 tests/build en verde. Producción no usa `.vite/deps`: worker empaquetado en chunk `MapView`. Queda en `REVIEW` para segunda pasada visual de Claude | `apps/web/vite.config.ts`; `apps/web/src/App.tsx`; dispatch `ctx_173c5fc5e12c` |
+| `2026-11-19` | MP-014 | Segunda revisión visual de Claude confirma dev correcto y descubre el worker ausente en build/preview (la ruta devolvía fallback HTML). Codex emite el worker como asset explícito, fija su URL solo en producción y añade verificación byte a byte al build; lint/typecheck/3 tests/build en verde. Preview comprobado con worker `text/javascript` de 550.754 bytes y SHA-256 idéntico a la dependencia; API real devuelve el corredor. Queda en `REVIEW` para tercera pasada visual dev + preview de Claude | `apps/web/vite.config.ts`; `apps/web/src/MapView.tsx`; `apps/web/scripts/verify-build.mjs`; dispatch `ctx_2ce422035b3e` |
+| `2026-11-19` | MP-014 | Tercera revisión visual de Claude confirma worker/dev, pero reproduce 2/2 una carrera menor de carga en frío que retrasa corredor/estaciones al siguiente poll. Codex sustituye listeners `once("load")` tardíos por readiness persistente y aplicación del último estado desde el handler inicial, registra errores MapLibre y añade regresiones jsdom; lint/typecheck/5 tests/build en verde y worker validado (550.754 bytes). Queda en `REVIEW` para cuarta pasada visual en varias pestañas nuevas de Claude | `apps/web/src/MapView.tsx`; `apps/web/src/MapView.test.tsx`; dispatch `ctx_180bdc48fbc5` |
+| `2026-11-19` | MP-014 | Cuarta revisión visual de Claude: build de producción reconstruida, preview en tres pestañas nuevas e independientes (carga en frío) — 3/3 mostraron corredor/23 estaciones de inmediato, sin errores de consola. Dev revalidado, interacción del toggle "Trazado" comprobada. Las cuatro rondas de hallazgos quedan cerradas; MP-014 aprobada `DONE` por el revisor | commit `d4abedb`; `docs/TASKS.md`; `docs/STATUS.md` |
 
 ## Cómo usar este documento
 

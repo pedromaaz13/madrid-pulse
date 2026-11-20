@@ -1,0 +1,6 @@
+route_id,route_short_name,route_long_name,route_type,route_color,route_text_color
+10T0017C5,C5,Mostoles el Soto                        -Humanes,2,FECB00,FFFFFF
+10T0018C5,C5,Humanes                                 -Mostoles el Soto,2,FECB00,FFFFFF
+10T0035C5,C5,-Fuenlabrada,2,FECB00,FFFFFF
+10T0047C5,C5,Atocha                                  -Fuenlabrada,2,FECB00,FFFFFF
+10T0048C5,C5,Fuenlabrada                             -Atocha,2,FECB00,FFFFFF

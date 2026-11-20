@@ -1,5 +1,11 @@
 # analytics/duckdb
 
-Motor analítico local (DuckDB) sobre los Parquet particionados para métricas y agregados de línea/estación. Ver `docs/ARCHITECTURE.md` y `docs/DATA_MODEL.md`.
+Motor analítico local (DuckDB) sobre los Parquet particionados. Implementado
+en `services/snapshotter/` (MP-009, ampliado en MP-015) — ver
+`analytics/dbt/README.md` para el detalle de capas (raw → gold por
+núcleo/línea/estación) y `docs/DATA_MODEL.md` para el esquema objetivo.
 
-**Vacío intencionadamente.** Se implementa como parte de **MP-009** (Historical exporter). No añadir código aquí antes de esa tarea — ver `docs/TASKS.md` y `docs/STATUS.md`.
+No hay código propio en este directorio: DuckDB se usa embebido, sin
+servicio, directamente desde `services/snapshotter/gold.py` y
+`services/snapshotter/export.py` (ver DEC-021 — un único motor, sin
+`pandas`/`pyarrow` añadidos).

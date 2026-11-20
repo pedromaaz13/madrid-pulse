@@ -1,6 +1,6 @@
 # ADR-0004: Modelo de posición en cuatro estados
 
-- **Estado:** Aceptado (principio y estados), umbrales **propuestos, pendientes de calibración real**
+- **Estado:** Aceptado (principio y estados); defaults calibrados en MP-012, todavía configurables
 - **Fecha:** 2026-11-18
 - **Decisores:** Propietario del repositorio, con fundamento en `docs/research/deep-research-report.md`
 
@@ -19,7 +19,9 @@ STALE       >180 s        dato obsoleto
 SCHEDULED   sin datos      solo horario GTFS
 ```
 
-Cada posición expone `position_mode`, `confidence`, `age_s` y `source`. Nunca se presenta una posición `estimated`/`scheduled` con la misma semántica visual que una `observed` en el frontend (MP-014).
+Cada posición expone modo, confianza, edad y fuente. Nunca se presenta una posición `estimated`/`scheduled` con la misma semántica visual que una `observed` en el frontend (MP-014).
+
+**Corrección de MP-015 (nomenclatura real tras MP-012/MP-013):** el contrato interno `packages.movement.MovementPosition` sí usa literalmente `position_mode`/`confidence`/`age_s`/`source`. El contrato público HTTP (`apps/api/schemas.py`, confirmado en [ADR-0005](0005-api-contract.md)) usa en cambio `position.mode` (no `position_mode`), `observation.age_s` como campo hermano de `position` (no anidado dentro de ella, porque describe la edad de la observación cruda, no de la posición calculada — ver `apps/api/service.py`) y **no expone `source` públicamente**. Esta sección describía la intención previa a la implementación; la nomenclatura pública real vive en ADR-0005/`docs/DATA_CONTRACTS.md`.
 
 Pipeline de cálculo: GPS reciente y plausible → map-match al track → localizar distancia acumulada sobre shape → estimar progreso esperado por horario → calcular offset temporal → interpolar hasta siguiente observación → limitar aceleración/velocidad/retrocesos imposibles.
 
@@ -30,5 +32,6 @@ Pipeline de cálculo: GPS reciente y plausible → map-match al track → locali
 
 ## Consecuencias
 
-- Los umbrales `60s`/`180s` son los propuestos por la investigación como punto de partida, **no verdad de diseño**: MP-012 debe calibrarlos contra datos reales de frecuencia de actualización medidos en MP-003.
+- MP-012 mantuvo `60s`/`180s` como defaults configurables después de calibrarlos: `vehicle_positions` se actualizó cada ~20–22 s en MP-003, de modo que representan aproximadamente 3 y 8 actualizaciones perdidas. No son verdad de fuente ni constantes ocultas; viven en `MovementThresholds`.
+- El límite de interpolación física (`160 km/h`) es distinto del filtro de salto inutilizable del feed (`900 km/h`). MP-008 observó saltos crudos reales de 246–787 km/h y la validación map-matched de MP-012 midió 666,4 km/h; tratarlos como velocidad continua sería incorrecto, pero descartarlos con un corte ferroviario convencional también eliminaría observaciones reales.
 - Todo endpoint de vehículo en vivo debe exponer estos campos sin excepción (ver `docs/DATA_CONTRACTS.md`).

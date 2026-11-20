@@ -36,13 +36,18 @@ python3 -m services.snapshotter 2026-11-19
   `trip_update_observation`, `service_alert`, `source_ingestion_run`,
   `data_quality_event`) se exportan completas, particionadas
   `date=YYYY-MM-DD/hour=HH`.
-- **Capa gold inicial** (`gold.py`): resumen diario **por núcleo**
-  (`nucleo_prefix`, ya resuelto y verificado en MP-003), partición
-  `date=YYYY-MM-DD`. **Limitación deliberada:** NO calcula
-  `daily_line_metrics`/`station_daily_metrics` (por `route_id`/`station_id`)
-  porque esa resolución depende de MP-010 (GTFS estático), que no es
-  dependencia de MP-009. Documentado en el docstring de `gold.py` para no
-  perderse cuando MP-010 esté hecho.
+- **Capa gold** (`gold.py`): tres agregados, partición `date=YYYY-MM-DD`.
+  - `build_nucleo_daily_summary` (MP-009): resumen diario **por núcleo**
+    (`nucleo_prefix`, resuelto y verificado en MP-003).
+  - `build_line_daily_metrics`/`build_station_daily_metrics` (MP-015):
+    `daily_line_metrics`/`station_daily_metrics` reales (docs/DATA_MODEL.md),
+    resolviendo `trip_id`→`route_id`/`stop_id`→`station_id` contra
+    `packages.gtfs.Topology` — la resolución que bloqueaba esto desde MP-009
+    (DEC-021/DEC-027) ya existe de verdad desde MP-010→MP-014. Límites
+    documentados en DEC-033: `trips_scheduled` solo usa `calendar.txt` (sin
+    `calendar_dates.txt`); el umbral de puntualidad es calibrable, no
+    medido; `station_daily_metrics` no incluye `data_quality_events_count`
+    (sin atribución real a una parada todavía).
 
 ## Test de replay
 
@@ -55,5 +60,6 @@ pérdida. Limpia sus propias filas al terminar (`try/finally`), nunca
 
 ```bash
 python3 -m unittest services.snapshotter.tests.test_export         # puro, sin BD
+python3 -m unittest services.snapshotter.tests.test_gold           # puro, sin BD (fixture GTFS real)
 python3 -m unittest services.snapshotter.tests.test_export_replay  # requiere PostgreSQL local
 ```

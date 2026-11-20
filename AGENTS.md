@@ -58,6 +58,18 @@ Ver [ADR-0007](docs/adr/0007-autonomy-model.md) para el contexto y las alternati
 - Un cambio de arquitectura sigue exigiendo un ADR (regla 8, no se relaja). El agente que lo propone lo redacta y lo registra como **`Propuesto`** (nunca `Aceptado`) en `docs/adr/README.md` y `docs/DECISIONS.md`, y puede aplicarlo de forma provisional dentro del ciclo de revisión cruzada sin esperar aprobación síncrona. El propietario revisa los ADR `Propuesto` en lote al cierre del hito y decide: promoverlos a `Aceptado`, pedir cambios, o rechazarlos. Esto es coherente con `docs/adr/README.md`: ningún ADR se marca `Aceptado` sin esa revisión explícita del propietario — durante la autonomía, simplemente se trabaja bajo `Propuesto` mientras se espera esa revisión, en vez de bloquear la tarea.
 - Un desacuerdo entre Claude Code y Codex que no converge tras varias rondas de corrección/re-verificación deja la tarea en `BLOCKED` (no interrumpe el resto del hito si las demás tareas son independientes en el grafo) y se recoge en el reporte de cierre de hito, no en una interrupción en tiempo real.
 
+### Convergencia de ramas para tareas con varias dependencias (resolución de DEC-015)
+
+Cuando una tarea depende directamente de más de una tarea anterior (p. ej. MP-012 depende de MP-008, MP-010 y MP-011), antes de abrir su worktree se comprueba, para cada dependencia, si ya es ancestro de la rama candidata a base con:
+
+```sh
+git merge-base --is-ancestor <rama-de-la-dependencia> <rama-candidata-a-base>
+```
+
+- **Si todas las dependencias son ancestros** de la rama candidata (normalmente la más "profunda" de la cadena — en el caso de MP-012, la rama de MP-011, que a su vez parte de MP-010), se ramifica directamente desde ahí. No hace falta ningún `git merge`: la nueva rama ya contiene a todas sus dependencias en su historial.
+- **Si alguna dependencia no es ancestro** (divergencia real — dos cadenas que nunca se encontraron), se resuelve con un `git merge` real de la rama no-ancestro sobre la rama base elegida, **antes** de empezar a implementar la tarea, documentando en `docs/STATUS.md` qué rama se eligió como base, cuál se fusionó, y cualquier conflicto encontrado y cómo se resolvió.
+- Este mecanismo se aplica de forma transitiva: no hace falta que una dependencia sea ancestro directo, basta con que lo sea en el historial de commits (herencia a través de `main` o de cualquier rama intermedia cuenta).
+
 ## Protocolo de coordinación en Orca — un worktree por tarea
 
 Madrid Pulse usa **un worktree por tarea**, no un worktree por agente. Dentro de ese worktree único, Claude Code y Codex trabajan **secuencialmente**: uno implementa, el otro revisa, el primero corrige, el segundo verifica de nuevo — tantas rondas como haga falta, sobre la misma rama/worktree.
