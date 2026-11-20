@@ -1,8 +1,8 @@
 # ADR-0010: Estrategia de deduplicación del colector
 
-- **Estado:** `Propuesto` — aplicado provisionalmente en MP-007 bajo el régimen de autonomía de ADR-0007. Codex (revisor de MP-007) audita y aprueba o rechaza su contenido técnico como parte de la revisión de la tarea; eso no equivale a promoverlo a `Aceptado` — **solo el propietario** puede hacerlo. **Corrección de MP-015:** el cierre real de Hito 1 (fusión a `main`, 2026-11-19) ocurrió sin que el propietario promoviera este ADR — la revisión pendiente pasa al cierre de Hito 2.
-- **Fecha:** 2026-11-19
-- **Decisores (propuesta):** Claude Code (ejecutor de MP-007); auditado por Codex como revisor; promoción a `Aceptado` pendiente exclusivamente del propietario.
+- **Estado:** `Aceptado` — promovido por el propietario en el cierre de Hito 2 (`2026-11-20`), tras la auditoría de integración de Hito 2 (ver `docs/STATUS.md`) que encontró y corrigió una omisión real en la "Decisión": faltaba el desempate `id DESC` que el código real sí implementa desde MP-007.
+- **Fecha:** 2026-11-19 (promovido 2026-11-20)
+- **Decisores:** Claude Code (ejecutor de MP-007); auditado por Codex como revisor de MP-007 y de la auditoría de integración de Hito 2; promovido por el propietario (Pedro Matute).
 
 ## Contexto
 
@@ -12,7 +12,7 @@
 
 ## Decisión
 
-1. La clave de deduplicación es `(clave_de_entidad_de_origen, payload_hash)`, donde la clave de entidad es `source_vehicle_id` (posiciones), `source_trip_id` (actualizaciones de viaje) o `source_alert_id` (alertas) — no `ingestion_run_id`. El colector compara el `payload_hash` de la entidad recién parseada contra el de la **última fila almacenada** para esa misma clave (`ORDER BY observed_at DESC LIMIT 1`); si coincide, no inserta una fila nueva.
+1. La clave de deduplicación es `(clave_de_entidad_de_origen, payload_hash)`, donde la clave de entidad es `source_vehicle_id` (posiciones), `source_trip_id` (actualizaciones de viaje) o `source_alert_id` (alertas) — no `ingestion_run_id`. El colector compara el `payload_hash` de la entidad recién parseada contra el de la **última fila almacenada** para esa misma clave (`ORDER BY observed_at DESC, id DESC LIMIT 1` para posiciones/viajes; `ORDER BY active_period_start DESC, id DESC LIMIT 1` para alertas); si coincide, no inserta una fila nueva. **El desempate `id DESC` es necesario, no cosmético:** si dos filas comparten exactamente el mismo `observed_at`/`active_period_start` (Renfe puede repetir el timestamp reportado en polls consecutivos sin que cambie), `ORDER BY observed_at DESC` por sí solo no garantiza determinismo sobre cuál es "la última" — el motor puede devolver cualquiera de las filas empatadas, arriesgando comparar contra la fila equivocada e insertar un duplicado en vez de deduplicar. `id DESC` como desempate secundario corrige esto de forma determinista (bloqueante real encontrado y corregido en MP-007; ver `services/collector/db.py` y `packages/quality/db.py`).
 2. **No se implementa `seen_count`.** Cuando una entidad se deduplica, no se incrementa ningún contador ni se actualiza la fila existente. Se puede derivar una cadencia de observación equivalente más adelante a partir de `source_ingestion_run` (que registra todos los ciclos, con o sin inserciones) sin necesitar un contador por fila.
 3. El `UNIQUE(ingestion_run_id, payload_hash)` de MP-006 queda como salvaguarda defensiva contra un bug que insertara la misma entidad dos veces dentro del mismo ciclo de ingesta — no es el mecanismo de deduplicación entre ciclos, que ocurre en la capa de aplicación (este colector) antes del `INSERT`.
 
@@ -27,4 +27,4 @@
 - `services/collector/db.py` expone `latest_payload_hash(conn, tabla, clave)` como única consulta de lectura antes de cada posible inserción.
 - El test de idempotencia de MP-007 (`services/collector/tests/`) verifica contra la base real que un mismo payload repetido produce una sola fila almacenada, no dos.
 - Si una fase posterior necesita `seen_count` o una métrica de "última vez vista sin cambios", requerirá una migración adicional y una revisión de este ADR — no se improvisa sin verificar antes.
-- Pendiente: Codex (revisor de MP-007) audita el contenido técnico de este ADR; **solo el propietario** puede promoverlo a `Aceptado` — en el cierre de Hito 2 (ver corrección en el campo `Estado`).
+- Codex (revisor de MP-007) auditó el contenido técnico de este ADR; el propietario lo promovió a `Aceptado` en el cierre de Hito 2, tras corregir la omisión de `id DESC` en la "Decisión" (hallazgo real de la auditoría de integración de Hito 2, no cosmético: ver Parte 2 de la auditoría en `docs/STATUS.md`).

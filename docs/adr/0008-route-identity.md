@@ -1,8 +1,8 @@
 # ADR-0008: `route_id` completo, no el código de línea, como identificador de ruta
 
-- **Estado:** `Propuesto` — aplicado provisionalmente en MP-003 bajo el régimen de autonomía de ADR-0007; pendiente de revisión y promoción a `Aceptado` por el propietario. **Corrección de MP-015:** el cierre real de Hito 1 (fusión a `main`, 2026-11-19) ocurrió sin que el propietario promoviera este ADR — la revisión pendiente pasa al cierre de Hito 2.
-- **Fecha:** 2026-11-18
-- **Decisores (propuesta):** Claude Code (ejecutor de MP-003); pendiente de aprobación del propietario.
+- **Estado:** `Aceptado` — promovido por el propietario en el cierre de Hito 2 (`2026-11-20`), tras la auditoría de integración de Hito 2 (`docs/STATUS.md`), que confirmó contra el código real (`Topology`, `route_groups()`, filtro de núcleo `10`, `UNIQUE(network_id, source_route_id)`) que la identidad adoptada se aplica sin colapsar en ninguna capa implementada.
+- **Fecha:** 2026-11-18 (promovido 2026-11-20)
+- **Decisores:** Claude Code (ejecutor de MP-003); auditado por Codex en la revisión de MP-003 y en la auditoría de integración de Hito 2; promovido por el propietario (Pedro Matute).
 
 ## Contexto
 

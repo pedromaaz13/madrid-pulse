@@ -1,8 +1,8 @@
 # ADR-0013: No se introduce dbt-core/dbt-duckdb como motor literal para la capa gold
 
-- **Estado:** Propuesto — pendiente de revisión del propietario en el cierre de Hito 2
-- **Fecha:** 2026-11-20
-- **Decisores (propuesta de):** Claude Code (ejecutor de MP-015); auditado por OpenAI Codex como revisor; pendiente de aceptación formal del propietario
+- **Estado:** `Aceptado` — promovido por el propietario en el cierre de Hito 2 (`2026-11-20`), tras la auditoría de integración de Hito 2 (`docs/STATUS.md`), que confirmó contra `requirements.txt`/`gold.py`/`analytics/dbt/README.md` que no se introdujo `dbt-core`/`dbt-duckdb` y que ADR-0003 permanece intacto.
+- **Fecha:** 2026-11-20 (promovido el mismo día)
+- **Decisores:** Claude Code (ejecutor de MP-015); auditado por OpenAI Codex como revisor de MP-015 y de la auditoría de integración de Hito 2; promovido por el propietario (Pedro Matute).
 
 ## Contexto
 

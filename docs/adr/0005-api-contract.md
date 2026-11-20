@@ -1,7 +1,7 @@
 # ADR-0005: Contrato de API propio versionado
 
-- **Estado:** Propuesto (confirmado en MP-013, pendiente de promoción del propietario)
-- **Fecha:** 2026-11-18 (actualizado 2026-11-19)
+- **Estado:** `Aceptado` — confirmado en MP-013, promovido por el propietario en el cierre de Hito 2 (`2026-11-20`). Los endpoints `history`/`metrics` siguen diferidos (ver nota de MP-015 más abajo); eso es alcance funcional futuro, no una objeción a la decisión arquitectónica de tener contrato propio versionado.
+- **Fecha:** 2026-11-18 (actualizado 2026-11-19, promovido 2026-11-20)
 - **Decisores:** Propietario del repositorio, con fundamento en `docs/research/deep-research-report.md` y `docs/research/MADRID_PULSE_BRIEF_INICIAL.md`
 
 ## Contexto

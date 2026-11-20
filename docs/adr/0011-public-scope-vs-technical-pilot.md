@@ -1,8 +1,8 @@
 # ADR-0011: Piloto técnico C5 (Hito 2) frente a objetivo de primera versión pública (toda Cercanías Madrid)
 
-- **Estado:** Propuesto — pendiente de revisión del propietario en el cierre de Hito 2
-- **Fecha:** 2026-11-19
-- **Decisores (propuesta de):** Claude Code, por instrucción explícita del propietario al autorizar Hito 2; pendiente de aceptación formal por el propietario del repositorio
+- **Estado:** `Aceptado` — promovido por el propietario en el cierre de Hito 2 (`2026-11-20`), tras la auditoría de integración de Hito 2 (`docs/STATUS.md`), que confirmó que la lógica de GTFS/geo/movimiento no fija la línea piloto como literal y que los defaults `C5` de `ApiConfig`/`SnapshotterConfig` son configuración sustituible, no un filtro codificado.
+- **Fecha:** 2026-11-19 (promovido 2026-11-20)
+- **Decisores:** Claude Code, por instrucción explícita del propietario al autorizar Hito 2; promovido por el propietario (Pedro Matute) en el cierre de Hito 2.
 
 ## Contexto
 

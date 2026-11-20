@@ -1,8 +1,8 @@
 # ADR-0012: Paquete independiente para el motor de movimiento
 
-- **Estado:** Propuesto — pendiente de revisión del propietario en el cierre de Hito 2
-- **Fecha:** 2026-11-19
-- **Decisores (propuesta de):** OpenAI Codex como ejecutor de MP-012; pendiente de revisión de Claude Code y aceptación formal del propietario
+- **Estado:** `Aceptado` — promovido por el propietario en el cierre de Hito 2 (`2026-11-20`), tras la auditoría de integración de Hito 2 (`docs/STATUS.md`), que confirmó que `packages/movement` sigue siendo puro y sin persistencia en producción, consumido por FastAPI sin incorporar el algoritmo a la capa HTTP.
+- **Fecha:** 2026-11-19 (promovido 2026-11-20)
+- **Decisores:** OpenAI Codex como ejecutor de MP-012; revisado por Claude Code en MP-012 y en la auditoría de integración de Hito 2; promovido por el propietario (Pedro Matute).
 
 ## Contexto
 

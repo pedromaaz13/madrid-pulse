@@ -1,8 +1,8 @@
 # ADR-0009: Campos del modelo candidato no observados en el feed real de Renfe
 
-- **Estado:** `Propuesto` — aplicado provisionalmente en MP-005 bajo el régimen de autonomía de ADR-0007. Codex (revisor de MP-005) audita y aprueba o rechaza su contenido técnico como parte de la revisión de la tarea; eso no equivale a promoverlo a `Aceptado` — **solo el propietario** puede hacerlo (ver `docs/adr/README.md` y `AGENTS.md`). Corregido tras la revisión de Codex: una redacción anterior sugería erróneamente que Codex podía promoverlo. **Corrección de MP-015:** el cierre real de Hito 1 (fusión a `main`, 2026-11-19) ocurrió sin que el propietario promoviera este ADR — la revisión pendiente pasa al cierre de Hito 2.
-- **Fecha:** 2026-11-18
-- **Decisores (propuesta):** Claude Code (ejecutor de MP-005); auditado por Codex como revisor de MP-005; promoción a `Aceptado` pendiente exclusivamente del propietario.
+- **Estado:** `Aceptado` — promovido por el propietario en el cierre de Hito 2 (`2026-11-20`), tras la auditoría de integración de Hito 2 (`docs/STATUS.md`), que confirmó contra el código real (contratos, migración, `packages.gtfs`) que los campos declarados no observados siguen sin fabricarse en ninguna capa.
+- **Fecha:** 2026-11-18 (promovido 2026-11-20)
+- **Decisores:** Claude Code (ejecutor de MP-005); auditado por Codex en la revisión de MP-005 y en la auditoría de integración de Hito 2; promovido por el propietario (Pedro Matute).
 
 ## Contexto
 

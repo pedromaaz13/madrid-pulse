@@ -1,7 +1,7 @@
 # ADR-0002: Fuentes de datos primarias
 
-- **Estado:** Aceptado (fuentes), con verificación formal **pendiente** en MP-002/MP-003
-- **Fecha:** 2026-11-18
+- **Estado:** `Aceptado (fuentes): Renfe verificada e integrada; CRTM con licencia verificada, disponibilidad técnica e integración pendientes` — resuelto en el cierre de Hito 2 (`2026-11-20`), tras la auditoría de integración de Hito 2 (`docs/STATUS.md`). La verificación de MP-002/MP-003 sí se completó (licencia de ambas fuentes, disponibilidad técnica de Renfe); lo que sigue abierto, y no se cierra con esta promoción, es la disponibilidad técnica e integración real de CRTM — ver "Consecuencias" para el detalle exacto, ya corregido en MP-015.
+- **Fecha:** 2026-11-18 (resuelto 2026-11-20)
 - **Decisores:** Propietario del repositorio, con fundamento en `docs/research/deep-research-report.md` y `docs/research/MADRID_PULSE_BRIEF_INICIAL.md`
 
 ## Contexto
