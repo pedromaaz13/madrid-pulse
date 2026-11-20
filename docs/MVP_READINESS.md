@@ -66,8 +66,10 @@ capturó, y se saltan explícitamente en vez de fallar o declararse superados
 sin ejecutarse.
 
 CI (`.github/workflows/ci.yml`) ejecuta ambos jobs (Python + frontend) en
-cada push/PR contra un PostgreSQL de servicio recién creado — nunca toca
-Renfe/CRTM/OSM en vivo.
+cada push a `main` y en cada pull request, contra un PostgreSQL de servicio
+recién creado — nunca toca Renfe/CRTM/OSM en vivo. Los worktrees de tarea no
+se empujan a `origin` directamente (ver `AGENTS.md`), así que un `pull_request`
+es el punto real donde CI se ejecuta antes de integrar.
 
 ## 4. Principios de datos — verificados, no solo declarados
 
@@ -78,7 +80,7 @@ estimado, dato ausente ≠ cero, puntualidad siempre con cobertura.
 - **Idempotencia:** deduplicación por hash canónico de payload completo (ADR-0010/DEC-013), probada contra PostgreSQL real en `services/collector/tests/test_collector_cycle.py`.
 - **Raw ≠ normalizado:** `packages/contracts/raw.py` (passthrough fiel al feed) vs. `canonical.py` (modelo interno); ningún campo no observado se inventa (ADR-0009, ~800 entidades reales auditadas en MP-005/MP-007).
 - **Observado ≠ estimado:** cuatro estados explícitos (`observed`/`estimated`/`stale`/`scheduled`, ADR-0004), nunca con la misma semántica visual en el frontend (4 rondas de revisión visual real de MP-014).
-- **Dato ausente ≠ cero:** `delay.coverage: "missing"` nunca se interpreta como retraso cero (probado en `apps/api/tests/test_api_contract.py` y `apps/web/src/format.test.ts`); `on_time_pct_of_covered`/`delay_coverage_pct` son `NULL`, no `0`, cuando el denominador es cero (`services/snapshotter/tests/test_gold.py`).
+- **Dato ausente ≠ cero:** `delay.coverage: "missing"` nunca se interpreta como retraso cero (probado en `apps/api/tests/test_api_contract.py` y `apps/web/src/format.test.ts`); `on_time_pct_of_covered` es `NULL`, no `0`, cuando ningún trip programado de esa línea tuvo dato de retraso ese día — `delay_coverage_pct` en cambio es un porcentaje real (puede ser `0.0`) siempre que exista al menos un trip programado, que es el caso de toda fila emitida (`services/snapshotter/tests/test_gold.py`).
 - **Puntualidad con cobertura:** `delay_coverage_pct` y `on_time_pct_of_covered` siempre se calculan y exponen juntos, nunca uno sin el otro (`docs/DATA_QUALITY.md`, DEC-033).
 
 ## 5. Hallazgos reales que moldearon la implementación (no exhaustivo — ver `docs/DECISIONS.md` para las 35 entradas completas)

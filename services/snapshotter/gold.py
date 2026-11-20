@@ -169,8 +169,14 @@ def build_line_daily_metrics(
     `trip_update_observation` del día tuvo `delay_coverage='reported'`;
     `on_time_pct_of_covered` usa el retraso **más reciente reportado** de
     ese trip como su veredicto del día (ver docstring del módulo para el
-    umbral). `delay_coverage_pct`/`on_time_pct_of_covered` son `NULL`
-    (nunca `0`) cuando el denominador es cero -- dato ausente, no cero
+    umbral). Ambos porcentajes son `numeric(5,2)` en escala `0..100`, igual
+    que `infra/migrations/0001_init.up.sql` y `docs/DATA_CONTRACTS.md`
+    (hallazgo de la revisión de Codex: la primera versión de esta función
+    calculaba una fracción `0..1`, inconsistente con el esquema real).
+    `delay_coverage_pct` nunca es `NULL` para una fila emitida (toda fila
+    tiene por construcción `trips_scheduled >= 1`, ver `scheduled_trips`
+    más abajo); `on_time_pct_of_covered` sí es `NULL` (nunca `0`) cuando
+    `trips_with_delay_data = 0` -- dato ausente, no cero
     (docs/DATA_QUALITY.md).
     """
     con = duckdb.connect()
@@ -213,16 +219,22 @@ def build_line_daily_metrics(
             count(DISTINCT s.trip_id) AS trips_scheduled,
             count(DISTINCT CASE WHEN r.has_reported_delay THEN s.trip_id END) AS trips_with_delay_data,
             CASE WHEN count(DISTINCT s.trip_id) = 0 THEN NULL
-                 ELSE count(DISTINCT CASE WHEN r.has_reported_delay THEN s.trip_id END)::DOUBLE
-                      / count(DISTINCT s.trip_id)
+                 ELSE round(
+                     100.0 * count(DISTINCT CASE WHEN r.has_reported_delay THEN s.trip_id END)::DOUBLE
+                          / count(DISTINCT s.trip_id),
+                     2
+                 )
             END AS delay_coverage_pct,
             CASE WHEN count(DISTINCT CASE WHEN r.has_reported_delay THEN s.trip_id END) = 0 THEN NULL
-                 ELSE count(DISTINCT CASE
+                 ELSE round(
+                     100.0 * count(DISTINCT CASE
                           WHEN r.has_reported_delay
                                AND abs(r.latest_reported_delay_seconds) <= $on_time_threshold
                           THEN s.trip_id
                       END)::DOUBLE
-                      / count(DISTINCT CASE WHEN r.has_reported_delay THEN s.trip_id END)
+                          / count(DISTINCT CASE WHEN r.has_reported_delay THEN s.trip_id END),
+                     2
+                 )
             END AS on_time_pct_of_covered
         FROM scheduled_trips s
         LEFT JOIN trip_reports r ON r.source_trip_id = s.trip_id

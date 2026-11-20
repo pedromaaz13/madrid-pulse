@@ -25,8 +25,18 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 - `docs/MVP_READINESS.md`: checklist de cierre de Hito 2 para la aceptación del propietario — cumplimiento del objetivo declarado, demo local reproducible, estado real de tests (ambos escenarios), principios de datos verificados con evidencia, hallazgos clave, límites conocidos documentados y pendientes exclusivos de gobernanza.
 - `docs/HITO_3_BACKLOG.md` recuperado desde `chore/hito-2-coordination` (redactado en una sesión anterior por instrucción explícita del propietario, Sección 7 de la autorización de Hito 2) — había divergido de la cadena `mp-010`→`mp-015` y se habría perdido al fusionar a `main` sin traerlo explícitamente a este worktree. Actualizado con un pointer a DEC-033 (las métricas por línea que planificaba como pendientes ya están resueltas para C5).
 
+#### Fixed after Codex review (first round)
+- Escala de porcentaje real: `build_line_daily_metrics` calculaba `delay_coverage_pct`/`on_time_pct_of_covered` como fracción `0..1`; el esquema real (`numeric(5,2) CHECK BETWEEN 0 AND 100`, `docs/DATA_CONTRACTS.md`) exige `0..100`. Corregido (`* 100`, redondeado a 2 decimales); test de regresión añadido.
+- `docs/DATA_CONTRACTS.md`/`apps/api/README.md`/ADR-0005 corregidos: ya no dicen que las tablas gold "siguen vacías" (lo que falta es solo exponerlas vía endpoint).
+- `docs/MVP_READINESS.md`: semántica `NULL` real precisada (`delay_coverage_pct` nunca `NULL` para una fila emitida; `on_time_pct_of_covered` sí, cuando `trips_with_delay_data = 0`); CI trigger descrito con precisión (`push` a `main` + `pull_request`, no "cada push").
+- **Hallazgo de proceso real:** DEC-034 había reescrito la "Decisión" de ADR-0003 (`Aceptado`) sin pasar por el proceso de ADR. Revertido el texto de ADR-0003 a su redacción original; DEC-034 queda como nota de implementación, sin tocar la Decisión aceptada.
+- `docs/HITO_3_BACKLOG.md` (área 5): corregido el dato obsoleto "~24 vehículos C5" con el desglose real de DEC-029.
+
+#### Verified
+- 115/115 tests Python (114 + 1 de regresión nuevo) contra la base de desarrollo; 110/115 + 5 `skip` contra un segundo contenedor PostgreSQL fresco desechable. PostgreSQL restaurado exactamente a `668/484/3/120/0`.
+
 #### In progress
-- MP-015 pasa a `REVIEW`, pendiente de auditoría cruzada de Codex — ver `docs/STATUS.md`.
+- MP-015 re-delegado a Codex (revisor) para re-verificación — ver `docs/STATUS.md`.
 
 ### MP-014 — Frontend React/MapLibre C5
 

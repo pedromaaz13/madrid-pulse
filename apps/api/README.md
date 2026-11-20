@@ -75,12 +75,14 @@ resuelven posición contra el mismo corredor.
 
 `docs/DATA_CONTRACTS.md` proponía también `history/lines/{line_id}`,
 `history/trips/{trip_id}`, `metrics/lines/{line_id}` y
-`metrics/stations/{station_id}`. `daily_line_metrics`/`station_daily_metrics`
-siguen vacías (ninguna tarea las ha poblado desde que MP-009/DEC-021 las
-difirió) y calcularlas de verdad -- agregados reales, no inventados -- es un
-alcance propio, no una extensión trivial de esta tarea. Quedan como
-pendientes explícitos para MP-015/Hito 3, documentados en
-`docs/DATA_CONTRACTS.md`, no omitidos en silencio.
+`metrics/stations/{station_id}`. **Actualizado en MP-015 (DEC-033):**
+`daily_line_metrics`/`station_daily_metrics` ya se calculan de verdad
+(`services/snapshotter/gold.py`) -- lo que sigue sin implementarse es
+únicamente estos cuatro endpoints de esta API que los expondrían; no cabían
+en esta tarea sin reescribir la capa de resolución GTFS fuera de este
+módulo. Quedan como pendientes explícitos para Hito 3 si el propietario lo
+prioriza, documentados en `docs/DATA_CONTRACTS.md`, no omitidos en
+silencio.
 
 ## Pruebas
 

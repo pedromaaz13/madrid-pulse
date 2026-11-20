@@ -37,3 +37,12 @@ Implementados y publicados en OpenAPI (`apps/api/openapi.json`): `health`,
 ninguna tarea posterior las ha poblado); calcularlas de verdad es un
 alcance propio, no una extensión trivial de MP-013. Quedan documentadas
 como pendientes explícitos en `docs/DATA_CONTRACTS.md` para MP-015/Hito 3.
+
+## Nota de MP-015 (2026-11-20, DEC-033)
+
+`daily_line_metrics`/`station_daily_metrics` ya se calculan de verdad
+(`services/snapshotter/gold.py`), cerrando la dependencia que bloqueaba su
+cálculo desde MP-009. Los cuatro endpoints `history`/`metrics` de arriba
+siguen sin implementarse en esta API — las tablas existen y se calculan,
+pero exponerlas vía HTTP no era parte del alcance de MP-015; queda como
+trabajo de Hito 3 si el propietario lo prioriza.

@@ -13,7 +13,7 @@ Guardar cada lectura de posición indefinidamente en una base relacional es inso
 Arquitectura de almacenamiento en dos capas:
 
 1. **PostgreSQL/PostGIS ("hot")**: estado operativo actual + histórico de corto plazo (días), con índices espaciales y temporales para servir la API en vivo.
-2. **Parquet particionado diario ("frío")**, con compresión ZSTD, para histórico de medio/largo plazo, consumido vía DuckDB para agregados (ver DEC-034: MP-015 aplica la disciplina dbt sobre esta capa sin introducir el motor dbt literal).
+2. **Parquet particionado diario ("frío")**, con compresión ZSTD, para histórico de medio/largo plazo, consumido vía DuckDB/dbt para agregados.
 
 Deduplicación por hash canónico de payload: observaciones idénticas consecutivas no se almacenan repetidamente.
 

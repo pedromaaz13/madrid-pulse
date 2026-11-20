@@ -126,12 +126,50 @@ declaran superados sin ejecutarse).
 
 ### Bloqueos
 
-Ninguno conocido. Pendiente de revisión cruzada real de Codex antes de `DONE`.
+Ninguno tras la corrección de la primera ronda de revisión de Codex (ver
+abajo). Pendiente de re-verificación real de Codex antes de `DONE`.
+
+### Primera revisión de Codex — seis hallazgos reales, todos corregidos
+
+Codex verificó de forma independiente (re-ejecutó la suite completa contra
+la base de desarrollo y contra su propio contenedor PostgreSQL fresco,
+114/109+5 confirmados) y encontró seis problemas reales:
+
+1. **Escala de porcentaje incorrecta:** `build_line_daily_metrics` calculaba
+   `delay_coverage_pct`/`on_time_pct_of_covered` como fracción `0..1`, pero
+   `infra/migrations/0001_init.up.sql` (`numeric(5,2) CHECK BETWEEN 0 AND 100`)
+   y `docs/DATA_CONTRACTS.md` (ejemplo `78.3`/`87.2`) exigen `0..100`.
+   Corregido (`* 100`, redondeado a 2 decimales); añadido un test de
+   regresión explícito (`test_percentages_match_the_real_0_100_schema_not_a_0_1_fraction`).
+2. `docs/DATA_CONTRACTS.md`/`apps/api/README.md`/ADR-0005 seguían diciendo
+   que las tablas gold "siguen vacías" — corregido: ya se calculan
+   (DEC-033), lo que falta es solo exponerlas vía endpoint.
+3. `docs/MVP_READINESS.md` describía mal la semántica `NULL` real —
+   corregido: `delay_coverage_pct` nunca es `NULL` para una fila emitida
+   (toda fila tiene `trips_scheduled >= 1` por construcción);
+   `on_time_pct_of_covered` sí, cuando `trips_with_delay_data = 0`.
+4. **Hallazgo de proceso real:** DEC-034 había reescrito la "Decisión" de
+   [ADR-0003](adr/0003-storage-strategy.md) (`Aceptado`) sin pasar por el
+   proceso de ADR (regla 8, `AGENTS.md`). Corregido: revertido el texto de
+   ADR-0003 a su redacción original; DEC-034 queda como nota de
+   implementación a nivel `DECISIONS.md`, sin tocar la Decisión aceptada.
+5. `docs/HITO_3_BACKLOG.md` (área 5) repetía el dato obsoleto "~24
+   vehículos C5" — corregido con el desglose real de DEC-029 (4 C5 + 19
+   otras líneas + 1 refuerzo sin resolver).
+6. `docs/MVP_READINESS.md` decía "cada push/PR" cuando el `on:` real de
+   `ci.yml` es `push` a `main` + `pull_request` — corregido con la
+   redacción precisa (los worktrees de tarea nunca se empujan a `origin`
+   directamente).
+
+Los seis se corrigieron en este mismo worktree; 115/115 tests (114 + 1
+nuevo de regresión) verificados de nuevo contra la base de desarrollo y
+contra un segundo contenedor PostgreSQL fresco desechable (109/115 + 5
+`skip`).
 
 ### Siguiente paso
 
-Delegado a Codex (revisor) para auditoría cruzada en este mismo worktree. Al
-aprobarse, MP-015 cierra la cadena del Hito 2. El propietario decide la
+Re-delegado a Codex (revisor) para re-verificación en este mismo worktree.
+Al aprobarse, MP-015 cierra la cadena del Hito 2. El propietario decide la
 auditoría de integración final y el momento de fusionar a `main`.
 
 ## Tareas cerradas de la cadena

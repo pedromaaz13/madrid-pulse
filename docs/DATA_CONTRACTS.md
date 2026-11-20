@@ -91,7 +91,7 @@ GET /api/v1/metrics/lines/{line_id}
 GET /api/v1/metrics/stations/{station_id}
 ```
 
-`daily_line_metrics`/`station_daily_metrics` siguen vacías: MP-009 las difirió explícitamente (DEC-021) y ninguna tarea posterior las ha poblado. Calcularlas de verdad —agregados reales sobre datos reales, nunca inventados— es un alcance propio que MP-013 no asumió; queda documentado para MP-015/Hito 3, no omitido en silencio (ver `apps/api/README.md` y ADR-0005).
+**Actualizado en MP-015 (DEC-033):** `daily_line_metrics`/`station_daily_metrics` ya se calculan de verdad en `services/snapshotter/gold.py` (diferidas desde MP-009, DEC-021, hasta que la resolución `route_id`/`station_id` existiera). Los endpoints `history/metrics` de arriba siguen sin implementarse en la API (`apps/api/`) -- las tablas gold existen y se calculan, pero ningún endpoint las expone todavía; queda como alcance de Hito 3 si el propietario lo prioriza (ver `apps/api/README.md` y ADR-0005).
 
 Todos bajo versionado explícito `/api/v1/`; un cambio incompatible de contrato requiere `/api/v2/`, nunca una mutación silenciosa de `/v1/`.
 

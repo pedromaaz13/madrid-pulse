@@ -135,8 +135,8 @@ class LineDailyMetricsTests(unittest.TestCase):
         # recibió un reporte de retraso -- coverage real es 1/2, no 1/1.
         self.assertEqual(trips_scheduled, 2)
         self.assertEqual(trips_with_delay_data, 1)
-        self.assertEqual(coverage_pct, 0.5)
-        self.assertEqual(on_time_pct, 1.0, "el único trip con dato de retraso estuvo dentro del umbral")
+        self.assertEqual(coverage_pct, 50.0)
+        self.assertEqual(on_time_pct, 100.0, "el único trip con dato de retraso estuvo dentro del umbral")
 
     def test_reported_delay_beyond_threshold_counts_as_not_on_time(self) -> None:
         con = duckdb.connect()
@@ -191,7 +191,39 @@ class LineDailyMetricsTests(unittest.TestCase):
             self.raw_dir, ACTIVE_SERVICE_DATE, self.raw_dir, self.topology,
         )
         _, _, _, _, on_time_pct = self._row_for_real_route(result.output_path)
-        self.assertEqual(on_time_pct, 1.0, "el último reporte (30s, dentro del umbral) debe ganar sobre el primero (900s)")
+        self.assertEqual(on_time_pct, 100.0, "el último reporte (30s, dentro del umbral) debe ganar sobre el primero (900s)")
+
+    def test_percentages_match_the_real_0_100_schema_not_a_0_1_fraction(self) -> None:
+        """Regresión directa del hallazgo de la revisión de Codex: la primera
+        versión de `build_line_daily_metrics` calculaba `delay_coverage_pct`/
+        `on_time_pct_of_covered` como fracción `0..1` (`0.5`/`1.0`), pero
+        `infra/migrations/0001_init.up.sql` define ambas columnas como
+        `numeric(5,2) CHECK (... BETWEEN 0 AND 100)` y `docs/DATA_CONTRACTS.md`
+        las ejemplifica como `78.3`/`87.2`. Un valor `<= 1.0` aquí (salvo el
+        caso real de cobertura/puntualidad cero) sería la regresión exacta
+        que este test existe para atrapar."""
+        con = duckdb.connect()
+        try:
+            _write_parquet(
+                con,
+                self._trip_update_dir(),
+                [
+                    {
+                        "source_trip_id": REAL_TRIP_ID,
+                        "delay_seconds": 60,
+                        "delay_coverage": "reported",
+                        "observed_at": datetime(2026, 11, 19, 10, 0, tzinfo=timezone.utc),
+                    }
+                ],
+            )
+        finally:
+            con.close()
+
+        result = build_line_daily_metrics(self.raw_dir, ACTIVE_SERVICE_DATE, self.raw_dir, self.topology)
+        _, _, _, coverage_pct, on_time_pct = self._row_for_real_route(result.output_path)
+        for name, value in (("delay_coverage_pct", coverage_pct), ("on_time_pct_of_covered", on_time_pct)):
+            self.assertGreater(value, 1.0, f"{name}={value} parece una fracción 0..1, no un porcentaje 0..100")
+            self.assertLessEqual(value, 100.0, f"{name}={value} excede el rango real 0..100")
 
 
 class StationDailyMetricsTests(unittest.TestCase):

@@ -138,8 +138,8 @@ daily_line_metrics (daily_trip_quality + agregado por línea)
   route_id FK
   trips_scheduled
   trips_with_delay_data
-  delay_coverage_pct        -- fracción con dato disponible, nunca implícita
-  on_time_pct_of_covered     -- % puntual SOLO sobre los que tienen dato
+  delay_coverage_pct        -- % (0-100) con dato disponible, nunca implícita; nunca NULL si hay trips programados (MP-015, DEC-033)
+  on_time_pct_of_covered     -- % (0-100) puntual SOLO sobre los que tienen dato; NULL (no 0) si ninguno tiene dato
   PRIMARY KEY(service_date, route_id)
 
 station_daily_metrics (daily_station_metrics)

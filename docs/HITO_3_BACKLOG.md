@@ -27,7 +27,7 @@ Extender Madrid Pulse de "C5 en vivo" a "toda la red de Cercanías Madrid en viv
 - Búsqueda por estación/línea: evaluar si el volumen de estaciones de toda la red justifica un buscador (autocompletar) frente a una lista navegable, igual que ya se evaluó para C5 en MP-014.
 
 ### 5. Escalabilidad con muchos trenes simultáneos
-- C5 tiene un volumen de trenes simultáneos relativamente pequeño (confirmado en el soak test de MP-007: ~24 vehículos). Toda la red de Cercanías Madrid multiplica ese número significativamente.
+- C5 tiene un volumen de trenes simultáneos relativamente pequeño: el soak test de MP-007 observó 24 vehículos distintos del núcleo Madrid en total, de los que solo 4 eran realmente C5 (`10T0017C5`/`10T0018C5`); los otros 19 eran otras líneas del núcleo (C1, C2, C3, C4, C4a, C4b, C8a, C8b, C10) y 1 un refuerzo sin resolver (DEC-029, confirmado contra el GTFS completo en MP-013). Toda la red de Cercanías Madrid multiplica significativamente el volumen real de trenes-C5-equivalentes a servir, no solo el total ya observado del núcleo.
 - Medir si el motor de movimiento (MP-012) y la API (MP-013) escalan linealmente o si aparecen cuellos de botella reales (no teóricos) al servir el estado de todos los trenes de la red — con datos reales, no con una proyección sin medir.
 - Evaluar si el patrón de snapshot/CDN ya previsto en `docs/ARCHITECTURE.md` ("Snapshot CDN (futuro)") se vuelve necesario en este punto, en vez de seguir sirviendo peticiones directas desde la API para cada espectador.
 

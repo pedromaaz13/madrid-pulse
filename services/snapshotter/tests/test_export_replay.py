@@ -365,7 +365,7 @@ class ExportReplayTests(unittest.TestCase):
         finally:
             con.close()
 
-        self.assertEqual(line_row, ("10T0017C5", 1, 1, 1.0))
+        self.assertEqual(line_row, ("10T0017C5", 1, 1, 100.0))
         self.assertEqual(station_row, ("replay-stop-0", 1))
 
 
