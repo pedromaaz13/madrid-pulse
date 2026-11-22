@@ -23,6 +23,11 @@ function emitMapLibreWorker(): Plugin {
   };
 }
 
+// Destino del proxy `/api` en desarrollo. Configurable porque un worktree
+// puede necesitar su propio backend cuando el puerto por defecto ya está
+// ocupado por otra instancia local; el valor por defecto no cambia.
+const API_TARGET = process.env.MADRID_PULSE_API_TARGET ?? "http://127.0.0.1:8000";
+
 export default defineConfig({
   plugins: [react(), emitMapLibreWorker()],
   // MapLibre crea su worker mediante una URL ESM propia. Prebundlearlo con
@@ -36,14 +41,14 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      "/api": "http://127.0.0.1:8000",
+      "/api": API_TARGET,
     },
   },
   preview: {
     // Solo para el smoke local de la build estática. En despliegue, el
     // frontend y /api se sirven bajo el mismo origen mediante reverse proxy.
     proxy: {
-      "/api": "http://127.0.0.1:8000",
+      "/api": API_TARGET,
     },
   },
 });
