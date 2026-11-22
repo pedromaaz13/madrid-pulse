@@ -44,6 +44,43 @@ No se avanza fuera de MP-010→MP-015 sin nueva autorización explícita (p. ej.
 - **Discrepancia señalada al propietario:** el encargo nombra "Claude Sonnet 5.5" / "Claude Opus 5.5 High" como modelos. El contexto de entorno de esta sesión solo confirma la existencia de **Sonnet 5** y **Opus 5** (además de Haiku 4.5) como los modelos Claude más recientes disponibles — no se ha podido verificar ningún identificador "5.5". Siguiendo la instrucción explícita de no inventar identificadores, los workers de Hito 2 se lanzan con `--model sonnet --effort high` (por defecto) y `--model opus --effort high` (escalado), que son los identificadores reales confirmados, no una invención de "5.5".
 - Codex: se usa el modelo/nivel de razonamiento disponible más adecuado, priorizando razonamiento alto para geometría, movimiento, contratos e integración, conforme a los roles ya fijados en `docs/TASKS.md`.
 
+**Hito 3 autorizado por el propietario el `2026-11-22`: `MP-016` → `MP-022` ("Hito 3 — toda Cercanías Madrid, mapa map-first").**
+
+```text
+Cobertura: fiabilidad realtime (MP-016) + catálogo Madrid (MP-017) + geometría ferroviaria (MP-018) +
+  arquitectura API/snapshots (MP-019) + frontend/movimiento UX (MP-020) + histórico/analítica (MP-021) +
+  validación integral (MP-022).
+Objetivo de salida: mapa funcional, dinámico e interactivo de toda la red de Cercanías Madrid (no solo C5),
+  map-first, con separación raw/matched/rendered, movimiento fluido entre polls, servicios programados sin
+  GPS diferenciados de los observados, búsqueda/filtros/seguimiento/tableros, e History/Explore con cobertura
+  verificable.
+Cadena: MP-016 → MP-017 → MP-018 → MP-019 → MP-020 → MP-021 → MP-022 (estrictamente secuencial).
+Tabla ejecutor/revisor (fijada por el propietario vía el kit `docs/hitos/hito-03/PLAN-Y-ACEPTACION.md`):
+  MP-016 Fiabilidad realtime    → Ejecutor Codex   · Revisor Claude
+  MP-017 Catálogo Madrid        → Ejecutor Claude  · Revisor Codex
+  MP-018 Geometría ferroviaria  → Ejecutor Codex   · Revisor Claude
+  MP-019 API/snapshots          → Ejecutor Claude  · Revisor Codex
+  MP-020 Frontend/movimiento UX → Ejecutor Claude  · Revisor Codex
+  MP-021 Histórico/analítica    → Ejecutor Claude  · Revisor Codex
+  MP-022 Validación integral    → Ejecutor Codex   · Revisor Claude
+Fuente del kit: `~/Documents/DATA/Madrid-Pulse-Orca-Hito3-FINAL/` (versión `hito3-v4-definitivo`), instalado
+  en `docs/hitos/hito-03/` de cada worktree de esta cadena vía `instalar.py` (--comprobar, luego real);
+  `data/hito-03/` queda fuera de Git (`/data/` ya en `.gitignore`). Integridad verificada: 48 archivos,
+  hashes OK; replay reproducido (42 rutas, 12 líneas/variantes, corte 1532: 119 matches/49 SKIPPED, corte
+  1533: 121 matches/49 SKIPPED) antes de tocar código.
+Criterios de aceptación vinculantes adicionales (no solo PLAN-Y-ACEPTACION.md): `MATRIZ-CIERRE-MADRID.md`,
+  `AMPLIACION-ACEPTACION-MADRID-Y-HORARIOS.md`, `ANEXO-CRITICO-POSICION-Y-RELOJ.md` (los tres en
+  `docs/hitos/hito-03/`). Protocolo de autonomía/permisos del coordinador: `AUTONOMIA-ORCA-Y-PERMISOS.md`
+  (mismo directorio) — el coordinador puede aprobar solicitudes rutinarias de workers dentro del worktree
+  autorizado, con motivo registrado; nunca push/PR/merge, operaciones destructivas, cloud de pago, cambios
+  de permisos del sistema, ni licencias nuevas sin autorización puntual del propietario.
+Gates activos: decisiones reales de licencia/coste conforme a ADR-0007; cualquier decisión arquitectónica
+  nueva (p. ej. el contrato temporal de MP-019, elegido por ADR comparativo según
+  `MEJORAS-PRODUCTO-VALIDADAS.md`) sigue el proceso de ADR, nunca autopromovida a `Aceptado`.
+No se avanza fuera de MP-016→MP-022 sin nueva autorización explícita (AVE/LD/MD, despliegue público 24/7,
+  dbt obligatorio y expansión multimodal quedan para Hito 4+, ver `docs/hitos/hito-03/SIGUIENTES-HITOS.md`).
+```
+
 ## Auditoría independiente de preparación para integración
 
 **OpenAI Codex — `2026-11-19`: APROBADA, sin bloqueantes reales para integrar `mp-009-historical-export` en `main`.** El estado auditado (`c8d3bd0`, antes de registrar esta entrada) contiene de forma lineal y sin merges todo MP-001 → MP-009: `git merge-base --is-ancestor 3e7b533 c8d3bd0` devuelve `0`, y el recorrido desde `origin/main` (`5b45227`) hasta `c8d3bd0` contiene los 23 commits esperados. Los 23 tienen autor y committer `Pedro Matute <pedromaaz13@gmail.com>` y ninguno incluye un trailer literal `Co-authored-by:`.
@@ -251,6 +288,31 @@ Con Hito 1 ya fusionado a `main`, el caso concreto de MP-012 **deja de requerir 
 
 ## Tarea actual
 
+**MP-016 — Fiabilidad realtime (SKIPPED, UTC, live/replay)**
+
+Ejecutor: OpenAI Codex · Revisor: Claude Code · Estado: **IN_PROGRESS**
+
+Worktree/rama: `mp-016-fiabilidad-live`, ramificada directamente desde `main` (`990c95d`, que ya contiene toda la cadena MP-010→MP-015 fusionada vía PR #2). Primer commit (`d0f4b3c`): instalación verificada del kit externo Hito 3 v4 (`docs/hitos/hito-03/`), integridad y replay confirmados antes de tocar código (ver "Hito autorizado actualmente" arriba para el detalle completo de alcance/criterios).
+
+### Alcance de MP-016
+
+Reproducir y corregir, contra el HEAD real (no asumiendo que el parche de referencia (`data/hito-03/madrid-pulse-live.patch`, 11 ficheros) aplica literalmente):
+
+1. Paradas `trip_update` con `schedule_relationship=SKIPPED` sin campo `arrival` — deben tratarse a nivel de parada/ETA, nunca congelar por sí solas la circulación completa (solo cancelación real, espera acreditada, falta de trayectoria o caducidad justifican ese comportamiento).
+2. Timestamps leídos de PostgreSQL deben normalizarse a UTC explícito (el parche de referencia toca `apps/api/db.py` con `.astimezone(timezone.utc)` en varios puntos — verificar si psycopg ya devuelve aware datetimes en este HEAD antes de aplicar ciegamente).
+3. Distinción explícita Live/Replay documentada y reproducible localmente.
+4. Salud de feed/colector/GPS medida y expuesta por separado, no como un único estado agregado.
+
+### Pruebas que debe superar antes de pasar a `REVIEW`
+
+- Replay (`python3 data/hito-03/replay/comprobar.py`) reproduce los conteos de fixture ya verificados en la instalación: corte `1532` → 119 vehículos Madrid/119 matches/49 `SKIPPED` sin `arrival`; corte `1533` → 121/121/49. Estos conteos son de la fixture congelada, no una expectativa del feed real de hoy.
+- Suite real del proyecto contra PostgreSQL real (no solo la sonda Python del replay).
+- Casos explícitos: respuesta inválida del feed, reloj desfasado, colector detenido (comprobar en pantalla qué ve una persona cuando el colector se detiene — instrucción explícita del propietario para la revisión de Claude).
+
+## Tareas cerradas de la cadena
+
+## MP-015 — E2E y readiness MVP (cerrada)
+
 **MP-015 — E2E y readiness MVP**
 
 Ejecutor: Claude Code · Revisor: OpenAI Codex · Estado: **DONE**
@@ -412,7 +474,6 @@ autorización explícita. El propietario decide ahora la auditoría de
 integración final, la revisión/promoción de los ADRs `Propuesto` y el
 momento de fusionar a `main`.
 
-## Tareas cerradas de la cadena
 
 **MP-014 — Frontend React/MapLibre C5**
 

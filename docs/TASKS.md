@@ -1,4 +1,4 @@
-# TASKS.md — Backlog Madrid Pulse (MP-001 a MP-015)
+# TASKS.md — Backlog Madrid Pulse (MP-001 a MP-022)
 
 Numeración y dependencias conservadas de `docs/research/deep-research-report.md`. Cualquier desviación de la numeración original debe justificarse aquí y registrarse en `docs/DECISIONS.md`.
 
@@ -389,6 +389,28 @@ Cada tarea se trabaja en **un único worktree/rama** (`mp-00X-nombre-corto`), co
 
 ---
 
+# Hito 3 — MP-016 a MP-022 ("toda Cercanías Madrid")
+
+Autorizado por el propietario el `2026-11-22` (mensaje "ORCA — MADRID PULSE / EJECUCIÓN AUTÓNOMA DEL HITO 3"), a partir del kit externo `~/Documents/DATA/Madrid-Pulse-Orca-Hito3-FINAL/` (versión `hito3-v4-definitivo`, integridad verificada — 48 archivos, hashes OK). El kit queda instalado en `docs/hitos/hito-03/` de cada worktree de esta cadena (documentos, prototipo `diseno/live.html`, mockups); `data/hito-03/` (replay 1532/1533, GTFS oficial, parche de referencia) vive fuera de Git bajo la regla `/data/` ya existente en `.gitignore`. Fuente de verdad del reparto/dependencias: `docs/hitos/hito-03/PLAN-Y-ACEPTACION.md`; criterios de aceptación vinculantes adicionales en `MATRIZ-CIERRE-MADRID.md`, `AMPLIACION-ACEPTACION-MADRID-Y-HORARIOS.md` y `ANEXO-CRITICO-POSICION-Y-RELOJ.md` del mismo directorio. Protocolo de autonomía/permisos del coordinador: `AUTONOMIA-ORCA-Y-PERMISOS.md`.
+
+## MP-016 — Fiabilidad realtime (SKIPPED, UTC, live/replay)
+
+- **Fase:** Hito 3 — Cierre ferroviario Madrid
+- **Objetivo:** reproducir y corregir los hallazgos de fiabilidad de ingesta/colector/API documentados en `docs/hitos/hito-03/referencia/01-auditoria-live.md` antes de tocar el resto de la cadena: paradas `SKIPPED` sin `arrival`, timestamps UTC leídos de PostgreSQL, distinción explícita live/replay, salud de feed/collector/GPS medida por separado.
+- **Prioridad:** P0
+- **Depende de:** MP-015 (`DONE`, fusionada a `main` en `990c95d`)
+- **Ejecutor:** OpenAI Codex
+- **Revisor:** Claude Code
+- **Archivos/componentes afectados:** `services/collector/`, `packages/contracts/`, `packages/quality/db.py`, `apps/api/db.py`, `apps/api/service.py`, `apps/api/tests/test_api_contract.py`, `tests/e2e/test_replay.py` — ver el alcance exacto en `data/hito-03/madrid-pulse-live.patch` (referencia, no aplicar ciegamente; 11 ficheros tocados, inspeccionar y adaptar al HEAD real de `main`/`990c95d`).
+- **Entradas:** `docs/hitos/hito-03/referencia/01-auditoria-live.md`, `data/hito-03/replay/` (capturas `1532`/`1533`, GTFS oficial `fomento_transit.zip`, `comprobar.py`), parche de referencia.
+- **Entregables:** parser/colector corregido con fixtures verificadas; `SKIPPED` sin `arrival` tratado como afecta-a-la-parada (no congela la circulación completa salvo evidencia de cancelación real); edad de observación visible aunque se use un ancla anterior; arranque local documentado con modos `Live` y `Replay` explícitos.
+- **Criterios de aceptación:** replay reproduce los conteos congelados del kit (corte `1532`: 119 vehículos Madrid, 119 matches, 49 `SKIPPED` sin `arrival`; corte `1533`: 121 matches, 49 `SKIPPED`) — conteos de fixture, no expectativa del feed en vivo de hoy. Tests reales contra PostGIS, no solo la sonda Python del replay. Casos probados: respuesta inválida, reloj desfasado, colector detenido.
+- **Pruebas necesarias:** suite real del proyecto (Python contra PostgreSQL real) + `python3 data/hito-03/replay/comprobar.py` como sonda adicional, nunca sustituto.
+- **Evidencia de verificación:** pendiente (tarea recién abierta).
+- **Estado:** `IN_PROGRESS` — worktree `mp-016-fiabilidad-live` abierto desde `main` (`990c95d`), kit instalado y verificado (`d0f4b3c`), dispatchado a Codex.
+
+---
+
 ## Grafo de dependencias
 
 Esta tabla refleja **exactamente** el campo "Depende de" de cada ficha anterior — sin añadir dependencias transitivas redundantes. Para dependencias transitivas (p. ej. qué depende indirectamente de MP-004), recórrase la tabla hacia arriba.
@@ -410,5 +432,12 @@ Esta tabla refleja **exactamente** el campo "Depende de" de cada ficha anterior 
 | MP-013 | MP-005, MP-007, MP-012 |
 | MP-014 | MP-013 |
 | MP-015 | MP-009, MP-012, MP-013, MP-014 |
+| MP-016 | MP-015 |
+| MP-017 | MP-016 |
+| MP-018 | MP-017 |
+| MP-019 | MP-018 |
+| MP-020 | MP-019 |
+| MP-021 | MP-020 |
+| MP-022 | MP-021 |
 
-Dos ramas pueden avanzar en paralelo en worktrees independientes una vez resuelto su ancestro común: `MP-005` y `MP-010` corren en paralelo tras `MP-004` (no dependen entre sí); `MP-006`/`MP-007` corren en la rama de `MP-005`, mientras `MP-011` corre en la rama de `MP-010`, hasta que ambas convergen en `MP-012`.
+Dos ramas pueden avanzar en paralelo en worktrees independientes una vez resuelto su ancestro común: `MP-005` y `MP-010` corren en paralelo tras `MP-004` (no dependen entre sí); `MP-006`/`MP-007` corren en la rama de `MP-005`, mientras `MP-011` corre en la rama de `MP-010`, hasta que ambas convergen en `MP-012`. Hito 3 (`MP-016`→`MP-022`) es estrictamente secuencial, un worktree por tarea heredando de la anterior ya `DONE`, conforme a `docs/hitos/hito-03/PLAN-Y-ACEPTACION.md`.
