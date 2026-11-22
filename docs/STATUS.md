@@ -288,6 +288,36 @@ Con Hito 1 ya fusionado a `main`, el caso concreto de MP-012 **deja de requerir 
 
 ## Tarea actual
 
+**MP-021 — Histórico y continuidad analítica**
+
+Ejecutor: Claude (escalado a Opus) · Revisor: OpenAI Codex · Estado: **IN_PROGRESS**
+
+Worktree/rama: `mp-021-historico`, ramificada desde `mp-020-mapa-y-tablero` (MP-020 `DONE`, `b616ae6`). Datos del kit repuestos con `instalar.py --solo-datos` (10 ficheros).
+
+### Alcance de MP-021
+
+Histórico consultable por circulación ligado a la identidad/fecha de Live (MP-019/020), mart reproducible con numeradores/denominadores de cobertura (extendiendo `services/snapshotter/gold.py` de un núcleo a todo el catálogo Madrid vía MP-017/018/019), exportación idempotente (reprocesar el mismo día de servicio dos veces produce el mismo resultado exacto), History/Explore mínimo navegable conectado a los botones ya deshabilitados en `apps/web/src/ui/TopBar.tsx` (`disabled title="Histórico y Explore se entregan en MP-021"`), y propuesta ejecutable de colector continuo supervisado con coste medido — sin declarar «24/7 confirmado» ni contratar ningún servicio de pago sin aprobación explícita del propietario.
+
+### Prohibido explícitamente en MP-021 (kit, `MEJORAS-PRODUCTO-VALIDADAS.md`)
+
+SQL Lab, dbt obligatorio, cuentas de usuario, infraestructura distribuida. El histórico y Explore mínimo del kit se mantienen tal cual están definidos — no se amplía el alcance.
+
+### Entorno heredado de MP-020 (disponible, no asumir que sigue vivo sin comprobarlo)
+
+Backend replay en `127.0.0.1:8010` (GTFS completo del núcleo), Vite dev en `127.0.0.1:5181`, contenedor desechable `mp020-replay-db` en `127.0.0.1:5434` con los cortes `1532`/`1533` ingeridos; base de desarrollo `5433` intacta. El worker de MP-020 lo mantiene en pie a la espera de que MP-021 lo reutilice o indique que puede pararlo.
+
+### Nota heredada de MP-019 (DEC-038, pendiente del propietario)
+
+Con conexión PostgreSQL por petición, ~66 ms de los ~69 ms de p50 de `/api/v1/health` son solo abrir la conexión. Sigue pendiente del propietario, no se toma en MP-021.
+
+### Nota heredada de MP-020 (limitación conocida, no divergencia)
+
+`route_color` real de Renfe no se expone en `/api/v1/catalog`; el frontend usa una paleta propia determinista por `line_id`. Queda abierto si MP-021/MP-022 deciden publicarlo.
+
+## Tareas cerradas de la cadena
+
+## MP-020 — Mapa y tablero (React/MapLibre) (cerrada)
+
 **MP-020 — Mapa y tablero (React/MapLibre)**
 
 Ejecutor: Claude (escalado a Opus) · Revisor: OpenAI Codex · Estado: **DONE** (aprobado el 2026-11-22)
@@ -369,7 +399,6 @@ puede ramificar desde esta rama conforme al hito autorizado. La paleta propia
 por falta de `route_color` en `/api/v1/catalog` permanece como limitación
 conocida, no como divergencia silenciosa.
 
-## Tareas cerradas de la cadena
 
 ## MP-019 — Contrato de snapshot/API coherente (cerrada)
 

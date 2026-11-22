@@ -4,6 +4,10 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 
 ## [Unreleased]
 
+### MP-021 — Histórico y continuidad analítica (en curso)
+
+Tarea abierta tras la aprobación de MP-020 el 2026-11-22. Worktree `mp-021-historico`, ramificado desde `mp-020-mapa-y-tablero` (`b616ae6`). Sin cambios de código todavía; entregables previstos: archivo/export idempotente, histórico consultable por circulación con huecos/denominadores visibles, mart extendido a todo el catálogo Madrid (`services/snapshotter/gold.py`), History/Explore mínimo conectado a `apps/web/src/ui/TopBar.tsx`, y propuesta de colector continuo con coste medido — sin declarar «24/7 confirmado».
+
 ### MP-020 — Mapa y tablero (React/MapLibre)
 
 #### Added

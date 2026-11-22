@@ -496,6 +496,34 @@ Autorizado por el propietario el `2026-11-22` (mensaje "ORCA — MADRID PULSE / 
 
 ---
 
+## MP-021 — Histórico y continuidad analítica
+
+- **Fase:** Hito 3 — Cierre ferroviario Madrid
+- **Objetivo:** histórico consultable por circulación ligado a la identidad/fecha de Live (MP-019/020), mart reproducible con numeradores/denominadores de cobertura (extendiendo `services/snapshotter/gold.py` de un núcleo a todo el catálogo Madrid vía MP-017/018/019), exportación idempotente, propuesta ejecutable (no necesariamente desplegada) de colector continuo supervisado con coste medido, e History/Explore mínimo navegable conectado a los botones ya deshabilitados en `apps/web/src/ui/TopBar.tsx`.
+- **Prioridad:** P0
+- **Depende de:** MP-020 (`DONE`)
+- **Ejecutor:** Claude (escalado a Opus — continuidad analítica sobre identidad/temporalidad de MP-017/018/019, decisión arquitectónica de alto impacto, política de modelo de Hito 2; asignación fija del kit en `PLAN-Y-ACEPTACION.md`)
+- **Revisor:** OpenAI Codex
+- **Archivos/componentes afectados:** `services/snapshotter/gold.py` (extensión, no duplicación), nuevo módulo de archivo/export bajo `services/` o `packages/` (a decidir por el ejecutor con justificación), `apps/api/` (si expone endpoints de histórico/Explore), `apps/web/src/ui/TopBar.tsx` + nuevas vistas History/Explore, `docs/adr/` (si hay decisión de arquitectura nueva, p. ej. formato de archivo o estrategia de colector continuo).
+- **Entradas:** `packages.gtfs.catalog` (MP-017, identidad de circulación/servicio), `packages.geo.catalog` (MP-018), contrato de snapshot/ADR-0014 (MP-019), frontend MP-020 (identidad de circulación, URL restaurable `?train=&trip=&sd=`), `services/snapshotter/gold.py` existente (agregación por núcleo/línea/estación).
+- **Entregables:**
+  1. Archivo/export propio e **idempotente**: reprocesar el mismo día de servicio dos veces produce exactamente el mismo resultado (mismos agregados, mismo recuento de filas, sin duplicados).
+  2. Histórico **consultable por circulación**, enlazado por identidad vehículo+viaje+día de servicio (la misma identidad que usa Live en MP-020), con huecos de cobertura siempre visibles — nunca una métrica de puntualidad sin su denominador, nunca "cobertura" inventada donde no hay dato.
+  3. Mart reproducible extendiendo `build_nucleo_daily_summary`/`build_line_daily_metrics`/`build_station_daily_metrics` al catálogo completo de Madrid (42 rutas/12 líneas de MP-017), con `GoldThresholds`/calidad explícitos.
+  4. History/Explore **mínimo** navegable: conecta los botones `History`/`Explore` de `TopBar.tsx` (hoy `disabled` con `title="Histórico y Explore se entregan en MP-021"`) a una vista real — no SQL Lab, no dbt obligatorio, no cuentas, no infraestructura distribuida (prohibido explícitamente por el kit).
+  5. Propuesta **ejecutable** de colector continuo supervisado (configuración reproducible, p. ej. script/servicio documentado) con **coste medido** (recursos, almacenamiento, transferencia, horas) — nunca una promesa de "24/7 confirmado" sin aprobación explícita del propietario sobre coste/licencias de cualquier servicio de pago. Si no hay host persistente autorizado: entregar la operación local y el plan/coste medido como entregable final, declarando explícitamente qué NO está desplegado.
+- **Criterios de aceptación:**
+  - Reprocesar el mismo día de servicio dos veces → mismo resultado exacto (test de idempotencia real, no solo revisión de código).
+  - Huecos de cobertura siempre visibles en cualquier métrica de puntualidad/fiabilidad expuesta (numerador y denominador juntos).
+  - History/Explore mínimo navegable de verdad en navegador (no solo API) — ligado a la identidad de Live, con vuelta de contexto (desde una circulación en History, volver a Live con esa misma identidad si sigue activa).
+  - Ninguna afirmación de "24/7 verificado" ni contratación de servicio de pago sin aprobación explícita del propietario; si no se logró, declarar el bloqueo concreto en vez de fingir el estado.
+  - No se añaden SQL Lab, dbt obligatorio, cuentas de usuario ni infraestructura distribuida.
+- **Pruebas necesarias:** suite real del proyecto (backend+frontend) + test de idempotencia de reprocesado + test de huecos/denominadores del mart + inspección visual real en navegador de History/Explore (Claude/Codex, Chrome DevTools MCP) siguiendo el mismo estándar que MP-020.
+- **Evidencia de verificación:** pendiente.
+- **Estado:** `IN_PROGRESS`
+
+---
+
 ## Grafo de dependencias
 
 Esta tabla refleja **exactamente** el campo "Depende de" de cada ficha anterior — sin añadir dependencias transitivas redundantes. Para dependencias transitivas (p. ej. qué depende indirectamente de MP-004), recórrase la tabla hacia arriba.
