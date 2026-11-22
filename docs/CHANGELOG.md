@@ -22,6 +22,14 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 - Suite Python exacta de CI: **153/153 OK** contra PostgreSQL real; recuentos antes/después `668/484/3/120/0`. Frontend con Node `22.13.1`: lint, typecheck, **5/5 tests** y build en verde. `compileall` y `git diff --check` limpios.
 - Estado entregado: `REVIEW`; pendiente aprobación independiente de Claude Code antes de `DONE`.
 
+#### Fixed after independent review (first round)
+- La fixture derivada ODbL `tests/fixtures/osm_c4_real/` ya estaba licenciada,
+  atribuida y reproducible en su propio manifiesto, pero los registros legales
+  centrales aún nombraban solo C5. `docs/legal/ATTRIBUTION.md`, la fila
+  `osm.rail_geometry` de `docs/legal/DATA_SOURCES.md` y DEC-024 ahora cubren
+  explícitamente las relaciones C4a/C4b `11332`/`9174510`/`9174511` bajo la
+  misma decisión ODbL; MP-018 permanece en `REVIEW` hasta re-verificación.
+
 ### MP-017 — Catálogo completo de Madrid
 
 #### Added

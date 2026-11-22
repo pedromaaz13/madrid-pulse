@@ -357,6 +357,37 @@ Extender `packages/geo` (hoy un único corredor OSM fijo para C5, MP-011) a un c
 Estado `REVIEW`: Codex no marca `DONE`; queda pendiente auditoría independiente
 de Claude Code sobre el diff completo y re-verificación en este worktree.
 
+### Primera revisión independiente (Claude Opus) — corrección documental pendiente de re-verificación
+
+El revisor confirmó lo sustantivo de MP-018: CSV byte-idéntico al regenerado;
+77 `way` compartidos que forman un tramo contiguo de 41,65 km
+Parla–Cantoblanco, con 15 estaciones a menos de 50 m del eje OSM; C5 con
+`gaps=0` y rechazo correcto al inyectar una discontinuidad; guard de sentido
+que degrada a `partial` al vincular deliberadamente el sentido contrario; y
+las tres fixtures C4 byte-idénticas a una nueva ejecución de `fetch_fixture`.
+Ejecutó además la suite completa contra desarrollo y contra un segundo
+PostgreSQL fresco: **153/153 OK en ambos**. Esta verificación fresca fue
+realizada por el revisor; no se atribuye a la entrega inicial de Codex y debe
+incluirse desde el ejecutor en futuras tareas siguiendo el precedente de
+MP-015/016/017.
+
+Único hallazgo bloqueante de esa ronda: DEC-024 y los registros legales
+centrales aún nombraban solo la base derivada C5. Corregido sin cambiar código:
+`docs/legal/ATTRIBUTION.md`, `docs/legal/DATA_SOURCES.md` (`osm.rail_geometry`)
+y DEC-024 ahora cubren también `tests/fixtures/osm_c4_real/` y las relaciones
+`11332`/`9174510`/`9174511`. La tarea permanece en `REVIEW` hasta que el mismo
+revisor verifique esta corrección.
+
+Notas no bloqueantes para MP-019 (no se corrigen en MP-018):
+
+- `shared_track_way_ids` lee las fixtures directamente y no verifica SHA-256;
+  `_load_source` sí lo hace. Un consumidor no debe tratar el helper aislado como
+  evidencia de integridad sin validar antes el `GeometrySourceSpec`.
+- `match_position` conserva `geometry_version` también en fallbacks `RAW` y
+  `UNLOCATED`, aunque no exista una proyección real. MP-019 debe interpretar
+  ese campo como versión de la geometría candidata/contextual y exigir
+  `resolution=map_matched` + `projection` para afirmar que hubo map-matching.
+
 ## Tareas cerradas de la cadena
 
 ## MP-017 — Catálogo completo de Madrid (identidad y vigencia) (cerrada)

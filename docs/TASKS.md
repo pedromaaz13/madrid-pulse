@@ -443,7 +443,7 @@ Autorizado por el propietario el `2026-11-22` (mensaje "ORCA — MADRID PULSE / 
 - **Criterios de aceptación:** C5 sigue encadenando sin huecos; nuevo ramal C4 y tramo compartido verificados contra Overpass real, con hallazgos (huecos, ambigüedades) documentados, no forzados; matriz de cobertura cubre los patrones de las 12 líneas, mayoría `pending` honesto, no fabricado.
 - **Pruebas necesarias:** suite real del proyecto + nuevos tests de geometría real (Overpass).
 - **Evidencia de verificación:** `packages.geo.tests.test_catalog` (11 pruebas: 3 ejecutables en CI sin el ZIP no versionado + 8 contra el catálogo oficial completo), regresión `packages.geo.tests.test_real_feed`; matriz exportada de 103 patrones/12 líneas (`28 validated`, `3 partial`, `72 pending`). Suite Python exacta de CI: **153/153 OK** contra PostgreSQL real, recuentos antes/después `668/484/3/120/0`; frontend Node `22.13.1`: lint/typecheck/5 tests/build en verde; `git diff --check` limpio. Overpass respondió 502 dos veces para C4b Parla→Colmenar (`9174512`), registrado como `pending`, no como ausencia de relación.
-- **Estado:** `REVIEW` — implementación de Codex entregada para auditoría completa de Claude Code en este mismo worktree; no puede pasar a `DONE` sin aprobación explícita del revisor.
+- **Estado:** `REVIEW` — primera auditoría independiente confirmó código, fixtures y pruebas, pero detectó que los registros legales centrales de DEC-024 aún nombraban solo C5; corregidos `ATTRIBUTION.md`, `DATA_SOURCES.md` y DEC-024 para cubrir `osm_c4_real`, pendiente re-verificación del mismo revisor antes de `DONE`.
 
 ---
 

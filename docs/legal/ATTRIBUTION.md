@@ -1,6 +1,6 @@
 # ATTRIBUTION.md
 
-Textos de atribución verificados para producto, documentación y exportaciones. Fecha de verificación: `2026-11-18`.
+Textos de atribución verificados para producto, documentación y exportaciones. Fecha de verificación más reciente: `2026-11-22`.
 
 ## OpenStreetMap (`ODbL-1.0`)
 
@@ -13,6 +13,14 @@ En toda vista que use datos OSM debe aparecer, visible y legible:
 En web, `OpenStreetMap` debe enlazar a `https://www.openstreetmap.org/copyright`, lo que identifica también la ODbL. En una distribución de datos, nombrar y enlazar directamente la licencia ODbL y ofrecer una base derivada conforme a sus términos. En mapas interactivos, seguir la [guía de atribución de la OSMF](https://osmfoundation.org/wiki/Licence/Attribution_Guidelines): crédito legible cerca del mapa o presentación inicial conforme a su *safe harbour*, y licencia siempre localizable.
 
 **MP-011 — fixture de geometría ferroviaria (`tests/fixtures/osm_c5_real/`):** es una base de datos derivada de OSM en el sentido de la ODbL (extracto estructurado de nodos/`ways`/relación, no una imagen renderizada). Se distribuye bajo `ODbL-1.0` con la atribución de arriba, independientemente de la licencia de código del repositorio (`DEC-002`, todavía pendiente) — ver DEC-024 en `docs/DECISIONS.md` y `tests/fixtures/osm_c5_real/MANIFEST.md` para el detalle de fuente, fecha y checksums.
+
+**MP-018 — fixture de geometría ferroviaria (`tests/fixtures/osm_c4_real/`):**
+aplica la misma clasificación y obligación de DEC-024: las relaciones OSM
+reales `11332`, `9174510` y `9174511` (C4a/C4b Madrid), congeladas como nodos,
+`ways` y relaciones vía Overpass API, forman una base de datos derivada que se
+distribuye bajo `ODbL-1.0` con `© OpenStreetMap contributors`, separadamente de
+la licencia del código. Fuente, fecha de descarga, comandos reproducibles y
+SHA-256 constan en `tests/fixtures/osm_c4_real/MANIFEST.md`.
 
 ## Renfe Data (`CC BY 4.0` + condiciones del portal)
 
