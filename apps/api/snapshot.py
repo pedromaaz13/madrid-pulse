@@ -654,8 +654,13 @@ def build_snapshot(
         for history in sorted(histories, key=lambda item: item.source_vehicle_id)
     ]
 
-    methods = [vehicle.rendered.rendering_method for vehicle in vehicles]
-    spaces = [vehicle.rendered.coordinate_space for vehicle in vehicles]
+    by_method: dict[str, int] = {}
+    by_space: dict[str, int] = {}
+    for vehicle in vehicles:
+        method = vehicle.rendered.rendering_method
+        by_method[method] = by_method.get(method, 0) + 1
+        space = vehicle.rendered.coordinate_space or "none"
+        by_space[space] = by_space.get(space, 0) + 1
     snapshot_id = _snapshot_identity(network, marker, histories, trip_updates, health)
     return SnapshotOut(
         snapshot_id=snapshot_id,
@@ -675,15 +680,8 @@ def build_snapshot(
         vehicles=vehicles,
         counts=SnapshotCountsOut(
             vehicles_total=len(vehicles),
-            rendered_map_matched=sum(
-                1
-                for method, space in zip(methods, spaces)
-                if space == "map_matched" and method != "stale_frozen"
-            ),
-            rendered_raw=sum(1 for space in spaces if space == "raw"),
-            rendered_schedule_only=methods.count("schedule_only"),
-            rendered_stale_frozen=methods.count("stale_frozen"),
-            rendered_unlocated=methods.count("unlocated"),
+            by_rendering_method=dict(sorted(by_method.items())),  # type: ignore[arg-type]
+            by_coordinate_space=dict(sorted(by_space.items())),  # type: ignore[arg-type]
             with_operator_delay=sum(
                 1 for vehicle in vehicles if vehicle.delay.coverage == "reported"
             ),

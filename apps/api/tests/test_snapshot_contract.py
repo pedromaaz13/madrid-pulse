@@ -645,6 +645,20 @@ class SnapshotPostgresTests(NetworkFixtureMixin, unittest.TestCase):
         self.assertTrue(
             all(feed.status in {"stale", "error", "unknown"} for feed in frozen.feeds)
         )
+        # Las dos particiones son cortes exactos del mismo total, no un mismo
+        # criterio mezclado: una circulación congelada sobre el corredor cuenta
+        # en `stale_frozen` y en `map_matched` a la vez, y cada diccionario
+        # suma `vehicles_total`.
+        self.assertEqual(
+            sum(frozen.counts.by_rendering_method.values()), frozen.counts.vehicles_total
+        )
+        self.assertEqual(
+            sum(frozen.counts.by_coordinate_space.values()), frozen.counts.vehicles_total
+        )
+        self.assertEqual(
+            set(frozen.counts.by_rendering_method), {"stale_frozen"},
+            "con el colector detenido y el horizonte agotado, todo queda congelado",
+        )
         self.assertEqual(
             frozen_ours.rendered.progress_m,
             ours.map_matched.progress_m if ours.map_matched else None,
@@ -750,6 +764,12 @@ class SnapshotPostgresTests(NetworkFixtureMixin, unittest.TestCase):
         with_eighteen = len(counting.executed)
 
         self.assertGreaterEqual(result.counts.vehicles_total, 18)
+        self.assertEqual(
+            sum(result.counts.by_rendering_method.values()), result.counts.vehicles_total
+        )
+        self.assertEqual(
+            sum(result.counts.by_coordinate_space.values()), result.counts.vehicles_total
+        )
         self.assertEqual(
             with_six,
             with_eighteen,

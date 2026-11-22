@@ -224,6 +224,16 @@ disponible. El `delay` del feed es de nivel viaje: aplicarlo a cada parada se
 publica marcado como `approximation: "trip_level_delay_applied_to_all_stops"`,
 nunca en silencio. No se introduce ningún modelo predictivo propio.
 
+### Recuentos sin ambigüedad
+
+`counts` publica **dos particiones independientes y exactas** de
+`vehicles_total`: `by_rendering_method` (cómo se obtuvo la coordenada) y
+`by_coordinate_space` (a qué espacio pertenece). Son cortes distintos de lo
+mismo —una circulación congelada sobre el corredor cuenta en `stale_frozen` y
+en `map_matched` a la vez— y cada diccionario suma exactamente
+`vehicles_total`. No se mezclan los dos criterios en un mismo contador, y las
+claves ausentes son ausencia de casos, no `0` artificiales.
+
 ### Tablero de estación
 
 Se calcula con `packages.gtfs.catalog.scheduled_trip_instances_for_date`

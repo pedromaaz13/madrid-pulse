@@ -19,6 +19,7 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 - Migración `0002_api_batch_indexes`: tres índices medidos con `EXPLAIN (ANALYZE, BUFFERS)`; solo estructuras de acceso, sin cambios de datos ni de semántica.
 - Herramientas reproducibles `apps.api.tools.bench_snapshot` y `apps.api.tools.replay_three_snapshots`; evidencia en `docs/evidence/mp-019-explain-y-bench.md` y `docs/evidence/mp-019-tres-snapshots-replay.md`.
 - `apps.api.tests.test_snapshot_contract` (36 tests) y `packages.movement.tests.test_rendering` (17 tests), ambos añadidos a `.github/workflows/ci.yml`.
+- `counts` del snapshot publica dos particiones independientes y exactas de `vehicles_total` (`by_rendering_method` y `by_coordinate_space`) en vez de contadores que mezclaban método y espacio de coordenada; cada diccionario suma el total y hay test de esa invariante.
 
 #### Fixed
 - **N+1 real eliminado:** `service.list_vehicles` hacía una consulta `latest_trip_update` por vehículo (24 con el soak de MP-007, una por circulación en operación). Ahora son dos consultas fijas, y un test cuenta los `execute` reales para impedir la regresión.

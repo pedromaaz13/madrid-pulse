@@ -375,12 +375,23 @@ class SnapshotDegradationOut(BaseModel):
 
 
 class SnapshotCountsOut(BaseModel):
+    """Dos particiones independientes y exactas de `vehicles_total`.
+
+    `by_rendering_method` reparte cada circulación por **cómo** se obtuvo su
+    coordenada publicada, y `by_coordinate_space` por **a qué espacio**
+    pertenece. Son cortes distintos de lo mismo: una circulación congelada
+    cuya coordenada vive en el corredor cuenta en `stale_frozen` y en
+    `map_matched` a la vez. Cada diccionario suma exactamente
+    `vehicles_total`; no se mezclan los dos criterios en un solo contador,
+    para que ninguna cifra sea ambigua.
+
+    Las claves ausentes son ausencia de casos, no se publican como `0`
+    artificiales de categorías que no existen en este snapshot.
+    """
+
     vehicles_total: int
-    rendered_map_matched: int
-    rendered_raw: int
-    rendered_schedule_only: int
-    rendered_stale_frozen: int
-    rendered_unlocated: int
+    by_rendering_method: dict[RenderingMethodLiteral, int]
+    by_coordinate_space: dict[Literal["map_matched", "raw", "schedule", "none"], int]
     with_operator_delay: int
     without_operator_delay: int
 

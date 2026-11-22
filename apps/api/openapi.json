@@ -1540,26 +1540,39 @@
         "type": "object"
       },
       "SnapshotCountsOut": {
+        "description": "Dos particiones independientes y exactas de `vehicles_total`.\n\n`by_rendering_method` reparte cada circulaci\u00f3n por **c\u00f3mo** se obtuvo su\ncoordenada publicada, y `by_coordinate_space` por **a qu\u00e9 espacio**\npertenece. Son cortes distintos de lo mismo: una circulaci\u00f3n congelada\ncuya coordenada vive en el corredor cuenta en `stale_frozen` y en\n`map_matched` a la vez. Cada diccionario suma exactamente\n`vehicles_total`; no se mezclan los dos criterios en un solo contador,\npara que ninguna cifra sea ambigua.\n\nLas claves ausentes son ausencia de casos, no se publican como `0`\nartificiales de categor\u00edas que no existen en este snapshot.",
         "properties": {
-          "rendered_map_matched": {
-            "title": "Rendered Map Matched",
-            "type": "integer"
+          "by_coordinate_space": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "propertyNames": {
+              "enum": [
+                "map_matched",
+                "raw",
+                "schedule",
+                "none"
+              ]
+            },
+            "title": "By Coordinate Space",
+            "type": "object"
           },
-          "rendered_raw": {
-            "title": "Rendered Raw",
-            "type": "integer"
-          },
-          "rendered_schedule_only": {
-            "title": "Rendered Schedule Only",
-            "type": "integer"
-          },
-          "rendered_stale_frozen": {
-            "title": "Rendered Stale Frozen",
-            "type": "integer"
-          },
-          "rendered_unlocated": {
-            "title": "Rendered Unlocated",
-            "type": "integer"
+          "by_rendering_method": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "propertyNames": {
+              "enum": [
+                "anchor",
+                "interpolated_between_known_anchors",
+                "extrapolated_from_last_anchor",
+                "schedule_only",
+                "stale_frozen",
+                "unlocated"
+              ]
+            },
+            "title": "By Rendering Method",
+            "type": "object"
           },
           "vehicles_total": {
             "title": "Vehicles Total",
@@ -1576,11 +1589,8 @@
         },
         "required": [
           "vehicles_total",
-          "rendered_map_matched",
-          "rendered_raw",
-          "rendered_schedule_only",
-          "rendered_stale_frozen",
-          "rendered_unlocated",
+          "by_rendering_method",
+          "by_coordinate_space",
           "with_operator_delay",
           "without_operator_delay"
         ],
