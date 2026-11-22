@@ -4,6 +4,34 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 
 ## [Unreleased]
 
+### MP-020 — Mapa y tablero (React/MapLibre)
+
+#### Added
+- `apps/web/` reconstruido como experiencia map-first de **toda Cercanías Madrid** sobre el contrato de MP-019 (`/api/v1/catalog` + `/api/v1/snapshot` + `/api/v1/stations/{id}/board`), sustituyendo en la UI los endpoints antiguos `/lines` + `/live/vehicles` de MP-014, que siguen existiendo por compatibilidad. `App.tsx` queda como composición; la lógica vive en `src/api/`, `src/domain/`, `src/hooks/`, `src/map/` y `src/ui/`.
+- Adquisición por recurso (`useCatalog`, `useSnapshot`, `useHealth`, `useStationBoard` sobre `useResource`): una lectura en vuelo por recurso, timeout y cancelación propios, descarte de respuestas antiguas por `revision`, catálogo revalidado con `ETag`/`304`, y pausa/revalidación según la visibilidad de la pestaña. Sin `Promise.all` como bloque indivisible de éxito; un fallo parcial conserva el último valor bueno y una respuesta con éxito no rejuvenece el dato.
+- Evaluación en el cliente de la `ProgressEnvelope` publicada por el backend, con conversión de progreso dirigido a longitud de arco física y proyección sobre la polilínea del patrón; nunca interpolación lat/lon en recta entre estaciones, y congelación al agotarse `rendered.valid_until`. El sentido se deriva del orden real de las paradas sobre el corredor, no de una convención de nombre.
+- Reloj de presentación en `requestAnimationFrame` que escribe directamente en las fuentes de MapLibre: ningún `setState` global por fotograma. Una sola instancia de mapa, con marcadores reconciliados por identidad de circulación (vehículo + viaje + día de servicio, nunca `vehicle_id` solo).
+- Anillo de la **última lectura confirmada** junto al símbolo cuando la posición mostrada es `extrapolated_from_last_anchor` o `stale_frozen`.
+- Seguimiento explícito separado de la selección: arrastrar suelta la cámara conservando la ficha y ofrece «Volver al tren». La cámara no hace `fitBounds` por sondeo y «Centrar Madrid» responde una sola vez por pulsación.
+- Búsqueda de estación y línea con y sin tilde y teclado completo (flechas, Intro, Escape), multiselección de líneas con contadores del mismo ámbito que el mapa, tablero de estación con cobertura y limitaciones declaradas, y cinta de novedades progresiva, pausable y con lista estática alternativa.
+- Estado restaurable en la URL (`?station=`, `?train=&trip=&sd=`, `?lines=`) con `pushState`, de modo que Atrás vuelve al contexto anterior; y modo replay `?at=<ISO>` que recorre un corte congelado de forma repetible con la etiqueta `REPLAY` y el instante siempre visibles.
+- Alternativa navegable de lista y tablero cuando el navegador no ofrece WebGL, y comportamiento sin animación espacial automática con `prefers-reduced-motion`.
+- 49 pruebas nuevas en `apps/web` apoyadas en una grabación real de esta API (`src/__fixtures__/snapshot-map-matched.json`, con su procedencia declarada dentro del fichero), incluida la que comprueba que la coordenada calculada por el cliente cae sobre `rendered.lat/lon` del backend con error inferior a 1 m.
+- `docs/evidence/mp-020-inspeccion-navegador.md` y `docs/evidence/mp-020-capturas/`: evidencia ejecutada de la inspección real en navegador, con la secuencia continua de 60 s de la app real.
+- `vite.config.ts` acepta `MADRID_PULSE_API_TARGET` para apuntar el proxy `/api` a otro puerto cuando el 8000 ya está ocupado por otra instancia local; el valor por defecto no cambia.
+
+#### Fixed
+- **Mapa invisible en el navegador, invisible también para los tests:** el chunk diferido de `maplibre-gl.css` carga después de la hoja propia y su `.maplibregl-map { position: relative }` ganaba por igual especificidad y orden al `position: absolute` del contenedor, que quedaba con altura 0. Se dimensiona ahora con `width`/`height`, correcto sea cual sea el `position` aplicado.
+- **`snapshot_id` no puede usarse como señal de «ha llegado dato nuevo»:** es identidad de contenido y se repite entre sondeos cuando los vehículos no han cambiado, aunque `display_at` avance; usarlo como disparador de repintado dejaba el mapa congelado con movimiento reducido. La señal es la `revision` del contrato.
+- «Volver al tren» no aparecía nunca tras soltar la cámara: el estado se escribía dentro del actualizador de `setFollowKey`, que debe ser puro.
+- Scroll horizontal en móvil de 390 px (449 px de ancho real) por la barra superior; cinta de novedades de 120 px de alto; leyenda pegada a la barra de atribución; y controles pequeños por debajo del tamaño táctil cómodo.
+- El tablero volcaba códigos crudos del contrato (`passed_or_skipped_per_operator_next_stop`) en la interfaz; los cuatro códigos de causa se traducen y se conserva el horario planificado cuando la ETA no está disponible.
+- Los nombres de las estaciones de un patrón se solapaban al estar alejado el zoom, y la ficha heredaba el desplazamiento del tablero anterior abriendo con su cabecera fuera de la vista.
+
+#### Notes
+- El GTFS oficial publica `route_color` real de Renfe, pero `/api/v1/catalog` no expone ese campo y MP-020 no reescribe el contrato de MP-019: la paleta de líneas del cliente es una elección de presentación propia, determinista por `line_id` y sin identificadores de línea incrustados en la lógica (ADR-0011), **no** el color corporativo del operador. Anotado para MP-021/MP-022.
+- Histórico y Explore no se implementan aquí (son MP-021): sus pestañas aparecen deshabilitadas y lo declaran, en vez de simular una función inexistente.
+
 ### MP-019 — Contrato de snapshot/API coherente
 
 #### Added

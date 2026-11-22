@@ -290,7 +290,7 @@ Con Hito 1 ya fusionado a `main`, el caso concreto de MP-012 **deja de requerir 
 
 **MP-020 — Mapa y tablero (React/MapLibre)**
 
-Ejecutor: Claude (escalado a Opus) · Revisor: OpenAI Codex (con inspección visual real en navegador) · Estado: **IN_PROGRESS**
+Ejecutor: Claude (escalado a Opus) · Revisor: OpenAI Codex (con inspección visual real en navegador) · Estado: **REVIEW**
 
 Worktree/rama: `mp-020-mapa-y-tablero`, ramificada desde `mp-019-snapshot-api` (MP-019 `DONE`, `7b87e6b`). Datos del kit repuestos con `instalar.py --solo-datos`.
 
@@ -302,9 +302,36 @@ Reconstruir `apps/web/` (hoy limitado a C5 y a los endpoints antiguos `/lines`/`
 
 Con conexión PostgreSQL por petición, ~66 ms de los ~69 ms de p50 de `/api/v1/health` son solo abrir la conexión. Si el frontend sondea cada 20s, esta latencia es relevante para medir fluidez real — la decisión de introducir un pool (nueva dependencia) sigue pendiente del propietario, no se toma en MP-020.
 
-### Pendiente de entrega y revisión
+### Qué se construyó
 
-Dispatchado a un ejecutor Claude Opus; pendiente de implementación, evidencia ejecutada (incluida inspección visual real en navegador) y entrega en `REVIEW` para Codex.
+`apps/web/` reconstruido en cuatro incrementos (selección+ficha → movimiento+seguimiento → estación/línea/búsqueda → enlaces/móvil), con `App.tsx` reducido a composición y la lógica repartida en `src/api/`, `src/domain/`, `src/hooks/`, `src/map/` y `src/ui/`:
+
+- **Adquisición:** un hook por recurso (catálogo, snapshot, salud, tablero), con una lectura en vuelo por recurso, timeout y cancelación propios, descarte de respuestas antiguas por `revision`, catálogo revalidado con `ETag`/`304` y pausa/revalidación por visibilidad de la pestaña. Un fallo parcial conserva el último valor bueno; una respuesta con éxito no rejuvenece el dato.
+- **Mapa:** una sola instancia MapLibre con fuentes GeoJSON reconciliadas por identidad de circulación (vehículo+viaje+día de servicio, no `vehicle_id`), reloj de presentación en `requestAnimationFrame` fuera de `setState`, y anillo de la última lectura confirmada cuando el símbolo es proyectado o congelado.
+- **Movimiento:** evaluación de la `ProgressEnvelope` del contrato y proyección del progreso dirigido sobre la polilínea del patrón; nunca interpolación lat/lon en recta, y congelación al agotarse `valid_until`.
+- **Navegación:** búsqueda de estación y línea con y sin tilde, multiselección de líneas con contadores del mismo ámbito que el mapa, tablero de estación, seguimiento explícito separado de la selección, y estado restaurable en la URL con `pushState`.
+
+### Resultado y evidencia
+
+Entregado en `REVIEW`. Evidencia ejecutada en `docs/evidence/mp-020-inspeccion-navegador.md` y capturas en `docs/evidence/mp-020-capturas/`. Lo verificado de verdad en navegador (no solo con tests) está resumido en la ficha de MP-020 de `docs/TASKS.md`; lo esencial: **60 s continuos** de la app real con 13 muestras de fotogramas intermedios avanzando a los **22,0 m/s** que declara la envolvente (1 316,7 m, sin teletransporte), la coordenada del cliente cayendo sobre la del backend con **error < 1 m**, y cámara/selección/seguimiento sobreviviendo a dos sondeos y a una caída y recuperación del backend mientras la edad del dato sigue avanzando.
+
+Suites reales con Node `22.13.1`: **49/49** en `apps/web` (lint y typecheck limpios, build con worker de MapLibre verificado byte a byte) y **233/233** en el backend, que no se tocó, con los recuentos de PostgreSQL intactos (`668/484/3/120/0`).
+
+**Siete defectos reales que ningún test automatizado detectó** se encontraron y corrigieron mirando el navegador. El primero repite el género de fallo de MP-014: el chunk diferido de `maplibre-gl.css` carga después de la hoja propia y su `.maplibregl-map { position: relative }` ganaba al `position: absolute` del contenedor, que quedaba con **altura 0** y sin mapa visible. El más interesante de contrato: **`snapshot_id` no sirve como señal de «hay dato nuevo»**, porque es identidad de contenido y se repite entre sondeos cuando los vehículos no cambian aunque `display_at` avance — usarlo congelaba el mapa con movimiento reducido; la señal correcta es la `revision`.
+
+### Entorno de la demostración (reproducible por el revisor)
+
+Backend real con el **GTFS completo** del núcleo (`data/hito-03/replay/fomento_transit.zip`, 42 `route_id` / 12 líneas / 103 patrones / 95 estaciones) en modo replay sobre un PostgreSQL **desechable** (`mp020-replay-db`, `127.0.0.1:5434`) con las capturas congeladas `1532`/`1533` ingeridas por el colector real: 122 circulaciones, 44 con coordenada `map_matched` y 78 con GPS bruto etiquetado. **La base de desarrollo (`5433`) no se tocó.** El frontend admite `?at=<ISO>` para recorrer ese corte de forma repetible, con la etiqueta `REPLAY` y el instante siempre visibles.
+
+El backend se sirvió en el puerto `8010` porque `8000` estaba ocupado por una instancia ajena a este worktree, que no se detuvo ni se modificó; por eso `vite.config.ts` acepta ahora `MADRID_PULSE_API_TARGET`, conservando `127.0.0.1:8000` por defecto.
+
+### Nota abierta para el revisor (no bloqueante)
+
+El GTFS oficial publica `route_color` real de Renfe, pero el contrato `/api/v1/catalog` de MP-019 no expone ese campo y MP-020 tenía prohibido reescribir el contrato. La paleta de líneas del cliente es por tanto una **elección de presentación propia**, determinista por `line_id` y sin identificadores incrustados (ADR-0011), **no** el color corporativo del operador. Queda anotado por si MP-021/MP-022 deciden publicarlo.
+
+### Pendiente
+
+Auditoría independiente de OpenAI Codex **con su propia inspección visual en navegador** en este mismo worktree, y aceptación del propietario. No se marca `DONE`.
 
 ## Tareas cerradas de la cadena
 
