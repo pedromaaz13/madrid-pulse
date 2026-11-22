@@ -25,6 +25,12 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 #### Verified (second round)
 - 3 tests nuevos (provenance/identidad real del catálogo; `circulation_status` activo/caducado/sin resolver). Suite completa: 141/141 contra desarrollo (`668/484/3/120/0` intacto), 141 tests/10 `skip` contra un segundo contenedor fresco con `data/` ausente. `git diff --check` limpio.
 
+#### Fixed after Codex review (second round)
+- **Contrato OpenAPI desincronizado:** añadir `VehicleOut.circulation_status` cambió la forma real de `app.openapi()` sin regenerar `apps/api/openapi.json`, dejando también `apps/web/src/types.ts` y el ejemplo de `docs/DATA_CONTRACTS.md` con el contrato anterior. Regenerado el JSON congelado (comando documentado en `apps/api/README.md`); sincronizados `types.ts` y `DATA_CONTRACTS.md`. Añadido `test_committed_openapi_json_matches_the_live_schema` (regresión permanente contra este tipo de drift).
+
+#### Verified (third round)
+- 142/142 contra desarrollo (`668/484/3/120/0` intacto); frontend lint/typecheck/5 tests/build en verde. `git diff --check` limpio.
+
 ### MP-016 — Fiabilidad realtime
 
 #### Added

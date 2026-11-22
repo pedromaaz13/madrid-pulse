@@ -470,6 +470,15 @@
       },
       "VehicleOut": {
         "properties": {
+          "circulation_status": {
+            "enum": [
+              "active",
+              "expired",
+              "unresolved"
+            ],
+            "title": "Circulation Status",
+            "type": "string"
+          },
           "delay": {
             "$ref": "#/components/schemas/DelayOut"
           },
@@ -528,7 +537,8 @@
           "position",
           "delay",
           "observation",
-          "quality"
+          "quality",
+          "circulation_status"
         ],
         "title": "VehicleOut",
         "type": "object"

@@ -320,6 +320,14 @@ Codex auditó `92c1b09..1276c9f`: replay correcto, 138/138 contra desarrollo (`6
 
 Añadidos 3 tests (provenance/identidad del catálogo real; `circulation_status` activo/caducado/sin resolver con el trip real de la fixture reducida, calendario de un solo día). Suite completa reejecutada: **141/141 contra desarrollo** (`668/484/3/120/0` intacto) y **141 tests/10 skip** contra un segundo contenedor PostgreSQL fresco desechable con `data/` ausente (simulando CI real) — el skip adicional es el nuevo test de provenance, gateado igual que los otros 4 por la ausencia del ZIP oficial. `git diff --check` limpio. Reenviado a Codex para segunda verificación.
 
+### Segunda revisión de Codex — un hallazgo real, corregido
+
+Codex confirmó que los dos hallazgos de la primera ronda quedaban resueltos (31 tests de catálogo/API en verde, `circulation_status` correcto, autoría y `git diff --check` limpios), pero encontró un hallazgo real nuevo: **el contrato OpenAPI congelado quedó desincronizado.** Añadir `VehicleOut.circulation_status` cambia la forma real que sirve `app.openapi()`, pero `apps/api/openapi.json` no se regeneró, y `apps/web/src/types.ts` + el ejemplo de `docs/DATA_CONTRACTS.md` seguían describiendo el contrato anterior.
+
+Corregido: `apps/api/openapi.json` regenerado con el comando exacto ya documentado en `apps/api/README.md`; `apps/web/src/types.ts` (`Vehicle.circulation_status`) y el ejemplo + campo obligatorio nuevo en `docs/DATA_CONTRACTS.md` sincronizados. Añadido además el `test_committed_openapi_json_matches_the_live_schema` que pedía Codex ("comprobación pertinente"): compara `app.openapi()` contra el JSON congelado en cada corrida, para que este tipo de drift falle en CI en vez de requerir una auditoría manual futura.
+
+Suite completa reejecutada: **142/142 contra desarrollo** (`668/484/3/120/0` intacto); frontend lint/typecheck/5 tests/build en verde tras tocar `types.ts`. `git diff --check` limpio. Reenviado a Codex para tercera verificación.
+
 ## Tareas cerradas de la cadena
 
 ## MP-016 — Fiabilidad realtime (SKIPPED, UTC, live/replay) (cerrada)

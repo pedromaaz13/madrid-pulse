@@ -36,6 +36,7 @@ export interface Vehicle {
     age_s: number | null;
   };
   quality: { stale: boolean; flags: string[] };
+  circulation_status: "active" | "expired" | "unresolved";
 }
 
 export interface FeedHealth {

@@ -10,6 +10,7 @@ la API responde con `None` honesto, nunca con un dato fabricado.
 from __future__ import annotations
 
 import hashlib
+import json
 import os
 import unittest
 from dataclasses import replace
@@ -71,6 +72,25 @@ class RuntimeModeTests(unittest.TestCase):
         config = replace(ApiConfig.from_env(), mode="live")
         with self.assertRaisesRegex(ValueError, "live no admite fixtures"):
             load_network(config)
+
+
+class FrozenOpenApiContractTests(unittest.TestCase):
+    """Hallazgo real de la segunda revisión de Codex en MP-017: añadir un
+    campo a un schema (`VehicleOut.circulation_status`) sin regenerar
+    `apps/api/openapi.json` deja el contrato congelado desincronizado del
+    contrato real servido -- nada lo detectaba hasta ahora. Esta prueba
+    convierte ese hallazgo puntual en una regresión permanente: cualquier
+    cambio futuro de schema que olvide `apps/api/README.md`'s comando de
+    regeneración falla aquí, no en una auditoría manual."""
+
+    def test_committed_openapi_json_matches_the_live_schema(self) -> None:
+        committed = json.loads((ROOT / "apps" / "api" / "openapi.json").read_text())
+        live = app.openapi()
+        self.assertEqual(
+            committed, live,
+            "apps/api/openapi.json desincronizado -- regenerar con el comando "
+            "documentado en apps/api/README.md",
+        )
 
 
 class ApiContractTests(unittest.TestCase):

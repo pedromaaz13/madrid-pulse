@@ -122,7 +122,8 @@ Todos bajo versionado explícito `/api/v1/`; un cambio incompatible de contrato 
   "quality": {
     "stale": false,
     "flags": []
-  }
+  },
+  "circulation_status": "active"
 }
 ```
 
@@ -135,6 +136,7 @@ Toda respuesta de vehículo en vivo **debe** incluir:
 - `observation.age_s`: segundos desde la última observación real.
 - `delay.coverage`: `reported | missing` — nunca se omite ni se sustituye por `0` cuando no hay dato.
 - `quality.flags`: lista de flags activos (puede estar vacía, nunca ausente).
+- `circulation_status` (MP-017): uno de `active | expired | unresolved` — separa "¿el `service_id` de este viaje está programado para la fecha de servicio actual?" de `quality.stale` (que solo mide antigüedad del GPS). `unresolved` cuando el `route_id` no resuelve; nunca se fabrica `active`/`expired` sin resolución real.
 
 ### Ejemplo sintético — salud de feed (`/api/v1/health`)
 
