@@ -429,6 +429,24 @@ Autorizado por el propietario el `2026-11-22` (mensaje "ORCA — MADRID PULSE / 
 
 ---
 
+## MP-018 — Corredores ferroviarios por patrón y sentido
+
+- **Fase:** Hito 3 — Cierre ferroviario Madrid
+- **Objetivo:** extender la geometría OSM de un único corredor fijo (C5, MP-011) a un catálogo de corredores indexado por patrón y sentido, con matriz de cobertura honesta (`validated`/`partial`/`pending`) para las 12 líneas del catálogo de MP-017.
+- **Prioridad:** P0
+- **Depende de:** MP-017 (`DONE`)
+- **Ejecutor:** OpenAI Codex
+- **Revisor:** Claude Code (posible escalado a Opus por complejidad geoespacial, política de selección de modelo ya fijada en Hito 2)
+- **Archivos/componentes afectados:** `packages/geo/` (nuevo módulo de catálogo de corredores), nuevas fixtures OSM reales versionadas (`tests/fixtures/osm_*_real/`, análogas a `osm_c5_real`).
+- **Entradas:** `packages.gtfs.catalog` (MP-017, patrones/líneas completos), Overpass API (geometría real).
+- **Entregables:** catálogo de `Corridor` por patrón/sentido; matriz de cobertura de las 12 líneas; al menos un ramal de C4 y un tramo compartido con geometría OSM real descargada y versionada (mismo formato que `osm_c5_real/MANIFEST.md`); proyección/distancia trazable (`Projection`/`distance_from_raw_m`) reutilizable por MP-019.
+- **Criterios de aceptación:** C5 sigue encadenando sin huecos; nuevo ramal C4 y tramo compartido verificados contra Overpass real, con hallazgos (huecos, ambigüedades) documentados, no forzados; matriz de cobertura cubre los patrones de las 12 líneas, mayoría `pending` honesto, no fabricado.
+- **Pruebas necesarias:** suite real del proyecto + nuevos tests de geometría real (Overpass).
+- **Evidencia de verificación:** pendiente (tarea recién abierta).
+- **Estado:** `IN_PROGRESS` — worktree `mp-018-corredores-madrid` abierto desde `mp-017-catalogo-madrid` (`c28d5e4`), dispatchado a Codex.
+
+---
+
 ## Grafo de dependencias
 
 Esta tabla refleja **exactamente** el campo "Depende de" de cada ficha anterior — sin añadir dependencias transitivas redundantes. Para dependencias transitivas (p. ej. qué depende indirectamente de MP-004), recórrase la tabla hacia arriba.

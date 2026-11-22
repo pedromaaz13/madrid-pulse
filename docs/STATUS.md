@@ -288,6 +288,24 @@ Con Hito 1 ya fusionado a `main`, el caso concreto de MP-012 **deja de requerir 
 
 ## Tarea actual
 
+**MP-018 — Corredores ferroviarios por patrón y sentido**
+
+Ejecutor: OpenAI Codex · Revisor: Claude Code · Estado: **IN_PROGRESS**
+
+Worktree/rama: `mp-018-corredores-madrid`, ramificada desde `mp-017-catalogo-madrid` (MP-017 `DONE`, `c28d5e4`). Datos del kit repuestos con `instalar.py --solo-datos`.
+
+### Alcance de MP-018
+
+Extender `packages/geo` (hoy un único corredor OSM fijo para C5, MP-011) a un catálogo de corredores por patrón/sentido, reutilizando `Corridor`/`build_corridor`/`ChainGap` tal cual. Mínimo real a descargar/verificar: revalidar C5 sin huecos, un ramal de C4 con geometría OSM real (mismo formato que `tests/fixtures/osm_c5_real/MANIFEST.md`), y un tramo compartido entre dos líneas (identificado desde el catálogo de MP-017, confirmado o descartado con datos reales, no forzado). Matriz de cobertura honesta (`validated`/`partial`/`pending`) para los patrones de las 12 líneas — `pending` es el resultado esperado para la mayoría, no un fallo.
+
+### Pendiente de entrega y revisión
+
+Dispatchado a Codex; pendiente de implementación, evidencia ejecutada y entrega en `REVIEW`.
+
+## Tareas cerradas de la cadena
+
+## MP-017 — Catálogo completo de Madrid (identidad y vigencia) (cerrada)
+
 **MP-017 — Catálogo completo de Madrid (identidad y vigencia)**
 
 Ejecutor: Claude Code · Revisor: OpenAI Codex · Estado: **DONE**
@@ -332,7 +350,6 @@ Suite completa reejecutada: **142/142 contra desarrollo** (`668/484/3/120/0` int
 
 Codex auditó el delta `07cdf6e..2663837` y el estado acumulado hasta `2663837`: OpenAPI congelado coincide exactamente con `app.openapi()`, `circulation_status` sincronizado en OpenAPI/`types.ts`/`DATA_CONTRACTS.md` y el nuevo test impide drift futuro. Repitió 15 tests focales de contrato/`circulation_status`/catálogo, frontend completo, autoría, recuentos `668/484/3/120/0`, `git diff --check` y limpieza del worktree — todo en verde, único aviso informativo conocido (chunks Vite >500 kB, no bloqueante). **Veredicto: APROBADA, sin hallazgos.** MP-017 pasa a `DONE`.
 
-## Tareas cerradas de la cadena
 
 ## MP-016 — Fiabilidad realtime (SKIPPED, UTC, live/replay) (cerrada)
 
