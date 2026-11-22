@@ -290,7 +290,7 @@ Con Hito 1 ya fusionado a `main`, el caso concreto de MP-012 **deja de requerir 
 
 **MP-018 — Corredores ferroviarios por patrón y sentido**
 
-Ejecutor: OpenAI Codex · Revisor: Claude Code · Estado: **REVIEW**
+Ejecutor: OpenAI Codex · Revisor: Claude Code · Estado: **DONE** (aprobado por Claude Code el 2026-11-22)
 
 Worktree/rama: `mp-018-corredores-madrid`, ramificada desde `mp-017-catalogo-madrid` (MP-017 `DONE`, `c28d5e4`). Datos del kit repuestos con `instalar.py --solo-datos`.
 
@@ -366,10 +366,13 @@ Parla–Cantoblanco, con 15 estaciones a menos de 50 m del eje OSM; C5 con
 que degrada a `partial` al vincular deliberadamente el sentido contrario; y
 las tres fixtures C4 byte-idénticas a una nueva ejecución de `fetch_fixture`.
 Ejecutó además la suite completa contra desarrollo y contra un segundo
-PostgreSQL fresco: **153/153 OK en ambos**. Esta verificación fresca fue
-realizada por el revisor; no se atribuye a la entrega inicial de Codex y debe
-incluirse desde el ejecutor en futuras tareas siguiendo el precedente de
-MP-015/016/017.
+PostgreSQL fresco desechable: **153/153 OK sin ningún `skip`** contra
+desarrollo y **153 ejecutados, OK con 5 `skip` explícitos** (los cinco del
+soak irrepetible de MP-007 documentados en DEC-035) contra el contenedor
+fresco — se declaran por separado, no como 153 pases en ambos. Esta
+verificación fresca fue realizada por el revisor; no se atribuye a la entrega
+inicial de Codex y debe incluirse desde el ejecutor en futuras tareas
+siguiendo el precedente de MP-015/016/017.
 
 Único hallazgo bloqueante de esa ronda: DEC-024 y los registros legales
 centrales aún nombraban solo la base derivada C5. Corregido sin cambiar código:
@@ -387,6 +390,49 @@ Notas no bloqueantes para MP-019 (no se corrigen en MP-018):
   `UNLOCATED`, aunque no exista una proyección real. MP-019 debe interpretar
   ese campo como versión de la geometría candidata/contextual y exigir
   `resolution=map_matched` + `projection` para afirmar que hubo map-matching.
+
+### Segunda revisión independiente (Claude Opus) — APROBADA
+
+Auditado el delta `933aa20..1b19df8` y el estado acumulado hasta `1b19df8`. La
+corrección es **exclusivamente documental**: `git diff --stat 933aa20..1b19df8 --
+packages/ tests/ apps/ services/ infra/ .github/` sale vacío, así que código y
+fixtures son byte-idénticos al commit ya auditado en la primera ronda y esa
+auditoría sigue siendo válida sin repetirla.
+
+Los tres registros legales quedan completos y con la misma vara que la entrada
+C5/DEC-024 original: `ATTRIBUTION.md` añade la fixture `osm_c4_real/` con la
+misma clasificación (base derivada, no render), licencia `ODbL-1.0`, atribución
+`© OpenStreetMap contributors`, separación de la licencia del código y reenvío
+al manifiesto para fuente/fecha/checksums; la fila `osm.rail_geometry` de
+`DATA_SOURCES.md` enumera ya los dos juegos de relaciones; y DEC-024 cubre ambas
+fixtures con el *share-alike* por base derivada. Verifiqué contra las propias
+fixtures que cada afirmación nueva es cierta: `11332`, `9174510` y `9174511`
+llevan realmente `ref=C-4` y `network=Cercanías Madrid`, con `official_ref=C-4a`
+las dos primeras y `C-4b` la tercera. Barrido completo de la documentación: los
+únicos ficheros que siguen nombrando solo C5 son el manifiesto propio de
+`osm_c5_real/` (correcto, el de C4 es el suyo) y `MVP_READINESS.md`, que es el
+acta congelada de cierre de Hito 2 y debe seguir describiendo lo que existía
+entonces. `LICENSE_MATRIX.md` es doctrina ODbL genérica y no inventaría
+fixtures, por lo que cubre ambas sin cambio.
+
+Re-verificación propia sobre `1b19df8`: suite exacta de CI **153/153 OK sin
+`skip`** contra la base de desarrollo, recuentos `668/484/3/120/0` intactos
+antes y después, y `git diff --check` limpio en todo el rango
+`47f2732..1b19df8`. Autoría del commit de corrección exclusivamente
+`Pedro Matute <pedromaaz13@gmail.com>` como autor y committer, sin
+`Co-authored-by` ni firmas de generación por IA.
+
+Corregí como revisor una única imprecisión en el acta de la ronda anterior: el
+texto declaraba «153/153 OK en ambos», cuando mi corrida contra el contenedor
+fresco fue de 153 ejecutados con 5 `skip` explícitos (el soak irrepetible de
+MP-007, DEC-035). El precedente de MP-015/016/017 es declarar siempre los
+`skip` por separado, nunca presentarlos como pases. Nada más que señalar.
+
+**Veredicto: APROBADA, sin hallazgos abiertos.** MP-018 pasa a `DONE` y queda
+disponible como base geométrica para MP-019. Las dos notas no bloqueantes
+(SHA-256 en `shared_track_way_ids`, `geometry_version` en fallbacks
+`RAW`/`UNLOCATED`) quedan registradas arriba como pendientes explícitas de
+MP-019, no como deuda silenciosa.
 
 ## Tareas cerradas de la cadena
 

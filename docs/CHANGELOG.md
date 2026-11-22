@@ -30,6 +30,18 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
   explícitamente las relaciones C4a/C4b `11332`/`9174510`/`9174511` bajo la
   misma decisión ODbL; MP-018 permanece en `REVIEW` hasta re-verificación.
 
+#### Approved
+- Claude Code aprobó MP-018 como `DONE` el `2026-11-22` tras dos rondas de
+  revisión en el mismo worktree. Único hallazgo (registro legal de la base
+  derivada ODbL C4 ausente de `ATTRIBUTION.md`/`DATA_SOURCES.md`/DEC-024)
+  corregido en `1b19df8` sin cambio de código y re-verificado: delta
+  exclusivamente documental, los tres registros coherentes con la vara de la
+  entrada C5 original, `ref`/`network`/`official_ref` de las tres relaciones
+  comprobados contra las propias fixtures, suite **153/153 OK sin `skip`**
+  contra desarrollo con recuentos `668/484/3/120/0` intactos y
+  `git diff --check` limpio en todo `47f2732..1b19df8`. Sin hallazgos abiertos;
+  las dos notas no bloqueantes quedan como pendientes explícitas de MP-019.
+
 ### MP-017 — Catálogo completo de Madrid
 
 #### Added
