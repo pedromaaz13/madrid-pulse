@@ -81,6 +81,8 @@ class FullPipelineReplayTests(unittest.TestCase):
         `trip_id` de la GTFS reducida de MP-010 -- mismo hallazgo que DEC-029
         en producción, reproducido aquí de extremo a extremo con datos
         deterministas, no con el soak real."""
+        # Una sesión local puede devolver timestamptz con el huso del sistema.
+        self.conn.execute("SET LOCAL TIME ZONE 'Europe/Madrid'")
         body = (FIXTURES_DIR / "vehicle_positions.json").read_bytes()
         self._run_vehicle_positions_cycle(body)
 

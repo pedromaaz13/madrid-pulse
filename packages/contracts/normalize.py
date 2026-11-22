@@ -57,9 +57,10 @@ def trip_updates_to_canonical(feed: RawTripUpdatesFeed) -> list[TripUpdateObserv
     observations = []
     for entity in feed.entity:
         update = entity.trip_update
-        # Primera parada informada, si existe (CANCELED no trae stopTimeUpdate).
-        next_stop_id = (
-            update.stop_time_update[0].stop_id if update.stop_time_update else None
+        next_stop_id = next(
+            (stop.stop_id for stop in update.stop_time_update or []
+             if stop.schedule_relationship != "SKIPPED"),
+            None,
         )
         observations.append(
             TripUpdateObservation(

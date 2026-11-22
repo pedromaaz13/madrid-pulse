@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 
 import psycopg
 
@@ -32,7 +32,7 @@ def latest_vehicle_position(
     return VehiclePositionObservation(
         source_vehicle_id=row[0],
         source_trip_id=row[1],
-        observed_at=row[2],
+        observed_at=row[2].astimezone(timezone.utc),
         latitude=row[3],
         longitude=row[4],
         current_status=row[5],
@@ -57,7 +57,7 @@ def recent_feed_snapshots(
             """,
             (feed_name, limit),
         )
-        return [SnapshotObservation(payload_hash=row[0], received_at=row[1]) for row in cur]
+        return [SnapshotObservation(payload_hash=row[0], received_at=row[1].astimezone(timezone.utc)) for row in cur]
 
 
 _LATEST_TIME_QUERIES = {
@@ -79,7 +79,7 @@ def latest_observed_at(
     with conn.cursor() as cur:
         cur.execute(query, (entity_ref,))
         row = cur.fetchone()
-    return row[0] if row else None
+    return row[0].astimezone(timezone.utc) if row else None
 
 
 def insert_quality_events(conn: psycopg.Connection, events: list[QualityEvent]) -> None:

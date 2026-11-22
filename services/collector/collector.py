@@ -87,9 +87,12 @@ def run_cycle(
     now: NowFn = _utcnow,
 ) -> CycleResult:
     started_at = now()
+    raw_body = b""
     try:
         raw_body = fetch_with_retry(feed.url, retry_policy, fetcher=fetcher)
-    except Exception as exc:  # noqa: BLE001 - se registra como ingestion_run fallido, no se relanza
+        parsed = _RAW_FEEDS[feed.name].model_validate_json(raw_body)
+        health = feed_health_from_raw(feed.name, parsed)
+    except Exception as exc:  # un fallo de transporte o formato queda registrado
         finished_at = now()
         with conn.transaction():
             db.insert_ingestion_run(
@@ -100,14 +103,11 @@ def run_cycle(
                 finished_at=finished_at,
                 status="error",
                 entity_count=None,
-                payload_hash=hashlib.sha256(b"").hexdigest(),
+                payload_hash=hashlib.sha256(raw_body).hexdigest(),
             )
-        logger.error("run_cycle: %s falló tras reintentos: %s", feed.name, exc)
+        logger.error("run_cycle: %s falló en la descarga o validación: %s", feed.name, exc)
         return CycleResult(feed.name, "error", None, 0, 0, error=str(exc))
 
-    raw_model = _RAW_FEEDS[feed.name]
-    parsed = raw_model.model_validate_json(raw_body)
-    health = feed_health_from_raw(feed.name, parsed)
     received_at = now()
     payload_hash = hashlib.sha256(raw_body).hexdigest()
 

@@ -4,6 +4,22 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 
 ## [Unreleased]
 
+### MP-016 — Fiabilidad realtime
+
+#### Added
+- Modos locales explícitos `MADRID_PULSE_MODE=live|replay`; Live rechaza fixtures y GTFS fuera de vigencia. `/api/v1/health` publica modo, SHA-256 y vigencia del catálogo.
+- `poll_age_s` separa edad del sondeo/colector de `data_age_s` (edad de la cabecera fuente), manteniendo salud independiente para posiciones, actualizaciones y avisos.
+- Regresiones para `SKIPPED` sin `arrival`, JSON roto, feed válido vacío, colector detenido, reloj PostgreSQL Europe/Madrid y cambio de viaje del mismo vehículo.
+
+#### Fixed
+- Trip updates reales con paradas `SKIPPED` sin `arrival` ya no invalidan el documento completo ni se usan como próxima parada comercial; errores de transporte/validación se registran con el hash recibido sin borrar el último éxito.
+- Lecturas `timestamptz` de API/calidad se normalizan a UTC antes de crear contratos canónicos.
+- La salud usa `source_timestamp` real y comprueba también la edad del sondeo; el frontend rotula la hora local como `Consulta`.
+- Una posición anterior del mismo vehículo pero de otro viaje ya no provoca que el motor descarte la primera posición válida del viaje nuevo.
+
+#### Verified
+- Replay congelado: `1532` = 119/119/49 y `1533` = 121/121/49 (vehículos Madrid/matches/SKIPPED sin arrival). Python: 123/123 contra desarrollo; 118 verdes + 5 skips de soak contra PostGIS fresco. Frontend: lint, typecheck, 5 tests y build verdes. Base de desarrollo intacta en `668/484/3/120/0`.
+
 ### MP-015 — E2E y readiness MVP
 
 #### Added

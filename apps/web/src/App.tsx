@@ -131,7 +131,7 @@ export default function App() {
         <aside className="side-panel" aria-label="Estado de vehículos">
           <div className="side-heading">
             <div><p className="eyebrow">Estado actual</p><h2>Trenes de {selectedLine?.line_id ?? "la red"}</h2></div>
-            <span>{updatedAt ? `Actualizado ${updatedAt.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}` : "Sin actualizar"}</span>
+            <span>{updatedAt ? `Consulta ${updatedAt.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}` : "Sin actualizar"}</span>
           </div>
           <div className="vehicle-list">
             {selectedVehicles.length ? selectedVehicles.map((vehicle) => (

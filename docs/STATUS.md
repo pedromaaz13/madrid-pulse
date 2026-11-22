@@ -290,7 +290,7 @@ Con Hito 1 ya fusionado a `main`, el caso concreto de MP-012 **deja de requerir 
 
 **MP-016 — Fiabilidad realtime (SKIPPED, UTC, live/replay)**
 
-Ejecutor: OpenAI Codex · Revisor: Claude Code · Estado: **IN_PROGRESS**
+Ejecutor: OpenAI Codex · Revisor: Claude Code · Estado: **REVIEW**
 
 Worktree/rama: `mp-016-fiabilidad-live`, ramificada directamente desde `main` (`990c95d`, que ya contiene toda la cadena MP-010→MP-015 fusionada vía PR #2). Primer commit (`d0f4b3c`): instalación verificada del kit externo Hito 3 v4 (`docs/hitos/hito-03/`), integridad y replay confirmados antes de tocar código (ver "Hito autorizado actualmente" arriba para el detalle completo de alcance/criterios).
 
@@ -308,6 +308,26 @@ Reproducir y corregir, contra el HEAD real (no asumiendo que el parche de refere
 - Replay (`python3 data/hito-03/replay/comprobar.py`) reproduce los conteos de fixture ya verificados en la instalación: corte `1532` → 119 vehículos Madrid/119 matches/49 `SKIPPED` sin `arrival`; corte `1533` → 121/121/49. Estos conteos son de la fixture congelada, no una expectativa del feed real de hoy.
 - Suite real del proyecto contra PostgreSQL real (no solo la sonda Python del replay).
 - Casos explícitos: respuesta inválida del feed, reloj desfasado, colector detenido (comprobar en pantalla qué ve una persona cuando el colector se detiene — instrucción explícita del propietario para la revisión de Claude).
+
+### Implementación entregada para revisión
+
+- `SKIPPED` sin `arrival` se acepta en raw y nunca se elige como próxima parada comercial; no se fabrica horario ni se congela la circulación. Descarga o validación inválida queda como `source_ingestion_run.status=error` con hash de los bytes recibidos; JSON roto conserva observaciones previas y un feed válido vacío queda `ok` con 0 entidades.
+- Todas las lecturas `timestamptz` que entran en contratos canónicos desde API/calidad se convierten explícitamente a UTC. Reproducción real: `SHOW TIME ZONE` devolvió `Europe/Madrid`, psycopg entregó `2026-11-20T15:32:00+01:00`, el contrato lo rechazó antes del límite y aceptó `2026-11-20T14:32:00+00:00` tras normalizar.
+- Salud separada por `alerts`, `trip_updates` y `vehicle_positions`; `data_age_s` usa la cabecera real y `poll_age_s` la edad del sondeo. Un sondeo reciente de fichero viejo y un colector detenido producen `stale` por razones distinguibles. La salida real con el colector detenido mostró HTTP 200 y los tres feeds `stale`, con `poll_age_s≈267886` y `data_age_s≈267890`, no un falso `ok`.
+- `MADRID_PULSE_MODE=replay|live` es explícito. Live rechaza fixtures, modos desconocidos y catálogos fuera de vigencia; `/health` publica modo, SHA-256 y ventana GTFS. README contiene ambos arranques. El rótulo mínimo de App cambia `Actualizado` por `Consulta`, porque esa hora es del navegador, no de la fuente.
+- Cambio de viaje del mismo vehículo: si la observación anterior tiene otro `trip_id`, el servicio pasa `previous=None` al motor; regresión añadida.
+
+### Diferencias respecto al parche de referencia
+
+`git apply --check data/hito-03/madrid-pulse-live.patch` sí fue limpio contra `d7447c3`; sus 11 ficheros se incorporaron tras auditar su intención. Se amplió deliberadamente con configuración/metadata Live-Replay (`config.py`, `gtfs_source.py`, `main.py`, esquemas y documentación), `poll_age_s`, casos JSON roto/feed vacío/colector detenido/cambio de viaje y contrato/OpenAPI. No se abordaron filtrado de históricos, selectores de avisos por estación, catálogo completo ni geometría multi-corredor: pertenecen al snapshot/identidad/geometría de MP-017→MP-019 según el kit, y adelantarlos aquí violaría el alcance.
+
+### Evidencia ejecutada
+
+- `python3 data/hito-03/replay/comprobar.py` → `1532`: 119 vehículos Madrid, 119 matches, 469 updates, 49 SKIPPED; `1533`: 121, 121, 474, 49.
+- `.venv/bin/python -m unittest ... -v` (lista exacta de CI) contra desarrollo → `Ran 123 tests ... OK`; recuentos antes/después intactos: `vehicle=668`, `trip=484`, `alerts=3`, `runs=120`, `quality=0`.
+- Mismo comando contra contenedor desechable `postgis/postgis:17-3.5` en `127.0.0.1:55416`, migración desde cero → `Ran 123 tests ... OK (skipped=5)`; 118 ejecutados en verde, 5 skips esperados por el soak histórico. Contenedor `mp016-postgis-fresh` eliminado al terminar; no tenía volumen y sus datos efímeros no son recuperables ni necesarios.
+- `npm run lint && npm run typecheck && npm test && npm run build` → lint/typecheck verdes, 2 ficheros/5 tests verdes, build Vite verde y worker MapLibre verificado (`550754 bytes`).
+- `git diff --check`, OpenAPI regenerado y suite focalizada de 36 tests se ejecutan de nuevo en el cierre previo al commit.
 
 ## Tareas cerradas de la cadena
 

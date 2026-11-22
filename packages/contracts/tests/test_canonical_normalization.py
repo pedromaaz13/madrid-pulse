@@ -24,6 +24,19 @@ def load_fixture(name: str) -> dict:
         return json.load(fixture_file)
 
 
+class SkippedStopTests(unittest.TestCase):
+    def test_skipped_stops_without_arrival_are_not_next_calls(self) -> None:
+        payload = load_fixture("trip_updates.json")
+        update = payload["entity"][0]["tripUpdate"]
+        skipped = {"stopId": "35606", "scheduleRelationship": "SKIPPED"}
+        arrival = {"stopId": "18000", "arrival": {"time": "1795185124"}}
+        for stops, expected in (([skipped, arrival], "18000"), ([skipped], None)):
+            with self.subTest(stops=stops):
+                update["stopTimeUpdate"] = stops
+                feed = RawTripUpdatesFeed.model_validate(payload)
+                self.assertEqual(trip_updates_to_canonical(feed)[0].next_stop_id, expected)
+
+
 class VehiclePositionNormalizationTests(unittest.TestCase):
     def setUp(self) -> None:
         feed = RawVehiclePositionsFeed.model_validate(load_fixture("vehicle_positions.json"))

@@ -17,6 +17,7 @@ class ApiConfig:
     gtfs_fixture_dir: Path
     osm_relation_path: Path
     feed_stale_after_s: float
+    mode: str
 
     @classmethod
     def from_env(cls) -> "ApiConfig":
@@ -40,4 +41,5 @@ class ApiConfig:
                 )
             ),
             feed_stale_after_s=float(os.environ.get("MADRID_PULSE_FEED_STALE_AFTER_S", "180")),
+            mode=os.environ.get("MADRID_PULSE_MODE", "replay").strip().lower(),
         )

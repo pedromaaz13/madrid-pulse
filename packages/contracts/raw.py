@@ -89,7 +89,11 @@ class RawStopTimeArrival(RawModel):
 
 class RawStopTimeUpdate(RawModel):
     stop_id: str = Field(alias="stopId")
-    arrival: RawStopTimeArrival
+    # Renfe omite arrival en paradas SKIPPED (captura del 20-11-2026).
+    arrival: Optional[RawStopTimeArrival] = None
+    schedule_relationship: Optional[str] = Field(
+        default=None, alias="scheduleRelationship", exclude_if=lambda value: value is None
+    )
 
 
 class RawTripUpdateVehicle(RawModel):

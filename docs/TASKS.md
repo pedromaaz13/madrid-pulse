@@ -406,8 +406,8 @@ Autorizado por el propietario el `2026-11-22` (mensaje "ORCA — MADRID PULSE / 
 - **Entregables:** parser/colector corregido con fixtures verificadas; `SKIPPED` sin `arrival` tratado como afecta-a-la-parada (no congela la circulación completa salvo evidencia de cancelación real); edad de observación visible aunque se use un ancla anterior; arranque local documentado con modos `Live` y `Replay` explícitos.
 - **Criterios de aceptación:** replay reproduce los conteos congelados del kit (corte `1532`: 119 vehículos Madrid, 119 matches, 49 `SKIPPED` sin `arrival`; corte `1533`: 121 matches, 49 `SKIPPED`) — conteos de fixture, no expectativa del feed en vivo de hoy. Tests reales contra PostGIS, no solo la sonda Python del replay. Casos probados: respuesta inválida, reloj desfasado, colector detenido.
 - **Pruebas necesarias:** suite real del proyecto (Python contra PostgreSQL real) + `python3 data/hito-03/replay/comprobar.py` como sonda adicional, nunca sustituto.
-- **Evidencia de verificación:** pendiente (tarea recién abierta).
-- **Estado:** `IN_PROGRESS` — worktree `mp-016-fiabilidad-live` abierto desde `main` (`990c95d`), kit instalado y verificado (`d0f4b3c`), dispatchado a Codex.
+- **Evidencia de verificación:** replay Hito 3 exacto (`1532`: 119/119/49; `1533`: 121/121/49); 123/123 tests Python contra PostgreSQL de desarrollo y 118 en verde + 5 `skip` documentados (de 123) contra PostGIS 17-3.5 fresco; frontend lint/typecheck/5 tests/build en verde; reproducción real `SHOW TIME ZONE = Europe/Madrid` y normalización `+01:00`→UTC; `/api/v1/health` real muestra los tres feeds `stale` por separado, con edad de fuente y de sondeo. Detalle y comandos en `docs/STATUS.md` → "Tarea actual".
+- **Estado:** `REVIEW` — implementación de Codex lista; pendiente auditoría independiente de Claude Code en este mismo worktree. No se marca `DONE` antes de su aprobación.
 
 ---
 

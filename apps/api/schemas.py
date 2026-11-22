@@ -53,6 +53,7 @@ class FeedHealthOut(BaseModel):
     status: Literal["ok", "stale", "error", "unknown"]
     source_timestamp: datetime | None
     data_age_s: float | None
+    poll_age_s: float
     unchanged_for_s: float | None
     entities: int | None
     rejected: int
@@ -60,6 +61,10 @@ class FeedHealthOut(BaseModel):
 
 class HealthOut(BaseModel):
     feeds: list[FeedHealthOut]
+    mode: Literal["live", "replay"] | None = None
+    gtfs_version: str | None = None
+    gtfs_valid_from: str | None = None
+    gtfs_valid_until: str | None = None
 
 
 class CoordinateOut(BaseModel):

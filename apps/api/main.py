@@ -11,6 +11,7 @@ from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 
 import psycopg
+import logging
 from fastapi import Depends, FastAPI, HTTPException
 
 from . import service
@@ -19,13 +20,19 @@ from .gtfs_source import LoadedNetwork, load_network
 from .schemas import HealthOut, LineOut, StationOut, VehicleOut
 
 _STATE: dict[str, object] = {}
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     config = ApiConfig.from_env()
     _STATE["config"] = config
-    _STATE["network"] = load_network(config)
+    network = load_network(config)
+    _STATE["network"] = network
+    logger.info(
+        "API mode=%s GTFS=%s vigencia=%s..%s",
+        network.mode, network.gtfs_version, network.gtfs_valid_from, network.gtfs_valid_until,
+    )
     yield
     _STATE.clear()
 
@@ -63,9 +70,17 @@ def now_utc() -> datetime:
 
 @app.get("/api/v1/health", response_model=HealthOut)
 def health(
-    config: ApiConfig = Depends(get_config), conn: psycopg.Connection = Depends(get_connection)
+    config: ApiConfig = Depends(get_config),
+    network: LoadedNetwork = Depends(get_network),
+    conn: psycopg.Connection = Depends(get_connection),
 ) -> HealthOut:
-    return service.feed_health(conn, now_utc(), stale_after_s=config.feed_stale_after_s)
+    result = service.feed_health(conn, now_utc(), stale_after_s=config.feed_stale_after_s)
+    return result.model_copy(update={
+        "mode": network.mode,
+        "gtfs_version": network.gtfs_version,
+        "gtfs_valid_from": network.gtfs_valid_from.isoformat(),
+        "gtfs_valid_until": network.gtfs_valid_until.isoformat(),
+    })
 
 
 @app.get("/api/v1/live/vehicles", response_model=list[VehicleOut])

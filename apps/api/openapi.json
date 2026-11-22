@@ -76,6 +76,10 @@
             "title": "Feed Name",
             "type": "string"
           },
+          "poll_age_s": {
+            "title": "Poll Age S",
+            "type": "number"
+          },
           "rejected": {
             "title": "Rejected",
             "type": "integer"
@@ -119,6 +123,7 @@
           "status",
           "source_timestamp",
           "data_age_s",
+          "poll_age_s",
           "unchanged_for_s",
           "entities",
           "rejected"
@@ -147,6 +152,54 @@
             },
             "title": "Feeds",
             "type": "array"
+          },
+          "gtfs_valid_from": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gtfs Valid From"
+          },
+          "gtfs_valid_until": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gtfs Valid Until"
+          },
+          "gtfs_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gtfs Version"
+          },
+          "mode": {
+            "anyOf": [
+              {
+                "enum": [
+                  "live",
+                  "replay"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mode"
           }
         },
         "required": [

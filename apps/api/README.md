@@ -60,6 +60,32 @@ export MADRID_PULSE_GTFS_SOURCE=data/gtfs_static/fomento_transit.zip
 `data/` está en `.gitignore`: el fichero (~298 MB extraído) no se versiona,
 mismo motivo que DEC-023 en MP-010.
 
+## Modos locales explícitos (MP-016)
+
+La API no llama «Live» a una fixture en silencio. El modo replay usa datos
+congelados y el modo live exige un ZIP ajeno a `tests/fixtures/` cuya ventana
+de calendario incluya la fecha actual de Madrid. Ambos publican en
+`/api/v1/health` el modo, el SHA-256 del catálogo y su vigencia.
+
+```sh
+# Replay reproducible (fixture reducida, valor por defecto)
+MADRID_PULSE_MODE=replay \
+MADRID_PULSE_GTFS_SOURCE="$PWD/tests/fixtures/gtfs_c5_real" \
+.venv/bin/uvicorn apps.api.main:app --port 8000
+
+# Live: descargar primero el ZIP oficial y comprobar que sigue vigente
+.venv/bin/python -m apps.api.tools.fetch_gtfs_static
+MADRID_PULSE_MODE=live \
+MADRID_PULSE_GTFS_SOURCE="$PWD/data/gtfs_static/fomento_transit.zip" \
+.venv/bin/uvicorn apps.api.main:app --port 8000
+```
+
+Un arranque live con fixture, modo desconocido o catálogo vencido falla con
+un diagnóstico explícito. `data_age_s` mide la edad de la cabecera publicada;
+`poll_age_s`, la edad del último intento del colector. Por ello un fichero viejo
+recién descargado y un colector detenido se distinguen, y los feeds
+`vehicle_positions`, `trip_updates` y `alerts` conservan estados separados.
+
 ## Una sola corriente de corredor cubre ambos sentidos de C5
 
 `MovementEngine` exige un corredor continuo por instancia (ADR-0012). Se

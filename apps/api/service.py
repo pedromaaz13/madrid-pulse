@@ -58,7 +58,13 @@ def _movement_position(
             service_date=_service_date(now),
             calculated_at=now,
             latest=history.latest.position,
-            previous=history.previous.position if history.previous is not None else None,
+            previous=(
+                history.previous.position
+                if history.previous is not None
+                and history.previous.position.source_trip_id
+                == history.latest.position.source_trip_id
+                else None
+            ),
             explicit_route_id=route_id,
         )
     except ValueError:
@@ -157,7 +163,11 @@ def feed_health(conn: psycopg.Connection, now: datetime, *, stale_after_s: float
     for feed_name, samples in by_feed.items():
         samples.sort(key=lambda item: item.started_at, reverse=True)
         latest = samples[0]
-        data_age_s = (now - latest.started_at).total_seconds()
+        poll_age_s = (now - latest.started_at).total_seconds()
+        data_age_s = (
+            (now - latest.source_timestamp).total_seconds()
+            if latest.source_timestamp is not None else None
+        )
         unchanged_for_s = 0.0
         for sample in samples[1:]:
             if sample.payload_hash != latest.payload_hash:
@@ -165,7 +175,9 @@ def feed_health(conn: psycopg.Connection, now: datetime, *, stale_after_s: float
             unchanged_for_s = (now - sample.started_at).total_seconds()
         if latest.status == "error":
             status = "error"
-        elif data_age_s > stale_after_s:
+        elif data_age_s is None or data_age_s < 0 or poll_age_s < 0 or latest.status != "ok":
+            status = "unknown"
+        elif data_age_s > stale_after_s or poll_age_s > stale_after_s:
             status = "stale"
         else:
             status = "ok"
@@ -174,8 +186,9 @@ def feed_health(conn: psycopg.Connection, now: datetime, *, stale_after_s: float
             FeedHealthOut(
                 feed_name=feed_name,
                 status=status,
-                source_timestamp=latest.started_at,
+                source_timestamp=latest.source_timestamp,
                 data_age_s=data_age_s,
+                poll_age_s=poll_age_s,
                 unchanged_for_s=unchanged_for_s,
                 entities=latest.entity_count,
                 rejected=rejected,

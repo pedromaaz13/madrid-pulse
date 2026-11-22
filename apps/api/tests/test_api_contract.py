@@ -11,8 +11,10 @@ from __future__ import annotations
 
 import os
 import unittest
+from dataclasses import replace
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
+from unittest.mock import Mock, patch
 
 from fastapi.testclient import TestClient
 
@@ -32,6 +34,39 @@ from apps.api.main import app  # noqa: E402
 from packages.contracts.canonical import VehiclePositionObservation  # noqa: E402
 
 VALID_MODES = {"observed", "estimated", "stale", "scheduled"}
+
+
+class FeedClockTests(unittest.TestCase):
+    def test_new_poll_of_old_payload_is_stale(self) -> None:
+        now = datetime(2026, 11, 20, 14, 32, tzinfo=timezone.utc)
+        published = now - timedelta(minutes=10)
+        run = db.FeedRunSample(
+            feed_name="vehicle_positions", source_timestamp=published,
+            started_at=now, finished_at=now, status="ok", entity_count=1, payload_hash="a" * 64,
+        )
+        with patch.object(db, "recent_ingestion_runs", return_value=[run]):
+            result = service.feed_health(None, now, stale_after_s=180).feeds[0]
+        self.assertEqual((result.source_timestamp, result.data_age_s, result.status),
+                         (published, 600, "stale"))
+        self.assertEqual(result.poll_age_s, 0)
+
+    def test_collector_stopped_is_visible_even_with_current_source_timestamp(self) -> None:
+        now = datetime(2026, 11, 20, 14, 32, tzinfo=timezone.utc)
+        run = db.FeedRunSample(
+            feed_name="vehicle_positions", source_timestamp=now,
+            started_at=now - timedelta(minutes=10), finished_at=now - timedelta(minutes=10),
+            status="ok", entity_count=119, payload_hash="a" * 64,
+        )
+        with patch.object(db, "recent_ingestion_runs", return_value=[run]):
+            result = service.feed_health(None, now, stale_after_s=180).feeds[0]
+        self.assertEqual((result.data_age_s, result.poll_age_s, result.status), (0, 600, "stale"))
+
+
+class RuntimeModeTests(unittest.TestCase):
+    def test_live_mode_rejects_replay_fixture(self) -> None:
+        config = replace(ApiConfig.from_env(), mode="live")
+        with self.assertRaisesRegex(ValueError, "live no admite fixtures"):
+            load_network(config)
 
 
 class ApiContractTests(unittest.TestCase):
@@ -106,6 +141,11 @@ class ApiContractTests(unittest.TestCase):
             self.assertIn(feed["status"], {"ok", "stale", "error", "unknown"})
             self.assertGreaterEqual(feed["data_age_s"], 0)
             self.assertGreaterEqual(feed["rejected"], 0)
+            self.assertGreaterEqual(feed["poll_age_s"], 0)
+        runtime = response.json()
+        self.assertEqual(runtime["mode"], "replay")
+        self.assertTrue(runtime["gtfs_version"].startswith("sha256:"))
+        self.assertLessEqual(runtime["gtfs_valid_from"], runtime["gtfs_valid_until"])
 
     def test_live_vehicles_always_report_raw_observation_age(self) -> None:
         """Hallazgo bloqueante de la revisión de Codex: antes `age_s` solo se
@@ -184,6 +224,29 @@ class ServiceDateTimezoneTests(unittest.TestCase):
         # Lejos de medianoche, ambas fechas coinciden.
         midday_utc = datetime(2026, 11, 19, 12, 0, tzinfo=timezone.utc)
         self.assertEqual(service._service_date(midday_utc), date(2026, 11, 19))
+
+
+class VehicleTripChangeTests(unittest.TestCase):
+    def test_previous_observation_from_another_trip_is_not_passed_to_engine(self) -> None:
+        now = datetime(2026, 11, 19, 8, 0, tzinfo=timezone.utc)
+        latest = VehiclePositionObservation(
+            source_vehicle_id="same-vehicle", source_trip_id="new-trip", observed_at=now,
+            latitude=40.4, longitude=-3.7, raw_vehicle_label="test", payload_hash="a" * 64,
+        )
+        previous = latest.model_copy(update={
+            "source_trip_id": "old-trip", "observed_at": now - timedelta(minutes=5),
+            "payload_hash": "b" * 64,
+        })
+        history = db.VehicleHistory(
+            source_vehicle_id="same-vehicle",
+            latest=db.ObservedRow(latest, now),
+            previous=db.ObservedRow(previous, now - timedelta(minutes=5)),
+        )
+        network = Mock()
+        network.engine.position.return_value = object()
+        result = service._movement_position(network, history, "route", now)
+        self.assertIsNotNone(result)
+        self.assertIsNone(network.engine.position.call_args.kwargs["previous"])
 
 
 class ResolvedTripEndToEndTests(unittest.TestCase):

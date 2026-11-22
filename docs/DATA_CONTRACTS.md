@@ -146,6 +146,7 @@ Toda respuesta de vehículo en vivo **debe** incluir:
       "status": "ok",
       "source_timestamp": "2026-11-18T09:00:00Z",
       "data_age_s": 8,
+      "poll_age_s": 2,
       "unchanged_for_s": 0,
       "entities": 42,
       "rejected": 0
@@ -155,11 +156,16 @@ Toda respuesta de vehículo en vivo **debe** incluir:
       "status": "stale",
       "source_timestamp": "2026-11-18T08:58:10Z",
       "data_age_s": 118,
+      "poll_age_s": 4,
       "unchanged_for_s": 118,
       "entities": 0,
       "rejected": 0
     }
-  ]
+  ],
+  "mode": "live",
+  "gtfs_version": "sha256:ejemplo-sintetico",
+  "gtfs_valid_from": "2026-11-18",
+  "gtfs_valid_until": "2026-12-06"
 }
 ```
 

@@ -8,6 +8,7 @@ idempotencia se prueba contra una base real, no simulada.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import unittest
 from pathlib import Path
@@ -55,6 +56,33 @@ class VehiclePositionIdempotencyTests(unittest.TestCase):
         self.addCleanup(self.conn.rollback)
         self.feed = FeedConfig("vehicle_positions", "https://example.invalid/vehicle_positions.json")
         self.body = _load_fixture_bytes("vehicle_positions.json")
+
+    def test_schema_failure_records_payload_hash_and_no_source_time(self) -> None:
+        body = b'{"header":{"unexpected":"schema"}}'
+        result = run_cycle(self.feed, self.conn, _POLICY, fetcher=lambda *_: body)
+        self.assertEqual(result.status, "error")
+        row = self.conn.execute(
+            "SELECT status, source_timestamp FROM source_ingestion_run "
+            "WHERE feed_name = %s AND payload_hash = %s ORDER BY id DESC LIMIT 1",
+            (self.feed.name, hashlib.sha256(body).hexdigest()),
+        ).fetchone()
+        self.assertEqual(row, ("error", None))
+
+    def test_broken_json_is_an_error_but_does_not_delete_existing_observations(self) -> None:
+        before = self.conn.execute("SELECT count(*) FROM vehicle_position_observation").fetchone()[0]
+        body = b'{"header":'
+        result = run_cycle(self.feed, self.conn, _POLICY, fetcher=lambda *_: body)
+        after = self.conn.execute("SELECT count(*) FROM vehicle_position_observation").fetchone()[0]
+        self.assertEqual(result.status, "error")
+        self.assertEqual(after, before)
+
+    def test_valid_empty_feed_is_success_not_network_failure(self) -> None:
+        body = (
+            b'{"header":{"gtfsRealtimeVersion":"2.0",'
+            b'"timestamp":"1795185124"},"entity":[]}'
+        )
+        result = run_cycle(self.feed, self.conn, _POLICY, fetcher=lambda *_: body)
+        self.assertEqual((result.status, result.entity_count, result.inserted_count), ("ok", 0, 0))
 
     def test_out_of_scope_nucleos_are_skipped_not_stored(self) -> None:
         """La fixture de MP-004 mezcla deliberadamente 7 entidades de Madrid

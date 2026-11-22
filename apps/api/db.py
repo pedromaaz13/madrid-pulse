@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 
 import psycopg
 from psycopg.rows import dict_row
@@ -31,7 +31,7 @@ def _row_to_observed(row: dict) -> ObservedRow:
     position = VehiclePositionObservation(
         source_vehicle_id=row["source_vehicle_id"],
         source_trip_id=row["source_trip_id"],
-        observed_at=row["observed_at"],
+        observed_at=row["observed_at"].astimezone(timezone.utc),
         latitude=row["latitude"],
         longitude=row["longitude"],
         current_status=row["current_status"],
@@ -41,7 +41,7 @@ def _row_to_observed(row: dict) -> ObservedRow:
         raw_vehicle_label=row["raw_vehicle_label"],
         payload_hash=row["payload_hash"],
     )
-    return ObservedRow(position=position, received_at=row["received_at"])
+    return ObservedRow(position=position, received_at=row["received_at"].astimezone(timezone.utc))
 
 
 def latest_vehicle_histories(conn: psycopg.Connection) -> list[VehicleHistory]:
@@ -120,7 +120,7 @@ def latest_trip_update(
         return None
     return TripUpdateObservation(
         source_trip_id=row["source_trip_id"],
-        observed_at=row["observed_at"],
+        observed_at=row["observed_at"].astimezone(timezone.utc),
         schedule_relationship=row["schedule_relationship"],
         delay_seconds=row["delay_seconds"],
         delay_coverage=row["delay_coverage"],
@@ -132,6 +132,7 @@ def latest_trip_update(
 @dataclass(frozen=True)
 class FeedRunSample:
     feed_name: str
+    source_timestamp: datetime | None
     started_at: datetime
     finished_at: datetime | None
     status: str
@@ -144,7 +145,7 @@ def recent_ingestion_runs(conn: psycopg.Connection, *, per_feed_limit: int = 50)
     with conn.cursor(row_factory=dict_row) as cur:
         cur.execute(
             """
-            SELECT feed_name, started_at, finished_at, status, entity_count, payload_hash,
+            SELECT feed_name, source_timestamp, started_at, finished_at, status, entity_count, payload_hash,
                    row_number() OVER (PARTITION BY feed_name ORDER BY started_at DESC) AS rank
             FROM source_ingestion_run
             """
@@ -153,8 +154,15 @@ def recent_ingestion_runs(conn: psycopg.Connection, *, per_feed_limit: int = 50)
     return [
         FeedRunSample(
             feed_name=row["feed_name"],
-            started_at=row["started_at"],
-            finished_at=row["finished_at"],
+            source_timestamp=(
+                row["source_timestamp"].astimezone(timezone.utc)
+                if row["source_timestamp"] is not None else None
+            ),
+            started_at=row["started_at"].astimezone(timezone.utc),
+            finished_at=(
+                row["finished_at"].astimezone(timezone.utc)
+                if row["finished_at"] is not None else None
+            ),
             status=row["status"],
             entity_count=row["entity_count"],
             payload_hash=row["payload_hash"],
