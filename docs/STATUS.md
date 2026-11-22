@@ -483,15 +483,66 @@ identificadores en la lógica). Registrada además en `docs/legal/ATTRIBUTION.md
 y `docs/legal/DATA_SOURCES.md`, aplicando por adelantado el mismo criterio que
 el hallazgo legal de MP-018.
 
+### Segunda auditoría independiente de Codex — un tercer hallazgo bloqueante, corregido
+
+Codex confirmó que los dos hallazgos anteriores quedaron bien corregidos (la
+reconstrucción DST es correcta, los dos trips `24:xx` resuelven a su fecha real,
+la fixture nueva es byte-idéntica a una regeneración, 222/222 + 5 `skip`,
+frontend `22.13.1`, replay con las siete invariantes, autoría y diff limpios) y
+encontró un **tercer bloqueante de la misma familia** al revisar precisamente
+esa corrección.
+
+**Hallazgo 3 — la ventana del tablero no determinaba sus días de servicio.**
+`build_station_board` derivaba sus días candidatos de `resolver.candidates`,
+calculado con `now`, así que en cuanto `now` rebasaba el horizonte de horas
+extendidas del feed dejaba de consultar el día anterior **aunque `lookback_s`
+todavía lo cubriera**. Reproducido con `tests/fixtures/gtfs_24h_real/`,
+estación `17000`, `lookback_s=600`: la llamada real de `1023V20533C4` a las
+`24:32` (las `00:32` en reloj de pared, justo donde se agota el horizonte de esa
+fixture) se veía a las `00:32` y **desaparecía a las `00:33`**, un minuto
+después de ocurrir. Reproducido también contra el ZIP completo con
+`1023V21644C2` (llamada `24:53`, estación `70200`): presente a las `00:53`,
+ausente a las `00:54`.
+
+**El mismo error existía en el sentido contrario**, y eso no venía en el
+informe: la ventana hacia delante tampoco consultaba el día de servicio
+siguiente. A las `23:55` del 20, con `lookahead_s=3600`, el tablero de la
+estación `35002` devolvía `considerados=['2026-11-20']` y perdía
+`1024S27997C5`, que sale a las `00:01` del día de servicio 21 — a seis minutos,
+dentro de la anticipación pedida.
+
+Corregido con `apps.api.service.service_dates_covering(start, end,
+extended_horizon_s)`, que devuelve en orden cronológico todos los días cuyo
+tramo `[medianoche local, +24 h + horizonte]` intersecta la ventana. El tablero
+la llama con su ventana real (`window_start`/`window_end`) y
+`ServiceDateResolver` con la ventana degenerada `[now, now]`, que reproduce
+exactamente su comportamiento anterior para resolver la fecha de **una
+circulación** en el snapshot. Los límites de cada día se calculan con
+`service_day_instant`, de modo que la cobertura también es correcta en los dos
+días de cambio de hora. El límite pasa a ser la **ventana pedida**: la llamada
+se ve de `00:31` a `00:42` y desaparece en `00:43`, y la `24:53` del ZIP de
+`00:53` a `01:03`.
+
+Las entradas de dos días de servicio distintos salen ordenadas por **instante
+absoluto**, comprobado con el ZIP (`23:50`, `23:53`, `23:56`, `00:01` del día
+siguiente, `24:17`, `24:39`), así que mezclarlos no altera el orden.
+
+**Las 11 regresiones nuevas se comprobaron contra el código anterior:** con
+`candidates = resolver.candidates` la clase nueva produce 13 fallos (incluidos
+los `subTest` minuto a minuto) y con la corrección pasa 5/5. Evidencia completa
+en `docs/evidence/mp-019-dst-y-horas-extendidas.md` (sección «Hallazgo 3»);
+DEC-039 ampliada.
+
 ### Matriz de evidencia reejecutada al completo tras la corrección
 
-- Suite Python exacta de CI, ya con las 16 regresiones nuevas:
-  **`Ran 222 tests ... OK`** contra la base de desarrollo, **sin ningún
+- Suite Python exacta de CI, con las 27 regresiones de las dos rondas:
+  **`Ran 233 tests ... OK`** contra la base de desarrollo, **sin ningún
   `skip`**; recuentos `668/484/3/120/0` idénticos antes y después y soak intacto
-  (`rows=668, near_corridor=177, after=668`).
+  (`rows=668, near_corridor=177, after=668`). Evolución: 206 en la primera
+  entrega → 222 tras la primera ronda → 233 tras la segunda.
 - Misma suite contra PostgreSQL **fresco y desechable** con `0001`+`0002`
-  aplicadas desde cero: **222 ejecutados, OK con 5 `skip` explícitos** (soak
-  irrepetible de MP-007, DEC-035) — declarados por separado, nunca como 222
+  aplicadas desde cero: **233 ejecutados, OK con 5 `skip` explícitos** (soak
+  irrepetible de MP-007, DEC-035) — declarados por separado, nunca como 233
   pases en ambos.
 - Frontend con **Node `22.13.1`**, la versión que fija CI: `npm ci` sin
   vulnerabilidades, lint, typecheck, **5/5 tests** y build con worker MapLibre
@@ -502,19 +553,23 @@ el hallazgo legal de MP-018.
   44 `map_matched`, 13 con avance real, revisión `3 → 6 → 7` monotónica en su
   ámbito, parcial que degrada solo `delays_and_eta`, congelado que no
   rejuvenece).
-- `EXPLAIN` y p50/p95: ninguna forma de consulta cambió, así que los planes
-  siguen vigentes; cifras nuevas medidas, incluido el **peor caso** del tablero
-  con dos días de servicio candidatos (p50 9,62 / p95 24,19 ms frente a
-  7,96 / 10,39 ms con uno solo).
+- `EXPLAIN` y p50/p95: ninguna forma de consulta cambió en ninguna de las tres
+  correcciones, así que los planes siguen vigentes; cifras remedidas en los
+  tres escenarios del tablero sobre el núcleo completo — un día candidato
+  (p50 8,20 / p95 12,56 ms), dos hacia atrás tras medianoche
+  (p50 10,27 / p95 13,95 ms) y dos hacia delante antes de medianoche
+  (p50 6,46 / p95 8,56 ms). Cruzar un día adicional cuesta ~2 ms de p50 y su
+  índice se memoiza por fecha.
 
 ### Pendiente de revisión
 
-Estado `REVIEW`. El ejecutor **no** marca `DONE` ni se autoaprueba: los dos
-hallazgos quedan corregidos con regresión y evidencia reejecutada, y queda
-pendiente la re-verificación independiente de OpenAI Codex sobre el diff
-completo en este mismo worktree, más la aceptación del propietario. ADR-0014
-permanece `Propuesto` y DEC-039 queda registrada como propuesta — su promoción
-es exclusiva del propietario (ADR-0007).
+Estado `REVIEW`. El ejecutor **no** marca `DONE` ni se autoaprueba: los **tres**
+hallazgos de las dos rondas quedan corregidos, cada uno con regresión
+comprobada contra el código anterior y con la matriz de evidencia reejecutada
+al completo. Queda pendiente la re-verificación independiente de OpenAI Codex
+sobre el diff completo en este mismo worktree, más la aceptación del
+propietario. ADR-0014 permanece `Propuesto` y DEC-039 queda registrada como
+propuesta — su promoción es exclusiva del propietario (ADR-0007).
 
 ## Tareas cerradas de la cadena
 

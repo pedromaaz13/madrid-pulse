@@ -9,7 +9,13 @@ import psycopg
 
 from packages.contracts.canonical import TripUpdateObservation
 from packages.gtfs import Topology, scheduled_service_ids_for_date
-from packages.movement import MovementPosition, PositionMode, parse_gtfs_time, service_seconds
+from packages.movement import (
+    MovementPosition,
+    PositionMode,
+    parse_gtfs_time,
+    service_day_instant,
+    service_seconds,
+)
 
 from . import db
 from .gtfs_source import LoadedNetwork
@@ -64,6 +70,48 @@ def extended_service_horizon_s(topology: Topology) -> float:
     return max(0.0, maximum - 86_400.0)
 
 
+def service_dates_covering(
+    start: datetime, end: datetime, *, extended_horizon_s: float
+) -> tuple[date, ...]:
+    """Días de servicio GTFS cuyo horario puede alcanzar la ventana `[start, end]`.
+
+    Un día de servicio `D` abarca los instantes
+    `[medianoche local de D, medianoche local de D + 24 h + horizonte]`; con un
+    horizonte derivado del feed (`extended_service_horizon_s`) ese tramo se
+    solapa con el del día siguiente. Esta función devuelve, en orden
+    cronológico, todos los días cuyo tramo intersecta la ventana pedida.
+
+    Tercer hallazgo bloqueante de la revisión de MP-019: el tablero calculaba
+    sus días candidatos **solo con `now`**, no con la ventana realmente
+    solicitada. En cuanto `now` rebasaba el horizonte, dejaba de consultar el
+    día anterior aunque `lookback_s` todavía lo cubriera: con la fixture
+    `gtfs_24h_real`, la llamada real de las `24:32` (las `00:32` en reloj de
+    pared) aparecía en el tablero a las `00:32` y desaparecía a las `00:33`,
+    pese a haber ocurrido un minuto antes y a pedirse 600 s de retrospectiva.
+    El mismo error existía en el sentido contrario: a las `23:55` el tablero no
+    consideraba el día de servicio siguiente, así que perdía sus llamadas de
+    `00:0x` aunque estuvieran a seis minutos dentro de `lookahead_s`.
+
+    Los instantes se calculan con `service_day_instant`, no sumando segundos a
+    un offset fijo, de modo que la cobertura también es correcta en los dos días
+    de cambio de hora.
+    """
+    if end < start:
+        start, end = end, start
+    span_s = 86_400.0 + max(0.0, extended_horizon_s)
+    first = _service_date(start) - timedelta(days=1)
+    last = _service_date(end)
+    covering: list[date] = []
+    candidate = first
+    while candidate <= last:
+        day_start = service_day_instant(candidate, 0.0)
+        day_end = service_day_instant(candidate, span_s)
+        if day_start <= end and day_end >= start:
+            covering.append(candidate)
+        candidate += timedelta(days=1)
+    return tuple(covering)
+
+
 class ServiceDateResolver:
     """Resuelve la fecha de servicio GTFS **por circulación**, no por reloj civil.
 
@@ -86,16 +134,24 @@ class ServiceDateResolver:
     def __init__(self, topology: Topology, now: datetime, *, extended_horizon_s: float) -> None:
         self.topology = topology
         self.now = now
+        self.extended_horizon_s = extended_horizon_s
         self.primary = _service_date(now)
-        previous = self.primary - timedelta(days=1)
-        # La ventana existe solo mientras el horario extendido del feed pueda
-        # alcanzar `now`: a las 02:00 locales con un feed que termina a las
-        # 25:09 ya no hay ambigüedad posible.
-        within_window = service_seconds(now, previous) <= 86_400.0 + extended_horizon_s
-        self.candidates: tuple[date, ...] = (
-            (previous, self.primary) if within_window else (self.primary,)
-        )
+        # Para resolver la fecha de **una circulación** la ventana es el propio
+        # instante: los candidatos son los días de servicio cuyo horario puede
+        # alcanzar `now`. A las 02:00 locales, con un feed que termina a las
+        # 25:09, ya no hay ambigüedad posible y queda solo el día civil.
+        self.candidates: tuple[date, ...] = self.dates_covering(now, now)
         self._scheduled: dict[date, frozenset[str]] = {}
+
+    def dates_covering(self, start: datetime, end: datetime) -> tuple[date, ...]:
+        """Días de servicio que pueden alcanzar la ventana `[start, end]`.
+
+        El tablero la usa con su ventana real (`window_start`/`window_end`), no
+        con `now`: ver `service_dates_covering`.
+        """
+        return service_dates_covering(
+            start, end, extended_horizon_s=self.extended_horizon_s
+        )
 
     def scheduled_service_ids(self, service_date: date) -> frozenset[str]:
         cached = self._scheduled.get(service_date)

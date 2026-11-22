@@ -1,7 +1,8 @@
-# MP-019 — Corrección de los dos hallazgos de aritmética temporal (evidencia ejecutada)
+# MP-019 — Corrección de los tres hallazgos de aritmética temporal (evidencia ejecutada)
 
-Hallazgos reales de la auditoría de OpenAI Codex sobre la primera entrega de
-MP-019. Los dos son errores de aritmética de día de servicio —la misma familia
+Hallazgos reales de las dos rondas de auditoría de OpenAI Codex sobre MP-019
+(los dos primeros sobre la entrega inicial, el tercero al revisar la
+corrección). Los tres son errores de aritmética de día de servicio —la misma familia
 que el proyecto ya corrigió en MP-009 (huso del exportador, DEC-021) y MP-013
 (`service_date` en UTC en vez de Europe/Madrid)—, así que se documentan con el
 número reproducido, no con una descripción.
@@ -186,30 +187,134 @@ argumentos, sin identificadores en la lógica). Queda registrada en
   de `24:05`; ninguna llamada se duplica entre los dos días candidatos; y fuera
   de la ventana el tablero vuelve a considerar solo el día civil.
 
+## Hallazgo 3 — los días candidatos del tablero se calculaban con `now`, no con la ventana pedida
+
+Hallazgo de la **segunda** ronda de auditoría de Codex, de la misma familia que
+los dos anteriores y encontrado precisamente al revisar la corrección.
+
+### Qué estaba mal
+
+`build_station_board` derivaba sus días de servicio candidatos de
+`resolver.candidates`, que se calcula con el instante `now`. En cuanto `now`
+rebasaba el horizonte de horas extendidas del feed, el tablero dejaba de
+consultar el día anterior **aunque `lookback_s` todavía lo cubriera**.
+
+Reproducido antes de corregir con `tests/fixtures/gtfs_24h_real/`, estación
+`17000`, `lookback_s=600` (10 min). La llamada real de `1023V20533C4` es a las
+`24:32` del día de servicio 2026-11-20, es decir las `00:32` en reloj de pared,
+y el horizonte de esa fixture se agota exactamente ahí (`1 920 s` = `24:32`):
+
+```text
+  00:31  considerados=['2026-11-20', '2026-11-21']  trips=['1023V20533C4']
+  00:32  considerados=['2026-11-20', '2026-11-21']  trips=['1023V20533C4']
+  00:33  considerados=['2026-11-21']                trips=[]      <-- desaparece
+  00:34  considerados=['2026-11-21']                trips=[]
+```
+
+La llamada había ocurrido **un minuto antes** y se habían pedido 600 s de
+retrospectiva. Reproducido también contra el ZIP completo con otra circulación
+real, `1023V21644C2` (llamada `24:53` en la estación `70200`): presente a las
+`00:53`, ausente a las `00:54`.
+
+**El mismo error existía en el sentido contrario**, y no estaba en el informe:
+la ventana hacia delante tampoco consultaba el día de servicio siguiente. A las
+`23:55` del 20, con `lookahead_s=3600`, el tablero de la estación `35002`
+devolvía `considerados=['2026-11-20']` y perdía `1024S27997C5`, que sale a las
+`00:01` del día de servicio 21 — a seis minutos, dentro de la anticipación
+pedida.
+
+### Corrección
+
+`apps/api/service.py::service_dates_covering(start, end, extended_horizon_s)`
+devuelve todos los días de servicio cuyo tramo
+`[medianoche local, medianoche local + 24 h + horizonte]` intersecta la ventana
+dada, en orden cronológico. El tablero la llama con su ventana real
+(`window_start`/`window_end`); `ServiceDateResolver` la usa con la ventana
+degenerada `[now, now]`, que reproduce exactamente su comportamiento anterior
+para resolver la fecha de **una circulación** en el snapshot. Los límites de
+cada día se calculan con `service_day_instant`, no sumando segundos a un offset
+fijo, así que la cobertura también es correcta en los dos días de cambio de
+hora.
+
+Verificado tras corregir — el límite pasa a ser la **ventana pedida**, no el
+horizonte del feed:
+
+```text
+fixture, estación 17000, lookback_s=600 (la llamada es a las 00:32)
+  00:31 .. 00:42  considerados=['2026-11-20','2026-11-21']  trips=['1023V20533C4']
+  00:43           considerados=['2026-11-21']               trips=[]   <-- borde real de los 600 s
+
+ZIP completo, estación 70200, lookback_s=600 (la llamada es a las 00:53)
+  00:53 .. 01:03  1023V21644C2 presente
+  01:04           ausente                                              <-- borde real de los 600 s
+
+ZIP completo, estación 35002, 23:55 del 20, lookahead_s=3600
+  considerados=['2026-11-20','2026-11-21']
+  1023V19793C5 sd=2026-11-20 23:50:00
+  1023V19795C5 sd=2026-11-20 23:53:00
+  1023V20924C5 sd=2026-11-20 23:56:00
+  1024S27997C5 sd=2026-11-21 00:01:00   <-- antes se perdía
+  1023V19788C5 sd=2026-11-20 24:17:00
+  1023V19790C5 sd=2026-11-20 24:39:00
+```
+
+La última lista confirma además que mezclar dos días de servicio **no** rompe el
+orden: las entradas salen ordenadas por instante absoluto, no por hora GTFS.
+
+### Regresión añadida
+
+`apps.api.tests.test_snapshot_contract`:
+
+- `BoardWindowCoversItsCandidateServiceDaysTests`: el minuto exacto del
+  hallazgo (`00:33`, estación `17000`, `lookback_s=600`); la supervivencia
+  minuto a minuto de `00:31` a `00:42` con desaparición en `00:43` (el borde
+  real de la ventana, comprobando además que el horizonte de la fixture se
+  agota en `00:32`, que es lo que hacía visible el fallo); que una ventana más
+  corta (`lookback_s=60`) la descarta antes, porque manda la ventana; el lado
+  **simétrico** hacia delante con entradas reales; y el orden por instante
+  absoluto al mezclar días.
+- `ServiceDatesCoveringTests`: la función pura, incluida la equivalencia con el
+  resolver para una ventana degenerada, los bordes de `lookback`/`lookahead`,
+  un feed sin horas extendidas (horizonte `0.0`, sin solape), ventanas
+  invertidas y la cobertura en las dos fechas de cambio de hora.
+
+**Comprobado que la regresión es real:** con el cálculo anterior
+(`candidates = resolver.candidates`) la clase nueva falla —13 fallos, incluidos
+los `subTest` minuto a minuto— y con la corrección pasa 5/5.
+
 ## Coste medido de la corrección
 
 Mismo equipo y método que `mp-019-explain-y-bench.md` (Apple M1, 8 GB,
-PostgreSQL 17.5, `TestClient` en proceso, conexión reutilizada):
+PostgreSQL 17.5, `TestClient` en proceso, conexión reutilizada, núcleo Madrid
+completo, 40 iteraciones):
 
-| Endpoint | Núcleo completo, 05:20 (un día candidato) | Núcleo completo, 00:02 (dos días candidatos) |
-|---|---:|---:|
-| `GET /api/v1/snapshot` | p50 8,42 / p95 23,32 ms | p50 9,62 / p95 13,81 ms |
-| `GET /api/v1/stations/{id}/board` | p50 7,96 / p95 10,39 ms | p50 9,62 / p95 24,19 ms |
-| `GET /api/v1/catalog` | p50 0,54 ms | p50 0,46 ms |
+| Endpoint | 05:20 (un día candidato) | 00:02 (dos días, hacia atrás) | 23:55 (dos días, hacia delante) |
+|---|---:|---:|---:|
+| `GET /api/v1/snapshot` | p50 7,98 / p95 14,58 | p50 9,97 / p95 18,49 | p50 7,69 / p95 11,76 |
+| `GET /api/v1/stations/{id}/board` | p50 8,20 / p95 12,56 | p50 10,27 / p95 13,95 | p50 6,46 / p95 8,56 |
+| `GET /api/v1/catalog` | p50 0,45 | p50 0,48 | p50 0,53 |
+| `GET /api/v1/live/vehicles` | p50 4,59 | p50 4,46 | p50 4,72 |
 
-El peor caso del tablero (dos días de servicio cruzados, justo después de
-medianoche) cuesta ~1,7 ms más de p50; los índices de llamadas programadas se
-memoizan por fecha, así que ese coste se paga una vez por día de servicio. No
-se introdujo ninguna consulta nueva: las formas de las consultas SQL no han
-cambiado y los planes `EXPLAIN` del documento anterior siguen vigentes, lo que
-confirman además los tests de conteo de `execute`.
+Cruzar un día de servicio adicional cuesta ~2 ms de p50 en el tablero; su
+índice de llamadas programadas se memoiza por fecha, así que ese coste se paga
+una vez por día. **No se introdujo ninguna consulta nueva** en ninguna de las
+tres correcciones: las formas SQL no han cambiado, los planes `EXPLAIN` del
+documento anterior siguen vigentes y los tests de conteo de `execute` lo
+confirman.
 
 ## Matriz de evidencia reejecutada al completo
 
+Reejecutada al completo después de **cada** ronda de corrección. Cifras de la
+última (los tres hallazgos corregidos):
+
 | Comprobación | Resultado |
 |---|---|
-| Suite exacta de CI contra la base de desarrollo | **222/222 OK, sin ningún `skip`**; recuentos `668/484/3/120/0` idénticos antes y después; soak `rows=668, near_corridor=177, after=668` |
-| Suite exacta de CI contra PostGIS **fresco** con `0001`+`0002` desde cero | **222 ejecutados, OK con 5 `skip` explícitos** (soak irrepetible de MP-007, DEC-035) |
+| Suite exacta de CI contra la base de desarrollo | **233/233 OK, sin ningún `skip`**; recuentos `668/484/3/120/0` idénticos antes y después; soak `rows=668, near_corridor=177, after=668` |
+| Suite exacta de CI contra PostGIS **fresco** con `0001`+`0002` desde cero | **233 ejecutados, OK con 5 `skip` explícitos** (soak irrepetible de MP-007, DEC-035) |
 | Frontend con **Node 22.13.1** (versión que fija CI) | `npm ci` sin vulnerabilidades, lint, typecheck, **5/5 tests**, build con worker MapLibre `550754` bytes |
-| Replay de tres snapshots sobre capturas reales `1532`/`1533` | invariantes de nuevo en verde; ver `mp-019-tres-snapshots-replay.md` |
+| Replay de tres snapshots sobre capturas reales `1532`/`1533` | las siete invariantes en verde; ver `mp-019-tres-snapshots-replay.md` |
 | `EXPLAIN` y p50/p95 | sin cambios de forma de consulta; nuevas cifras arriba y en `mp-019-explain-y-bench.md` |
+
+Evolución del número de tests: 206 en la primera entrega → 222 tras la primera
+ronda de corrección (16 regresiones DST/`24:xx`) → **233** tras la segunda
+(11 regresiones de cobertura de ventana).

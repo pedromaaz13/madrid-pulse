@@ -232,6 +232,14 @@ ser el **día anterior** al civil: un viaje con horas `24:xx`/`25:xx` sigue
 perteneciendo al día de servicio en que empezó. `StationBoardOut` publica
 además `service_dates_considered` con los días realmente cruzados.
 
+Esos días se derivan de la **ventana completa** del tablero
+(`lookback_s`/`lookahead_s`), no del instante de consulta: una llamada `24:xx`
+del día anterior sigue dentro de la retrospectiva pedida después de que el
+horizonte del feed deje de alcanzar el instante actual, y las primeras llamadas
+del día siguiente pueden caer dentro de la anticipación antes de la medianoche.
+Las entradas se ordenan por **instante absoluto**, así que mezclar dos días de
+servicio no altera el orden.
+
 La ventana de ambigüedad tras medianoche sale del propio feed —el máximo
 `arrival`/`departure` del GTFS cargado menos 24 h— y nunca de una constante:
 con el núcleo Madrid completo son 3 180 s (máximo real `24:53`); con un feed sin

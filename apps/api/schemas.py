@@ -487,10 +487,12 @@ class StationBoardOut(BaseModel):
     service_date: str
     """Día de servicio principal (el civil de Europe/Madrid)."""
     service_dates_considered: list[str]
-    """Días de servicio realmente cruzados para construir el tablero. Tras
-    medianoche, y mientras el horizonte de horas extendidas del propio feed lo
-    justifique, incluye también el día anterior para no perder sus llamadas
-    `24:xx`."""
+    """Días de servicio realmente cruzados para construir el tablero.
+
+    Se derivan de la **ventana completa** (`lookback_s`/`lookahead_s`), no del
+    instante de consulta: incluyen el día anterior mientras su horario
+    extendido (`24:xx`) pueda caer dentro de la retrospectiva, y el día
+    siguiente cuando sus primeras llamadas caigan dentro de la anticipación."""
     calculated_from: str = (
         "gtfs_calendar+calendar_dates+stop_times, cruzado con trip_update y "
         "observaciones de vehículo"

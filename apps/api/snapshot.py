@@ -914,15 +914,20 @@ def build_station_board(
     resolver = network.service_date_resolver(now)
     service_date = resolver.primary
 
-    # Tras medianoche el tablero cubre los **dos** días de servicio candidatos:
-    # las llamadas `24:xx` del día anterior siguen vigentes (hallazgo de la
-    # revisión de MP-019). Cada llamada se convierte a instante absoluto con su
-    # propio día de servicio, así que la ventana temporal basta para
+    # Los días de servicio candidatos se derivan de la **ventana completa**
+    # solicitada, no del instante `now`: una llamada `24:xx` del día anterior
+    # sigue dentro de `lookback_s` después de que el horizonte del feed deje de
+    # alcanzar `now`, y una llamada `00:0x` del día siguiente puede caer dentro
+    # de `lookahead_s` antes de la medianoche. Calcularlos con `now` perdía las
+    # dos (tercer hallazgo de la revisión de MP-019, ver
+    # `service_dates_covering`). Cada llamada se convierte a instante absoluto
+    # con su propio día de servicio, así que la ventana basta para
     # seleccionarlas y ninguna aparece dos veces.
     window_start = now - timedelta(seconds=lookback_s)
     window_end = now + timedelta(seconds=lookahead_s)
+    candidates = resolver.dates_covering(window_start, window_end)
     selected: list[tuple[datetime, date, BoardCall]] = []
-    for candidate in resolver.candidates:
+    for candidate in candidates:
         for call in board_index(network, candidate).get(station_id, ()):
             reference = service_instant(candidate, call.departure_s or call.arrival_s)
             if reference is None:
@@ -996,7 +1001,7 @@ def build_station_board(
         station_id=stop.stop_id,
         name=stop.name,
         service_date=service_date.isoformat(),
-        service_dates_considered=[item.isoformat() for item in resolver.candidates],
+        service_dates_considered=[item.isoformat() for item in candidates],
         mode=network.mode,  # type: ignore[arg-type]
         generated_at=now,
         display_at=display_at,

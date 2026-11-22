@@ -1210,3 +1210,204 @@ class ExtendedHoursBoardTests(unittest.TestCase):
         self.assertEqual(board.service_dates_considered, ["2026-11-21"])
         self.assertEqual(board.entries, [])
         self.assertIsNone(board.coverage.operator_delay_coverage_pct)
+
+
+class BoardWindowCoversItsCandidateServiceDaysTests(unittest.TestCase):
+    """Regresión del tercer hallazgo bloqueante de la revisión de MP-019.
+
+    Los días de servicio candidatos del tablero se calculaban **solo con
+    `now`**, no con la ventana realmente pedida. En cuanto `now` rebasaba el
+    horizonte de horas extendidas del feed, el tablero dejaba de consultar el
+    día anterior aunque `lookback_s` todavía lo cubriera: la llamada real de las
+    `24:32` (las `00:32` en reloj de pared) aparecía a las `00:32` y
+    **desaparecía a las `00:33`**, un minuto después de ocurrir y con 600 s de
+    retrospectiva solicitados.
+
+    El mismo error existía en el sentido contrario, y también se prueba aquí: la
+    ventana hacia delante no consultaba el día de servicio siguiente.
+    """
+
+    EXTENDED_CALL_WALL_CLOCK = "00:32"
+    """Reloj de pared de la llamada `24:32` de `1023V20533C4` en la estación
+    `17000`, el día de servicio 2026-11-20."""
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.config = replace(
+            ApiConfig.from_env(), gtfs_fixture_dir=EXTENDED_FIXTURE, short_name=""
+        )
+        cls.network = load_network(cls.config)
+
+    def setUp(self) -> None:
+        self.conn = _connect_or_skip()
+        self.conn.execute("SELECT 1")
+        self.addCleanup(self.conn.close)
+        self.addCleanup(self.conn.rollback)
+
+    def _board_at(self, hour: int, minute: int, **kwargs):
+        now = datetime(2026, 11, 21, hour, minute, tzinfo=MADRID).astimezone(timezone.utc)
+        return snapshot.build_station_board(
+            self.conn, self.network, self.config, "17000", now, **kwargs
+        )
+
+    def test_the_exact_minute_where_the_call_used_to_disappear(self) -> None:
+        """`00:33` con `lookback_s=600`: el minuto exacto del hallazgo."""
+        board = self._board_at(0, 33, lookback_s=600, lookahead_s=600, limit=50)
+        self.assertIn(
+            EXTENDED_SERVICE_DATE.isoformat(),
+            board.service_dates_considered,
+            "la ventana de 600 s sigue alcanzando el día de servicio anterior",
+        )
+        entry = next(
+            (item for item in board.entries if item.trip_id == EXTENDED_TRIP_C4), None
+        )
+        self.assertIsNotNone(
+            entry,
+            "la llamada de las 24:32 ocurrió hace un minuto: debe seguir en el tablero",
+        )
+        self.assertEqual(entry.service_date, EXTENDED_SERVICE_DATE.isoformat())
+        self.assertEqual(entry.scheduled_departure_time, "24:32:00")
+        self.assertEqual(
+            entry.scheduled_departure_at.astimezone(MADRID).isoformat(),
+            "2026-11-21T00:32:00+01:00",
+        )
+
+    def test_the_call_survives_exactly_as_long_as_the_requested_lookback(self) -> None:
+        """Minuto a minuto: la llamada de las `00:32` con `lookback_s=600` debe
+        verse hasta las `00:42` inclusive y desaparecer a las `00:43`, es decir
+        en el borde de la **ventana pedida**, no en el del horizonte del feed
+        (que con esta fixture se agota a las `00:32`)."""
+        self.assertEqual(
+            self.network.extended_service_horizon_s,
+            32 * 60.0,
+            "el horizonte del feed se agota justo en la llamada: es lo que hacía visible el fallo",
+        )
+        for minute in range(31, 43):
+            with self.subTest(minute=minute):
+                board = self._board_at(0, minute, lookback_s=600, lookahead_s=600, limit=50)
+                self.assertIn(
+                    EXTENDED_TRIP_C4,
+                    {item.trip_id for item in board.entries},
+                    f"a las 00:{minute:02d} la llamada sigue dentro de los 600 s pedidos",
+                )
+        board = self._board_at(0, 43, lookback_s=600, lookahead_s=600, limit=50)
+        self.assertNotIn(
+            EXTENDED_TRIP_C4,
+            {item.trip_id for item in board.entries},
+            "a las 00:43 la llamada ya salió de la ventana de 600 s: debe desaparecer",
+        )
+
+    def test_a_shorter_lookback_drops_it_earlier_as_requested(self) -> None:
+        """La ventana manda: con `lookback_s=60` la misma llamada solo sobrevive
+        un minuto, y con `lookback_s=0` desaparece en cuanto pasa."""
+        self.assertIn(
+            EXTENDED_TRIP_C4,
+            {item.trip_id for item in self._board_at(0, 33, lookback_s=60, lookahead_s=600).entries},
+        )
+        self.assertNotIn(
+            EXTENDED_TRIP_C4,
+            {item.trip_id for item in self._board_at(0, 34, lookback_s=60, lookahead_s=600).entries},
+        )
+
+    def test_the_forward_window_also_reaches_the_next_service_day(self) -> None:
+        """Lado simétrico: a las `23:55` del 19, con anticipación suficiente, el
+        tablero consulta el día de servicio del 20 y publica su llamada real de
+        las `23:50`, que de otro modo quedaba fuera de los candidatos."""
+        now = datetime(2026, 11, 19, 23, 55, tzinfo=MADRID).astimezone(timezone.utc)
+        board = snapshot.build_station_board(
+            self.conn,
+            self.network,
+            self.config,
+            "17000",
+            now,
+            lookback_s=600,
+            lookahead_s=86_400,
+            limit=50,
+        )
+        self.assertIn("2026-11-20", board.service_dates_considered)
+        entry = next(
+            (item for item in board.entries if item.trip_id == EXTENDED_TRIP_C1), None
+        )
+        self.assertIsNotNone(entry, "la llamada del día de servicio siguiente debe aparecer")
+        self.assertEqual(entry.service_date, "2026-11-20")
+        self.assertEqual(entry.scheduled_departure_time, "23:50:00")
+
+    def test_calls_of_two_service_days_are_ordered_by_absolute_instant(self) -> None:
+        board = self._board_at(0, 33, lookback_s=3600, lookahead_s=3600, limit=100)
+        instants = [
+            item.scheduled_departure_at or item.scheduled_arrival_at for item in board.entries
+        ]
+        self.assertEqual(instants, sorted(instants), "mezclar días de servicio no rompe el orden")
+        keys = [(item.trip_id, item.stop_sequence, item.service_date) for item in board.entries]
+        self.assertEqual(len(keys), len(set(keys)))
+
+
+class ServiceDatesCoveringTests(unittest.TestCase):
+    """`service_dates_covering` como función pura, sin base de datos."""
+
+    HORIZON = 32 * 60.0
+    """El de `tests/fixtures/gtfs_24h_real/` (máximo real `24:32`)."""
+
+    def _covering(self, start: datetime, end: datetime, horizon: float | None = None):
+        return [
+            item.isoformat()
+            for item in service.service_dates_covering(
+                start, end, extended_horizon_s=self.HORIZON if horizon is None else horizon
+            )
+        ]
+
+    def test_a_degenerate_window_matches_the_per_trip_resolver(self) -> None:
+        """Con `start == end` la cobertura es exactamente la del resolver de una
+        circulación, que es como se usa en el snapshot."""
+        for hour, minute, expected in (
+            (0, 2, ["2026-11-20", "2026-11-21"]),
+            (0, 32, ["2026-11-20", "2026-11-21"]),
+            (0, 33, ["2026-11-21"]),
+            (12, 0, ["2026-11-21"]),
+        ):
+            instant = datetime(2026, 11, 21, hour, minute, tzinfo=MADRID).astimezone(timezone.utc)
+            with self.subTest(at=f"{hour:02d}:{minute:02d}"):
+                self.assertEqual(self._covering(instant, instant), expected)
+
+    def test_the_lookback_edge_extends_the_coverage_backwards(self) -> None:
+        now = datetime(2026, 11, 21, 0, 33, tzinfo=MADRID).astimezone(timezone.utc)
+        self.assertEqual(self._covering(now, now), ["2026-11-21"])
+        self.assertEqual(
+            self._covering(now - timedelta(seconds=600), now),
+            ["2026-11-20", "2026-11-21"],
+        )
+
+    def test_the_lookahead_edge_extends_the_coverage_forwards(self) -> None:
+        now = datetime(2026, 11, 20, 23, 55, tzinfo=MADRID).astimezone(timezone.utc)
+        self.assertEqual(self._covering(now, now), ["2026-11-20"])
+        self.assertEqual(
+            self._covering(now, now + timedelta(seconds=600)),
+            ["2026-11-20", "2026-11-21"],
+        )
+
+    def test_a_feed_without_extended_hours_has_no_overlap(self) -> None:
+        """Sin horas `24:xx` el horizonte es `0.0` y cada día de servicio
+        termina en su propia medianoche: no hay solape que cubrir."""
+        instant = datetime(2026, 11, 21, 0, 2, tzinfo=MADRID).astimezone(timezone.utc)
+        self.assertEqual(self._covering(instant, instant, horizon=0.0), ["2026-11-21"])
+
+    def test_inverted_windows_are_tolerated(self) -> None:
+        start = datetime(2026, 11, 21, 0, 33, tzinfo=MADRID).astimezone(timezone.utc)
+        end = start - timedelta(seconds=600)
+        self.assertEqual(self._covering(start, end), self._covering(end, start))
+
+    def test_coverage_is_computed_with_real_offsets_on_both_dst_dates(self) -> None:
+        """Los límites de cada día de servicio se calculan con
+        `service_day_instant`, así que un día de 23 h o de 25 h se cubre con su
+        duración real y no con un offset fijo."""
+        # Adelanto: el día de servicio 2026-03-29 dura 23 h de reloj real, así
+        # que su horizonte extendido alcanza menos lejos en tiempo absoluto.
+        spring_night = datetime(2026, 3, 30, 0, 20, tzinfo=MADRID).astimezone(timezone.utc)
+        self.assertEqual(
+            self._covering(spring_night, spring_night), ["2026-03-29", "2026-03-30"]
+        )
+        # Atraso: el día 2026-10-25 dura 25 h reales.
+        autumn_night = datetime(2026, 10, 26, 0, 20, tzinfo=MADRID).astimezone(timezone.utc)
+        self.assertEqual(
+            self._covering(autumn_night, autumn_night), ["2026-10-25", "2026-10-26"]
+        )

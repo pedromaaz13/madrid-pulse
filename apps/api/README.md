@@ -167,6 +167,12 @@ Sin esto, a las `00:02` un viaje real del día anterior con paradas a las
 `24:00`/`24:05` se situaba 10,4 km fuera de su posición y aparecía `expired`
 (ver `docs/evidence/mp-019-dst-y-horas-extendidas.md`).
 
+El tablero deriva sus días candidatos de la **ventana completa**
+(`lookback_s`/`lookahead_s`), no del instante de consulta: con `now` a secas,
+una llamada `24:xx` ocurrida un minuto antes desaparecía aunque se pidieran
+600 s de retrospectiva, y las primeras llamadas del día siguiente se perdían
+dentro de la anticipación.
+
 ### Variables nuevas
 
 | Variable | Valor por defecto | Para qué |
