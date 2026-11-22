@@ -290,7 +290,7 @@ Con Hito 1 ya fusionado a `main`, el caso concreto de MP-012 **deja de requerir 
 
 **MP-017 — Catálogo completo de Madrid (identidad y vigencia)**
 
-Ejecutor: Claude Code · Revisor: OpenAI Codex · Estado: **REVIEW**
+Ejecutor: Claude Code · Revisor: OpenAI Codex · Estado: **DONE**
 
 Worktree/rama: `mp-017-catalogo-madrid`, ramificada desde `mp-016-fiabilidad-live` (MP-016 `DONE`). Datos del kit repuestos con `instalar.py --solo-datos` (no versionados, `/data/` en `.gitignore`).
 
@@ -327,6 +327,10 @@ Codex confirmó que los dos hallazgos de la primera ronda quedaban resueltos (31
 Corregido: `apps/api/openapi.json` regenerado con el comando exacto ya documentado en `apps/api/README.md`; `apps/web/src/types.ts` (`Vehicle.circulation_status`) y el ejemplo + campo obligatorio nuevo en `docs/DATA_CONTRACTS.md` sincronizados. Añadido además el `test_committed_openapi_json_matches_the_live_schema` que pedía Codex ("comprobación pertinente"): compara `app.openapi()` contra el JSON congelado en cada corrida, para que este tipo de drift falle en CI en vez de requerir una auditoría manual futura.
 
 Suite completa reejecutada: **142/142 contra desarrollo** (`668/484/3/120/0` intacto); frontend lint/typecheck/5 tests/build en verde tras tocar `types.ts`. `git diff --check` limpio. Reenviado a Codex para tercera verificación.
+
+### Tercera revisión de Codex — APROBADA
+
+Codex auditó el delta `07cdf6e..2663837` y el estado acumulado hasta `2663837`: OpenAPI congelado coincide exactamente con `app.openapi()`, `circulation_status` sincronizado en OpenAPI/`types.ts`/`DATA_CONTRACTS.md` y el nuevo test impide drift futuro. Repitió 15 tests focales de contrato/`circulation_status`/catálogo, frontend completo, autoría, recuentos `668/484/3/120/0`, `git diff --check` y limpieza del worktree — todo en verde, único aviso informativo conocido (chunks Vite >500 kB, no bloqueante). **Veredicto: APROBADA, sin hallazgos.** MP-017 pasa a `DONE`.
 
 ## Tareas cerradas de la cadena
 

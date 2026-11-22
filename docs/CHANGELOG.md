@@ -31,6 +31,9 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 #### Verified (third round)
 - 142/142 contra desarrollo (`668/484/3/120/0` intacto); frontend lint/typecheck/5 tests/build en verde. `git diff --check` limpio.
 
+#### Approved
+- Codex aprobó MP-017 como `DONE` tras tres rondas (versión/procedencia e identidad red/operador; estado activo/caducado de circulación; sincronización OpenAPI/frontend), todas corregidas y re-verificadas. Sin hallazgos abiertos.
+
 ### MP-016 — Fiabilidad realtime
 
 #### Added
