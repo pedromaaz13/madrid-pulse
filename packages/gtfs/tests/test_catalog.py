@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import unittest
 from datetime import date
 from pathlib import Path
@@ -126,11 +127,12 @@ class ScheduledServiceIdsSyntheticTests(unittest.TestCase):
             shape_points=(),
             calendar=(),
         )
-        catalog = build_catalog(topology)
+        catalog = build_catalog(topology, gtfs_version="sha256:synthetic-test")
         line = catalog.line("C8")
         self.assertIsNotNone(line)
         self.assertEqual(line.patterns, ())
         self.assertEqual(line.route_ids, ("10T9998C8",))
+        self.assertEqual(catalog.gtfs_version, "sha256:synthetic-test")
 
 
 @unittest.skipIf(_find_official_zip() is None, "ZIP GTFS oficial completo no presente localmente")
@@ -145,7 +147,18 @@ class FullMadridCatalogRealFeedTests(unittest.TestCase):
     def setUpClass(cls) -> None:
         cls.zip_path = _find_official_zip()
         cls.topology = load_feed(cls.zip_path, network_id="10")
-        cls.catalog = build_catalog(cls.topology)
+        cls.gtfs_version = f"sha256:{hashlib.sha256(cls.zip_path.read_bytes()).hexdigest()}"
+        cls.catalog = build_catalog(cls.topology, gtfs_version=cls.gtfs_version)
+
+    def test_catalog_carries_real_provenance_and_instance_identity(self) -> None:
+        """Hallazgo de la revisión de Codex en MP-017: el catálogo y las
+        instancias programadas deben llevar versión/procedencia e identidad
+        completa red/operador, no solo `trip_id`/`route_id`."""
+        self.assertEqual(self.catalog.gtfs_version, self.gtfs_version)
+        instances = scheduled_trip_instances_for_date(self.topology, date(2026, 11, 20))
+        self.assertTrue(instances)
+        self.assertTrue(all(instance.network_id == "10" for instance in instances))
+        self.assertTrue(all(instance.operator == "Renfe" for instance in instances))
 
     def test_42_route_ids_group_into_12_line_names(self) -> None:
         self.assertEqual(len(self.topology.routes), 42)

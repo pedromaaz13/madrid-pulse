@@ -8,6 +8,7 @@ from zoneinfo import ZoneInfo
 import psycopg
 
 from packages.contracts.canonical import TripUpdateObservation
+from packages.gtfs import scheduled_service_ids_for_date
 from packages.movement import MovementPosition, PositionMode
 
 from . import db
@@ -86,11 +87,31 @@ def _movement_position(
         return None
 
 
+def _circulation_status(
+    network: LoadedNetwork, source_trip_id: str, route_id: str | None, active_service_ids: frozenset[str]
+) -> str:
+    """Separa "existe un histórico" de "está programado hoy" (hallazgo MP-017:
+    `latest_vehicle_histories` no acota por tiempo -- un vehículo con último
+    dato de hace semanas se devolvía igual, sin distinguir alta/caducidad de
+    su circulación). No usa `quality.stale` (edad del GPS): un vehículo puede
+    tener GPS reciente y aun así pertenecer a un `service_id` no programado
+    para la fecha de servicio actual (dato residual de un día anterior que
+    nunca se limpió), o viceversa, estar `stale` pero seguir `active` si su
+    servicio sigue programado hoy."""
+    if route_id is None:
+        return "unresolved"
+    service_id = network.topology.trip_service_id(source_trip_id)
+    if service_id is None:
+        return "unresolved"
+    return "active" if service_id in active_service_ids else "expired"
+
+
 def vehicle_to_out(
     network: LoadedNetwork,
     history: db.VehicleHistory,
     trip_update: TripUpdateObservation | None,
     now: datetime,
+    active_service_ids: frozenset[str],
 ) -> VehicleOut:
     source_trip_id = history.latest.position.source_trip_id
     route_id = network.topology.resolve_trip_route_id(source_trip_id)
@@ -99,6 +120,7 @@ def vehicle_to_out(
         if route_id
         else None
     )
+    circulation_status = _circulation_status(network, source_trip_id, route_id, active_service_ids)
 
     movement = _movement_position(network, history, route_id, now) if route_id else None
 
@@ -144,18 +166,20 @@ def vehicle_to_out(
             age_s=age_s,
         ),
         quality=QualityOut(stale=stale, flags=flags),
+        circulation_status=circulation_status,
     )
 
 
 def list_vehicles(conn: psycopg.Connection, network: LoadedNetwork, now: datetime) -> list[VehicleOut]:
     histories = db.latest_vehicle_histories(conn)
     cutoff = _trip_update_cutoff(now)
+    active_service_ids = scheduled_service_ids_for_date(network.topology, _service_date(now))
     result = []
     for history in histories:
         trip_update = db.latest_trip_update(
             conn, history.latest.position.source_trip_id, observed_after=cutoff
         )
-        result.append(vehicle_to_out(network, history, trip_update, now))
+        result.append(vehicle_to_out(network, history, trip_update, now, active_service_ids))
     return result
 
 
@@ -168,7 +192,8 @@ def get_vehicle(
     trip_update = db.latest_trip_update(
         conn, history.latest.position.source_trip_id, observed_after=_trip_update_cutoff(now)
     )
-    return vehicle_to_out(network, history, trip_update, now)
+    active_service_ids = scheduled_service_ids_for_date(network.topology, _service_date(now))
+    return vehicle_to_out(network, history, trip_update, now, active_service_ids)
 
 
 def feed_health(conn: psycopg.Connection, now: datetime, *, stale_after_s: float) -> HealthOut:

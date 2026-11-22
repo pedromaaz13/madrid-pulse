@@ -297,6 +297,14 @@ class Topology:
             item.stop_sequence for item in self.stop_times_for_trip(trip_id) if item.stop_id == stop_id
         )
 
+    def trip_service_id(self, trip_id: str) -> str | None:
+        """``service_id`` estático del ``trip_id``, o ``None`` si no resuelve
+        (p. ej. un refuerzo ``SPECIAL_`` sin trip programado) -- usado para
+        separar estado activo/caducado de una circulación del mero hecho de
+        tener una observación histórica (hallazgo MP-017)."""
+        trip = self._trips_by_id.get(trip_id)
+        return trip.service_id if trip else None
+
 
 def _unique(items: Iterable[object], attribute: str) -> dict[str, object]:
     result: dict[str, object] = {}

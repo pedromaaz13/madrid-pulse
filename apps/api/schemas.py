@@ -46,6 +46,14 @@ class VehicleOut(BaseModel):
     delay: DelayOut
     observation: ObservationOut
     quality: QualityOut
+    circulation_status: Literal["active", "expired", "unresolved"]
+    """Hallazgo MP-017: distinto de `quality.stale` (que mide antigüedad del
+    GPS). `active` = el `service_id` del viaje está programado para la fecha
+    de servicio actual (`packages.gtfs.catalog.scheduled_service_ids_for_date`).
+    `expired` = el viaje resuelve contra el GTFS pero su `service_id` no está
+    programado hoy (circulación de un día de servicio anterior que nunca se
+    reasignó). `unresolved` = `route_id` no resuelto, no se puede determinar
+    (nunca se fabrica `active`/`expired` sin resolución real)."""
 
 
 class FeedHealthOut(BaseModel):

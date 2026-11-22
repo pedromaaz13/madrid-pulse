@@ -18,6 +18,13 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 #### Verified
 - Suite completa (+`packages.gtfs.tests.test_catalog`) contra la base de desarrollo real: 138/138 OK, `668/484/3/120/0` intacto. Contra un segundo PostgreSQL fresco desechable con `data/` ausente (simulando CI real, sin el ZIP oficial): 138 tests, 9 `skip` (5 del soak de MP-007 + 4 de `test_catalog` gateados), ninguno inesperado.
 
+#### Fixed after Codex review (first round)
+- **Versión/procedencia e identidad red/operador ausentes** (hallazgo real contra `PLAN-Y-ACEPTACION.md`/`MATRIZ-CIERRE-MADRID.md`): `Catalog`/`LineVariant`/`ScheduledTripInstance` no llevaban esos campos. `Catalog.gtfs_version: str` ahora obligatorio (mismo identificador que `/api/v1/health`); `ScheduledTripInstance.network_id`/`operator` añadidos.
+- **Sin "estado activo separado de último histórico"**: `latest_vehicle_histories`/`list_vehicles` seguían devolviendo todo vehículo histórico sin cota; la ventana de 20h solo afectaba a `trip_update_observation`. Nuevo `VehicleOut.circulation_status` (`active`/`expired`/`unresolved`), comparando el `service_id` real del vehículo contra `scheduled_service_ids_for_date`.
+
+#### Verified (second round)
+- 3 tests nuevos (provenance/identidad real del catálogo; `circulation_status` activo/caducado/sin resolver). Suite completa: 141/141 contra desarrollo (`668/484/3/120/0` intacto), 141 tests/10 `skip` contra un segundo contenedor fresco con `data/` ausente. `git diff --check` limpio.
+
 ### MP-016 — Fiabilidad realtime
 
 #### Added

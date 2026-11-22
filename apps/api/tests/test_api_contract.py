@@ -351,12 +351,66 @@ class ResolvedTripEndToEndTests(unittest.TestCase):
             latest=db.ObservedRow(position=observation, received_at=now - timedelta(seconds=5)),
             previous=None,
         )
-        result = service.vehicle_to_out(self.network, history, None, now)
+        active_service_ids = service.scheduled_service_ids_for_date(
+            self.network.topology, service._service_date(now)
+        )
+        result = service.vehicle_to_out(self.network, history, None, now, active_service_ids)
         self.assertEqual(result.route_id, "10T0017C5")
         self.assertEqual(result.line, "C5")
         self.assertIsNotNone(result.position)
         self.assertEqual(result.position.mode, "observed")
         self.assertEqual(result.quality.stale, False)
+        self.assertEqual(
+            result.circulation_status, "active",
+            "el service_id 1022J está programado exactamente para 2026-11-19 (calendario de un solo día)",
+        )
+
+    def test_circulation_status_is_expired_for_a_service_not_scheduled_today(self) -> None:
+        """Hallazgo real de MP-017: sin esto, un vehículo con GPS reciente pero
+        cuyo `service_id` ya no está programado (día de servicio anterior que
+        nunca se limpió) se mostraba igual que uno realmente activo -- no
+        existía "alta/caducidad" separada del mero histórico."""
+        trip = next(t for t in self.network.topology.trips if t.trip_id == "1022J19502C5")
+        cal = next(c for c in self.network.topology.calendar if c.service_id == trip.service_id)
+        self.assertEqual(cal.start_date, cal.end_date, "calendario de un solo día, 2026-11-19")
+        now = datetime(2026, 11, 20, 8, 0, tzinfo=timezone.utc)  # un día después de su único service_date
+        observation = VehiclePositionObservation(
+            source_vehicle_id="test-vehicle-expired",
+            source_trip_id="1022J19502C5",
+            observed_at=now - timedelta(seconds=10),
+            latitude=40.4, longitude=-3.7,
+            raw_vehicle_label="contract test", payload_hash="d" * 64,
+        )
+        history = db.VehicleHistory(
+            source_vehicle_id="test-vehicle-expired",
+            latest=db.ObservedRow(position=observation, received_at=now - timedelta(seconds=5)),
+            previous=None,
+        )
+        active_service_ids = service.scheduled_service_ids_for_date(
+            self.network.topology, service._service_date(now)
+        )
+        result = service.vehicle_to_out(self.network, history, None, now, active_service_ids)
+        self.assertEqual(result.circulation_status, "expired")
+
+    def test_circulation_status_is_unresolved_when_route_does_not_resolve(self) -> None:
+        now = datetime(2026, 11, 19, 8, 0, tzinfo=timezone.utc)
+        observation = VehiclePositionObservation(
+            source_vehicle_id="test-vehicle-unresolved",
+            source_trip_id="SPECIAL_10_unknown",
+            observed_at=now,
+            latitude=40.4, longitude=-3.7,
+            raw_vehicle_label="contract test", payload_hash="e" * 64,
+        )
+        history = db.VehicleHistory(
+            source_vehicle_id="test-vehicle-unresolved",
+            latest=db.ObservedRow(position=observation, received_at=now),
+            previous=None,
+        )
+        active_service_ids = service.scheduled_service_ids_for_date(
+            self.network.topology, service._service_date(now)
+        )
+        result = service.vehicle_to_out(self.network, history, None, now, active_service_ids)
+        self.assertEqual(result.circulation_status, "unresolved")
 
 
 if __name__ == "__main__":

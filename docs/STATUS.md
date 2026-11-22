@@ -311,6 +311,15 @@ Worktree/rama: `mp-017-catalogo-madrid`, ramificada desde `mp-016-fiabilidad-liv
 - `git diff --check` limpio.
 - `.github/workflows/ci.yml` actualizado con el nuevo módulo `packages.gtfs.tests.test_catalog`.
 
+### Primera revisión de Codex — dos hallazgos reales, corregidos
+
+Codex auditó `92c1b09..1276c9f`: replay correcto, 138/138 contra desarrollo (`668/484/3/120/0` intacto), 138+9 skip contra PostGIS fresco, frontend y `git diff --check` en verde, autoría confirmada. Dos omisiones bloqueantes reales frente a `PLAN-Y-ACEPTACION.md`/`MATRIZ-CIERRE-MADRID.md`:
+
+1. **Versión/procedencia e identidad red/operador ausentes:** `Catalog`/`LineVariant`/`ScheduledTripInstance` no llevaban `gtfs_version` ni `network_id`/`operator` — el kit exige explícitamente "versiones y procedencia" e "identidad completa red/operador de circulación" (MP-017), no solo `trip_id`/`route_id` (que por sí solos no distinguen núcleos, ver ADR-0008). Corregido: `Catalog.gtfs_version: str` (obligatorio, mismo identificador que `/api/v1/health` ya publica vía `_source_version`), `ScheduledTripInstance.network_id`/`operator` (derivados de `Route.network_id` y la constante documentada `OPERATOR = "Renfe"`, único operador integrado en el alcance actual, DEC-006).
+2. **Sin "estado activo separado de último histórico":** `latest_vehicle_histories`/`list_vehicles` devuelven todo vehículo histórico sin cota — la ventana de 20h de la primera entrega solo afectaba a `trip_update_observation` (retrasos), no a la propia circulación. Corregido: nuevo campo `VehicleOut.circulation_status` (`active`/`expired`/`unresolved`), calculado comparando el `service_id` real del `trip_id` del vehículo contra `scheduled_service_ids_for_date(topology, service_date)` — distinto de `quality.stale` (que mide solo antigüedad del GPS, no si el servicio sigue programado hoy).
+
+Añadidos 3 tests (provenance/identidad del catálogo real; `circulation_status` activo/caducado/sin resolver con el trip real de la fixture reducida, calendario de un solo día). Suite completa reejecutada: **141/141 contra desarrollo** (`668/484/3/120/0` intacto) y **141 tests/10 skip** contra un segundo contenedor PostgreSQL fresco desechable con `data/` ausente (simulando CI real) — el skip adicional es el nuevo test de provenance, gateado igual que los otros 4 por la ausencia del ZIP oficial. `git diff --check` limpio. Reenviado a Codex para segunda verificación.
+
 ## Tareas cerradas de la cadena
 
 ## MP-016 — Fiabilidad realtime (SKIPPED, UTC, live/replay) (cerrada)

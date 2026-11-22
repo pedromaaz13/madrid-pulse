@@ -21,6 +21,13 @@ _WEEKDAY_ATTRS = (
     "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday",
 )
 
+OPERATOR = "Renfe"
+"""Único operador integrado en el alcance actual del proyecto (DEC-006):
+Cercanías Madrid se ingiere exclusivamente desde Renfe. No es un valor
+inventado por circulación -- es una constante de alcance, documentada para
+que un operador adicional futuro (CRTM u otro) no se confunda con un campo
+ya resuelto dinámicamente."""
+
 
 def _parse_gtfs_date(value: str) -> date:
     return datetime.strptime(value, "%Y%m%d").date()
@@ -64,10 +71,17 @@ class ScheduledTripInstance:
     anterior) se conservan tal cual los publica GTFS -- no se desplaza
     ``service_date``, que es la fecha de servicio, no la fecha de reloj de la
     última parada.
+
+    ``network_id``/``operator`` dan la identidad completa de red/operador que
+    exige `docs/hitos/hito-03/MATRIZ-CIERRE-MADRID.md` (MP-017) -- no basta
+    con `trip_id`/`route_id`, que por sí solos no distinguen núcleos (ver
+    ADR-0008/DEC-017: "C5" existe en varios núcleos de Renfe).
     """
 
     trip_id: str
     route_id: str
+    network_id: str | None
+    operator: str
     service_id: str
     service_date: date
     headsign: str
@@ -100,6 +114,7 @@ def scheduled_trip_instances_for_date(
     `validate_topology`) no se fabrica como instancia: se omite.
     """
     active_services = scheduled_service_ids_for_date(topology, service_date)
+    routes_by_id = {route.route_id: route for route in topology.routes}
     instances: list[ScheduledTripInstance] = []
     for trip in topology.trips:
         if trip.service_id not in active_services:
@@ -107,10 +122,13 @@ def scheduled_trip_instances_for_date(
         times = topology.stop_times_for_trip(trip.trip_id)
         if not times:
             continue
+        route = routes_by_id.get(trip.route_id)
         instances.append(
             ScheduledTripInstance(
                 trip_id=trip.trip_id,
                 route_id=trip.route_id,
+                network_id=route.network_id if route is not None else None,
+                operator=OPERATOR,
                 service_id=trip.service_id,
                 service_date=service_date,
                 headsign=trip.headsign,
@@ -140,19 +158,27 @@ class LineVariant:
 
 @dataclass(frozen=True)
 class Catalog:
+    """``gtfs_version`` es la procedencia exigida por
+    `docs/hitos/hito-03/MATRIZ-CIERRE-MADRID.md` (MP-017: "versiones y
+    procedencia") -- el mismo identificador que `/api/v1/health` ya publica
+    (`apps/api/gtfs_source.py::_source_version`, hash SHA-256 del ZIP/directorio
+    fuente), no un valor nuevo e inconsistente inventado aquí."""
+
     lines: tuple[LineVariant, ...]
+    gtfs_version: str
 
     def line(self, short_name: str) -> LineVariant | None:
         return next((item for item in self.lines if item.short_name == short_name), None)
 
 
-def build_catalog(topology: Topology) -> Catalog:
+def build_catalog(topology: Topology, *, gtfs_version: str) -> Catalog:
     """Construye el catálogo completo de líneas/variantes/patrones de ``topology``.
 
     No filtra por observaciones en vivo: una línea con cero vehículos en un
     corte sigue apareciendo, con sus patrones (si el GTFS los valida) o vacía
     (si `validate_topology` no encontró ningún patrón válido para ninguno de
-    sus `route_id`, p. ej. todos sus trips son huérfanos)."""
+    sus `route_id`, p. ej. todos sus trips son huérfanos). ``gtfs_version`` es
+    obligatorio -- sin procedencia, el catálogo no es trazable (MP-017)."""
     validation = validate_topology(topology)
     patterns_by_route: dict[str, list[RoutePattern]] = {}
     for pattern in validation.patterns:
@@ -174,4 +200,4 @@ def build_catalog(topology: Topology) -> Catalog:
                 patterns=patterns,
             )
         )
-    return Catalog(lines=tuple(lines))
+    return Catalog(lines=tuple(lines), gtfs_version=gtfs_version)
