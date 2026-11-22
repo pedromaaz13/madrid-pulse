@@ -290,7 +290,7 @@ Con Hito 1 ya fusionado a `main`, el caso concreto de MP-012 **deja de requerir 
 
 **MP-020 — Mapa y tablero (React/MapLibre)**
 
-Ejecutor: Claude (escalado a Opus) · Revisor: OpenAI Codex (con inspección visual real en navegador) · Estado: **REVIEW**
+Ejecutor: Claude (escalado a Opus) · Revisor: OpenAI Codex · Estado: **DONE** (aprobado el 2026-11-22)
 
 Worktree/rama: `mp-020-mapa-y-tablero`, ramificada desde `mp-019-snapshot-api` (MP-019 `DONE`, `7b87e6b`). Datos del kit repuestos con `instalar.py --solo-datos`.
 
@@ -329,9 +329,45 @@ El backend se sirvió en el puerto `8010` porque `8000` estaba ocupado por una i
 
 El GTFS oficial publica `route_color` real de Renfe, pero el contrato `/api/v1/catalog` de MP-019 no expone ese campo y MP-020 tenía prohibido reescribir el contrato. La paleta de líneas del cliente es por tanto una **elección de presentación propia**, determinista por `line_id` y sin identificadores incrustados (ADR-0011), **no** el color corporativo del operador. Queda anotado por si MP-021/MP-022 deciden publicarlo.
 
-### Pendiente
+### Auditoría independiente y cierre
 
-Auditoría independiente de OpenAI Codex **con su propia inspección visual en navegador** en este mismo worktree, y aceptación del propietario. No se marca `DONE`.
+OpenAI Codex auditó el diff completo `74667c0..5f8b739` y no encontró
+hallazgos abiertos. La inspección visual real se reprodujo en Chrome DevTools
+contra la API `8010` y Vite `5181` desde la sesión coordinadora de Orca, porque
+la superficie Chrome no estaba disponible en la sesión aislada del revisor:
+se observó el mapa completo (12 líneas, 103 patrones y 95 estaciones), trenes
+de varias líneas, degradación honesta sin vaciado ni rejuvenecimiento, URL
+restaurable y ficha real de la circulación C5 `19656`, seguimiento explícito y
+layout usable a `390x844`. La consola no mostró errores de aplicación; el 404
+de `favicon.ico` es cosmético y los abortos iniciales corresponden al montaje
+doble esperado de React StrictMode. El gesto de arrastre y la media feature de
+movimiento reducido no pudieron repetirse desde esa herramienta concreta; se
+aceptan con la evidencia ejecutada del implementador, los tests de regresión y
+la auditoría del flujo de estado (`followIntent`/`cameraDetached`) y del sello
+por `revision` en el bucle de presentación.
+
+La auditoría de código confirmó: adquisición independiente por recurso, sin
+`Promise.all`; descarte temporal por `revision` y uso de `snapshot_id` solo
+para deduplicar contenido del informador; proyección de `progress_m` sobre la
+polilínea indexada del patrón; identidad estable vehículo+viaje+día de
+servicio; una única instancia MapLibre y reloj `requestAnimationFrame` fuera
+de `setState`; y limitación de `route_color` declarada. El arreglo del mapa
+invisible es efectivo: `.map-canvas` conserva `width` y `height` al 100 % aun
+cuando el CSS diferido de MapLibre sustituye `position: absolute` por
+`relative`, evitando el contenedor de altura cero.
+
+Verificación reejecutada: frontend completo con Node **22.13.1** (lint,
+typecheck, **49/49** tests y build; worker MapLibre de 550754 bytes), backend
+exacto de CI **233/233** sin `skip` contra desarrollo con recuentos
+`668/484/3/120/0`, y la misma suite sobre PostGIS fresco con migraciones
+`0001`+`0002` (**233 ejecutados, 5 `skip` explícitos** por ausencia normal del
+soak local). `git diff --check` está limpio; los cinco commits tienen autor y
+committer exclusivos de Pedro Matute y no contienen `Co-authored-by`.
+
+**Veredicto: APROBADA, sin hallazgos abiertos.** MP-020 pasa a `DONE`; MP-021
+puede ramificar desde esta rama conforme al hito autorizado. La paleta propia
+por falta de `route_color` en `/api/v1/catalog` permanece como limitación
+conocida, no como divergencia silenciosa.
 
 ## Tareas cerradas de la cadena
 

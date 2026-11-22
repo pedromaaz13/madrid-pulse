@@ -32,6 +32,11 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 - El GTFS oficial publica `route_color` real de Renfe, pero `/api/v1/catalog` no expone ese campo y MP-020 no reescribe el contrato de MP-019: la paleta de líneas del cliente es una elección de presentación propia, determinista por `line_id` y sin identificadores de línea incrustados en la lógica (ADR-0011), **no** el color corporativo del operador. Anotado para MP-021/MP-022.
 - Histórico y Explore no se implementan aquí (son MP-021): sus pestañas aparecen deshabilitadas y lo declaran, en vez de simular una función inexistente.
 
+#### Verified
+- Revisión final de OpenAI Codex sobre `74667c0..5f8b739`, sin hallazgos abiertos. Inspección visual real reproducida en Chrome DevTools desde la sesión coordinadora de Orca contra API `8010` + Vite `5181`: red completa, varias líneas, circulación C5 `19656`, URL restaurable, seguimiento, degradación honesta y móvil `390x844`; sin errores de aplicación en consola. El arrastre y `prefers-reduced-motion`, no disponibles en esa herramienta concreta, quedaron cubiertos por la evidencia ejecutada del implementador, tests de regresión y auditoría directa del código.
+- Frontend con Node **22.13.1**: `npm ci` sin vulnerabilidades, lint, typecheck, **49/49 tests** y build en verde con worker MapLibre verificado (550754 bytes). Backend exacto de CI: **233/233** sin `skip` contra desarrollo con `668/484/3/120/0` intactos; 233 ejecutados con 5 `skip` esperados sobre PostGIS fresco tras aplicar `0001`+`0002`.
+- `git diff --check` limpio; los cinco commits de MP-020 tienen autor y committer exclusivos de Pedro Matute, sin `Co-authored-by`. Estado final: `DONE`, aprobado por OpenAI Codex el 2026-11-22.
+
 ### MP-019 — Contrato de snapshot/API coherente
 
 #### Added
