@@ -447,6 +447,24 @@ Autorizado por el propietario el `2026-11-22` (mensaje "ORCA — MADRID PULSE / 
 
 ---
 
+## MP-019 — Contrato de snapshot/API coherente
+
+- **Fase:** Hito 3 — Cierre ferroviario Madrid
+- **Objetivo:** snapshot API coherente y cacheable (catálogo separado del feed operativo, lote/batch sin N+1), con separación explícita raw/matched/rendered, ETA con método/procedencia, y un contrato temporal de movimiento elegido por ADR comparativo (no una segunda implementación divergente del motor de MP-012).
+- **Prioridad:** P0
+- **Depende de:** MP-018 (`DONE`)
+- **Ejecutor:** Claude (escalado a Opus — decisión arquitectónica de alto impacto, política de modelo de Hito 2)
+- **Revisor:** OpenAI Codex
+- **Archivos/componentes afectados:** `apps/api/` (nuevo contrato de snapshot), `packages/movement/` (si el ADR exige extenderlo, no duplicarlo), `docs/adr/` (nuevo ADR propuesto).
+- **Entradas:** `packages.gtfs.catalog` (MP-017), `packages.geo.catalog` (MP-018, `PositionMatch`/`CorridorCatalog`), `packages.movement` (MP-012).
+- **Entregables:** ADR propuesto comparando las tres alternativas de contrato temporal (`docs/hitos/hito-03/MEJORAS-PRODUCTO-VALIDADAS.md`, sección MP-019); snapshot con `snapshot_id` no asumido como ordenable; catálogo cacheable separado del snapshot ligero; ETA con edad de GPS/feed/ETA distintas y procedencia (operador/horario/calculado); tablero de estación basado en servicios+calendario+RT, no en "trenes cercanos".
+- **Criterios de aceptación:** tres snapshots (normal/parcial/congelado) se distinguen correctamente; el último snapshot válido sobrevive al fallo de un feed; EXPLAIN + p50/p95 medidos; semántica `0` vs `NULL` correcta; sin N+1 por tren; contrato versionado si rompe compatibilidad.
+- **Pruebas necesarias:** suite real del proyecto + nuevos tests de contrato/snapshot.
+- **Evidencia de verificación:** pendiente (tarea recién abierta).
+- **Estado:** `IN_PROGRESS` — worktree `mp-019-snapshot-api` abierto desde `mp-018-corredores-madrid` (`728c667`), dispatchado a un ejecutor Claude Opus.
+
+---
+
 ## Grafo de dependencias
 
 Esta tabla refleja **exactamente** el campo "Depende de" de cada ficha anterior — sin añadir dependencias transitivas redundantes. Para dependencias transitivas (p. ej. qué depende indirectamente de MP-004), recórrase la tabla hacia arriba.

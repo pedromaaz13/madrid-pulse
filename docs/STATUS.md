@@ -288,6 +288,24 @@ Con Hito 1 ya fusionado a `main`, el caso concreto de MP-012 **deja de requerir 
 
 ## Tarea actual
 
+**MP-019 — Contrato de snapshot/API coherente**
+
+Ejecutor: Claude (escalado a Opus) · Revisor: OpenAI Codex · Estado: **IN_PROGRESS**
+
+Worktree/rama: `mp-019-snapshot-api`, ramificada desde `mp-018-corredores-madrid` (MP-018 `DONE`, `728c667`). Datos del kit repuestos con `instalar.py --solo-datos`.
+
+### Alcance de MP-019
+
+Unificar el catálogo completo de MP-017 (`packages.gtfs.catalog`) y el catálogo de corredores de MP-018 (`packages.geo.catalog`, con `PositionMatch` raw→matched ya trazable) en un contrato de snapshot/API coherente: catálogo cacheable separado del snapshot operativo ligero, `snapshot_id` no asumido como ordenable, ETA con edad de GPS/feed/ETA distintas y procedencia, capa `rendered` (completa raw→matched→rendered) elegida mediante ADR comparativo de las tres alternativas de contrato temporal de `docs/hitos/hito-03/MEJORAS-PRODUCTO-VALIDADAS.md` (sección MP-019) — sin duplicar el motor de movimiento de MP-012.
+
+### Pendiente de entrega y revisión
+
+Dispatchado a un ejecutor Claude Opus (decisión arquitectónica de alto impacto); pendiente de ADR, implementación, evidencia ejecutada y entrega en `REVIEW` para Codex.
+
+## Tareas cerradas de la cadena
+
+## MP-018 — Corredores ferroviarios por patrón y sentido (cerrada)
+
 **MP-018 — Corredores ferroviarios por patrón y sentido**
 
 Ejecutor: OpenAI Codex · Revisor: Claude Code · Estado: **DONE** (aprobado por Claude Code el 2026-11-22)
@@ -434,7 +452,6 @@ disponible como base geométrica para MP-019. Las dos notas no bloqueantes
 `RAW`/`UNLOCATED`) quedan registradas arriba como pendientes explícitas de
 MP-019, no como deuda silenciosa.
 
-## Tareas cerradas de la cadena
 
 ## MP-017 — Catálogo completo de Madrid (identidad y vigencia) (cerrada)
 
