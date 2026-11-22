@@ -35,8 +35,8 @@ resetean la edad del dato.
 ```json
 {
  "generated_at": "2026-11-20T14:32:14+00:00",
- "snapshot_id": "sha256:41f07a0ab035a413db0df9b01b54cb1a1bc237693a3e8ced57642c6baf41cf6c",
- "revision": {"scope": "pg:7710895564495704109", "sequence": 3},
+ "snapshot_id": "sha256:e1f921b37bd69ea871c11d8fc1e8b9b16363225aaef6585b1477a12f8922104d",
+ "revision": {"scope": "pg:<system_identifier del contenedor>", "sequence": 3},
  "vehicles_total": 119,
  "rendering_methods": {"anchor": 75, "extrapolated_from_last_anchor": 44},
  "coordinate_spaces": {"map_matched": 44, "raw": 75},
@@ -58,8 +58,8 @@ un avance. Ninguna desaparece del snapshot.
 ```json
 {
  "generated_at": "2026-11-20T14:33:31+00:00",
- "snapshot_id": "sha256:912ece5244c341d8165782d96103f2f30bec5b86a8946a10ff5bbbd929f13a51",
- "revision": {"scope": "pg:7710895564495704109", "sequence": 6},
+ "snapshot_id": "sha256:510314e39f5f28ad54edf0b0fc04291ea164fbd8c47dbcdba74158d2a7ecf351",
+ "revision": {"scope": "pg:<system_identifier del contenedor>", "sequence": 6},
  "vehicles_total": 122,
  "rendering_methods": {"anchor": 78, "extrapolated_from_last_anchor": 44},
  "coordinate_spaces": {"map_matched": 44, "raw": 78},
@@ -103,7 +103,7 @@ interpolación observada.
 ```json
 {
  "generated_at": "2026-11-20T14:34:46+00:00",
- "revision": {"scope": "pg:7710895564495704109", "sequence": 8},
+ "revision": {"scope": "pg:<system_identifier del contenedor>", "sequence": 7},
  "vehicles_total": 122,
  "rendering_methods": {"anchor": 78, "extrapolated_from_last_anchor": 44},
  "with_operator_delay": 122,
@@ -124,7 +124,7 @@ interpolación observada.
 ```json
 {
  "generated_at": "2026-11-20T15:33:21+00:00",
- "revision": {"scope": "pg:7710895564495704109", "sequence": 8},
+ "revision": {"scope": "pg:<system_identifier del contenedor>", "sequence": 7},
  "vehicles_total": 122,
  "rendering_methods": {"stale_frozen": 122},
  "coordinate_spaces": {"map_matched": 44, "raw": 78},
@@ -138,7 +138,7 @@ interpolación observada.
 ```
 
 Las 122 pasan a `stale_frozen`: congeladas **en el ancla**, sin envolvente de
-progreso y sin `valid_until`. `revision.sequence` se queda en 8 porque no entró
+progreso y sin `valid_until`. `revision.sequence` se queda en 7 porque no entró
 ninguna ejecución de ingesta nueva — la revisión **no avanza sola con el
 reloj**, que es exactamente lo que evita rotular como nuevo un dato viejo.
 
@@ -164,6 +164,13 @@ sondeos posteriores de otros feeds.
 
 `vehicle_position_observation / trip_update_observation / service_alert /
 source_ingestion_run / data_quality_event` = **240 / 199 / 4 / 7 / 2**.
+
+Los valores absolutos de `revision.scope`, `snapshot_id` y `sequence` cambian
+entre ejecuciones porque el ámbito es el `system_identifier` del clúster
+—distinto en cada contenedor desechable— y porque los `id` de
+`source_ingestion_run` no son contiguos cuando un ciclo falla. Lo que se
+comprueba, y lo que el contrato promete, es la **relación** entre ellos:
+monotonía dentro del mismo ámbito e identidad estable ante el mismo contenido.
 
 Los 2 `data_quality_event` los generó el motor de calidad de MP-008 sobre las
 capturas reales; no son fallos de esta tarea. La base de desarrollo

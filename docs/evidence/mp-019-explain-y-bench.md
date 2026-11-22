@@ -162,21 +162,44 @@ Conexión reutilizada (aísla el coste del código de la API):
 
 | Endpoint | p50 (ms) | p95 (ms) |
 |---|---:|---:|
-| `GET /api/v1/catalog` | 0,40 | 0,50 |
-| `GET /api/v1/snapshot` | 8,47 | 19,79 |
-| `GET /api/v1/stations/18000/board` | 4,67 | 6,44 |
-| `GET /api/v1/live/vehicles` | 5,25 | 6,77 |
-| `GET /api/v1/health` | 2,45 | 7,68 |
+| `GET /api/v1/catalog` | 0,41 | 0,52 |
+| `GET /api/v1/snapshot` | 8,73 | 17,76 |
+| `GET /api/v1/stations/18000/board` | 4,83 | 6,71 |
+| `GET /api/v1/live/vehicles` | 4,38 | 5,36 |
+| `GET /api/v1/health` | 3,71 | 8,39 |
 
 ### 2.2 Dataset B — núcleo Madrid completo (42 rutas / 12 líneas / 103 patrones), 40 iteraciones
 
+Reloj a las `05:20` locales: un único día de servicio candidato.
+
 | Endpoint | p50 conexión/petición | p95 | p50 conexión reutilizada | p95 | Bytes |
 |---|---:|---:|---:|---:|---:|
-| `GET /api/v1/catalog` | 0,65 | 1,79 | 0,47 | 0,58 | 361 362 |
-| `GET /api/v1/snapshot` | 98,73 | 114,23 | 8,59 | 11,19 | 34 899 |
-| `GET /api/v1/stations/18000/board` | 93,44 | 119,44 | 6,65 | 18,07 | 21 699 |
-| `GET /api/v1/live/vehicles` | 82,40 | 94,76 | 4,44 | 5,57 | 7 866 |
-| `GET /api/v1/health` | 69,66 | 82,39 | 2,93 | 3,67 | 749 |
+| `GET /api/v1/catalog` | 0,65 | 1,79 | 0,54 | 2,18 | 361 362 |
+| `GET /api/v1/snapshot` | 98,73 | 114,23 | 8,42 | 23,32 | 35 526 |
+| `GET /api/v1/stations/18000/board` | 93,44 | 119,44 | 7,96 | 10,39 | 22 301 |
+| `GET /api/v1/live/vehicles` | 82,40 | 94,76 | 4,95 | 7,04 | 7 866 |
+| `GET /api/v1/health` | 69,66 | 82,39 | 3,41 | 6,87 | 749 |
+
+### 2.3 Dataset B a las `00:02` locales — peor caso: dos días de servicio candidatos
+
+Tras la corrección del segundo hallazgo de la revisión, dentro de la ventana de
+horas extendidas el tablero cruza el día de servicio anterior **y** el civil, y
+la fecha de servicio se resuelve por circulación. Medido con conexión
+reutilizada, 40 iteraciones, estación `17000`:
+
+| Endpoint | p50 (ms) | p95 (ms) | Bytes |
+|---|---:|---:|---:|
+| `GET /api/v1/catalog` | 0,46 | 0,62 | 361 362 |
+| `GET /api/v1/snapshot` | 9,62 | 13,81 | 35 526 |
+| `GET /api/v1/stations/17000/board` | 9,62 | 24,19 | 16 096 |
+| `GET /api/v1/live/vehicles` | 5,68 | 12,04 | 7 866 |
+| `GET /api/v1/health` | 2,81 | 3,41 | 749 |
+
+El peor caso cuesta ~1,7 ms más de p50 en el tablero y ~1,2 ms en el snapshot.
+Los índices de llamadas programadas se memoizan por fecha de servicio, así que
+el coste de construir el segundo se paga una vez por día. **No se añadió
+ninguna consulta**: las formas SQL no cambiaron, los planes de la sección 1
+siguen vigentes y los tests de conteo de `execute` lo confirman.
 
 El snapshot pasa de 14 patrones (C5) a 103 patrones / 12 líneas **sin cambio
 medible** (8,47 → 8,59 ms de p50 con conexión reutilizada): el coste depende de

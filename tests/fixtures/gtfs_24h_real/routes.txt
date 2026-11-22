@@ -1,0 +1,3 @@
+route_id,route_short_name,route_long_name,route_type,route_color,route_text_color
+10T0001C1,C1,Principe Pio                            -Aeropuerto-T4,2,75B6E0,FFFFFF
+10T0012C4,C4,Parla                                   -Chamartín - Clara Campoamor,2,2C2A86,FFFFFF

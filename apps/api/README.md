@@ -153,6 +153,20 @@ MADRID_PULSE_GTFS_SOURCE="$PWD/data/gtfs_static/fomento_transit.zip" \
   .venv/bin/uvicorn apps.api.main:app --port 8000
 ```
 
+### Día de servicio tras medianoche
+
+La fecha de servicio **no** es la fecha civil: se resuelve por circulación
+(`apps.api.service.ServiceDateResolver`). Dentro de la ventana que el propio
+feed justifica —su máximo `arrival`/`departure` menos 24 h; 3 180 s con el ZIP
+oficial, `0.0` con un feed sin horas extendidas— se comprueba primero si el
+viaje sigue perteneciendo al día anterior por su horario `24:xx`. El snapshot
+publica `service_date` por circulación y el tablero por entrada, además de
+`service_dates_considered`.
+
+Sin esto, a las `00:02` un viaje real del día anterior con paradas a las
+`24:00`/`24:05` se situaba 10,4 km fuera de su posición y aparecía `expired`
+(ver `docs/evidence/mp-019-dst-y-horas-extendidas.md`).
+
 ### Variables nuevas
 
 | Variable | Valor por defecto | Para qué |

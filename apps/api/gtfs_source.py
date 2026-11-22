@@ -13,6 +13,7 @@ import hashlib
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from pathlib import Path
+from typing import TYPE_CHECKING
 from zoneinfo import ZoneInfo
 
 from packages.geo import (
@@ -28,6 +29,9 @@ from packages.gtfs import Topology, build_catalog, load_feed
 from packages.movement import MovementEngine, TripSchedule
 
 from .config import ApiConfig
+
+if TYPE_CHECKING:  # evita un ciclo de importación con apps.api.service
+    from .service import ServiceDateResolver
 
 
 @dataclass(frozen=True)
@@ -51,6 +55,14 @@ class LoadedNetwork:
     _schedule_caches: dict[str, dict[str, TripSchedule]] = field(
         default_factory=dict, repr=False
     )
+    _extended_horizon: list[float] = field(default_factory=list, repr=False)
+    """Horizonte de horas extendidas (`24:xx`) del feed, calculado una vez.
+
+    Es catálogo derivado: depende solo del GTFS cargado. Se usa para acotar la
+    ventana de ambigüedad de fecha de servicio tras medianoche
+    (`apps.api.service.ServiceDateResolver`).
+    """
+
     _catalog_json: dict[str, bytes] = field(default_factory=dict, repr=False)
     """Payload del catálogo ya serializado, memoizado por `catalog_version`.
 
@@ -66,6 +78,21 @@ class LoadedNetwork:
     """Índice de llamadas programadas por estación, memoizado por fecha de
     servicio. Es catálogo derivado (depende solo del GTFS cargado), no estado
     operativo: ninguna observación ni retraso entra aquí."""
+
+    @property
+    def extended_service_horizon_s(self) -> float:
+        if not self._extended_horizon:
+            from .service import extended_service_horizon_s
+
+            self._extended_horizon.append(extended_service_horizon_s(self.topology))
+        return self._extended_horizon[0]
+
+    def service_date_resolver(self, now: datetime) -> "ServiceDateResolver":
+        from .service import ServiceDateResolver
+
+        return ServiceDateResolver(
+            self.topology, now, extended_horizon_s=self.extended_service_horizon_s
+        )
 
     def engine_for(self, coverage: CorridorCoverage) -> MovementEngine | None:
         """Motor de MP-012 asociado al corredor de un patrón validado.

@@ -21,14 +21,14 @@ from __future__ import annotations
 
 import hashlib
 from dataclasses import dataclass
-from datetime import date, datetime, time, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
 import psycopg
 
 from packages.contracts.canonical import TripUpdateObservation
 from packages.geo import CorridorCoverage, CoverageStatus, PositionResolution, corridor_length_m
-from packages.gtfs import OPERATOR, scheduled_service_ids_for_date, scheduled_trip_instances_for_date
+from packages.gtfs import OPERATOR, scheduled_trip_instances_for_date
 from packages.movement import (
     AnchorSample,
     MovementPosition,
@@ -38,6 +38,7 @@ from packages.movement import (
     render_from_movement,
     render_raw_anchor,
     render_unlocated,
+    service_day_instant,
 )
 
 from . import db, service
@@ -430,11 +431,13 @@ def build_vehicle_entry(
     trip_update: TripUpdateObservation | None,
     now: datetime,
     display_at: datetime,
-    active_service_ids: frozenset[str],
+    resolver: service.ServiceDateResolver,
 ) -> SnapshotVehicleOut:
     latest = history.latest.position
     source_trip_id = latest.source_trip_id
-    service_date = service._service_date(now)
+    # Por circulación, no por reloj civil: un viaje `24:xx` del día de servicio
+    # anterior sigue siendo suyo tras la medianoche (ver `ServiceDateResolver`).
+    service_date = resolver.for_trip(source_trip_id)
     route_id = network.topology.resolve_trip_route_id(source_trip_id)
     route = (
         network.topology.resolve_trip_route(source_trip_id, explicit_route_id=route_id)
@@ -443,7 +446,9 @@ def build_vehicle_entry(
     )
     coverage = coverage_for_trip(network, source_trip_id, route_id)
     movement = (
-        _movement_for(network, coverage, history, route_id, now) if route_id else None
+        _movement_for(network, coverage, history, route_id, now, service_date)
+        if route_id
+        else None
     )
     rendered, map_matched = _render_vehicle(
         network, history, coverage, movement, service_date, now, display_at
@@ -463,8 +468,9 @@ def build_vehicle_entry(
         line=route.short_name if route is not None else None,
         pattern_id=coverage.identity.pattern_id if coverage is not None else None,
         circulation_status=service._circulation_status(  # type: ignore[arg-type]
-            network, source_trip_id, route_id, active_service_ids
+            network, source_trip_id, route_id, resolver.scheduled_service_ids(service_date)
         ),
+        service_date=service_date.isoformat(),
         schedule_relationship=(
             trip_update.schedule_relationship if trip_update is not None else None
         ),
@@ -496,6 +502,7 @@ def _movement_for(
     history: db.VehicleHistory,
     route_id: str,
     now: datetime,
+    service_date: date,
 ) -> MovementPosition | None:
     engine = network.engine_for(coverage) if coverage is not None else None
     if engine is None:
@@ -510,7 +517,7 @@ def _movement_for(
     try:
         return engine.position(
             trip_id=latest.source_trip_id,
-            service_date=service._service_date(now),
+            service_date=service_date,
             calculated_at=now,
             latest=latest,
             previous=previous,
@@ -629,8 +636,7 @@ def build_snapshot(
 ) -> SnapshotOut:
     lag = config.display_lag_s if display_lag_s is None else display_lag_s
     display_at = now - timedelta(seconds=lag)
-    service_date = service._service_date(now)
-    active_service_ids = scheduled_service_ids_for_date(network.topology, service_date)
+    resolver = network.service_date_resolver(now)
 
     histories = db.latest_vehicle_histories(conn)
     trip_updates = db.latest_trip_updates(
@@ -649,7 +655,7 @@ def build_snapshot(
             trip_updates.get(history.latest.position.source_trip_id),
             now,
             display_at,
-            active_service_ids,
+            resolver,
         )
         for history in sorted(histories, key=lambda item: item.source_vehicle_id)
     ]
@@ -765,11 +771,17 @@ def _gtfs_seconds(value: str | None) -> float | None:
 
 
 def service_instant(service_date: date, seconds: float | None) -> datetime | None:
-    """Inversa exacta de `packages.movement.schedule.service_seconds`."""
+    """Instante UTC de una hora GTFS, o `None` si la hora no existe en la fuente.
+
+    Delega en `packages.movement.schedule.service_day_instant`, la **única**
+    implementación de la aritmética del día de servicio: así la API y el motor
+    de movimiento no pueden divergir en los días de cambio de hora, que es
+    exactamente lo que ocurrió con la primera versión de MP-019 (ver el
+    docstring de `service_seconds`).
+    """
     if seconds is None:
         return None
-    midnight = datetime.combine(service_date, time.min, tzinfo=MADRID).astimezone(timezone.utc)
-    return midnight + timedelta(seconds=seconds)
+    return service_day_instant(service_date, seconds)
 
 
 def _relative_to_operator_next(
@@ -899,22 +911,28 @@ def build_station_board(
         return None
     lag = config.display_lag_s if display_lag_s is None else display_lag_s
     display_at = now - timedelta(seconds=lag)
-    service_date = service._service_date(now)
-    calls = board_index(network, service_date).get(station_id, ())
+    resolver = network.service_date_resolver(now)
+    service_date = resolver.primary
 
+    # Tras medianoche el tablero cubre los **dos** días de servicio candidatos:
+    # las llamadas `24:xx` del día anterior siguen vigentes (hallazgo de la
+    # revisión de MP-019). Cada llamada se convierte a instante absoluto con su
+    # propio día de servicio, así que la ventana temporal basta para
+    # seleccionarlas y ninguna aparece dos veces.
     window_start = now - timedelta(seconds=lookback_s)
     window_end = now + timedelta(seconds=lookahead_s)
-    selected: list[tuple[datetime, BoardCall]] = []
-    for call in calls:
-        reference = service_instant(service_date, call.departure_s or call.arrival_s)
-        if reference is None:
-            continue
-        if window_start <= reference <= window_end:
-            selected.append((reference, call))
-    selected.sort(key=lambda item: (item[0], item[1].trip_id))
+    selected: list[tuple[datetime, date, BoardCall]] = []
+    for candidate in resolver.candidates:
+        for call in board_index(network, candidate).get(station_id, ()):
+            reference = service_instant(candidate, call.departure_s or call.arrival_s)
+            if reference is None:
+                continue
+            if window_start <= reference <= window_end:
+                selected.append((reference, candidate, call))
+    selected.sort(key=lambda item: (item[0], item[2].trip_id))
     visible = selected[:limit]
 
-    trip_ids = [call.trip_id for _, call in visible]
+    trip_ids = [call.trip_id for _, _, call in visible]
     trip_updates = db.latest_trip_updates(
         conn, trip_ids, observed_after=service._trip_update_cutoff(now)
     )
@@ -923,16 +941,17 @@ def build_station_board(
     health = service.feed_health(conn, now, stale_after_s=config.feed_stale_after_s)
 
     entries: list[BoardEntryOut] = []
-    for _, call in visible:
+    for _, call_service_date, call in visible:
         trip_update = trip_updates.get(call.trip_id)
         next_stop_id = trip_update.next_stop_id if trip_update is not None else None
         relative, operator_next = _relative_to_operator_next(call, next_stop_id)
-        arrival_at = service_instant(service_date, call.arrival_s)
-        departure_at = service_instant(service_date, call.departure_s)
+        arrival_at = service_instant(call_service_date, call.arrival_s)
+        departure_at = service_instant(call_service_date, call.departure_s)
         sighting = observed.get(call.trip_id)
         entries.append(
             BoardEntryOut(
                 trip_id=call.trip_id,
+                service_date=call_service_date.isoformat(),
                 route_id=call.route_id,
                 line=call.line,
                 network_id=call.network_id,
@@ -977,6 +996,7 @@ def build_station_board(
         station_id=stop.stop_id,
         name=stop.name,
         service_date=service_date.isoformat(),
+        service_dates_considered=[item.isoformat() for item in resolver.candidates],
         mode=network.mode,  # type: ignore[arg-type]
         generated_at=now,
         display_at=display_at,

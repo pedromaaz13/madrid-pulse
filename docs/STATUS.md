@@ -423,12 +423,98 @@ materializada como una `ProgressEnvelope` por circulación y **extendiendo**
    `ready to accept connections` **posterior** a
    `PostgreSQL init process complete`. No es un fallo del repositorio.
 
+### Primera auditoría independiente de Codex — dos hallazgos bloqueantes, corregidos
+
+Codex reprodujo con éxito todo lo sustantivo de la primera entrega (suite en
+verde contra desarrollo y contra PostGIS fresco con las dos migraciones,
+frontend con Node `22.13.1` real, ausencia de N+1 con su propio conteo de
+`execute`, `ETag`/`304`/`no-store`, respuesta fuera de orden, tablero programado
+sin GPS, migración simétrica, autoría y `git diff --check` limpios) y no aprobó
+por **dos hallazgos reales de aritmética temporal**, la misma familia de error
+que el proyecto ya corrigió en MP-009 (DEC-021) y MP-013. Ambos reproducidos con
+cifras y corregidos; evidencia completa en
+`docs/evidence/mp-019-dst-y-horas-extendidas.md` y decisión en **DEC-039**.
+
+**Hallazgo 1 — la inversa del día de servicio fallaba en los cambios de hora.**
+`service_instant` sumaba los segundos *después* de convertir la medianoche a
+UTC, o sea sobre un desplazamiento fijo: el `2026-03-29` la hora GTFS `03:30` se
+reconstruía como `04:30+02:00` y el `2026-10-25` como `02:30+01:00`. La causa
+raíz era más sutil que el síntoma: `service_seconds` restaba dos `datetime`
+*aware* con el **mismo** `tzinfo`, caso que Python resuelve de forma naive, así
+que en realidad era aritmética de reloj de pared y acertaba *por accidente*; al
+escribir la inversa sobre UTC se eligió sin saberlo un modelo temporal distinto.
+Corregido con una **única** implementación explícita en ambas direcciones
+(`service_seconds` / `service_day_instant` nueva, en
+`packages/movement/schedule.py`), a la que `apps/api/snapshot.py` delega para
+que la API y el motor no puedan volver a divergir. Dos casos límite declarados
+en el propio docstring: la hora que no existe en el adelanto se resuelve con el
+desplazamiento previo al salto (comprobado que el feed real publica **0** horas
+en esa franja, `02:xx`/`26:xx`, sobre 3,5 M de `stop_times`) y la hora ambigua
+del atraso toma su primera ocurrencia.
+
+**Hallazgo 2 — la fecha de servicio se elegía por reloj civil y perdía los
+viajes `24:xx`.** A las `00:02` del 21 de noviembre, el viaje real
+`1023V20533C4` (C4, `23:50` → `24:32`, patrón `validated` contra la relación OSM
+`11332`) se resolvía contra el día 21: `service_seconds` daba 120 en vez de
+86 520 y el motor lo situaba a **10 445 m** de su posición real, además de
+marcarlo `expired` porque su `service_id` no está programado el 21. No es
+marginal: **742 circulaciones del núcleo Madrid** tienen horas `24:xx` en el ZIP
+oficial. Corregido con `apps.api.service.ServiceDateResolver`, que resuelve la
+fecha **por circulación** con una ventana de ambigüedad derivada del propio feed
+(su máximo `arrival`/`departure` menos 24 h: 3 180 s con el ZIP real, `0.0`
+cuando no hay horas extendidas, y entonces el comportamiento es idéntico al
+anterior). Un día candidato se admite solo si el `service_id` del viaje está
+realmente programado en él **y** el instante cae dentro de su horario publicado;
+si ninguno lo contiene, se conserva la fecha civil. La fecha resuelta gobierna
+posición **y** `circulation_status`, el snapshot publica `service_date` por
+circulación, y el tablero cruza los dos días candidatos con `service_date` por
+entrada y `service_dates_considered`. Antes de la corrección, 23 llamadas del
+día de servicio anterior eran invisibles en el tablero de Chamartín a esa hora.
+
+**Fixture real nueva, sin tocar la aprobada.** `tests/fixtures/gtfs_c5_real/` no
+tiene ninguna hora `24:xx` (máximo `23:53`), y ampliarla habría cambiado su
+SHA-256 y con él el `gtfs_version` del que dependen la matriz de cobertura ya
+aprobada de MP-018 (comparada byte a byte) y aserciones de MP-010/MP-017. Se
+añade por eso `tests/fixtures/gtfs_24h_real/` con dos circulaciones extraídas
+literalmente del ZIP oficial —una con corredor validado y otra sin geometría—,
+su manifiesto completo y la herramienta genérica
+`packages.gtfs.tools.extract_trips_fixture` (los `trip_id` son argumentos, sin
+identificadores en la lógica). Registrada además en `docs/legal/ATTRIBUTION.md`
+y `docs/legal/DATA_SOURCES.md`, aplicando por adelantado el mismo criterio que
+el hallazgo legal de MP-018.
+
+### Matriz de evidencia reejecutada al completo tras la corrección
+
+- Suite Python exacta de CI, ya con las 16 regresiones nuevas:
+  **`Ran 222 tests ... OK`** contra la base de desarrollo, **sin ningún
+  `skip`**; recuentos `668/484/3/120/0` idénticos antes y después y soak intacto
+  (`rows=668, near_corridor=177, after=668`).
+- Misma suite contra PostgreSQL **fresco y desechable** con `0001`+`0002`
+  aplicadas desde cero: **222 ejecutados, OK con 5 `skip` explícitos** (soak
+  irrepetible de MP-007, DEC-035) — declarados por separado, nunca como 222
+  pases en ambos.
+- Frontend con **Node `22.13.1`**, la versión que fija CI: `npm ci` sin
+  vulnerabilidades, lint, typecheck, **5/5 tests** y build con worker MapLibre
+  `550754` bytes. (La primera entrega se verificó con `20.20.0`; hallazgo de
+  proceso de la auditoría, corregido.)
+- Replay de tres snapshots sobre las capturas reales `1532`/`1533` en
+  contenedor desechable: invariantes de nuevo en verde (119 y 121 vehículos,
+  44 `map_matched`, 13 con avance real, revisión `3 → 6 → 7` monotónica en su
+  ámbito, parcial que degrada solo `delays_and_eta`, congelado que no
+  rejuvenece).
+- `EXPLAIN` y p50/p95: ninguna forma de consulta cambió, así que los planes
+  siguen vigentes; cifras nuevas medidas, incluido el **peor caso** del tablero
+  con dos días de servicio candidatos (p50 9,62 / p95 24,19 ms frente a
+  7,96 / 10,39 ms con uno solo).
+
 ### Pendiente de revisión
 
-Estado `REVIEW`. El ejecutor no marca `DONE`: queda pendiente la auditoría
-independiente de OpenAI Codex sobre el diff completo en este mismo worktree y
-la aceptación del propietario. ADR-0014 permanece `Propuesto` — su promoción a
-`Aceptado` es exclusiva del propietario (ADR-0007).
+Estado `REVIEW`. El ejecutor **no** marca `DONE` ni se autoaprueba: los dos
+hallazgos quedan corregidos con regresión y evidencia reejecutada, y queda
+pendiente la re-verificación independiente de OpenAI Codex sobre el diff
+completo en este mismo worktree, más la aceptación del propietario. ADR-0014
+permanece `Propuesto` y DEC-039 queda registrada como propuesta — su promoción
+es exclusiva del propietario (ADR-0007).
 
 ## Tareas cerradas de la cadena
 

@@ -330,6 +330,11 @@ class SnapshotDelayOut(BaseModel):
 class SnapshotVehicleOut(BaseModel):
     vehicle_id: str
     trip_id: str
+    service_date: str
+    """Día de servicio GTFS resuelto **para esta circulación**, no la fecha
+    civil: un viaje con horas `24:xx` sigue perteneciendo al día en que empezó
+    después de la medianoche local. `circulation_status` y la posición se
+    calculan contra este día."""
     route_id: str | None
     line: str | None
     pattern_id: str | None
@@ -431,6 +436,10 @@ class EtaOut(BaseModel):
 
 class BoardEntryOut(BaseModel):
     trip_id: str
+    service_date: str
+    """Día de servicio GTFS **de esta llamada**, que tras medianoche puede ser
+    el anterior al civil: un viaje con horas `24:xx` pertenece al día de
+    servicio en que empezó. Puede diferir de `StationBoardOut.service_date`."""
     route_id: str
     line: str | None
     network_id: str | None
@@ -476,6 +485,12 @@ class StationBoardOut(BaseModel):
     station_id: str
     name: str
     service_date: str
+    """Día de servicio principal (el civil de Europe/Madrid)."""
+    service_dates_considered: list[str]
+    """Días de servicio realmente cruzados para construir el tablero. Tras
+    medianoche, y mientras el horizonte de horas extendidas del propio feed lo
+    justifique, incluye también el día anterior para no perder sus llamadas
+    `24:xx`."""
     calculated_from: str = (
         "gtfs_calendar+calendar_dates+stop_times, cruzado con trip_update y "
         "observaciones de vehículo"

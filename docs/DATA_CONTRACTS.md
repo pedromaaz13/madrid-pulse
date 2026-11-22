@@ -224,6 +224,35 @@ disponible. El `delay` del feed es de nivel viaje: aplicarlo a cada parada se
 publica marcado como `approximation: "trip_level_delay_applied_to_all_stops"`,
 nunca en silencio. No se introduce ningún modelo predictivo propio.
 
+### Día de servicio GTFS: resuelto por circulación, no por reloj civil
+
+Cada circulación del snapshot publica su propio `service_date`, y cada entrada
+del tablero el suyo (`BoardEntryOut.service_date`), que tras medianoche puede
+ser el **día anterior** al civil: un viaje con horas `24:xx`/`25:xx` sigue
+perteneciendo al día de servicio en que empezó. `StationBoardOut` publica
+además `service_dates_considered` con los días realmente cruzados.
+
+La ventana de ambigüedad tras medianoche sale del propio feed —el máximo
+`arrival`/`departure` del GTFS cargado menos 24 h— y nunca de una constante:
+con el núcleo Madrid completo son 3 180 s (máximo real `24:53`); con un feed sin
+horas extendidas es `0.0` y no existe ventana. Dentro de ella se comprueba
+**primero** el día anterior, y un día candidato solo se acepta si el
+`service_id` del viaje está realmente programado en él *y* el instante actual
+cae dentro de su horario publicado; si ningún candidato lo contiene, se conserva
+la fecha civil. Nunca se fabrica una pertenencia.
+
+`circulation_status` se evalúa contra el calendario de **ese** día resuelto, de
+modo que una circulación `24:xx` en curso es `active` y no `expired`.
+
+Las horas GTFS se convierten a instantes con
+`packages.movement.schedule.service_day_instant`, la **única** implementación de
+esta aritmética, inversa exacta de `service_seconds`: el día de servicio se mide
+sobre el reloj de pared de Europe/Madrid, de modo que los dos días del año en
+que cambia la hora tienen 23 o 25 horas reales sin desplazar los horarios
+publicados. Dos casos límite documentados: una hora de reloj que no existe
+(adelanto) se resuelve con el desplazamiento previo al salto y una hora ambigua
+(atraso) toma su primera ocurrencia.
+
 ### Recuentos sin ambigüedad
 
 `counts` publica **dos particiones independientes y exactas** de

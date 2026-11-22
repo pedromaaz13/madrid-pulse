@@ -34,6 +34,17 @@ Datos [normalizados/modificados] por Madrid Pulse; Renfe no respalda ni patrocin
 
 En web, enlazar `Renfe Operadora` a `https://data.renfe.com/` y la licencia a `https://creativecommons.org/licenses/by/4.0/`. Deben preservarse los metadatos originales de actualización y condiciones de reutilización. Si no hubo cambios, sustituir `[normalizados/modificados]` por `reproducidos sin modificación`; nunca inventar una fecha ausente.
 
+Las fixtures GTFS estáticas versionadas en el repositorio son datos reales de
+esta fuente, reducidos, y quedan cubiertas por esta misma atribución
+(`CC BY 4.0`, no `ODbL`: no son bases derivadas de OSM). Cada una conserva
+fuente, URL, fecha, SHA-256 del ZIP original, licencia, atribución y comando
+reproducible en su propio manifiesto:
+
+| Fixture | Contenido | Manifiesto |
+|---|---|---|
+| `tests/fixtures/gtfs_c5_real/` | C5: un trip representativo por patrón (MP-010, DEC-023) | [`MANIFEST.md`](../../tests/fixtures/gtfs_c5_real/MANIFEST.md) |
+| `tests/fixtures/gtfs_24h_real/` | dos circulaciones reales con horas `24:xx` (MP-019) | [`MANIFEST.md`](../../tests/fixtures/gtfs_24h_real/MANIFEST.md) |
+
 ## CRTM (`CRTM-LDA`)
 
 La licencia exige identificar datos brutos o explotados y, en plataformas digitales, mostrar `Powered by CRTM` con enlace oficial:

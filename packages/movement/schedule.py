@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date, datetime, time
+from datetime import date, datetime, time, timedelta, timezone
 from zoneinfo import ZoneInfo
 
 from packages.geo import Corridor, corridor_length_m
@@ -24,11 +24,58 @@ def parse_gtfs_time(value: str) -> float:
 
 
 def service_seconds(at: datetime, service_date: date) -> float:
+    """Segundo de día de servicio GTFS de un instante, en reloj de pared local.
+
+    El día de servicio se mide sobre el **reloj de pared** de Europe/Madrid, no
+    sobre segundos reales transcurridos: una hora GTFS `HH:MM:SS` corresponde a
+    la hora `HH:MM:SS` del calendario local (y `24:xx`, `25:xx` a la madrugada
+    del día civil siguiente). Es la convención que publican las agencias y la
+    que GTFS describe como «medianoche, salvo los días con cambio de hora»; por
+    eso un día de cambio de horario tiene 23 o 25 horas reales pero sus horas
+    GTFS siguen siendo las del horario publicado.
+
+    Hallazgo de la revisión de MP-019: una versión anterior calculaba esta
+    diferencia entre dos `datetime` *aware* con el mismo `tzinfo`, lo que Python
+    resuelve de forma naive (ignora el huso) y daba por tanto el resultado
+    correcto **por accidente**. Al escribir la inversa (`service_day_instant`)
+    con aritmética sobre UTC, las dos funciones dejaban de ser inversas en los
+    dos días de cambio de hora. Ahora la aritmética de reloj de pared es
+    explícita en ambas direcciones y la propiedad de ida y vuelta está probada
+    sobre las dos fechas de 2026.
+    """
     if at.tzinfo is None or at.utcoffset() is None:
         raise ValueError("calculated_at debe ser timezone-aware")
-    local = at.astimezone(MADRID)
-    start = datetime.combine(service_date, time.min, tzinfo=MADRID)
-    return (local - start).total_seconds()
+    local = at.astimezone(MADRID).replace(tzinfo=None)
+    return (local - datetime.combine(service_date, time.min)).total_seconds()
+
+
+def service_day_instant(service_date: date, seconds: float) -> datetime:
+    """Inversa de `service_seconds`: instante UTC de un segundo de día de servicio.
+
+    Suma los segundos en el espacio de **reloj de pared** y localiza después, de
+    modo que el cambio de hora se aplica con el desplazamiento real de cada
+    fecha en vez de con un único offset fijo. Admite `seconds >= 86400`
+    (horas GTFS `24:xx`/`25:xx`), que caen en el día civil siguiente.
+
+    Dos casos límite del cambio de hora, resueltos de forma deliberada y no por
+    omisión (`fold=0`):
+
+    - **Hora inexistente** (adelanto: el 2026-03-29 el reloj local salta de
+      02:00 a 03:00). Un horario en esa franja se resuelve con el offset previo
+      al salto, lo que equivale a desplazarlo una hora hacia delante. La ida y
+      vuelta no es exacta ahí porque ese reloj de pared no existe. El feed real
+      de Renfe verificado no publica ninguna hora en esa franja (0 valores en
+      `02:xx`/`26:xx` sobre 3,5 M de `stop_times`), así que es un caso
+      documentado, no observado.
+    - **Hora ambigua** (atraso: el 2026-10-25 el reloj local repite 02:00-03:00).
+      Se toma la **primera** ocurrencia, coherente con `service_seconds`, que no
+      puede distinguir las dos.
+    """
+    days, remainder = divmod(float(seconds), 86400.0)
+    wall = datetime.combine(service_date + timedelta(days=int(days)), time.min) + timedelta(
+        seconds=remainder
+    )
+    return wall.replace(tzinfo=MADRID).astimezone(timezone.utc)
 
 
 @dataclass(frozen=True)

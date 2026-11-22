@@ -199,6 +199,10 @@
             ],
             "title": "Scheduled Departure Time"
           },
+          "service_date": {
+            "title": "Service Date",
+            "type": "string"
+          },
           "stop_sequence": {
             "title": "Stop Sequence",
             "type": "integer"
@@ -221,6 +225,7 @@
         },
         "required": [
           "trip_id",
+          "service_date",
           "route_id",
           "line",
           "network_id",
@@ -1973,6 +1978,10 @@
             ],
             "title": "Schedule Relationship"
           },
+          "service_date": {
+            "title": "Service Date",
+            "type": "string"
+          },
           "timestamps": {
             "$ref": "#/components/schemas/VehicleTimestampsOut"
           },
@@ -1988,6 +1997,7 @@
         "required": [
           "vehicle_id",
           "trip_id",
+          "service_date",
           "route_id",
           "line",
           "pattern_id",
@@ -2065,6 +2075,13 @@
             "title": "Service Date",
             "type": "string"
           },
+          "service_dates_considered": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Service Dates Considered",
+            "type": "array"
+          },
           "station_id": {
             "title": "Station Id",
             "type": "string"
@@ -2074,6 +2091,7 @@
           "station_id",
           "name",
           "service_date",
+          "service_dates_considered",
           "mode",
           "generated_at",
           "display_at",

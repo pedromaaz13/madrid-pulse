@@ -41,7 +41,6 @@ from packages.contracts.canonical import (  # noqa: E402
     VehiclePositionObservation,
 )
 from packages.geo import point_at_arc_length  # noqa: E402
-from packages.gtfs import scheduled_service_ids_for_date  # noqa: E402
 from services.collector import db as collector_db  # noqa: E402
 from services.collector.config import CollectorConfig  # noqa: E402
 
@@ -148,7 +147,6 @@ class NetworkFixtureMixin:
         trip_update: TripUpdateObservation | None = None,
         display_at: datetime | None = None,
     ):
-        active = scheduled_service_ids_for_date(self.network.topology, SERVICE_DATE)
         return snapshot.build_vehicle_entry(
             self.network,
             self.config,
@@ -156,7 +154,7 @@ class NetworkFixtureMixin:
             trip_update,
             now,
             display_at or now,
-            active,
+            self.network.service_date_resolver(now),
         )
 
 
@@ -208,7 +206,7 @@ class RawMatchedRenderedTests(NetworkFixtureMixin, unittest.TestCase):
             None,
             now,
             now - timedelta(seconds=4),
-            scheduled_service_ids_for_date(self.network.topology, SERVICE_DATE),
+            self.network.service_date_resolver(now),
         )
         stamps = entry.timestamps
         self.assertEqual(stamps.gps_observed_at, anchor_at)
@@ -985,3 +983,230 @@ class StationBoardPostgresTests(NetworkFixtureMixin, unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+EXTENDED_FIXTURE = ROOT / "tests" / "fixtures" / "gtfs_24h_real"
+EXTENDED_TRIP_C4 = "1023V20533C4"
+"""C4 real, 23:50 -> 24:32, patrón `validated` contra la relación OSM 11332."""
+EXTENDED_TRIP_C1 = "1023V19940C1"
+"""C1 real, con paradas en 24:00 y 24:05; patrón sin geometría (`pending`)."""
+EXTENDED_SERVICE_DATE = date(2026, 11, 20)
+"""Único día programado de `1023V` (viernes), según su `calendar.txt`."""
+
+
+class ExtendedHoursAfterMidnightTests(unittest.TestCase):
+    """Regresión del segundo hallazgo bloqueante de la revisión de MP-019.
+
+    A las `00:02` del 21 de noviembre, una circulación del día de servicio del
+    20 con paradas a las `24:00`/`24:05` seguía siendo suya; resolver la fecha
+    de servicio por reloj civil la mandaba al día siguiente, de modo que
+    `service_seconds` pasaba de 86 520 a 120 y el motor situaba el tren a más
+    de 10 km de su posición real, además de marcarlo `expired`.
+
+    Usa la fixture real `tests/fixtures/gtfs_24h_real/` (dos circulaciones
+    extraídas literalmente del ZIP oficial, ver su `MANIFEST.md`), no datos
+    sintéticos.
+    """
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.config = replace(
+            ApiConfig.from_env(), gtfs_fixture_dir=EXTENDED_FIXTURE, short_name=""
+        )
+        cls.network = load_network(cls.config)
+        cls.just_after_midnight = datetime(2026, 11, 21, 0, 2, tzinfo=MADRID).astimezone(
+            timezone.utc
+        )
+
+    def test_the_horizon_comes_from_the_feed_not_from_a_magic_number(self) -> None:
+        # El máximo real de la fixture es 24:32:00 -> 32 min por encima de 24 h.
+        self.assertEqual(self.network.extended_service_horizon_s, 32 * 60.0)
+
+    def test_a_24xx_trip_still_belongs_to_the_previous_service_day(self) -> None:
+        resolver = self.network.service_date_resolver(self.just_after_midnight)
+        self.assertEqual(resolver.primary, date(2026, 11, 21), "la fecha civil sigue siendo el 21")
+        self.assertEqual(resolver.candidates, (EXTENDED_SERVICE_DATE, date(2026, 11, 21)))
+        self.assertEqual(resolver.for_trip(EXTENDED_TRIP_C4), EXTENDED_SERVICE_DATE)
+        self.assertEqual(resolver.for_trip(EXTENDED_TRIP_C1), EXTENDED_SERVICE_DATE)
+
+    def test_outside_the_window_there_is_no_ambiguity_left(self) -> None:
+        """A las 02:00 locales el horizonte del feed (24:32) ya no alcanza:
+        la ventana se cierra y la fecha civil vuelve a ser la única."""
+        late = datetime(2026, 11, 21, 2, 0, tzinfo=MADRID).astimezone(timezone.utc)
+        resolver = self.network.service_date_resolver(late)
+        self.assertEqual(resolver.candidates, (date(2026, 11, 21),))
+        self.assertEqual(resolver.for_trip(EXTENDED_TRIP_C4), date(2026, 11, 21))
+
+    def test_a_daytime_trip_of_the_new_civil_day_does_not_migrate_backwards(self) -> None:
+        """La ventana no arrastra al día anterior cualquier circulación: solo
+        aquellas cuyo horario publicado contiene realmente `now`."""
+        midday = datetime(2026, 11, 20, 12, 0, tzinfo=MADRID).astimezone(timezone.utc)
+        resolver = self.network.service_date_resolver(midday)
+        self.assertEqual(resolver.candidates, (date(2026, 11, 20),))
+        self.assertEqual(resolver.for_trip(EXTENDED_TRIP_C4), date(2026, 11, 20))
+
+    def test_service_date_is_never_fabricated_for_an_unscheduled_day(self) -> None:
+        """`1023V` solo está programado el 2026-11-20. A las 00:02 del 22 de
+        noviembre (fuera de su calendario) no se inventa ninguna pertenencia."""
+        later_night = datetime(2026, 11, 22, 0, 2, tzinfo=MADRID).astimezone(timezone.utc)
+        resolver = self.network.service_date_resolver(later_night)
+        self.assertEqual(resolver.candidates, (date(2026, 11, 21), date(2026, 11, 22)))
+        self.assertEqual(
+            resolver.for_trip(EXTENDED_TRIP_C4),
+            date(2026, 11, 22),
+            "sin servicio programado en ningún candidato, se conserva la fecha civil",
+        )
+
+    def test_position_of_a_24xx_trip_is_right_and_the_civil_date_is_wrong(self) -> None:
+        from packages.geo import haversine_m
+        from packages.movement import service_seconds
+
+        coverage = snapshot.coverage_for_trip(
+            self.network, EXTENDED_TRIP_C4, "10T0012C4"
+        )
+        self.assertIsNotNone(coverage)
+        self.assertTrue(coverage.can_map_match, "el patrón C4 debe estar validado (relación 11332)")
+        engine = self.network.engine_for(coverage)
+        resolver = self.network.service_date_resolver(self.just_after_midnight)
+        resolved = resolver.for_trip(EXTENDED_TRIP_C4)
+        self.assertEqual(resolved, EXTENDED_SERVICE_DATE)
+
+        self.assertEqual(service_seconds(self.just_after_midnight, resolved), 86_520.0)
+        self.assertEqual(
+            service_seconds(self.just_after_midnight, date(2026, 11, 21)), 120.0
+        )
+
+        correct = engine.position(
+            trip_id=EXTENDED_TRIP_C4,
+            service_date=resolved,
+            calculated_at=self.just_after_midnight,
+        )
+        civil = engine.position(
+            trip_id=EXTENDED_TRIP_C4,
+            service_date=date(2026, 11, 21),
+            calculated_at=self.just_after_midnight,
+        )
+        self.assertGreater(correct.progress_m, 12_000)
+        self.assertLess(civil.progress_m, 100, "la fecha civil lo sitúa al inicio del recorrido")
+        self.assertGreater(
+            haversine_m(correct.latitude, correct.longitude, civil.latitude, civil.longitude),
+            10_000,
+            "el error del hallazgo era de más de 10 km: la regresión debe ser inequívoca",
+        )
+
+    def test_snapshot_entry_publishes_the_resolved_service_day_and_stays_active(self) -> None:
+        coverage = snapshot.coverage_for_trip(self.network, EXTENDED_TRIP_C4, "10T0012C4")
+        engine = self.network.engine_for(coverage)
+        schedule = engine.trip_schedule(EXTENDED_TRIP_C4)
+        polyline = list(coverage.corridor.segments[0])
+        from packages.movement import service_seconds
+
+        observed_at = self.just_after_midnight - timedelta(seconds=15)
+        # La observación se sitúa donde el horario dice que estaba el tren en su
+        # propio instante, para que el ancla sea físicamente coherente.
+        progress = schedule.progress_at(service_seconds(observed_at, EXTENDED_SERVICE_DATE))
+        lat, lon = point_at_arc_length(polyline, schedule.physical_arc(progress))
+        latest = VehiclePositionObservation(
+            source_vehicle_id="extended-hours-test",
+            source_trip_id=EXTENDED_TRIP_C4,
+            observed_at=observed_at,
+            latitude=lat,
+            longitude=lon,
+            raw_vehicle_label="synthetic observation on a real 24:xx trip",
+            payload_hash="1" * 64,
+        )
+        history = db.VehicleHistory(
+            source_vehicle_id=latest.source_vehicle_id,
+            latest=db.ObservedRow(
+                position=latest, received_at=observed_at, feed_published_at=observed_at
+            ),
+            previous=None,
+        )
+        entry = snapshot.build_vehicle_entry(
+            self.network,
+            self.config,
+            history,
+            None,
+            self.just_after_midnight,
+            self.just_after_midnight,
+            self.network.service_date_resolver(self.just_after_midnight),
+        )
+        self.assertEqual(entry.service_date, EXTENDED_SERVICE_DATE.isoformat())
+        self.assertEqual(
+            entry.circulation_status,
+            "active",
+            "una circulación 24:xW en curso no es `expired`: su servicio está programado el 20",
+        )
+        self.assertIsNotNone(entry.map_matched)
+        self.assertGreater(entry.map_matched.progress_m, 12_000)
+        self.assertEqual(entry.rendered.coordinate_space, "map_matched")
+
+
+class ExtendedHoursBoardTests(unittest.TestCase):
+    """El tablero tras medianoche no pierde las llamadas `24:xx` del día anterior."""
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.config = replace(
+            ApiConfig.from_env(), gtfs_fixture_dir=EXTENDED_FIXTURE, short_name=""
+        )
+        cls.network = load_network(cls.config)
+
+    def setUp(self) -> None:
+        self.conn = _connect_or_skip()
+        self.conn.execute("SELECT 1")
+        self.addCleanup(self.conn.close)
+        self.addCleanup(self.conn.rollback)
+        self.now = datetime(2026, 11, 21, 0, 2, tzinfo=MADRID).astimezone(timezone.utc)
+
+    def _board(self, station_id: str, **kwargs):
+        return snapshot.build_station_board(
+            self.conn, self.network, self.config, station_id, self.now, **kwargs
+        )
+
+    def test_a_24xx_call_appears_with_its_own_service_date(self) -> None:
+        board = self._board("98304", lookback_s=1800, lookahead_s=1800, limit=50)
+        self.assertIsNotNone(board)
+        self.assertEqual(board.service_date, "2026-11-21", "la fecha principal sigue siendo la civil")
+        self.assertEqual(
+            board.service_dates_considered, ["2026-11-20", "2026-11-21"]
+        )
+        entry = next(item for item in board.entries if item.trip_id == EXTENDED_TRIP_C1)
+        self.assertEqual(entry.service_date, EXTENDED_SERVICE_DATE.isoformat())
+        self.assertEqual(entry.scheduled_departure_time, "24:00:00")
+        self.assertEqual(
+            entry.scheduled_departure_at.astimezone(MADRID).isoformat(),
+            "2026-11-21T00:00:00+01:00",
+            "24:00 del día de servicio 20 es la medianoche del 21 en reloj de pared",
+        )
+        self.assertEqual(entry.circulation_source, "scheduled_only")
+        self.assertEqual(entry.departure.method, "schedule")
+
+    def test_the_second_extended_call_is_also_kept(self) -> None:
+        board = self._board("98305", lookback_s=1800, lookahead_s=1800, limit=50)
+        entry = next(item for item in board.entries if item.trip_id == EXTENDED_TRIP_C1)
+        self.assertEqual(entry.scheduled_arrival_time, "24:05:00")
+        self.assertEqual(
+            entry.scheduled_arrival_at.astimezone(MADRID).isoformat(),
+            "2026-11-21T00:05:00+01:00",
+        )
+
+    def test_extended_calls_are_not_duplicated_across_candidate_days(self) -> None:
+        board = self._board("17000", lookback_s=3600, lookahead_s=3600, limit=200)
+        keys = [(item.trip_id, item.stop_sequence, item.service_date) for item in board.entries]
+        self.assertEqual(len(keys), len(set(keys)), "ninguna llamada aparece dos veces")
+        self.assertEqual(board.coverage.returned, len(board.entries))
+
+    def test_outside_the_window_the_board_considers_only_the_civil_day(self) -> None:
+        board = snapshot.build_station_board(
+            self.conn,
+            self.network,
+            self.config,
+            "98304",
+            datetime(2026, 11, 21, 2, 0, tzinfo=MADRID).astimezone(timezone.utc),
+            lookback_s=1800,
+            lookahead_s=1800,
+        )
+        self.assertEqual(board.service_dates_considered, ["2026-11-21"])
+        self.assertEqual(board.entries, [])
+        self.assertIsNone(board.coverage.operator_delay_coverage_pct)

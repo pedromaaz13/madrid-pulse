@@ -353,3 +353,97 @@ class RenderedPositionTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ServiceDayArithmeticTests(unittest.TestCase):
+    """Regresión de los dos hallazgos de aritmética temporal de la revisión.
+
+    `service_day_instant` y `service_seconds` tienen que ser inversas una de la
+    otra **también** en los dos días en que Europe/Madrid cambia de hora. La
+    primera versión de MP-019 sumaba los segundos después de convertir la
+    medianoche a UTC, es decir sobre un único offset fijo, y por eso desplazaba
+    una hora los horarios de esos dos días.
+    """
+
+    SPRING_FORWARD = date(2026, 3, 29)
+    """El reloj local salta de 02:00 (+01:00) a 03:00 (+02:00): día de 23 h."""
+
+    FALL_BACK = date(2026, 10, 25)
+    """El reloj local repite 02:00-03:00 (+02:00 → +01:00): día de 25 h."""
+
+    def test_the_two_cases_reported_by_the_review(self) -> None:
+        from packages.movement import service_day_instant, service_seconds
+
+        gtfs_03_30 = 3 * 3600 + 30 * 60
+        spring = service_day_instant(self.SPRING_FORWARD, gtfs_03_30)
+        autumn = service_day_instant(self.FALL_BACK, gtfs_03_30)
+        self.assertEqual(spring.astimezone(MADRID).isoformat(), "2026-03-29T03:30:00+02:00")
+        self.assertEqual(autumn.astimezone(MADRID).isoformat(), "2026-10-25T03:30:00+01:00")
+        # Y la vuelta devuelve el mismo segundo de día de servicio.
+        self.assertEqual(service_seconds(spring, self.SPRING_FORWARD), gtfs_03_30)
+        self.assertEqual(service_seconds(autumn, self.FALL_BACK), gtfs_03_30)
+
+    def test_round_trip_is_exact_across_both_dst_dates_and_their_neighbours(self) -> None:
+        """Barrido minuto a minuto de 00:00 a 28:00 en las dos fechas de cambio
+        de hora, sus vísperas y un día normal. La única excepción admitida es la
+        franja de reloj de pared que **no existe** el día del adelanto."""
+        from packages.movement import service_day_instant, service_seconds
+
+        nonexistent_gap = set(range(2 * 3600, 3 * 3600, 60))
+        for service_date in (
+            self.SPRING_FORWARD,
+            self.SPRING_FORWARD - timedelta(days=1),
+            self.FALL_BACK,
+            self.FALL_BACK - timedelta(days=1),
+            date(2026, 11, 20),
+        ):
+            for seconds in range(0, 28 * 3600, 60):
+                instant = service_day_instant(service_date, seconds)
+                recovered = service_seconds(instant, service_date)
+                wall_of_day = seconds % 86_400
+                day_offset = seconds // 86_400
+                in_gap = (
+                    wall_of_day in nonexistent_gap
+                    and service_date + timedelta(days=day_offset) == self.SPRING_FORWARD
+                )
+                if in_gap:
+                    # Hora inexistente: se resuelve con el offset previo al
+                    # salto, lo que equivale a desplazarla una hora adelante.
+                    self.assertEqual(
+                        recovered,
+                        seconds + 3600,
+                        f"{service_date} {seconds}s debería desplazarse una hora exacta",
+                    )
+                else:
+                    self.assertEqual(
+                        recovered,
+                        seconds,
+                        f"ida y vuelta inexacta para {service_date} {seconds}s",
+                    )
+
+    def test_extended_hours_land_on_the_next_civil_day(self) -> None:
+        from packages.movement import service_day_instant
+
+        # 24:05 del día de servicio del 20 = 00:05 del 21 en reloj de pared.
+        instant = service_day_instant(date(2026, 11, 20), 24 * 3600 + 5 * 60)
+        self.assertEqual(instant.astimezone(MADRID).isoformat(), "2026-11-21T00:05:00+01:00")
+        # 25:09, el máximo real del feed oficial verificado.
+        latest = service_day_instant(date(2026, 11, 20), 25 * 3600 + 9 * 60)
+        self.assertEqual(latest.astimezone(MADRID).isoformat(), "2026-11-21T01:09:00+01:00")
+
+    def test_ambiguous_hour_of_the_fall_back_takes_the_first_occurrence(self) -> None:
+        """El 2026-10-25 las 02:30 locales ocurren dos veces. Se elige la
+        primera, coherente con `service_seconds`, que no las distingue."""
+        from packages.movement import service_day_instant, service_seconds
+
+        seconds = 2 * 3600 + 30 * 60
+        instant = service_day_instant(self.FALL_BACK, seconds)
+        self.assertEqual(instant.isoformat(), "2026-10-25T00:30:00+00:00")
+        self.assertEqual(instant.astimezone(MADRID).utcoffset(), timedelta(hours=2))
+        self.assertEqual(service_seconds(instant, self.FALL_BACK), seconds)
+
+    def test_naive_instants_are_still_rejected(self) -> None:
+        from packages.movement import service_seconds
+
+        with self.assertRaisesRegex(ValueError, "timezone-aware"):
+            service_seconds(datetime(2026, 11, 20, 8, 0), date(2026, 11, 20))

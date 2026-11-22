@@ -20,7 +20,13 @@ from .rendering import (
     render_raw_anchor,
     render_unlocated,
 )
-from .schedule import TripSchedule, build_trip_schedule, parse_gtfs_time, service_seconds
+from .schedule import (
+    TripSchedule,
+    build_trip_schedule,
+    parse_gtfs_time,
+    service_day_instant,
+    service_seconds,
+)
 
 __all__ = [
     "AnchorSample",
@@ -38,6 +44,7 @@ __all__ = [
     "TripSchedule",
     "build_trip_schedule",
     "parse_gtfs_time",
+    "service_day_instant",
     "render_from_movement",
     "render_raw_anchor",
     "render_unlocated",

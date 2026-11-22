@@ -268,7 +268,7 @@ class VehicleTripChangeTests(unittest.TestCase):
         )
         network = Mock()
         network.engine.position.return_value = object()
-        result = service._movement_position(network, history, "route", now)
+        result = service._movement_position(network, history, "route", now, now.date())
         self.assertIsNotNone(result)
         self.assertIsNone(network.engine.position.call_args.kwargs["previous"])
 
@@ -371,10 +371,9 @@ class ResolvedTripEndToEndTests(unittest.TestCase):
             latest=db.ObservedRow(position=observation, received_at=now - timedelta(seconds=5)),
             previous=None,
         )
-        active_service_ids = service.scheduled_service_ids_for_date(
-            self.network.topology, service._service_date(now)
+        result = service.vehicle_to_out(
+            self.network, history, None, now, self.network.service_date_resolver(now)
         )
-        result = service.vehicle_to_out(self.network, history, None, now, active_service_ids)
         self.assertEqual(result.route_id, "10T0017C5")
         self.assertEqual(result.line, "C5")
         self.assertIsNotNone(result.position)
@@ -406,10 +405,9 @@ class ResolvedTripEndToEndTests(unittest.TestCase):
             latest=db.ObservedRow(position=observation, received_at=now - timedelta(seconds=5)),
             previous=None,
         )
-        active_service_ids = service.scheduled_service_ids_for_date(
-            self.network.topology, service._service_date(now)
+        result = service.vehicle_to_out(
+            self.network, history, None, now, self.network.service_date_resolver(now)
         )
-        result = service.vehicle_to_out(self.network, history, None, now, active_service_ids)
         self.assertEqual(result.circulation_status, "expired")
 
     def test_circulation_status_is_unresolved_when_route_does_not_resolve(self) -> None:
@@ -426,10 +424,9 @@ class ResolvedTripEndToEndTests(unittest.TestCase):
             latest=db.ObservedRow(position=observation, received_at=now),
             previous=None,
         )
-        active_service_ids = service.scheduled_service_ids_for_date(
-            self.network.topology, service._service_date(now)
+        result = service.vehicle_to_out(
+            self.network, history, None, now, self.network.service_date_resolver(now)
         )
-        result = service.vehicle_to_out(self.network, history, None, now, active_service_ids)
         self.assertEqual(result.circulation_status, "unresolved")
 
 
