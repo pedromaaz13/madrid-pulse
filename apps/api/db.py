@@ -101,19 +101,30 @@ def vehicle_history(conn: psycopg.Connection, source_vehicle_id: str) -> Vehicle
 
 
 def latest_trip_update(
-    conn: psycopg.Connection, source_trip_id: str
+    conn: psycopg.Connection, source_trip_id: str, *, observed_after: datetime
 ) -> TripUpdateObservation | None:
+    """Última actualización de viaje, acotada a ``observed_after``.
+
+    Hallazgo real de MP-017 (kit Hito 3): un `trip_id` GTFS recurre cada día
+    que su `service_id` está activo -- el mismo `source_trip_id` identifica la
+    circulación de hoy y la de ayer. Sin cota temporal, un retraso de ayer
+    seguía siendo "la última actualización" hasta que llegara una fila nueva
+    de hoy, completando el viaje de hoy con un dato de otra fecha de servicio.
+    `observed_after` exige que la fila realmente pertenezca a la ventana
+    reciente del llamante (ver `apps/api/service.py`, que la calcula a partir
+    de la fecha de servicio vigente), no a cualquier histórico del mismo id.
+    """
     with conn.cursor(row_factory=dict_row) as cur:
         cur.execute(
             """
             SELECT source_trip_id, observed_at, schedule_relationship, delay_seconds,
                    delay_coverage, next_stop_id, payload_hash
             FROM trip_update_observation
-            WHERE source_trip_id = %s
+            WHERE source_trip_id = %s AND observed_at >= %s
             ORDER BY observed_at DESC, id DESC
             LIMIT 1
             """,
-            (source_trip_id,),
+            (source_trip_id, observed_after),
         )
         row = cur.fetchone()
     if row is None:

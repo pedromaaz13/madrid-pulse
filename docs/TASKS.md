@@ -411,6 +411,24 @@ Autorizado por el propietario el `2026-11-22` (mensaje "ORCA — MADRID PULSE / 
 
 ---
 
+## MP-017 — Catálogo completo de Madrid (identidad y vigencia)
+
+- **Fase:** Hito 3 — Cierre ferroviario Madrid
+- **Objetivo:** catálogo versionado de todo el núcleo Madrid (línea/variante/patrón) desde el GTFS completo, enumeración explícita de servicios programados elegibles (calendar + calendar_dates), y resolución de avisos por estación sin fabricar matches.
+- **Prioridad:** P0
+- **Depende de:** MP-016 (`DONE`)
+- **Ejecutor:** Claude Code
+- **Revisor:** OpenAI Codex
+- **Archivos/componentes afectados:** `packages/gtfs/` (nuevo `catalog.py`, `parser.py` extendido con `calendar_dates.txt` opcional), `packages/contracts/` (`raw.py`/`canonical.py`/`normalize.py`: `stop_id` en avisos), `services/collector/` (`collector.py`/`__main__.py`/`config.py`: resolución de avisos por estación), `apps/api/db.py`/`service.py` (ventana de recencia en `latest_trip_update`).
+- **Entradas:** GTFS oficial completo (`data/hito-03/replay/fomento_transit.zip` o `data/gtfs_static/fomento_transit.zip`, ambos fuera de Git), `docs/hitos/hito-03/referencia/01-auditoria-live.md` (hallazgo P1 "Avisos de estación").
+- **Entregables:** `packages.gtfs.catalog`: `build_catalog` (líneas/variantes/patrones, conserva líneas con 0 patrones válidos), `scheduled_service_ids_for_date`/`scheduled_trip_instances_for_date` (enumeración real de servicios programados, no el fallback `SCHEDULED` del motor), soporte opcional de `calendar_dates.txt`. Avisos por estación (`stopId` sin `routeId`) resueltos contra el catálogo real de paradas de Madrid, no descartados por defecto. Ventana de recencia (20h) en `latest_trip_update` para que un retraso de un día de servicio anterior no complete el viaje de hoy.
+- **Criterios de aceptación:** 42 `route_id` agrupados en 12 nombres de línea/variante (verificado contra el GTFS oficial real); las 12 permanecen en catálogo aunque alguna tenga cero vehículos; `stopId` 60104 (Valdemoro) resuelve como estación real de Madrid; un `trip_id` `SPECIAL_` nunca aparece como instancia programada; un trip con horas `24:xx` real (`1023V19788C5`) se enumera correctamente sin desplazar `service_date`; un retraso de hace 26h no completa el viaje de hoy.
+- **Pruebas necesarias:** suite real del proyecto + nuevo módulo `packages.gtfs.tests.test_catalog` (lógica síncrona con topología sintética + clase gateada por la presencia del ZIP oficial, `skip` explícito si no está, igual criterio que el soak de MP-007).
+- **Evidencia de verificación:** pendiente de completar tras commit (ver `docs/STATUS.md` → "Tarea actual").
+- **Estado:** `REVIEW` — implementación de Claude Code lista; pendiente auditoría independiente de OpenAI Codex en este mismo worktree. No se marca `DONE` antes de su aprobación.
+
+---
+
 ## Grafo de dependencias
 
 Esta tabla refleja **exactamente** el campo "Depende de" de cada ficha anterior — sin añadir dependencias transitivas redundantes. Para dependencias transitivas (p. ej. qué depende indirectamente de MP-004), recórrase la tabla hacia arriba.

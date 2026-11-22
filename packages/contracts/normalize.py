@@ -97,6 +97,11 @@ def alerts_to_canonical(feed: RawAlertsFeed) -> list[ServiceAlert]:
                     for informed in alert.informed_entity
                     if informed.route_id is not None
                 ],
+                affected_stop_ids=[
+                    informed.stop_id
+                    for informed in alert.informed_entity
+                    if informed.stop_id is not None
+                ],
                 description_text=first_translation.text,
                 description_language=first_translation.language,
                 payload_hash=_entity_hash(entity),

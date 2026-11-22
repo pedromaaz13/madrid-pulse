@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from zoneinfo import ZoneInfo
 
 import psycopg
@@ -44,6 +44,19 @@ def _service_date(now: datetime) -> date:
     exportador histórico).
     """
     return now.astimezone(_MADRID).date()
+
+
+def _trip_update_cutoff(now: datetime) -> datetime:
+    """Ventana de recencia para `latest_trip_update` (hallazgo MP-017).
+
+    Cercanías Madrid opera aproximadamente de 05:00 a 01:00 hora local
+    (servicios `24:xx` incluidos) -- 20 horas cubre un día de servicio
+    completo con margen, sin exigir calcular el límite exacto de
+    `calendar.txt`/`24:xx`, que ya resuelve `packages.gtfs.catalog` para la
+    enumeración de servicios programados. Más allá de esta ventana, un
+    retraso solo puede pertenecer a un día de servicio anterior.
+    """
+    return now - timedelta(hours=20)
 
 
 def _movement_position(
@@ -136,9 +149,12 @@ def vehicle_to_out(
 
 def list_vehicles(conn: psycopg.Connection, network: LoadedNetwork, now: datetime) -> list[VehicleOut]:
     histories = db.latest_vehicle_histories(conn)
+    cutoff = _trip_update_cutoff(now)
     result = []
     for history in histories:
-        trip_update = db.latest_trip_update(conn, history.latest.position.source_trip_id)
+        trip_update = db.latest_trip_update(
+            conn, history.latest.position.source_trip_id, observed_after=cutoff
+        )
         result.append(vehicle_to_out(network, history, trip_update, now))
     return result
 
@@ -149,7 +165,9 @@ def get_vehicle(
     history = db.vehicle_history(conn, vehicle_id)
     if history is None:
         return None
-    trip_update = db.latest_trip_update(conn, history.latest.position.source_trip_id)
+    trip_update = db.latest_trip_update(
+        conn, history.latest.position.source_trip_id, observed_after=_trip_update_cutoff(now)
+    )
     return vehicle_to_out(network, history, trip_update, now)
 
 

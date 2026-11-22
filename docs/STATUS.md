@@ -288,6 +288,33 @@ Con Hito 1 ya fusionado a `main`, el caso concreto de MP-012 **deja de requerir 
 
 ## Tarea actual
 
+**MP-017 — Catálogo completo de Madrid (identidad y vigencia)**
+
+Ejecutor: Claude Code · Revisor: OpenAI Codex · Estado: **REVIEW**
+
+Worktree/rama: `mp-017-catalogo-madrid`, ramificada desde `mp-016-fiabilidad-live` (MP-016 `DONE`). Datos del kit repuestos con `instalar.py --solo-datos` (no versionados, `/data/` en `.gitignore`).
+
+### Alcance de MP-017
+
+1. **Catálogo completo** (`packages/gtfs/catalog.py`, nuevo): `build_catalog(topology)` agrupa el GTFS completo del núcleo por línea/variante/patrón, reutilizando `route_groups()`/`validate_topology()` ya existentes de MP-010 — conserva una línea aunque no tenga ningún patrón válido (todos sus trips huérfanos) o ningún vehículo observado.
+2. **Enumeración explícita de servicios programados**: `scheduled_service_ids_for_date`/`scheduled_trip_instances_for_date` aplican `calendar.txt` (día de la semana + rango) y, si existe, `calendar_dates.txt` (excepciones `ADDED`/`REMOVED`) — distinto del fallback `PositionMode.SCHEDULED` del motor de movimiento, que solo resuelve un `trip_id` ya conocido por el feed en vivo, no enumera el día completo. **Hallazgo real:** el ZIP oficial de Renfe verificado en esta tarea (descarga del kit, 2026-11-20) **no incluye `calendar_dates.txt`** — el soporte queda listo para cuando exista, pero hoy `calendar.txt` sigue siendo la única fuente real.
+3. **Avisos por estación:** Renfe publica alertas por `stopId` sin `routeId` (hallazgo P1 real de `docs/hitos/hito-03/referencia/01-auditoria-live.md`, ej. `AVISO_527127` para `stopId=60104`, Valdemoro) — el filtro anterior, solo por prefijo de núcleo de `route_id`, las descartaba como fuera de alcance. `_persist_alerts` acepta ahora un conjunto opcional `madrid_stop_ids` (cargado una vez al arrancar el colector desde el GTFS real, `MADRID_PULSE_GTFS_SOURCE`) y resuelve por ruta O por estación; sin ese catálogo, conserva el comportamiento anterior (documentado, no fabricado).
+4. **Un retraso viejo no completa el viaje de hoy:** `apps/api/db.latest_trip_update` exigía solo `source_trip_id`, sin cota temporal — como un `trip_id` GTFS recurre cada día que su `service_id` está activo, el retraso de ayer podía seguir siendo "el último" hasta que llegara una fila de hoy. Se añade `observed_after` (ventana de 20h desde `apps/api/service.py`, cubre el día de servicio completo de Cercanías incluidos los `24:xx`).
+
+### Pruebas y evidencia ejecutada
+
+- `packages.gtfs.tests.test_catalog` (nuevo, 10 tests): 6 síncronos con topología sintética (excepciones `calendar_dates` ADD/REMOVE, huérfano no fabricado, línea con 0 patrones conservada) + 4 gateados por la presencia del ZIP oficial completo (`skip` explícito si no está, mismo criterio que el soak de MP-007): 42 `route_id`/12 líneas reales, `stopId` 60104 real en el catálogo Madrid, trip real `1023V19788C5` con horas `24:02`/`24:05`/`24:08` enumerado sin desplazar `service_date`, un `SPECIAL_` nunca aparece como instancia programada.
+- `services.collector.tests.test_collector_cycle` (+3 tests): aviso por estación se descarta sin catálogo (comportamiento anterior conservado), se persiste con el catálogo real, y un `stopId` fuera del catálogo dado sigue descartándose (no se "adivina" Madrid por tener cualquier `stopId`).
+- `apps.api.tests.test_api_contract` (+2 tests): un retraso insertado hace 26h no se devuelve para el viaje de hoy; uno de hace 2h sí.
+- Suite completa (lista exacta de CI, +`packages.gtfs.tests.test_catalog`) contra la base de desarrollo real → **138/138 OK**; recuento `668/484/3/120/0` confirmado antes y después.
+- Misma suite contra un segundo contenedor PostgreSQL fresco desechable, **con `data/` renombrado temporalmente fuera del worktree** (simulando CI real, donde el ZIP oficial no existe) → **138 tests, 9 `skip`** (5 del soak histórico de MP-007 + 4 nuevos de `test_catalog` gateados por el ZIP ausente, ninguno inesperado) — contenedor eliminado al terminar, `data/` restaurado.
+- `git diff --check` limpio.
+- `.github/workflows/ci.yml` actualizado con el nuevo módulo `packages.gtfs.tests.test_catalog`.
+
+## Tareas cerradas de la cadena
+
+## MP-016 — Fiabilidad realtime (SKIPPED, UTC, live/replay) (cerrada)
+
 **MP-016 — Fiabilidad realtime (SKIPPED, UTC, live/replay)**
 
 Ejecutor: OpenAI Codex · Revisor: Claude Code · Estado: **DONE**
@@ -349,7 +376,6 @@ Auditoría completa sobre `f9c3e2b` (autoría exclusiva de Pedro Matute, sin coa
 
 **Veredicto: APROBADO, sin hallazgos.** Las diferencias respecto al parche de referencia (ampliación con `poll_age_s`, casos JSON roto/feed vacío/cambio de viaje, configuración Live/Replay) están justificadas y dentro del alcance declarado de MP-016; lo deliberadamente diferido (catálogo completo, geometría multi-corredor, avisos por estación, filtrado histórico) pertenece correctamente a MP-017→MP-019 según el kit. MP-016 pasa a `DONE`.
 
-## Tareas cerradas de la cadena
 
 ## MP-015 — E2E y readiness MVP (cerrada)
 

@@ -85,6 +85,7 @@ def run_cycle(
     retry_policy: RetryPolicy,
     fetcher: Fetcher = default_fetcher,
     now: NowFn = _utcnow,
+    madrid_stop_ids: frozenset[str] | None = None,
 ) -> CycleResult:
     started_at = now()
     raw_body = b""
@@ -146,7 +147,9 @@ def run_cycle(
         elif feed.name == "trip_updates":
             inserted, deduped, skipped = _persist_trip_updates(conn, parsed, received_at, run_id)
         else:
-            inserted, deduped, skipped = _persist_alerts(conn, parsed, received_at, run_id)
+            inserted, deduped, skipped = _persist_alerts(
+                conn, parsed, received_at, run_id, madrid_stop_ids=madrid_stop_ids
+            )
 
     logger.info(
         "run_cycle: %s ok (run_id=%d, entidades=%d, insertadas=%d, dedup=%d, fuera_de_alcance=%d)",
@@ -229,10 +232,29 @@ def _persist_trip_updates(conn, parsed, received_at, run_id: int) -> tuple[int, 
     return inserted, deduped, skipped
 
 
-def _persist_alerts(conn, parsed, received_at, run_id: int) -> tuple[int, int, int]:
+def _persist_alerts(
+    conn, parsed, received_at, run_id: int, *, madrid_stop_ids: frozenset[str] | None = None
+) -> tuple[int, int, int]:
+    """Filtra alertas al núcleo de Madrid por ruta o por estación.
+
+    Hallazgo real de MP-017 (kit Hito 3, auditoría de 01-auditoria-live.md):
+    Renfe publica avisos por estación (`informedEntity` solo con `stopId`,
+    sin `routeId`) -- el filtro anterior, basado únicamente en el prefijo de
+    núcleo de `route_id`, descartaba esas filas como "fuera de alcance" sin
+    serlo (ej. `AVISO_527127` para `stopId=60104`, Valdemoro, núcleo Madrid).
+    `madrid_stop_ids` es el conjunto real de `stop_id` del GTFS estático
+    cargado para el núcleo de Madrid (ver `packages.gtfs.load_feed(...,
+    network_id=MADRID_PREFIX)`); si no se proporciona (p. ej. una llamada que
+    no tiene acceso a la topología), se conserva el comportamiento anterior
+    basado solo en ruta -- documentado, no fabricado.
+    """
     inserted = deduped = skipped = 0
     for alert in alerts_to_canonical(parsed):
-        if MADRID_PREFIX not in alert.nucleo_prefixes:
+        by_route = MADRID_PREFIX in alert.nucleo_prefixes
+        by_stop = bool(madrid_stop_ids) and any(
+            stop_id in madrid_stop_ids for stop_id in alert.affected_stop_ids
+        )
+        if not by_route and not by_stop:
             skipped += 1
             continue
         previous_hash = db.latest_payload_hash(conn, "service_alert", alert.source_alert_id)

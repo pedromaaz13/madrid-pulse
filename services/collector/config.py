@@ -32,6 +32,13 @@ class CollectorConfig:
     max_retries: int = 3
     backoff_base_seconds: float = 1.0
     database_url: str = "postgresql://madrid_pulse:madrid_pulse_local@127.0.0.1:5433/madrid_pulse"
+    gtfs_source: str | None = None
+    """Ruta al ZIP/directorio GTFS estático oficial (mismo `MADRID_PULSE_GTFS_SOURCE`
+    que `apps/api`), usada únicamente para resolver avisos por estación
+    (`stop_id`) de núcleo Madrid sin `route_id` -- ver `collector._persist_alerts`
+    (hallazgo MP-017). Opcional: si no se define, el colector conserva el
+    filtro anterior basado solo en ruta, documentado como limitación, nunca
+    fabrica una correspondencia de estación sin el catálogo real cargado."""
 
     @classmethod
     def from_env(cls) -> "CollectorConfig":
@@ -50,4 +57,5 @@ class CollectorConfig:
                 os.environ.get("COLLECTOR_BACKOFF_BASE_SECONDS", defaults.backoff_base_seconds)
             ),
             database_url=os.environ.get("MADRID_PULSE_DATABASE_URL", defaults.database_url),
+            gtfs_source=os.environ.get("MADRID_PULSE_GTFS_SOURCE", defaults.gtfs_source),
         )

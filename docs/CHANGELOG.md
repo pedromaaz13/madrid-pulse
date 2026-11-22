@@ -4,6 +4,20 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 
 ## [Unreleased]
 
+### MP-017 — Catálogo completo de Madrid
+
+#### Added
+- `packages/gtfs/catalog.py` (nuevo): `build_catalog` agrupa el GTFS completo del núcleo Madrid por línea/variante/patrón (verificado: 42 `route_id` → 12 líneas reales, conservando líneas sin patrones válidos u observaciones). `scheduled_service_ids_for_date`/`scheduled_trip_instances_for_date` enumeran explícitamente los servicios programados aplicando `calendar.txt` + `calendar_dates.txt` (soporte nuevo y opcional en `packages/gtfs/parser.py` — el ZIP oficial real no incluye este fichero hoy, verificado empíricamente, no asumido).
+- Avisos por estación (`stopId` sin `routeId`) resueltos contra el catálogo real de paradas de Madrid: `RawInformedEntity.stop_id`, `ServiceAlert.affected_stop_ids`, `services/collector/collector.py::_persist_alerts(madrid_stop_ids=...)`, cargado una vez al arrancar el colector desde `MADRID_PULSE_GTFS_SOURCE`.
+- `packages/gtfs/tests/test_catalog.py` (10 tests): 6 síncronos (topología sintética) + 4 gateados por la presencia del ZIP oficial completo (`skip` explícito si no está).
+
+#### Fixed
+- **Hallazgo real:** `apps/api/db.latest_trip_update` no acotaba por tiempo — un `trip_id` GTFS recurrente podía devolver el retraso de un día de servicio anterior como "el más reciente" hasta que llegara una observación de hoy. Añadida ventana de recencia (`observed_after`, 20h desde `apps/api/service.py`).
+- Avisos por estación (ej. `AVISO_527127`, `stopId=60104`, Valdemoro — hallazgo P1 de `docs/hitos/hito-03/referencia/01-auditoria-live.md`) se descartaban silenciosamente como "fuera de alcance" por no tener `routeId`.
+
+#### Verified
+- Suite completa (+`packages.gtfs.tests.test_catalog`) contra la base de desarrollo real: 138/138 OK, `668/484/3/120/0` intacto. Contra un segundo PostgreSQL fresco desechable con `data/` ausente (simulando CI real, sin el ZIP oficial): 138 tests, 9 `skip` (5 del soak de MP-007 + 4 de `test_catalog` gateados), ninguno inesperado.
+
 ### MP-016 — Fiabilidad realtime
 
 #### Added

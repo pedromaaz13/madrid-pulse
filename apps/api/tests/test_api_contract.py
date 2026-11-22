@@ -9,6 +9,7 @@ la API responde con `None` honesto, nunca con un dato fabricado.
 
 from __future__ import annotations
 
+import hashlib
 import os
 import unittest
 from dataclasses import replace
@@ -16,6 +17,7 @@ from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from unittest.mock import Mock, patch
 
+import psycopg
 from fastapi.testclient import TestClient
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -31,7 +33,9 @@ from apps.api import db, service  # noqa: E402
 from apps.api.config import ApiConfig  # noqa: E402
 from apps.api.gtfs_source import load_network  # noqa: E402
 from apps.api.main import app  # noqa: E402
-from packages.contracts.canonical import VehiclePositionObservation  # noqa: E402
+from packages.contracts.canonical import TripUpdateObservation, VehiclePositionObservation  # noqa: E402
+from services.collector import db as collector_db  # noqa: E402
+from services.collector.config import CollectorConfig  # noqa: E402
 
 VALID_MODES = {"observed", "estimated", "stale", "scheduled"}
 
@@ -247,6 +251,70 @@ class VehicleTripChangeTests(unittest.TestCase):
         result = service._movement_position(network, history, "route", now)
         self.assertIsNotNone(result)
         self.assertIsNone(network.engine.position.call_args.kwargs["previous"])
+
+
+class OldTripUpdateCannotCompleteTodayTests(unittest.TestCase):
+    """Hallazgo real de MP-017 (kit Hito 3): un `trip_id` GTFS recurre cada día
+    que su `service_id` está activo -- sin cota temporal, `latest_trip_update`
+    devolvía "la última fila jamás insertada para este trip_id", aunque fuera
+    de ayer o de hace una semana, completando el viaje de hoy con un retraso
+    de otro día de servicio."""
+
+    def setUp(self) -> None:
+        try:
+            self.conn = psycopg.connect(
+                CollectorConfig.from_env().database_url, autocommit=False, connect_timeout=3
+            )
+        except psycopg.OperationalError as exc:
+            raise unittest.SkipTest(f"PostgreSQL local no disponible: {exc}")
+        self.conn.execute("SELECT 1")
+        self.addCleanup(self.conn.close)
+        self.addCleanup(self.conn.rollback)
+
+    def _insert_trip_update(self, *, trip_id: str, observed_at: datetime, delay_seconds: int) -> None:
+        run_id = collector_db.insert_ingestion_run(
+            self.conn,
+            feed_name="trip_updates",
+            source_timestamp=observed_at,
+            started_at=observed_at,
+            finished_at=observed_at,
+            status="ok",
+            entity_count=1,
+            payload_hash=hashlib.sha256(f"{trip_id}-{observed_at}".encode()).hexdigest(),
+        )
+        collector_db.insert_trip_update_observation(
+            self.conn,
+            TripUpdateObservation(
+                source_trip_id=trip_id,
+                observed_at=observed_at,
+                schedule_relationship=None,
+                delay_seconds=delay_seconds,
+                delay_coverage="reported",
+                next_stop_id=None,
+                payload_hash=hashlib.sha256(f"{trip_id}-{delay_seconds}".encode()).hexdigest(),
+            ),
+            received_at=observed_at,
+            ingestion_run_id=run_id,
+        )
+
+    def test_a_delay_from_yesterdays_run_of_the_same_recurring_trip_id_is_not_returned_today(self) -> None:
+        trip_id = f"10test-recurring-trip-{id(self)}"
+        now = datetime(2026, 11, 20, 8, 0, tzinfo=timezone.utc)
+        yesterday = now - timedelta(hours=26)  # fuera de la ventana de 20h (MP-017)
+        self._insert_trip_update(trip_id=trip_id, observed_at=yesterday, delay_seconds=999)
+
+        result = db.latest_trip_update(self.conn, trip_id, observed_after=now - timedelta(hours=20))
+        self.assertIsNone(result, "un retraso de hace 26h no debe completar el viaje de hoy")
+
+    def test_a_delay_from_within_the_recency_window_is_returned(self) -> None:
+        trip_id = f"10test-recurring-trip-fresh-{id(self)}"
+        now = datetime(2026, 11, 20, 8, 0, tzinfo=timezone.utc)
+        recent = now - timedelta(hours=2)
+        self._insert_trip_update(trip_id=trip_id, observed_at=recent, delay_seconds=120)
+
+        result = db.latest_trip_update(self.conn, trip_id, observed_after=now - timedelta(hours=20))
+        self.assertIsNotNone(result)
+        self.assertEqual(result.delay_seconds, 120)
 
 
 class ResolvedTripEndToEndTests(unittest.TestCase):
