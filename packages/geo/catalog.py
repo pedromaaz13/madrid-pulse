@@ -143,6 +143,20 @@ class CorridorCatalog:
     def entry(self, pattern_id: str) -> CorridorCoverage | None:
         return self._by_pattern.get(pattern_id)
 
+    def coverage_for_stops(
+        self, route_id: str, stop_ids: tuple[str, ...]
+    ) -> CorridorCoverage | None:
+        """Como ``coverage_for`` pero sin exigir un ``RoutePattern`` construido
+        ni lanzar si el patrón no está catalogado.
+
+        Añadido en MP-019: la API resuelve el patrón de una circulación viva a
+        partir de su ``route_id`` y de la secuencia real de ``stop_id`` de su
+        ``trip_id``; un patrón que el GTFS cargado no contiene (fixture
+        reducida, trip de refuerzo) devuelve ``None`` en vez de un error, para
+        que el snapshot pueda publicar la causa en vez de ocultar el vehículo.
+        """
+        return self._by_route_and_stops.get((route_id, stop_ids))
+
     def match_position(
         self, pattern_id: str, *, raw_lat: float | None, raw_lon: float | None
     ) -> PositionMatch:

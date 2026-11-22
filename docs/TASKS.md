@@ -460,8 +460,16 @@ Autorizado por el propietario el `2026-11-22` (mensaje "ORCA — MADRID PULSE / 
 - **Entregables:** ADR propuesto comparando las tres alternativas de contrato temporal (`docs/hitos/hito-03/MEJORAS-PRODUCTO-VALIDADAS.md`, sección MP-019); snapshot con `snapshot_id` no asumido como ordenable; catálogo cacheable separado del snapshot ligero; ETA con edad de GPS/feed/ETA distintas y procedencia (operador/horario/calculado); tablero de estación basado en servicios+calendario+RT, no en "trenes cercanos".
 - **Criterios de aceptación:** tres snapshots (normal/parcial/congelado) se distinguen correctamente; el último snapshot válido sobrevive al fallo de un feed; EXPLAIN + p50/p95 medidos; semántica `0` vs `NULL` correcta; sin N+1 por tren; contrato versionado si rompe compatibilidad.
 - **Pruebas necesarias:** suite real del proyecto + nuevos tests de contrato/snapshot.
-- **Evidencia de verificación:** pendiente (tarea recién abierta).
-- **Estado:** `IN_PROGRESS` — worktree `mp-019-snapshot-api` abierto desde `mp-018-corredores-madrid` (`728c667`), dispatchado a un ejecutor Claude Opus.
+- **Evidencia de verificación:**
+  - [ADR-0014](adr/0014-snapshot-and-temporal-contract.md) escrito **antes** de implementar, comparando las tres alternativas del encargo más dos evaluadas y descartadas. Estado `Propuesto`; no lo promueve el ejecutor.
+  - Suite Python exacta de `.github/workflows/ci.yml` (con los dos módulos nuevos, `apps.api.tests.test_snapshot_contract` y `packages.movement.tests.test_rendering`): **206/206 OK sin `skip`** contra la base de desarrollo real; recuentos `668/484/3/120/0` idénticos antes y después.
+  - Misma suite contra un contenedor PostgreSQL fresco y desechable con `0001`+`0002` aplicadas desde cero: **206 ejecutados, OK con 5 `skip` explícitos** (soak irrepetible de MP-007, DEC-035), repetido tres veces.
+  - Frontend con Node `20.20.0`: `npm ci`, lint, typecheck, **5/5 tests**, build (worker MapLibre `550754` bytes).
+  - Tres snapshots reales (normal/parcial/congelado) sobre las capturas `1532`/`1533` con reloj controlado y contenedor desechable: `docs/evidence/mp-019-tres-snapshots-replay.md`. 119 y 121 vehículos de Madrid; 13 circulaciones map-matcheadas con avance real; revisión `3 → 6 → 8` en el mismo ámbito; fallo parcial que degrada solo `delays_and_eta`; congelado que conserva el último dato válido sin rejuvenecerlo.
+  - `EXPLAIN (ANALYZE, BUFFERS)` de las cuatro consultas y p50/p95 en dos datasets (fixture C5 y núcleo Madrid completo, 42 rutas/12 líneas/103 patrones), con equipo documentado: `docs/evidence/mp-019-explain-y-bench.md`.
+  - Ausencia de N+1 probada por conteo de `execute` reales: constante entre 6 y 18 vehículos en `/snapshot`, entre 4 y 14 en `/live/vehicles`, y sin consulta por fila en el tablero.
+- **Hallazgos abiertos (no silenciados):** el coste dominante de cada petición es abrir la conexión PostgreSQL (~66 ms de 68,91 ms de p50 en `/health`), registrado como DEC-038 porque un pool es dependencia nueva; y el `stop_time_update` por parada no está persistido en el modelo canónico, así que no hay evidencia directa de `SKIPPED` por parada (declarado en `limitations` del tablero).
+- **Estado:** `REVIEW` — implementado y verificado por el ejecutor (Claude Opus) en el worktree `mp-019-snapshot-api`; pendiente de auditoría independiente de OpenAI Codex sobre el diff completo antes de poder pasar a `DONE`.
 
 ---
 

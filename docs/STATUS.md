@@ -290,7 +290,7 @@ Con Hito 1 ya fusionado a `main`, el caso concreto de MP-012 **deja de requerir 
 
 **MP-019 — Contrato de snapshot/API coherente**
 
-Ejecutor: Claude (escalado a Opus) · Revisor: OpenAI Codex · Estado: **IN_PROGRESS**
+Ejecutor: Claude (escalado a Opus) · Revisor: OpenAI Codex · Estado: **REVIEW**
 
 Worktree/rama: `mp-019-snapshot-api`, ramificada desde `mp-018-corredores-madrid` (MP-018 `DONE`, `728c667`). Datos del kit repuestos con `instalar.py --solo-datos`.
 
@@ -298,9 +298,137 @@ Worktree/rama: `mp-019-snapshot-api`, ramificada desde `mp-018-corredores-madrid
 
 Unificar el catálogo completo de MP-017 (`packages.gtfs.catalog`) y el catálogo de corredores de MP-018 (`packages.geo.catalog`, con `PositionMatch` raw→matched ya trazable) en un contrato de snapshot/API coherente: catálogo cacheable separado del snapshot operativo ligero, `snapshot_id` no asumido como ordenable, ETA con edad de GPS/feed/ETA distintas y procedencia, capa `rendered` (completa raw→matched→rendered) elegida mediante ADR comparativo de las tres alternativas de contrato temporal de `docs/hitos/hito-03/MEJORAS-PRODUCTO-VALIDADAS.md` (sección MP-019) — sin duplicar el motor de movimiento de MP-012.
 
-### Pendiente de entrega y revisión
+### Decisión del contrato temporal — ADR-0014 (`Propuesto`)
 
-Dispatchado a un ejecutor Claude Opus (decisión arquitectónica de alto impacto); pendiente de ADR, implementación, evidencia ejecutada y entrega en `REVIEW` para Codex.
+El ADR se escribió **antes** de implementar, como exige el encargo, y está
+registrado en `docs/adr/README.md` y en DEC-036. Alternativa elegida: la **1**
+del encargo (progreso temporal compacto calculado por el backend),
+materializada como una `ProgressEnvelope` por circulación y **extendiendo**
+`packages/movement` de forma aditiva.
+
+- **Alternativa 2 (cálculo puro compartido o equivalencia por replay)
+  descartada:** el cliente es TypeScript y el motor Python; "compartir el
+  cálculo" exigiría compilar a WASM (dependencia y presupuesto nuevos, no
+  autorizados) o mantener una segunda implementación y demostrar su
+  equivalencia — exactamente la implementación divergente que el encargo
+  prohíbe, y duplicaría en el cliente reglas que no son de presentación (qué
+  observación es utilizable, filtrado de saltos del feed de hasta 787 km/h,
+  DEC-010).
+- **Alternativa 3 (interpolación con búfer entre anclas) descartada como
+  contrato principal, conservada como caso explícito:** es la única forma
+  honesta de etiquetar `interpolated_between_known_anchors` y el contrato la
+  soporta para replay y para un cliente que declare retraso de presentación,
+  pero no puede ser *el* contrato del directo: exige un ancla futura que en
+  vivo no existe, impondría un retraso de ~20 s (cadencia real medida en
+  MP-003) a todos los usuarios y, al detenerse el feed, el caso difícil
+  reaparece igual.
+- Dos alternativas más, no planteadas en el encargo, evaluadas y descartadas en
+  el ADR: bajar `observed_max_age_s` a 0 (rompería la semántica publicada de
+  los cuatro estados de ADR-0004/DEC-010 sin necesidad) y escribir un segundo
+  motor en `apps/api/` (violaría ADR-0012).
+
+### Implementación entregada para revisión
+
+- `packages/movement/rendering.py` (nuevo, dentro del paquete existente): los
+  seis `rendering_method` del anexo, `ProgressEnvelope` compacta (una sola
+  expresión monótona y acotada, sin array de puntos futuros, con espera
+  programada respetada de verdad) y los instantes separados. Reutiliza
+  `TripSchedule`/`service_seconds`/`MovementThresholds`; no reimplementa
+  map-matching, horario ni límites físicos.
+- Extensiones aditivas del motor: `MovementPosition.anchor_progress_m`
+  (ancla realmente usada), `MovementEngine(schedule_cache=...)` opcional e
+  inyectable, `TripSchedule.dwell_end_seconds`, y `build_trip_schedule` emite
+  llegada **y** salida cuando difieren — sin eso el horario absorbía las
+  esperas reales (11 paradas en la fixture C5, 60 s en Madrid-Atocha) y
+  `dwell_until` no podía existir sin inventarlo.
+- `apps/api/snapshot.py`: catálogo cacheable, snapshot operativo y tablero.
+  `apps/api/db.py`: lecturas por lote (`latest_trip_updates`,
+  `vehicles_for_trips`), `revision_marker` con ámbito del clúster y
+  `feed_published_at` por observación.
+- Endpoints nuevos `GET /api/v1/catalog` (`ETag`/`304`), `GET /api/v1/snapshot`
+  (`no-store`) y `GET /api/v1/stations/{station_id}/board`. Todo **aditivo**:
+  `/api/v1` conserva compatibilidad, no se abre `/v2` (ADR-0005).
+- Migración `0002_api_batch_indexes`: tres índices medidos, solo estructuras de
+  acceso.
+
+### Las dos cautelas que MP-018 dejó abiertas — decisión tomada, no ignorada
+
+1. **`shared_track_way_ids` no verifica SHA-256 como `_load_source`.** MP-019
+   **no usa** ese helper: el snapshot consume exclusivamente
+   `build_madrid_corridor_catalog`, cuyo `_load_source` sí valida el checksum
+   de cada `GeometrySourceSpec` antes de construir el corredor. Ninguna
+   afirmación de integridad del contrato depende del helper; queda como
+   utilidad de inspección de MP-018 y se deja registrada aquí para que no se
+   use como evidencia aislada en MP-020+.
+2. **`match_position` devuelve `geometry_version` también en fallbacks
+   `RAW`/`UNLOCATED`.** El contrato lo trata exactamente como pidió MP-018: se
+   publica `map_matched` **solo** con `resolution == map_matched` y
+   `projection` real, y en los fallbacks la versión viaja en un campo distinto,
+   `geometry_candidate_version` (geometría candidata/contextual, no acredita
+   proyección). `RenderedPosition` lo valida en construcción y rechaza
+   `geometry_version` fuera del espacio `map_matched`; hay test de regresión.
+
+### Evidencia ejecutada
+
+- Suite Python exacta de CI, ya con `apps.api.tests.test_snapshot_contract`
+  (36 tests) y `packages.movement.tests.test_rendering` (17 tests):
+  **`Ran 206 tests ... OK`** contra la base de desarrollo, **sin ningún
+  `skip`**; recuentos `668/484/3/120/0` idénticos antes y después y soak
+  intacto (`rows=668, near_corridor=177, after=668`).
+- Misma suite contra un contenedor PostgreSQL **fresco y desechable** con
+  `0001`+`0002` aplicadas desde cero: **206 ejecutados, OK con 5 `skip`
+  explícitos** (los del soak irrepetible de MP-007, DEC-035) — se declaran por
+  separado, nunca como 206 pases en ambos. Repetido tres veces.
+- Frontend con Node `20.20.0` (CI fija `22.13.1`): `npm ci`, lint, typecheck,
+  **5/5 tests**, build con worker MapLibre `550754` bytes, idéntico a MP-018.
+- `docs/evidence/mp-019-tres-snapshots-replay.md`: tres snapshots reales sobre
+  las capturas congeladas `1532`/`1533` con reloj controlado y contenedor
+  desechable. 119 y 121 vehículos de Madrid ingeridos (recuentos del kit),
+  **44 de 119** con coordenada `map_matched` y 75 con GPS bruto etiquetado
+  (honesto: solo 28 de 103 patrones tienen corredor validado tras MP-018),
+  **13 circulaciones map-matcheadas con avance real** entre capturas, revisión
+  `3 → 6 → 8` en el mismo ámbito, fallo parcial que degrada solo
+  `delays_and_eta` sin vaciar vehículos ni rejuvenecer el GPS, y congelado que
+  conserva el último dato válido con `revision.sequence` detenida.
+- `docs/evidence/mp-019-explain-y-bench.md`: `EXPLAIN (ANALYZE, BUFFERS)` de
+  las cuatro consultas y p50/p95 en dos datasets (fixture C5 y núcleo Madrid
+  completo: 42 rutas / 12 líneas / 103 patrones), con equipo documentado
+  (Apple M1, 8 GB, PostgreSQL 17.5). El snapshot pasa de 14 a 103 patrones sin
+  cambio medible (8,47 → 8,59 ms de p50 con conexión reutilizada).
+- Ausencia de N+1 probada además por conteo de `execute` reales sobre la
+  conexión: constante entre 6 y 18 vehículos en `/snapshot`, entre 4 y 14 en
+  `/live/vehicles`, y sin consulta por fila en el tablero.
+
+### Hallazgos abiertos (registrados, no silenciados)
+
+1. **El coste dominante de cada petición es abrir la conexión, no la
+   consulta:** ~66 ms de los 68,91 ms de p50 de `/api/v1/health`. Registrado
+   como **DEC-038** (pendiente del propietario) porque un pool
+   (`psycopg_pool`) es una dependencia nueva, mismo criterio que
+   DEC-019/DEC-030. La evidencia publica las dos columnas medidas.
+2. **El `stop_time_update` por parada no está persistido** en el modelo
+   canónico (solo `next_stop_id`, el primer no-`SKIPPED`): no existe evidencia
+   directa de `SKIPPED` por parada. El tablero lo declara en `limitations` y
+   expone `operator_next_stop_id` con la posición relativa como señal derivada,
+   sin afirmar que una parada concreta fue omitida.
+3. **Ningún `source_trip_id` del soak de MP-007 (`2026-11-19`) resuelve contra
+   el ZIP GTFS del kit (`2026-11-20`):** Renfe regenera los `trip_id` entre
+   publicaciones. No es un fallo de resolución — es la razón por la que la
+   evidencia con datos reales se produjo con las capturas `1532`/`1533`, de la
+   misma fecha que ese ZIP, y no con el soak.
+4. **Nota de proceso sobre contenedores frescos:** `pg_isready` responde ya con
+   el servidor temporal que la imagen arranca para `initdb` y luego apaga; la
+   primera corrida contra un contenedor recién creado puede fallar con
+   `server closed the connection unexpectedly`. Hay que esperar la línea
+   `ready to accept connections` **posterior** a
+   `PostgreSQL init process complete`. No es un fallo del repositorio.
+
+### Pendiente de revisión
+
+Estado `REVIEW`. El ejecutor no marca `DONE`: queda pendiente la auditoría
+independiente de OpenAI Codex sobre el diff completo en este mismo worktree y
+la aceptación del propietario. ADR-0014 permanece `Propuesto` — su promoción a
+`Aceptado` es exclusiva del propietario (ADR-0007).
 
 ## Tareas cerradas de la cadena
 

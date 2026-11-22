@@ -12,12 +12,20 @@ from datetime import datetime, timezone
 
 import psycopg
 import logging
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Query, Request, Response
 
-from . import service
+from . import service, snapshot
 from .config import ApiConfig
 from .gtfs_source import LoadedNetwork, load_network
-from .schemas import HealthOut, LineOut, StationOut, VehicleOut
+from .schemas import (
+    CatalogOut,
+    HealthOut,
+    LineOut,
+    SnapshotOut,
+    StationBoardOut,
+    StationOut,
+    VehicleOut,
+)
 
 _STATE: dict[str, object] = {}
 logger = logging.getLogger(__name__)
@@ -124,6 +132,109 @@ def stations(network: LoadedNetwork = Depends(get_network)) -> list[StationOut]:
 @app.get("/api/v1/stations/{station_id}", response_model=StationOut)
 def station_detail(station_id: str, network: LoadedNetwork = Depends(get_network)) -> StationOut:
     result = service.get_station(network, station_id)
+    if result is None:
+        raise HTTPException(status_code=404, detail="station_id no encontrado")
+    return result
+
+
+# --------------------------------------------------------------------------
+# MP-019 (ADR-0014): catálogo cacheable, snapshot operativo y tablero.
+# --------------------------------------------------------------------------
+
+
+def _replay_clock(
+    config: ApiConfig, network: LoadedNetwork, at: datetime | None
+) -> datetime:
+    try:
+        return snapshot.resolve_clock(config, network, at)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.get("/api/v1/catalog", response_model=CatalogOut)
+def catalog(
+    request: Request,
+    response: Response,
+    network: LoadedNetwork = Depends(get_network),
+) -> CatalogOut | Response:
+    """Catálogo cacheable, versionado por GTFS + geometría.
+
+    Responde `304` cuando el cliente ya tiene la versión vigente: el catálogo
+    solo cambia si cambia el GTFS o la geometría, nunca con un sondeo. Es
+    deliberadamente el **único** recurso cacheable: `/snapshot` se sirve con
+    `no-store` para que ningún dato viejo se rotule como nuevo.
+    """
+    etag = f'"{network.catalog_version}"'
+    headers = {"ETag": etag, "Cache-Control": "no-cache"}
+    if request.headers.get("if-none-match") == etag:
+        return Response(status_code=304, headers=headers)
+    cached = network._catalog_json.get(network.catalog_version)
+    if cached is None:
+        cached = snapshot.build_catalog_payload(network).model_dump_json().encode()
+        network._catalog_json[network.catalog_version] = cached
+    # Devolver una `Response` ya serializada evita revalidar y reserializar el
+    # mismo payload inmutable en cada petición (ver la medición en
+    # docs/evidence/mp-019-explain-y-bench.md). `response_model` sigue
+    # documentando el contrato en OpenAPI.
+    return Response(content=cached, media_type="application/json", headers=headers)
+
+
+@app.get("/api/v1/snapshot", response_model=SnapshotOut)
+def live_snapshot(
+    response: Response,
+    at: datetime | None = Query(
+        default=None,
+        description=(
+            "Reloj explícito, solo admitido en modo replay. En live se rechaza con 400: "
+            "un instante arbitrario permitiría falsificar edades."
+        ),
+    ),
+    display_lag_s: float | None = Query(
+        default=None,
+        ge=0,
+        description=(
+            "Retraso de presentación declarado. Con un valor > 0 y dos anclas reales, "
+            "`rendered.rendering_method` puede ser `interpolated_between_known_anchors`."
+        ),
+    ),
+    config: ApiConfig = Depends(get_config),
+    network: LoadedNetwork = Depends(get_network),
+    conn: psycopg.Connection = Depends(get_connection),
+) -> SnapshotOut:
+    response.headers["Cache-Control"] = "no-store"
+    now = _replay_clock(config, network, at)
+    return snapshot.build_snapshot(conn, network, config, now, display_lag_s=display_lag_s)
+
+
+@app.get("/api/v1/stations/{station_id}/board", response_model=StationBoardOut)
+def station_board(
+    station_id: str,
+    response: Response,
+    at: datetime | None = Query(default=None, description="Reloj explícito, solo en replay."),
+    lookback_s: float = Query(default=600.0, ge=0, le=7200),
+    lookahead_s: float = Query(default=7200.0, ge=0, le=86400),
+    limit: int = Query(default=20, ge=1, le=200),
+    config: ApiConfig = Depends(get_config),
+    network: LoadedNetwork = Depends(get_network),
+    conn: psycopg.Connection = Depends(get_connection),
+) -> StationBoardOut:
+    """Tablero calculado con servicios + calendario + actualizaciones.
+
+    Nunca con "trenes cercanos": parte de la enumeración real de servicios
+    programados del día de servicio (`scheduled_trip_instances_for_date`).
+    """
+    response.headers["Cache-Control"] = "no-store"
+    now = _replay_clock(config, network, at)
+    result = snapshot.build_station_board(
+        conn,
+        network,
+        config,
+        station_id,
+        now,
+        lookback_s=lookback_s,
+        lookahead_s=lookahead_s,
+        limit=limit,
+    )
     if result is None:
         raise HTTPException(status_code=404, detail="station_id no encontrado")
     return result

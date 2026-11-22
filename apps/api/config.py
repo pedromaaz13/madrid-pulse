@@ -16,8 +16,11 @@ class ApiConfig:
     short_name: str
     gtfs_fixture_dir: Path
     osm_relation_path: Path
+    geometry_fixtures_root: Path
     feed_stale_after_s: float
     mode: str
+    operator_delay_max_age_s: float
+    display_lag_s: float
 
     @classmethod
     def from_env(cls) -> "ApiConfig":
@@ -40,6 +43,15 @@ class ApiConfig:
                     str(REPO_ROOT / "tests" / "fixtures" / "osm_c5_real" / "relation_3418150.json"),
                 )
             ),
+            geometry_fixtures_root=Path(
+                os.environ.get(
+                    "MADRID_PULSE_GEOMETRY_FIXTURES_ROOT", str(REPO_ROOT / "tests" / "fixtures")
+                )
+            ),
             feed_stale_after_s=float(os.environ.get("MADRID_PULSE_FEED_STALE_AFTER_S", "180")),
             mode=os.environ.get("MADRID_PULSE_MODE", "replay").strip().lower(),
+            operator_delay_max_age_s=float(
+                os.environ.get("MADRID_PULSE_OPERATOR_DELAY_MAX_AGE_S", "600")
+            ),
+            display_lag_s=float(os.environ.get("MADRID_PULSE_DISPLAY_LAG_S", "0")),
         )

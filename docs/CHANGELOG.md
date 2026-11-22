@@ -4,6 +4,44 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 
 ## [Unreleased]
 
+### MP-019 — Contrato de snapshot/API coherente
+
+#### Added
+- [ADR-0014](adr/0014-snapshot-and-temporal-contract.md) (`Propuesto`): contrato temporal de presentación y snapshot coherente, con las tres alternativas del encargo comparadas y dos más evaluadas y descartadas. Escrito **antes** de implementar, como exige `docs/hitos/hito-03/MEJORAS-PRODUCTO-VALIDADAS.md`.
+- `packages/movement/rendering.py`: capa `rendered` con los seis `rendering_method` del anexo (`anchor`, `interpolated_between_known_anchors`, `extrapolated_from_last_anchor`, `schedule_only`, `stale_frozen`, `unlocated`), `ProgressEnvelope` compacta (una sola expresión monótona y acotada, sin array de puntos futuros) y los instantes separados `calculated_at`/`display_at`/`valid_until`/`last_confirmed_at`. Extiende `packages/movement` (MP-012); no lo duplica.
+- `MovementPosition.anchor_progress_m` (aditivo, por defecto `None`): progreso del ancla realmente usada, para construir la envolvente sin recalcular el map-matching.
+- `MovementEngine(schedule_cache=...)` opcional e inyectable, y `TripSchedule.dwell_end_seconds`. `build_trip_schedule` emite llegada **y** salida cuando difieren, de modo que las esperas reales del horario (11 paradas en la fixture C5, p. ej. 60 s en Madrid-Atocha) dejan de absorberse y el contrato puede declarar `dwell_until`.
+- `GET /api/v1/catalog`: catálogo cacheable versionado por `gtfs_version` + `geometry_catalog_version`, con `ETag`/`304`, geometría física publicada una sola vez y referenciada por patrón, y cobertura `validated`/`partial`/`pending` explícita.
+- `GET /api/v1/snapshot`: snapshot operativo ligero con `raw`/`map_matched`/`rendered` separados, `snapshot_id` de identidad de contenido declarado **no ordenable** y bloque `revision` (`scope`/`scope_source`/`sequence`/`generated_at`/`tiebreak`) monotónico solo dentro de su ámbito, degradación por recurso y `Cache-Control: no-store`.
+- `GET /api/v1/stations/{station_id}/board`: tablero calculado con `scheduled_trip_instances_for_date` (calendario + excepciones + `stop_times`, `24:xx` incluidas) cruzado con `trip_update` y observaciones; nunca por proximidad geográfica. ETA con procedencia (`schedule` / `operator_delay_on_schedule` / `unavailable` con causa) y aproximación declarada al propagar un retraso de nivel viaje.
+- `apps/api/db.py`: `latest_trip_updates` y `vehicles_for_trips` por lote, `revision_marker` con ámbito del clúster, y `feed_published_at` por observación (quinto timestamp del anexo).
+- `CorridorCatalog.coverage_for_stops` en `packages/geo`: resuelve el patrón de una circulación viva sin lanzar cuando el GTFS cargado no lo contiene.
+- Migración `0002_api_batch_indexes`: tres índices medidos con `EXPLAIN (ANALYZE, BUFFERS)`; solo estructuras de acceso, sin cambios de datos ni de semántica.
+- Herramientas reproducibles `apps.api.tools.bench_snapshot` y `apps.api.tools.replay_three_snapshots`; evidencia en `docs/evidence/mp-019-explain-y-bench.md` y `docs/evidence/mp-019-tres-snapshots-replay.md`.
+- `apps.api.tests.test_snapshot_contract` (36 tests) y `packages.movement.tests.test_rendering` (17 tests), ambos añadidos a `.github/workflows/ci.yml`.
+
+#### Fixed
+- **N+1 real eliminado:** `service.list_vehicles` hacía una consulta `latest_trip_update` por vehículo (24 con el soak de MP-007, una por circulación en operación). Ahora son dos consultas fijas, y un test cuenta los `execute` reales para impedir la regresión.
+- `latest_vehicle_histories` aplica el filtro `rank <= 2` en SQL en vez de traer toda la tabla a Python, y publica `feed_published_at` con un `JOIN` a `source_ingestion_run`.
+- `recent_ingestion_runs` usa `LATERAL ... LIMIT` por feed en vez de rankear el histórico completo.
+- `/api/v1/catalog` memoiza su payload serializado por `catalog_version`: medido **122,67 ms → 0,40 ms** de p50 (no consultaba PostgreSQL; el coste era reserializar el mismo payload inmutable en cada petición).
+- `MADRID_PULSE_SHORT_NAME` vacío carga el núcleo completo (42 `route_id` / 12 líneas / 103 patrones) en vez de una sola línea; el filtro por línea sigue siendo configuración, nunca un literal (ADR-0011).
+
+#### Findings
+- Existía un índice `vehicle_position_observation_trip_observed_at_idx` sobre la clave ajena `trip_id` (bigint) que **el colector no puebla**: no servía para consultar por `source_trip_id`, y la consulta del tablero resolvía con `Seq Scan` pese al nombre parecido.
+- El coste dominante de cada petición no era la consulta sino **abrir la conexión**: `~66 ms` de los `68,91 ms` de p50 de `/api/v1/health`. Queda abierto y documentado (un pool es dependencia nueva y decisión del propietario), con ambas columnas medidas en la evidencia.
+- Ninguno de los 24 `source_trip_id` del soak de MP-007 (`2026-11-19`) resuelve contra el ZIP GTFS del kit (`2026-11-20`): Renfe regenera los `trip_id` entre publicaciones. Por eso la evidencia de `map_matched`/`rendered` con datos reales se produjo con las capturas `1532`/`1533`, de la misma fecha que ese ZIP.
+- Con las capturas reales, **44 de 119** circulaciones de Madrid obtienen coordenada `map_matched`; las otras 75 publican GPS bruto etiquetado porque solo 28 de los 103 patrones tienen corredor validado tras MP-018. Ninguna se oculta ni se proyecta sobre un corredor ajeno.
+- El `stop_time_update` por parada no está persistido en el modelo canónico (solo `next_stop_id`), así que no existe evidencia directa de `SKIPPED` por parada. El tablero lo declara en `limitations` y expone `operator_next_stop_id` con la posición relativa, sin afirmar que una parada fue omitida.
+
+#### Verified
+- Suite Python exacta de CI (ya con los dos módulos nuevos): **206/206 OK sin ningún `skip`** contra la base de desarrollo real; recuentos `668/484/3/120/0` idénticos antes y después, soak intacto (`rows=668`, `near_corridor=177`, `after=668`).
+- Misma suite contra un contenedor PostgreSQL **fresco y desechable** con `0001` + `0002` aplicadas desde cero: **206 ejecutados, OK con 5 `skip` explícitos** (los del soak irrepetible de MP-007, DEC-035), reproducido tres veces.
+- Frontend con Node `20.20.0`: `npm ci`, lint, typecheck, **5/5 tests** y build en verde (worker MapLibre `550754` bytes, idéntico a MP-018).
+- Tres snapshots reales (normal/parcial/congelado) sobre las capturas `1532`/`1533` con reloj controlado: 119 y 121 vehículos de Madrid ingeridos, 13 circulaciones map-matcheadas con avance real entre capturas, revisión monotónica `3 → 6 → 8`, fallo parcial que degrada solo `delays_and_eta` sin vaciar vehículos ni rejuvenecer el GPS, y congelado que conserva el último dato válido con `revision.sequence` detenida.
+- `EXPLAIN (ANALYZE, BUFFERS)` de las cuatro consultas de lectura y p50/p95 con equipo y dataset documentados, en dos datasets (fixture C5 y núcleo Madrid completo).
+- Estado entregado: `REVIEW`. No se marca `DONE`: pendiente de auditoría independiente de OpenAI Codex en este mismo worktree.
+
 ### MP-018 — Corredores ferroviarios por patrón y sentido
 
 #### Added

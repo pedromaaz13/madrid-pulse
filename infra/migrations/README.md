@@ -16,7 +16,18 @@ docker compose -p madrid-pulse -f infra/docker/docker-compose.yml exec -T postgr
   sh -eu -c 'for migration in /migrations/*.up.sql; do psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -f "$migration"; done'
 ```
 
-Revertir la última migración (hoy `0001_init`):
+Revertir la última migración (hoy `0002_api_batch_indexes`):
+
+```bash
+docker compose -p madrid-pulse -f infra/docker/docker-compose.yml exec -T postgres \
+  psql -v ON_ERROR_STOP=1 -U madrid_pulse -d madrid_pulse -f /migrations/0002_api_batch_indexes.down.sql
+```
+
+`0002_api_batch_indexes` (MP-019) añade únicamente dos índices medidos con
+`EXPLAIN (ANALYZE, BUFFERS)` -- no cambia tablas, columnas ni datos, así que su
+rollback es seguro y solo degrada el rendimiento de las lecturas por lote de la
+API (ver `docs/evidence/mp-019-explain-y-bench.md`). Revertir `0001_init`
+sigue siendo la operación destructiva:
 
 ```bash
 docker compose -p madrid-pulse -f infra/docker/docker-compose.yml exec -T postgres \

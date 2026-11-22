@@ -49,6 +49,7 @@ jobs:
         run: |
           python -m unittest \
             apps.api.tests.test_api_contract \
+            apps.api.tests.test_snapshot_contract \
             packages.contracts.tests.test_canonical_normalization \
             packages.contracts.tests.test_nucleo \
             packages.contracts.tests.test_raw_parsing \
@@ -58,6 +59,7 @@ jobs:
             packages.gtfs.tests.test_catalog \
             packages.gtfs.tests.test_real_feed \
             packages.movement.tests.test_engine \
+            packages.movement.tests.test_rendering \
             packages.movement.tests.test_real_soak_postgres \
             packages.quality.tests.test_engine \
             packages.quality.tests.test_persistence \

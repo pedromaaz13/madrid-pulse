@@ -1,4 +1,4 @@
-# apps/api — FastAPI v1 (MP-013)
+# apps/api — FastAPI v1 (MP-013, ampliada en MP-019)
 
 API propia de Madrid Pulse bajo `/api/v1/*`, nunca un passthrough de Renfe/
 CRTM (`docs/ARCHITECTURE.md`). Consume `packages/contracts`, `packages/gtfs`,
@@ -8,13 +8,16 @@ resolución de rutas, geometría ni el motor de movimiento.
 ## Endpoints implementados
 
 ```text
-GET /api/v1/health                     -- salud real por feed (source_ingestion_run)
-GET /api/v1/live/vehicles              -- todos los vehículos vistos, map-matched vía MP-012
+GET /api/v1/health                      -- salud real por feed (source_ingestion_run)
+GET /api/v1/live/vehicles               -- todos los vehículos vistos, map-matched vía MP-012
 GET /api/v1/live/vehicles/{vehicle_id}
-GET /api/v1/lines                      -- agrupación (network_id, short_name) de packages.gtfs
+GET /api/v1/lines                       -- agrupación (network_id, short_name) de packages.gtfs
 GET /api/v1/lines/{line_id}
 GET /api/v1/stations
 GET /api/v1/stations/{station_id}
+GET /api/v1/catalog                     -- MP-019: catálogo cacheable (ETag/304)
+GET /api/v1/snapshot                    -- MP-019: snapshot operativo ligero (no-store)
+GET /api/v1/stations/{station_id}/board -- MP-019: tablero por servicios+calendario+RT
 ```
 
 Desde MP-014, cada `LineOut` incluye `geometry` nullable (DEC-031): los
@@ -109,6 +112,74 @@ en esta tarea sin reescribir la capa de resolución GTFS fuera de este
 módulo. Quedan como pendientes explícitos para Hito 3 si el propietario lo
 prioriza, documentados en `docs/DATA_CONTRACTS.md`, no omitidos en
 silencio.
+
+## MP-019: catálogo cacheable, snapshot y tablero (ADR-0014)
+
+El contrato completo está en `docs/DATA_CONTRACTS.md`; aquí solo lo operativo.
+
+`GET /api/v1/catalog` publica lo inmutable del proceso (líneas, patrones,
+estaciones, geometría y cobertura) versionado por `catalog_version` =
+`gtfs_version` + `geometry_catalog_version`, con `ETag`; `If-None-Match`
+devuelve `304`. El payload serializado se memoiza por versión: medido
+`122,67 ms → 0,40 ms` de p50 (ver `docs/evidence/mp-019-explain-y-bench.md`).
+
+`GET /api/v1/snapshot` publica lo operativo con `Cache-Control: no-store`:
+`raw`/`map_matched`/`rendered` separados, los cinco instantes del anexo,
+`snapshot_id` de identidad de contenido **declarado no ordenable** y el bloque
+`revision` monotónico solo dentro de su `scope`.
+
+`GET /api/v1/stations/{station_id}/board` se calcula con
+`scheduled_trip_instances_for_date` (calendario + excepciones + `stop_times`),
+nunca por proximidad geográfica.
+
+Ambos aceptan `?at=` **solo en modo replay** (en `live`, `400`):
+
+```sh
+curl -s 'http://127.0.0.1:8000/api/v1/snapshot?at=2026-11-20T14:32:14Z' | jq '.counts, .revision'
+curl -s 'http://127.0.0.1:8000/api/v1/stations/18000/board?at=2026-11-20T14:32:14Z' | jq '.coverage'
+curl -sI 'http://127.0.0.1:8000/api/v1/catalog' | grep -i etag
+```
+
+### Toda la red del núcleo, no una línea
+
+`MADRID_PULSE_SHORT_NAME` vacío carga el núcleo completo (con el ZIP oficial:
+42 `route_id`, 12 líneas, 95 paradas, 103 patrones). Con un valor, filtra a esa
+línea — es el modo que usan los tests y el piloto. El filtro sigue siendo
+configuración, nunca un literal en la lógica (ADR-0011).
+
+```sh
+MADRID_PULSE_MODE=replay MADRID_PULSE_SHORT_NAME= \
+MADRID_PULSE_GTFS_SOURCE="$PWD/data/gtfs_static/fomento_transit.zip" \
+  .venv/bin/uvicorn apps.api.main:app --port 8000
+```
+
+### Variables nuevas
+
+| Variable | Valor por defecto | Para qué |
+|---|---|---|
+| `MADRID_PULSE_SHORT_NAME` | `C5` | vacío = núcleo completo |
+| `MADRID_PULSE_GEOMETRY_FIXTURES_ROOT` | `tests/fixtures` | raíz de las fixtures OSM versionadas de MP-011/MP-018 |
+| `MADRID_PULSE_OPERATOR_DELAY_MAX_AGE_S` | `600` | más allá de esa edad el retraso del operador se publica pero **no** se aplica a la ETA (`operator_delay_expired`) |
+| `MADRID_PULSE_DISPLAY_LAG_S` | `0` | retraso de presentación declarado; con dos anclas reales habilita `interpolated_between_known_anchors` |
+
+### Medición y evidencia reproducibles
+
+```sh
+.venv/bin/python -m apps.api.tools.bench_snapshot --iterations 60 --at 2026-11-19T05:20:00Z
+.venv/bin/python -m apps.api.tools.bench_snapshot --iterations 60 --reuse-connection
+```
+
+`--reuse-connection` aísla el coste del código de la API del de abrir la
+conexión. Hallazgo abierto y documentado: con conexión por petición, ~66 ms de
+cada respuesta son establecer la conexión PostgreSQL
+(`get_connection` abre y cierra una por petición desde MP-013). Un pool es una
+dependencia nueva y por tanto decisión del propietario; las dos columnas
+medidas están en `docs/evidence/mp-019-explain-y-bench.md`.
+
+`apps.api.tools.replay_three_snapshots` reproduce los tres snapshots
+(normal/parcial/congelado) sobre las capturas reales `1532`/`1533` contra un
+PostgreSQL desechable; resultado en
+`docs/evidence/mp-019-tres-snapshots-replay.md`.
 
 ## Pruebas
 

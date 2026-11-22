@@ -1,6 +1,7 @@
 """Parser y resolución de topología GTFS estática de Renfe."""
 
 from .catalog import (
+    OPERATOR,
     Catalog,
     LineVariant,
     ScheduledTripInstance,
@@ -23,6 +24,7 @@ from .parser import (
 from .topology import RoutePattern, TopologyValidation, validate_topology
 
 __all__ = [
+    "OPERATOR",
     "Catalog",
     "CalendarException",
     "CalendarService",

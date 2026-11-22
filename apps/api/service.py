@@ -171,16 +171,31 @@ def vehicle_to_out(
 
 
 def list_vehicles(conn: psycopg.Connection, network: LoadedNetwork, now: datetime) -> list[VehicleOut]:
+    """Listado completo en **dos** consultas, no en 1 + N.
+
+    Corrección de MP-019: esta función hacía una consulta `latest_trip_update`
+    por vehículo (N+1 real, 24 consultas con el soak de MP-007 y una por cada
+    circulación del núcleo completo en operación). `db.latest_trip_updates`
+    devuelve la misma fila por viaje -- mismo orden y mismo desempate
+    `id DESC` de ADR-0010 -- en una sola consulta por lote.
+    """
     histories = db.latest_vehicle_histories(conn)
-    cutoff = _trip_update_cutoff(now)
+    trip_updates = db.latest_trip_updates(
+        conn,
+        [history.latest.position.source_trip_id for history in histories],
+        observed_after=_trip_update_cutoff(now),
+    )
     active_service_ids = scheduled_service_ids_for_date(network.topology, _service_date(now))
-    result = []
-    for history in histories:
-        trip_update = db.latest_trip_update(
-            conn, history.latest.position.source_trip_id, observed_after=cutoff
+    return [
+        vehicle_to_out(
+            network,
+            history,
+            trip_updates.get(history.latest.position.source_trip_id),
+            now,
+            active_service_ids,
         )
-        result.append(vehicle_to_out(network, history, trip_update, now, active_service_ids))
-    return result
+        for history in histories
+    ]
 
 
 def get_vehicle(

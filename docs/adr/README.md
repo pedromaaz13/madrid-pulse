@@ -15,6 +15,7 @@
 | [0011](0011-public-scope-vs-technical-pilot.md) | C5 es el piloto técnico de Hito 2; el objetivo de primera versión pública es toda la red de Cercanías Madrid — complementa ADR-0001 sin reescribirlo | `Aceptado` — promovido en el cierre de Hito 2 (`2026-11-20`) |
 | [0012](0012-movement-package-boundary.md) | Motor de movimiento como capa independiente entre geometría, topología, calidad y API | `Aceptado` — promovido en el cierre de Hito 2 (`2026-11-20`) |
 | [0013](0013-no-literal-dbt-engine.md) | No se introduce dbt-core/dbt-duckdb como motor literal para la capa gold; la disciplina dbt se aplica directamente en `services/snapshotter/gold.py` — ADR-0003 permanece intacto, esta decisión no lo reescribe | `Aceptado` — promovido en el cierre de Hito 2 (`2026-11-20`) |
+| [0014](0014-snapshot-and-temporal-contract.md) | Contrato temporal de presentación (`rendered` con envolvente de progreso compacta calculada por el backend, extendiendo `packages/movement` sin duplicarlo) y snapshot coherente: identidad `snapshot_id` separada de una revisión monotónica con ámbito explícito, catálogo cacheable separado del feed operativo, ETA con procedencia | `Propuesto` — aplicado provisionalmente bajo ADR-0007 en MP-019; pendiente de revisión de Codex y promoción del propietario |
 
 Ver `docs/DECISIONS.md` para el resumen ejecutivo de estado de todas las decisiones (aceptadas, propuestas, pendientes y no-go), con enlaces de vuelta a estos ADRs.
 
