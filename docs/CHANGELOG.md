@@ -51,7 +51,8 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 - Frontend con **Node `22.13.1`**, la versión que fija CI (la primera entrega se verificó con `20.20.0`; hallazgo de proceso de la auditoría): `npm ci` sin vulnerabilidades, lint, typecheck, **5/5 tests** y build en verde (worker MapLibre `550754` bytes, idéntico a MP-018).
 - Tres snapshots reales (normal/parcial/congelado) sobre las capturas `1532`/`1533` con reloj controlado: 119 y 121 vehículos de Madrid ingeridos, 13 circulaciones map-matcheadas con avance real entre capturas, revisión monotónica `3 → 6 → 7` dentro del mismo ámbito, fallo parcial que degrada solo `delays_and_eta` sin vaciar vehículos ni rejuvenecer el GPS, y congelado que conserva el último dato válido con `revision.sequence` detenida.
 - `EXPLAIN (ANALYZE, BUFFERS)` de las cuatro consultas de lectura y p50/p95 con equipo y dataset documentados, en dos datasets (fixture C5 y núcleo Madrid completo).
-- Estado entregado: `REVIEW`. No se marca `DONE`: pendiente de auditoría independiente de OpenAI Codex en este mismo worktree.
+- Revisión final independiente de OpenAI Codex sobre `60a6eb3`: reproducción propia con el ZIP completo de los bordes hacia atrás (`1023V21644C2`, visible hasta `01:03` y fuera a `01:04`) y hacia delante (`1024S27997C5`, incluido a las `23:55` con salida `00:01`), orden absoluto entre días, 11 tests focales, 233/233 sin `skip` en desarrollo, 233 con 5 `skip` en PostGIS fresco, frontend Node `22.13.1` y replay con siete invariantes. Diff y autoría limpios; sin hallazgos abiertos.
+- Estado final: `DONE`, aprobado por OpenAI Codex el 2026-11-22. ADR-0014 permanece `Propuesto` para decisión del propietario.
 
 ### MP-018 — Corredores ferroviarios por patrón y sentido
 

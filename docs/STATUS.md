@@ -290,7 +290,7 @@ Con Hito 1 ya fusionado a `main`, el caso concreto de MP-012 **deja de requerir 
 
 **MP-019 — Contrato de snapshot/API coherente**
 
-Ejecutor: Claude (escalado a Opus) · Revisor: OpenAI Codex · Estado: **REVIEW**
+Ejecutor: Claude (escalado a Opus) · Revisor: OpenAI Codex · Estado: **DONE** (aprobado por OpenAI Codex el 2026-11-22)
 
 Worktree/rama: `mp-019-snapshot-api`, ramificada desde `mp-018-corredores-madrid` (MP-018 `DONE`, `728c667`). Datos del kit repuestos con `instalar.py --solo-datos`.
 
@@ -561,15 +561,27 @@ DEC-039 ampliada.
   (p50 6,46 / p95 8,56 ms). Cruzar un día adicional cuesta ~2 ms de p50 y su
   índice se memoiza por fecha.
 
-### Pendiente de revisión
+### Revisión final independiente de OpenAI Codex — APROBADA
 
-Estado `REVIEW`. El ejecutor **no** marca `DONE` ni se autoaprueba: los **tres**
-hallazgos de las dos rondas quedan corregidos, cada uno con regresión
-comprobada contra el código anterior y con la matriz de evidencia reejecutada
-al completo. Queda pendiente la re-verificación independiente de OpenAI Codex
-sobre el diff completo en este mismo worktree, más la aceptación del
-propietario. ADR-0014 permanece `Propuesto` y DEC-039 queda registrada como
-propuesta — su promoción es exclusiva del propietario (ADR-0007).
+Codex auditó el delta hasta `60a6eb3` y reprodujo de forma propia los dos
+límites sobre el ZIP completo: con `lookback_s=600`, `1023V21644C2` permanece
+visible hasta `01:03` y sale a `01:04`; a las `23:55`, con
+`lookahead_s=3600`, `1024S27997C5` aparece a las `00:01` consultando los días
+20 y 21. La lista mezclada de ambos días conserva el orden por instante
+absoluto.
+
+Se reejecutaron los 11 tests focales, la suite exacta de CI (**233/233**, sin
+`skip`) contra desarrollo, la misma suite contra PostGIS fresco con ambas
+migraciones (**233 ejecutados, 5 `skip` explícitos**), el frontend completo con
+Node **22.13.1** (lint, typecheck, 5/5 tests y build) y el replay de tres
+snapshots (siete invariantes en verde; fallo parcial limitado a
+`delays_and_eta`). `git diff --check` quedó limpio y todos los commits desde la
+base pertenecen exclusivamente a Pedro Matute, sin `Co-authored-by`.
+
+**Veredicto: APROBADA, sin hallazgos abiertos.** MP-019 pasa a `DONE` y MP-020
+puede ramificar desde esta rama conforme al hito autorizado. ADR-0014 sigue
+`Propuesto` y DEC-039 registrada como propuesta; solo el propietario puede
+promoverlas (ADR-0007).
 
 ## Tareas cerradas de la cadena
 

@@ -2,7 +2,7 @@
 
 - **Estado:** `Propuesto` — aplicado de forma provisional bajo [ADR-0007](0007-autonomy-model.md). No lo promueve el ejecutor ni el revisor: solo el propietario del repositorio (`AGENTS.md`, regla 8), normalmente en el cierre de Hito 3.
 - **Fecha:** 2026-11-22
-- **Decisores:** Claude Opus como ejecutor de MP-019 (escalado por política de modelo de Hito 2: decisión arquitectónica de alto impacto); revisión cruzada pendiente de OpenAI Codex; promoción pendiente del propietario (Pedro Matute).
+- **Decisores:** Claude Opus como ejecutor de MP-019 (escalado por política de modelo de Hito 2: decisión arquitectónica de alto impacto); revisión cruzada completada y aprobada por OpenAI Codex el 2026-11-22; promoción pendiente del propietario (Pedro Matute).
 
 ## Contexto
 
