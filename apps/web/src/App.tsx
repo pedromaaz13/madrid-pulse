@@ -254,6 +254,17 @@ export default function App() {
     [news, selectCirculation],
   );
 
+  // Señal de "ha llegado una respuesta nueva": la revisión del contrato, no
+  // `snapshot_id`, que es identidad de contenido y se repite si los vehículos
+  // no cambiaron aunque el instante de presentación sí avance.
+  const snapshotStamp = useMemo(() => {
+    const revision = snapshot.data?.revision;
+    if (revision === undefined) return null;
+    return `${revision.scope}|${revision.sequence ?? "none"}|${revision.generated_at}`;
+  }, [snapshot.data]);
+
+  const mapIndex = catalog.index;
+  const mapAvailable = webgl && mapIndex !== null;
   const degradedCount = snapshot.data?.degraded.length ?? 0;
   const mode = snapshot.data?.mode ?? catalog.data?.mode ?? health.data?.mode ?? null;
 
@@ -365,10 +376,10 @@ export default function App() {
         </aside>
 
         <section className="map-column" aria-label="Mapa de la red">
-          {webgl && catalog.index !== null ? (
+          {mapAvailable ? (
             <Suspense fallback={<div className="map-message">Preparando el mapa…</div>}>
               <MapView
-                index={catalog.index}
+                index={mapIndex}
                 colors={colors}
                 vehicles={visibleVehicles}
                 activeLines={activeLines}
@@ -378,6 +389,10 @@ export default function App() {
                 followKey={activeFollowKey}
                 reducedMotion={reducedMotion}
                 clock={clock}
+                snapshotStamp={snapshotStamp}
+                displayAtMs={
+                  snapshot.data === null ? null : Date.parse(snapshot.data.display_at)
+                }
                 onSelectVehicle={selectVehicle}
                 onSelectStation={selectStation}
                 onCameraGesture={onCameraGesture}
@@ -395,18 +410,20 @@ export default function App() {
               <p className="meta">
                 {webgl
                   ? "El mapa aparecerá en cuanto el catálogo esté cargado."
-                  : "La navegación sigue siendo completa: busca una estación, abre su tablero y seleccióna una circulación desde el panel."}
+                  : "La navegación sigue siendo completa: busca una estación, abre su tablero y selecciona una circulación desde el panel."}
               </p>
             </div>
           )}
           <div className="map-overlay">
-            <button
-              type="button"
-              className="map-button"
-              onClick={() => setRecenterToken((value) => value + 1)}
-            >
-              Centrar Madrid
-            </button>
+            {mapAvailable && (
+              <button
+                type="button"
+                className="map-button"
+                onClick={() => setRecenterToken((value) => value + 1)}
+              >
+                Centrar Madrid
+              </button>
+            )}
             {activeFollowKey !== null && (
               <span className="map-badge">Siguiendo · arrastra para soltar la cámara</span>
             )}
@@ -416,7 +433,7 @@ export default function App() {
               </button>
             )}
           </div>
-          <Legend present={presentMethods} />
+          {mapAvailable && <Legend present={presentMethods} />}
         </section>
       </main>
 

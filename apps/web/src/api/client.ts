@@ -37,7 +37,13 @@ export async function requestJson<T>(
   { signal, timeoutMs = DEFAULT_TIMEOUT_MS, headers = {} }: RequestOptions = {},
 ): Promise<ApiResponse<T>> {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(new ApiError(`Tiempo agotado en ${path}`, null)), timeoutMs);
+  // El mensaje nombra el recurso, no la URL completa: la cadena de consulta
+  // lleva el reloj de replay codificado y no dice nada al lector.
+  const resource = path.split("?")[0];
+  const timer = setTimeout(
+    () => controller.abort(new ApiError(`tiempo agotado al pedir ${resource}`, null)),
+    timeoutMs,
+  );
   const onAbort = () => controller.abort(signal?.reason);
   signal?.addEventListener("abort", onAbort, { once: true });
 
@@ -48,7 +54,9 @@ export async function requestJson<T>(
     });
     const etag = response.headers.get("etag");
     if (response.status === 304) return { body: null, status: 304, etag };
-    if (!response.ok) throw new ApiError(`La API respondió ${response.status} en ${path}`, response.status);
+    if (!response.ok) {
+      throw new ApiError(`la API respondió ${response.status} en ${resource}`, response.status);
+    }
     return { body: (await response.json()) as T, status: response.status, etag };
   } finally {
     clearTimeout(timer);

@@ -13,6 +13,7 @@ import {
   stationFeatures,
   vehicleFrames,
   type MapStyleContext,
+  type VehicleFrame,
 } from "./features";
 
 // MapLibre deriva la URL de su worker en runtime, así que Rolldown no puede
@@ -43,6 +44,19 @@ export interface MapViewProps {
   followKey: string | null;
   reducedMotion: boolean;
   clock: Clock;
+  /**
+   * Sello de **revisión** del snapshot vigente. Con movimiento reducido marca
+   * cuándo puede repintarse, en vez de hacerlo en cada fotograma.
+   *
+   * Deliberadamente **no** es `snapshot_id`: ese campo es identidad de
+   * contenido y se repite entre sondeos cuando los vehículos no han cambiado,
+   * aunque `display_at` sí avance. Usarlo aquí congelaba el mapa (defecto real
+   * observado en navegador). La revisión avanza con cada respuesta aceptada,
+   * que es justo la señal de "ha llegado dato nuevo".
+   */
+  snapshotStamp: string | null;
+  /** Instante de presentación que publica el propio snapshot. */
+  displayAtMs: number | null;
   onSelectVehicle: (vehicle: SnapshotVehicle) => void;
   onSelectStation: (stationId: string) => void;
   /** El usuario tomó la cámara con un gesto: se suelta el seguimiento. */
@@ -71,6 +85,8 @@ interface FrameState {
   followKey: string | null;
   reducedMotion: boolean;
   clock: Clock;
+  snapshotStamp: string | null;
+  displayAtMs: number | null;
 }
 
 export function MapView(props: MapViewProps) {
@@ -85,6 +101,8 @@ export function MapView(props: MapViewProps) {
     followKey,
     reducedMotion,
     clock,
+    snapshotStamp,
+    displayAtMs,
     onSelectVehicle,
     onSelectStation,
     onCameraGesture,
@@ -97,6 +115,12 @@ export function MapView(props: MapViewProps) {
   const labelsRef = useRef(new Map<string, maplibregl.Marker>());
   const rafRef = useRef<number | null>(null);
   const lastLabelAtRef = useRef(0);
+  const staticKeyRef = useRef<string | null>(null);
+  const lastPaintRef = useRef<{ atMs: number; frames: VehicleFrame[]; count: number }>({
+    atMs: 0,
+    frames: [],
+    count: 0,
+  });
   const vehicleIndexRef = useRef(new Map<string, SnapshotVehicle>());
   const [zoom, setZoom] = useState(MADRID_ZOOM);
 
@@ -113,6 +137,8 @@ export function MapView(props: MapViewProps) {
     followKey,
     reducedMotion,
     clock,
+    snapshotStamp,
+    displayAtMs,
   });
   useEffect(() => {
     stateRef.current = {
@@ -125,6 +151,8 @@ export function MapView(props: MapViewProps) {
       followKey,
       reducedMotion,
       clock,
+      snapshotStamp,
+      displayAtMs,
     };
   }, [
     index,
@@ -136,6 +164,8 @@ export function MapView(props: MapViewProps) {
     followKey,
     reducedMotion,
     clock,
+    snapshotStamp,
+    displayAtMs,
   ]);
 
   const paintStatic = useCallback(() => {
@@ -209,21 +239,23 @@ export function MapView(props: MapViewProps) {
       if (map === null || !readyRef.current) return;
 
       const context = styleContext(state);
-      const atMs = state.clock.nowMs();
-      const { collection, frames } = vehicleFrames(state.vehicles, context, atMs);
-      (map.getSource(SOURCES.vehicles) as GeoJSONSource | undefined)?.setData(collection);
 
-      // Sonda de desarrollo: permite auditar fotogramas intermedios (no solo
-      // capturas finales) sin instrumentar el código de producción. El bloque
-      // desaparece de la build: `import.meta.env.DEV` es constante en release.
+      // Sonda de desarrollo: se publica en **cada** fotograma, aunque no haya
+      // repintado, para poder auditar también el caso de movimiento reducido
+      // (donde no repintar es justamente lo correcto). Desaparece de la build:
+      // `import.meta.env.DEV` es constante en release.
       if (import.meta.env.DEV) {
         (window as unknown as Record<string, unknown>).__mpMap = map;
         (window as unknown as Record<string, unknown>).__mpFrame = () => ({
-          atMs,
+          atMs: lastPaintRef.current.atMs,
+          paintCount: lastPaintRef.current.count,
           center: map.getCenter(),
           zoom: map.getZoom(),
-          followKey: state.followKey,
-          vehicles: frames.map((frame) => ({
+          followKey: stateRef.current.followKey,
+          reducedMotion: stateRef.current.reducedMotion,
+          snapshotStamp: stateRef.current.snapshotStamp,
+          displayAtMs: stateRef.current.displayAtMs,
+          vehicles: lastPaintRef.current.frames.map((frame) => ({
             key: frame.key,
             lon: frame.lon,
             lat: frame.lat,
@@ -233,13 +265,39 @@ export function MapView(props: MapViewProps) {
         });
       }
 
+      // `prefers-reduced-motion`: ninguna animación espacial automática. Las
+      // posiciones se evalúan en el instante de presentación que publica el
+      // propio snapshot y solo se repintan cuando llega uno nuevo o cambia
+      // la selección, de modo que nada se mueve por sí solo. El dato sigue
+      // siendo el mismo; lo que desaparece es la interpolación continua.
+      const staticKey =
+        `${state.snapshotStamp ?? "none"}|${state.selectedVehicleKey ?? "none"}` +
+        `|${[...state.activeLines].sort().join(",")}`;
+      if (state.reducedMotion) {
+        if (staticKey === staticKeyRef.current) return;
+        staticKeyRef.current = staticKey;
+      } else {
+        staticKeyRef.current = null;
+      }
+
+      const atMs =
+        state.reducedMotion && state.displayAtMs !== null
+          ? state.displayAtMs
+          : state.clock.nowMs();
+      const { collection, frames } = vehicleFrames(state.vehicles, context, atMs);
+      (map.getSource(SOURCES.vehicles) as GeoJSONSource | undefined)?.setData(collection);
+      if (import.meta.env.DEV) {
+        lastPaintRef.current = { atMs, frames, count: lastPaintRef.current.count + 1 };
+      }
+
       const followKeyNow = state.followKey;
       if (followKeyNow !== null) {
         const target = frames.find((frame) => frame.key === followKeyNow);
         if (target !== undefined) {
           // Movimiento programático explícito, no un `easeTo` por fotograma:
           // `jumpTo` sobre una posición que ya es continua evita encadenar
-          // animaciones que se pisan entre sí.
+          // animaciones que se pisan entre sí. Con movimiento reducido esto
+          // ocurre una vez por snapshot, no de forma continua.
           map.jumpTo({ center: [target.lon, target.lat] });
         }
       }

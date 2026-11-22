@@ -115,6 +115,7 @@ h2 {
   flex-direction: column;
   height: 100dvh;
   min-height: 520px;
+  overflow-x: hidden;
 }
 
 .topbar {
@@ -136,6 +137,14 @@ h2 {
   font-size: 24px;
   letter-spacing: -1.6px;
   white-space: nowrap;
+  /* El rótulo cede espacio antes que provocar scroll horizontal. */
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.brand__logo {
+  flex: 0 0 auto;
 }
 
 .brand__logo {
@@ -156,6 +165,7 @@ h2 {
   align-self: stretch;
   display: flex;
   gap: 16px;
+  flex: 0 0 auto;
 }
 
 .topbar nav button {
@@ -176,6 +186,7 @@ h2 {
   gap: 9px;
   font-size: 12px;
   color: var(--muted);
+  flex: 0 0 auto;
 }
 
 .status b {
@@ -440,9 +451,10 @@ h2 {
   gap: 5px;
   border: 1px solid var(--line);
   border-radius: 5px;
-  padding: 5px 7px;
+  padding: 5px 9px;
   font: 600 12px ui-monospace, monospace;
   background: #fff;
+  min-height: 34px;
 }
 
 .line-chip.is-active {
@@ -477,9 +489,16 @@ h2 {
 .pill {
   font: 700 12px/1 ui-monospace, monospace;
   border-radius: 4px;
-  padding: 6px 8px;
+  padding: 6px 9px;
   color: #26241a;
   border: 1px solid #0002;
+  min-height: 30px;
+  display: inline-flex;
+  align-items: center;
+}
+
+button.pill {
+  min-height: 34px;
 }
 
 .pill--static {
@@ -806,28 +825,43 @@ h2 {
 
 @media (max-width: 740px) {
   .topbar {
-    height: 54px;
-    padding: 0 12px;
-    gap: 12px;
+    height: 52px;
+    padding: 0 10px;
+    gap: 8px;
   }
 
   .brand {
-    font-size: 19px;
+    font-size: 16px;
     gap: 5px;
   }
 
   .brand__logo {
-    width: 24px;
-    height: 24px;
-    font-size: 17px;
+    width: 21px;
+    height: 21px;
+    font-size: 15px;
   }
 
   .topbar nav {
-    gap: 8px;
+    gap: 7px;
   }
 
   .topbar nav button {
-    font-size: 12px;
+    font-size: 11px;
+    padding: 3px 1px 0;
+  }
+
+  .status {
+    gap: 5px;
+    font-size: 10px;
+  }
+
+  .status b {
+    font-size: 9px;
+  }
+
+  .status i {
+    width: 6px;
+    height: 6px;
   }
 
   .status__snapshot {
@@ -856,6 +890,23 @@ h2 {
     flex-basis: 66%;
   }
 
+  /* Tamaño táctil cómodo en los controles pequeños, incluidos los del mapa. */
+  .line-chip,
+  button.pill {
+    min-height: 38px;
+  }
+
+  .maplibregl-ctrl-group button {
+    width: 36px;
+    height: 36px;
+  }
+
+  .details summary {
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+  }
+
   .searchbox {
     width: 70%;
   }
@@ -864,11 +915,13 @@ h2 {
     font-size: 30px;
   }
 
+  /* Por encima de la barra de atribución de MapLibre, no encima de ella. */
   .legend {
-    bottom: 8px;
+    bottom: 42px;
     left: 8px;
     font-size: 10px;
     gap: 8px;
+    max-width: calc(100% - 16px);
   }
 
   .map-overlay {
@@ -876,14 +929,30 @@ h2 {
     top: 8px;
   }
 
+  /* Una sola fila: la cinta informa sin comerse el panel inferior. */
   .ticker {
     padding: 6px 10px calc(6px + env(safe-area-inset-bottom));
     gap: 8px;
+    flex-wrap: nowrap;
+    min-height: 44px;
+  }
+
+  .ticker > .mono,
+  .ticker__count {
+    display: none;
   }
 
   .ticker__event {
     font-size: 12px;
-    flex-basis: 100%;
+    flex: 1 1 auto;
+    min-height: 32px;
+  }
+
+  .ticker__button {
+    min-height: 32px;
+    padding: 3px 8px;
+    font-size: 12px;
+    flex: 0 0 auto;
   }
 }
 
