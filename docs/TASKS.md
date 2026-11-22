@@ -477,6 +477,24 @@ Autorizado por el propietario el `2026-11-22` (mensaje "ORCA — MADRID PULSE / 
 
 ---
 
+## MP-020 — Mapa y tablero (React/MapLibre)
+
+- **Fase:** Hito 3 — Cierre ferroviario Madrid
+- **Objetivo:** reconstruir el frontend (hoy limitado a C5, MP-014) como la experiencia map-first de `diseno/live.html`/mockups: mapa de toda Cercanías Madrid, búsqueda, multiselección de líneas, tablero de estación, seguimiento de circulación, movimiento fluido entre polls sobre la geometría real, consumiendo el contrato `/api/v1/catalog`+`/api/v1/snapshot`+`/api/v1/stations/{id}/board` de MP-019.
+- **Prioridad:** P0
+- **Depende de:** MP-019 (`DONE`)
+- **Ejecutor:** Claude (escalado a Opus — rediseño de frontend de alto impacto, política de modelo de Hito 2)
+- **Revisor:** OpenAI Codex (auditoría con inspección visual real en navegador, no solo tests automatizados)
+- **Archivos/componentes afectados:** `apps/web/` (refactor completo).
+- **Entradas:** `docs/hitos/hito-03/diseno/live.html`+PNGs+`INTERACCIONES.md`; contrato de MP-019 (`CatalogOut`/`SnapshotOut`/`StationBoardOut`, `RenderedOut` con `rendering_method`/`progress_m`/`valid_until`).
+- **Entregables:** mapa persistente (una instancia MapLibre, marcadores reconciliados por ID estable, nunca recreados por poll); animación por longitud de arco sobre `ProgressEnvelope` (nunca interpolación lat/lon en línea recta); selección/cámara/seguimiento que sobreviven a polls y fallos recuperables; búsqueda+filtros multi-línea; tablero de estación; móvil 390px, teclado, `prefers-reduced-motion`, fallback sin WebGL.
+- **Criterios de aceptación:** recorrido completo (Madrid → elegir 2 líneas → estación compartida → salida → tren → Seguir → arrastrar → Volver → History) en escritorio y móvil 390px; dos actualizaciones conservan cámara/selección; frames intermedios varían suavemente sin "teletransporte"; estados con procedencia visible (nunca GPS fabricado); grabación real de ≥60s, no solo capturas estáticas del prototipo.
+- **Pruebas necesarias:** suite real del proyecto + inspección visual real en navegador (Claude/Codex, Chrome DevTools MCP) — no se acredita con tests automatizados únicamente.
+- **Evidencia de verificación:** pendiente (tarea recién abierta).
+- **Estado:** `IN_PROGRESS` — worktree `mp-020-mapa-y-tablero` abierto desde `mp-019-snapshot-api` (`7b87e6b`), dispatchado a un ejecutor Claude Opus.
+
+---
+
 ## Grafo de dependencias
 
 Esta tabla refleja **exactamente** el campo "Depende de" de cada ficha anterior — sin añadir dependencias transitivas redundantes. Para dependencias transitivas (p. ej. qué depende indirectamente de MP-004), recórrase la tabla hacia arriba.

@@ -288,6 +288,28 @@ Con Hito 1 ya fusionado a `main`, el caso concreto de MP-012 **deja de requerir 
 
 ## Tarea actual
 
+**MP-020 — Mapa y tablero (React/MapLibre)**
+
+Ejecutor: Claude (escalado a Opus) · Revisor: OpenAI Codex (con inspección visual real en navegador) · Estado: **IN_PROGRESS**
+
+Worktree/rama: `mp-020-mapa-y-tablero`, ramificada desde `mp-019-snapshot-api` (MP-019 `DONE`, `7b87e6b`). Datos del kit repuestos con `instalar.py --solo-datos`.
+
+### Alcance de MP-020
+
+Reconstruir `apps/web/` (hoy limitado a C5 y a los endpoints antiguos `/lines`/`/live/vehicles`/`/health` con un único `Promise.all`, MP-014) como la experiencia map-first de `diseno/live.html`/mockups, consumiendo el nuevo contrato de MP-019 (`/api/v1/catalog` cacheable, `/api/v1/snapshot` ligero, `/api/v1/stations/{id}/board`): mapa persistente de toda Cercanías Madrid, búsqueda, multiselección de líneas, tablero de estación, seguimiento, movimiento fluido por longitud de arco sobre `ProgressEnvelope` (fórmula ya fijada por MP-019: `t0 = dwell_until or reference_at; progress(t) = min(progress_m_at_reference + speed_mps*max(0, t-t0), max_progress_m)`, válida hasta `rendered.valid_until`), nunca interpolando lat/lon en recta.
+
+### Nota heredada de MP-019 (DEC-038, pendiente del propietario)
+
+Con conexión PostgreSQL por petición, ~66 ms de los ~69 ms de p50 de `/api/v1/health` son solo abrir la conexión. Si el frontend sondea cada 20s, esta latencia es relevante para medir fluidez real — la decisión de introducir un pool (nueva dependencia) sigue pendiente del propietario, no se toma en MP-020.
+
+### Pendiente de entrega y revisión
+
+Dispatchado a un ejecutor Claude Opus; pendiente de implementación, evidencia ejecutada (incluida inspección visual real en navegador) y entrega en `REVIEW` para Codex.
+
+## Tareas cerradas de la cadena
+
+## MP-019 — Contrato de snapshot/API coherente (cerrada)
+
 **MP-019 — Contrato de snapshot/API coherente**
 
 Ejecutor: Claude (escalado a Opus) · Revisor: OpenAI Codex · Estado: **DONE** (aprobado por OpenAI Codex el 2026-11-22)
@@ -583,7 +605,6 @@ puede ramificar desde esta rama conforme al hito autorizado. ADR-0014 sigue
 `Propuesto` y DEC-039 registrada como propuesta; solo el propietario puede
 promoverlas (ADR-0007).
 
-## Tareas cerradas de la cadena
 
 ## MP-018 — Corredores ferroviarios por patrón y sentido (cerrada)
 
