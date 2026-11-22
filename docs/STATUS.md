@@ -290,7 +290,7 @@ Con Hito 1 ya fusionado a `main`, el caso concreto de MP-012 **deja de requerir 
 
 **MP-016 — Fiabilidad realtime (SKIPPED, UTC, live/replay)**
 
-Ejecutor: OpenAI Codex · Revisor: Claude Code · Estado: **REVIEW**
+Ejecutor: OpenAI Codex · Revisor: Claude Code · Estado: **DONE**
 
 Worktree/rama: `mp-016-fiabilidad-live`, ramificada directamente desde `main` (`990c95d`, que ya contiene toda la cadena MP-010→MP-015 fusionada vía PR #2). Primer commit (`d0f4b3c`): instalación verificada del kit externo Hito 3 v4 (`docs/hitos/hito-03/`), integridad y replay confirmados antes de tocar código (ver "Hito autorizado actualmente" arriba para el detalle completo de alcance/criterios).
 
@@ -328,6 +328,26 @@ Reproducir y corregir, contra el HEAD real (no asumiendo que el parche de refere
 - Mismo comando contra contenedor desechable `postgis/postgis:17-3.5` en `127.0.0.1:55416`, migración desde cero → `Ran 123 tests ... OK (skipped=5)`; 118 ejecutados en verde, 5 skips esperados por el soak histórico. Contenedor `mp016-postgis-fresh` eliminado al terminar; no tenía volumen y sus datos efímeros no son recuperables ni necesarios.
 - `npm run lint && npm run typecheck && npm test && npm run build` → lint/typecheck verdes, 2 ficheros/5 tests verdes, build Vite verde y worker MapLibre verificado (`550754 bytes`).
 - `git diff --check`, OpenAPI regenerado y suite focalizada de 36 tests se ejecutan de nuevo en el cierre previo al commit.
+
+### Revisión independiente de Claude Code — APROBADA
+
+Auditoría completa sobre `f9c3e2b` (autoría exclusiva de Pedro Matute, sin coautores, confirmado con `git log --format='%an <%ae>|%cn <%ce>'`). Revisé el diff real punto por punto, no solo el resumen del ejecutor:
+
+- `packages/contracts/raw.py`/`normalize.py`: `arrival` pasa a opcional, `schedule_relationship` se añade con alias `scheduleRelationship` y `exclude_if` — verifiqué que `exclude_if` es un parámetro real de `pydantic.Field` en la versión instalada (`2.13.4`, no un kwarg inventado) ejecutando `inspect.signature(Field)` y probando parseo/serialización directamente en el intérprete. `next_stop_id` ahora salta las paradas `SKIPPED` al elegir la próxima parada comercial.
+- `services/collector/collector.py`: el parseo/validación se movió dentro del `try`, así un JSON roto o un esquema inesperado queda registrado en `source_ingestion_run` con el hash real de los bytes recibidos (antes quedaba fuera del bloque, hallazgo P0 de la auditoría) — confirmado con los 3 tests nuevos (`test_schema_failure_records_payload_hash_and_no_source_time`, `test_broken_json_is_an_error_but_does_not_delete_existing_observations`, `test_valid_empty_feed_is_success_not_network_failure`).
+- `apps/api/service.py` (`feed_health`): separa `poll_age_s` (edad del sondeo) de `data_age_s` (edad real de la cabecera `source_timestamp`), exactamente el hallazgo P0 de la auditoría (antes usaba `started_at` para ambos). **Verificado en vivo, no solo en test unitario** (instrucción explícita del propietario): arranqué la API de este worktree contra la base de desarrollo real en un puerto aparte (`8099`, sin colector corriendo) y `/api/v1/health` devolvió los tres feeds en `stale` con `poll_age_s≈268163`/`data_age_s≈268169` — nunca un falso `ok`, coincide en orden de magnitud con lo reportado por Codex.
+- `apps/api/db.py`/`packages/quality/db.py`: conversión `.astimezone(timezone.utc)` en todos los puntos de lectura — necesaria en este HEAD (no un arreglo ya obsoleto), consistente con el hallazgo de huso horario de la auditoría.
+- `apps/api/gtfs_source.py`: modo `live` rechaza explícitamente rutas de fixture y GTFS fuera de vigencia; `gtfs_version`/`gtfs_valid_from`/`gtfs_valid_until` se exponen en `/health`.
+- `apps/api/service.py` (`_movement_position`): `previous` ya no se pasa al motor cuando pertenece a otro `trip_id` — confirmado con `test_previous_observation_from_another_trip_is_not_passed_to_engine`.
+- `apps/web/src/App.tsx`: rótulo cambiado de "Actualizado" a "Consulta" — correcto, es la hora del navegador, no la de la fuente.
+
+**Re-ejecución independiente, no solo lectura del reporte:**
+- `python3 data/hito-03/replay/comprobar.py` → idéntico a lo reportado (1532: 119/119/49; 1533: 121/121/49).
+- Suite completa (lista exacta de CI) contra la base de desarrollo real → **123/123 OK**; recuento `668/484/3/120/0` confirmado antes y después, sin residuo.
+- Misma suite contra un segundo contenedor PostgreSQL fresco desechable (`postgis/postgis:17-3.5`, puerto `55417`, sin volumen) con migración desde cero → **123 tests, 5 skip, 118 en verde** — contenedor eliminado al terminar.
+- Frontend: `lint`/`typecheck`/`test` (5/5)/`build` en verde, worker MapLibre verificado (`550754 bytes`), `git diff --check` limpio.
+
+**Veredicto: APROBADO, sin hallazgos.** Las diferencias respecto al parche de referencia (ampliación con `poll_age_s`, casos JSON roto/feed vacío/cambio de viaje, configuración Live/Replay) están justificadas y dentro del alcance declarado de MP-016; lo deliberadamente diferido (catálogo completo, geometría multi-corredor, avisos por estación, filtrado histórico) pertenece correctamente a MP-017→MP-019 según el kit. MP-016 pasa a `DONE`.
 
 ## Tareas cerradas de la cadena
 

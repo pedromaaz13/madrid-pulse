@@ -407,7 +407,7 @@ Autorizado por el propietario el `2026-11-22` (mensaje "ORCA — MADRID PULSE / 
 - **Criterios de aceptación:** replay reproduce los conteos congelados del kit (corte `1532`: 119 vehículos Madrid, 119 matches, 49 `SKIPPED` sin `arrival`; corte `1533`: 121 matches, 49 `SKIPPED`) — conteos de fixture, no expectativa del feed en vivo de hoy. Tests reales contra PostGIS, no solo la sonda Python del replay. Casos probados: respuesta inválida, reloj desfasado, colector detenido.
 - **Pruebas necesarias:** suite real del proyecto (Python contra PostgreSQL real) + `python3 data/hito-03/replay/comprobar.py` como sonda adicional, nunca sustituto.
 - **Evidencia de verificación:** replay Hito 3 exacto (`1532`: 119/119/49; `1533`: 121/121/49); 123/123 tests Python contra PostgreSQL de desarrollo y 118 en verde + 5 `skip` documentados (de 123) contra PostGIS 17-3.5 fresco; frontend lint/typecheck/5 tests/build en verde; reproducción real `SHOW TIME ZONE = Europe/Madrid` y normalización `+01:00`→UTC; `/api/v1/health` real muestra los tres feeds `stale` por separado, con edad de fuente y de sondeo. Detalle y comandos en `docs/STATUS.md` → "Tarea actual".
-- **Estado:** `REVIEW` — implementación de Codex lista; pendiente auditoría independiente de Claude Code en este mismo worktree. No se marca `DONE` antes de su aprobación.
+- **Estado:** `DONE` — implementación de Codex auditada por Claude Code (diff completo, re-ejecución independiente de la suite contra dev y contra un segundo PostgreSQL fresco, verificación en vivo del escenario "colector detenido") en el mismo worktree; sin hallazgos.
 
 ---
 
