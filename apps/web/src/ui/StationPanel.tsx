@@ -107,6 +107,9 @@ export function StationPanel({
                         </small>
                         <small className="row__provenance">
                           {ETA_METHOD_LABELS[eta.method]}
+                          {eta.method === "unavailable" &&
+                            eta.scheduled_at !== null &&
+                            " · se conserva el horario planificado"}
                           {eta.delay_age_s !== null && ` · retraso ${formatAge(eta.delay_age_s)}`}
                           {eta.approximation !== null && " · aproximación de nivel viaje"}
                         </small>

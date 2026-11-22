@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as maplibregl from "maplibre-gl";
 import type { GeoJSONSource, Map as MapLibreMap, MapMouseEvent } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
@@ -28,6 +28,8 @@ const MADRID_CENTER: [number, number] = [-3.7038, 40.4168];
 const MADRID_ZOOM = 9.6;
 /** Cadencia del rótulo del tren seguido; el símbolo va a cada fotograma. */
 const LABEL_THROTTLE_MS = 250;
+/** Por debajo de este zoom los nombres de estación se solapan: no se rotulan. */
+const LABEL_MIN_ZOOM = 11;
 
 export interface MapViewProps {
   index: CatalogIndex;
@@ -96,6 +98,7 @@ export function MapView(props: MapViewProps) {
   const rafRef = useRef<number | null>(null);
   const lastLabelAtRef = useRef(0);
   const vehicleIndexRef = useRef(new Map<string, SnapshotVehicle>());
+  const [zoom, setZoom] = useState(MADRID_ZOOM);
 
   // Todo lo que el bucle de fotogramas necesita vive en una ref: el reloj de
   // presentación nunca pasa por `setState`, así que React no renderiza por
@@ -172,6 +175,7 @@ export function MapView(props: MapViewProps) {
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
     map.addControl(new maplibregl.AttributionControl({ compact: true }), "bottom-right");
     map.on("error", (event) => console.error("MapLibre", event.error));
+    map.on("zoomend", () => setZoom(map.getZoom()));
     map.on("load", () => {
       addRailLayers(map);
       readyRef.current = true;
@@ -213,6 +217,7 @@ export function MapView(props: MapViewProps) {
       // capturas finales) sin instrumentar el código de producción. El bloque
       // desaparece de la build: `import.meta.env.DEV` es constante en release.
       if (import.meta.env.DEV) {
+        (window as unknown as Record<string, unknown>).__mpMap = map;
         (window as unknown as Record<string, unknown>).__mpFrame = () => ({
           atMs,
           center: map.getCenter(),
@@ -335,7 +340,13 @@ export function MapView(props: MapViewProps) {
   useEffect(() => {
     const map = mapRef.current;
     if (map === null) return;
-    const wanted = new Set(labelledStationIds);
+    // Desambiguación de solapamientos: por debajo de este zoom los nombres de
+    // un patrón completo se pisan entre sí, así que no se rotulan. El objeto
+    // seleccionado conserva siempre su rótulo.
+    const readable = zoom >= LABEL_MIN_ZOOM;
+    const wanted = new Set(
+      readable ? labelledStationIds : labelledStationIds.slice(0, 1),
+    );
     for (const [id, marker] of labelsRef.current) {
       if (id === "selected-vehicle") continue;
       if (!wanted.has(id)) {
@@ -355,7 +366,7 @@ export function MapView(props: MapViewProps) {
         .addTo(map);
       labelsRef.current.set(stationId, marker);
     }
-  }, [labelledStationIds, index]);
+  }, [labelledStationIds, index, zoom]);
 
   // Rótulo del tren seleccionado: un único marcador DOM reutilizado.
   useEffect(() => {

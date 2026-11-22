@@ -46,8 +46,11 @@ export default function App() {
   const selectedStationId = selection.kind === "station" ? selection.stationId : null;
   const board = useStationBoard(selectedStationId, clock, visible);
 
-  const [followKey, setFollowKey] = useState<string | null>(null);
-  const [cameraReleased, setCameraReleased] = useState(false);
+  // Intención explícita de seguir una circulación, separada de si la cámara
+  // está ahora mismo enganchada: un gesto del usuario la desengancha sin
+  // borrar la intención, que es lo que permite ofrecer «Volver al tren».
+  const [followIntent, setFollowIntent] = useState<string | null>(null);
+  const [cameraDetached, setCameraDetached] = useState(false);
   const [recenterToken, setRecenterToken] = useState(0);
   const [news, setNews] = useState<NewsEvent[]>([]);
   const [newsPaused, setNewsPaused] = useState(reducedMotion);
@@ -56,6 +59,15 @@ export default function App() {
   const [returnTo, setReturnTo] = useState<Selection | null>(null);
 
   const previousSnapshotRef = useRef<Snapshot | null>(null);
+  const panelRef = useRef<HTMLElement>(null);
+  const selectionId = selectionKey(selection);
+
+  // Al cambiar de objeto, la ficha empieza por su encabezado: sin esto el
+  // panel conserva el desplazamiento del tablero anterior y la cabecera (con
+  // el destino y el botón de seguir) queda fuera de la vista.
+  useEffect(() => {
+    panelRef.current?.scrollTo({ top: 0 });
+  }, [selectionId]);
 
   // Reloj visible de la ficha: un render por segundo, nunca por fotograma.
   // El valor inicial ya lo fija el estado al montar; el intervalo solo lo
@@ -172,32 +184,39 @@ export default function App() {
 
   // --- Seguimiento y cámara ---------------------------------------------
 
-  // Seguir es explícito y nunca una consecuencia de seleccionar. El
-  // seguimiento efectivo se **deriva** de la selección vigente, así que al
-  // cambiar de circulación deja de aplicarse sin arrastrarse a otra y sin
-  // un efecto que corrija el estado después de pintar.
-  const activeFollowKey = followKey === selectedVehicleKey ? followKey : null;
+  // Seguir es explícito y nunca una consecuencia de seleccionar. Todo se
+  // **deriva** de la intención y de la selección vigente: al cambiar de
+  // circulación el seguimiento no se arrastra a otra, y no hace falta un
+  // efecto que corrija el estado después de pintar.
+  const followsSelection = followIntent !== null && followIntent === selectedVehicleKey;
+  const activeFollowKey = followsSelection && !cameraDetached ? followIntent : null;
+  const canReturnToTrain = followsSelection && cameraDetached;
+
+  // El gesto solo tiene efecto si había seguimiento activo; se lee de una ref
+  // para que el manejador registrado en el mapa nunca use un valor obsoleto.
+  const followingRef = useRef(false);
+  useEffect(() => {
+    followingRef.current = activeFollowKey !== null;
+  }, [activeFollowKey]);
 
   const toggleFollow = useCallback(() => {
     if (selectedVehicleKey === null) return;
-    setCameraReleased(false);
-    setFollowKey((current) => (current === selectedVehicleKey ? null : selectedVehicleKey));
+    setCameraDetached(false);
+    setFollowIntent((current) => (current === selectedVehicleKey ? null : selectedVehicleKey));
   }, [selectedVehicleKey]);
 
-  // Un gesto libera la cámara pero **conserva la ficha**: solo deja de
-  // arrastrarla y ofrece volver.
+  // Un gesto suelta la cámara pero **conserva la ficha** y la intención de
+  // seguimiento: solo deja de arrastrar la cámara y ofrece volver.
   const onCameraGesture = useCallback(() => {
-    setFollowKey((current) => {
-      if (current === null) return null;
-      setCameraReleased(true);
-      return null;
-    });
+    if (!followingRef.current) return;
+    followingRef.current = false;
+    setCameraDetached(true);
   }, []);
 
   const backToTrain = useCallback(() => {
     if (selectedVehicleKey === null) return;
-    setCameraReleased(false);
-    setFollowKey(selectedVehicleKey);
+    setCameraDetached(false);
+    setFollowIntent(selectedVehicleKey);
   }, [selectedVehicleKey]);
 
   const openBoardEntry = useCallback(
@@ -259,7 +278,7 @@ export default function App() {
           vehicle={selectedVehicle}
           nowMs={panelNowMs}
           following={activeFollowKey !== null}
-          cameraReleased={cameraReleased}
+          cameraReleased={canReturnToTrain}
           onToggleFollow={toggleFollow}
           onBackToCamera={backToTrain}
           onOpenStation={selectStation}
@@ -315,7 +334,7 @@ export default function App() {
       />
 
       <main className="workspace">
-        <aside className="side-panel" aria-label="Panel de navegación y detalle">
+        <aside ref={panelRef} className="side-panel" aria-label="Panel de navegación y detalle">
           {isMobile && (
             <button
               type="button"
@@ -391,7 +410,7 @@ export default function App() {
             {activeFollowKey !== null && (
               <span className="map-badge">Siguiendo · arrastra para soltar la cámara</span>
             )}
-            {cameraReleased && activeFollowKey === null && selectedVehicleKey !== null && (
+            {canReturnToTrain && (
               <button type="button" className="map-button" onClick={backToTrain}>
                 Volver al tren
               </button>
@@ -414,7 +433,7 @@ export default function App() {
             ? `Estación seleccionada: ${catalog.index?.stationsById.get(selection.stationId)?.name ?? selection.stationId}`
             : `Circulación seleccionada: ${selection.circulation.vehicleId}`}
       </p>
-      <span className="visually-hidden">{selectionKey(selection)}</span>
+      <span className="visually-hidden">{selectionId}</span>
     </div>
   );
 }

@@ -125,6 +125,25 @@ export function formatEta(eta: Eta): string {
   return formatIsoClock(eta.eta_at);
 }
 
+/**
+ * Causas por las que el backend declara una ETA no disponible. Son códigos
+ * estables del contrato (`apps/api/snapshot.py`): se traducen para el lector
+ * y se conserva el código en el detalle técnico, en vez de volcar el
+ * identificador crudo en la interfaz.
+ */
+export const ETA_REASON_LABELS: Record<string, string> = {
+  trip_canceled: "Circulación cancelada",
+  schedule_time_missing: "El horario no publica hora para esta parada",
+  passed_or_skipped_per_operator_next_stop:
+    "El operador ya declara una parada posterior: esta llamada quedó atrás u omitida",
+  operator_delay_expired: "El retraso del operador es demasiado antiguo para aplicarlo",
+};
+
+export function formatEtaReason(reason: string | null): string | null {
+  if (reason === null) return null;
+  return ETA_REASON_LABELS[reason] ?? reason;
+}
+
 export const ETA_METHOD_LABELS: Record<Eta["method"], string> = {
   schedule: "Horario",
   operator_delay_on_schedule: "Horario + retraso del operador",
@@ -134,7 +153,7 @@ export const ETA_METHOD_LABELS: Record<Eta["method"], string> = {
 export function boardEntryNote(entry: BoardEntry): string {
   if (entry.circulation_source === "scheduled_only") return "Solo horario";
   const eta = entry.departure.method === "unavailable" ? entry.arrival : entry.departure;
-  if (eta.method === "unavailable") return eta.reason ?? "ETA no disponible";
+  if (eta.method === "unavailable") return formatEtaReason(eta.reason) ?? "ETA no disponible";
   if (eta.delay_seconds === null) return "Sin dato de retraso";
   if (eta.delay_seconds === 0) return "En hora";
   const minutes = Math.round(Math.abs(eta.delay_seconds) / 60);
