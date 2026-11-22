@@ -4,6 +4,24 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 
 ## [Unreleased]
 
+### MP-018 — Corredores ferroviarios por patrón y sentido
+
+#### Added
+- `packages/geo/catalog.py` y `madrid.py`: catálogo de `Corridor` por patrón GTFS ordenado/sentido, con identidad estable, versión OSM por SHA-256 y matriz `validated`/`partial`/`pending`. La secuencia de paradas representa el sentido porque el GTFS real no publica `direction_id`; no se fabrica ese dato.
+- Contrato geométrico mínimo `PositionMatch`: raw conservado, `Projection`, `progress_m`, `geometry_version` y `distance_from_raw_m` para corredores validados; fallback explícito `raw` o `unlocated` sin unir huecos ni proyectar sobre geometría no fiable.
+- Fixture real C4 (`11332`, `9174510`, `9174511`) con manifiesto ODbL, atribución, checksums y comandos reproducibles. C4a queda verificada en ambos sentidos; C4b Colmenar→Parla, en el sentido descargado.
+- Matriz versionada `docs/evidence/mp-018-corridor-coverage.csv` (103 patrones/12 líneas): 28 `validated`, 3 `partial`, 72 `pending`; exportador reproducible `packages.geo.tools.export_madrid_catalog`.
+- `packages.geo.tests.test_catalog` añadido a CI: verifica checksums/continuidad incluso sin el ZIP GTFS no versionado y, cuando está presente, cobertura total, dirección, C4, vía compartida, casos problemáticos, CSV y raw→matched.
+
+#### Findings
+- C4a Alcobendas→Parla (`9174510`) y C4b Colmenar→Parla (`9174511`) comparten 77 IDs literales de `way` ferroviario OSM: tramo físico compartido confirmado, no inferido solo por estaciones.
+- Dos variantes C5 de 7 paradas permanecen `partial` por la ambigüedad DEC-025; una variante C4b de 14 paradas omite Nuevos Ministerios entre Chamartín y Sol y también queda `partial`.
+- Overpass respondió `502 Bad Gateway` dos veces al pedir C4b Parla→Colmenar (`9174512`); ese sentido queda `pending`, sin convertir indisponibilidad del endpoint en ausencia de dato.
+
+#### Verified
+- Suite Python exacta de CI: **153/153 OK** contra PostgreSQL real; recuentos antes/después `668/484/3/120/0`. Frontend con Node `22.13.1`: lint, typecheck, **5/5 tests** y build en verde. `compileall` y `git diff --check` limpios.
+- Estado entregado: `REVIEW`; pendiente aprobación independiente de Claude Code antes de `DONE`.
+
 ### MP-017 — Catálogo completo de Madrid
 
 #### Added

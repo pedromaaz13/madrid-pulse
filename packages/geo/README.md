@@ -42,6 +42,60 @@ punto-segmento usa un plano local equirrectangular por consulta, suficiente
 para el margen de error (metros) que exige un prototipo de corredor de
 pocas decenas de km.
 
+## Catálogo Madrid por patrón y sentido (MP-018)
+
+`packages.geo.catalog` conserva `Corridor`/`build_corridor`/`ChainGap` como
+primitivas y añade el índice que faltaba: cada entrada representa un patrón
+GTFS completo, no una línea comercial. El GTFS real verificado no trae
+`direction_id`; el sentido se identifica sin inventarlo mediante la secuencia
+ordenada de paradas. `PatternIdentity.pattern_id` deriva de
+`route_id + stop_ids`, y `direction_key` expone origen→destino para inspección.
+
+`packages.geo.madrid` declara únicamente relaciones OSM descargadas y con
+SHA-256 verificado. `build_madrid_corridor_catalog` recorre **todos** los
+patrones de `packages.gtfs.catalog`, comprueba continuidad, distancia de cada
+estación (umbral 150 m) y orden monótono antes de asignar un corredor. El resto
+queda `pending`; una ambigüedad conocida queda `partial`. No se asigna por
+parecido del nombre de línea.
+
+Matriz del GTFS congelado de Hito 3 (`103` patrones / `12` líneas):
+
+| Estado | Patrones | Significado operativo |
+|---|---:|---|
+| `validated` | 28 | C4 (5), C4a (8), C4b sentido Colmenar→Parla (3) y C5 (12); corredor continuo, paradas cercanas y en orden |
+| `partial` | 3 | dos variantes C5 de 7 paradas sin relación propia (DEC-025) y una C4b de 14 paradas que omite Nuevos Ministerios |
+| `pending` | 72 | no se descargó/verificó corredor para ese patrón y sentido; incluye el sentido Parla→Colmenar de C4b tras dos 502 reales de Overpass |
+
+La tabla completa, con fuente, versión, estado y motivo por patrón, está en
+`docs/evidence/mp-018-corridor-coverage.csv`. Se regenera de forma
+reproducible (el ZIP oficial queda fuera de Git por DEC-023):
+
+```sh
+python3 -m packages.geo.tools.export_madrid_catalog \
+  --gtfs data/hito-03/replay/fomento_transit.zip \
+  --fixtures tests/fixtures \
+  --out docs/evidence/mp-018-corridor-coverage.csv
+```
+
+### Contrato mínimo raw → map-matched
+
+`CorridorCatalog.match_position` conserva siempre `raw_lat/raw_lon`. Si el
+patrón está `validated`, devuelve `PositionMatch` con `projection`,
+`progress_m`, `geometry_version` y `distance_from_raw_m` (el residuo real de
+la proyección). En un corredor `partial`/`pending`, devuelve `RAW` sin
+proyección fabricada; si el punto de origen falta, devuelve `UNLOCATED` y
+mantiene las coordenadas como `None`. La posición de presentación
+(`rendered`) y el contrato snapshot/API completo pertenecen a MP-019.
+
+### C4 y vía compartida real
+
+Las relaciones reales C4 descargadas se documentan en
+`tests/fixtures/osm_c4_real/MANIFEST.md`. C4a está disponible en ambos
+sentidos (`11332`/`9174510`) y C4b Colmenar→Parla en `9174511`; todas encadenan
+sin huecos. `9174510` (C4a hacia Parla) y `9174511` (C4b hacia Parla)
+comparten 77 IDs literales de `way` de vía OSM: confirma tronco físico común,
+no solo estaciones compartidas en el GTFS.
+
 ## Fuente real y hallazgos de MP-011
 
 Relación OSM `11331` ("Humanes → Atocha → Móstoles-El Soto") y sus tres

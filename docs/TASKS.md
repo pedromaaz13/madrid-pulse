@@ -442,8 +442,8 @@ Autorizado por el propietario el `2026-11-22` (mensaje "ORCA — MADRID PULSE / 
 - **Entregables:** catálogo de `Corridor` por patrón/sentido; matriz de cobertura de las 12 líneas; al menos un ramal de C4 y un tramo compartido con geometría OSM real descargada y versionada (mismo formato que `osm_c5_real/MANIFEST.md`); proyección/distancia trazable (`Projection`/`distance_from_raw_m`) reutilizable por MP-019.
 - **Criterios de aceptación:** C5 sigue encadenando sin huecos; nuevo ramal C4 y tramo compartido verificados contra Overpass real, con hallazgos (huecos, ambigüedades) documentados, no forzados; matriz de cobertura cubre los patrones de las 12 líneas, mayoría `pending` honesto, no fabricado.
 - **Pruebas necesarias:** suite real del proyecto + nuevos tests de geometría real (Overpass).
-- **Evidencia de verificación:** pendiente (tarea recién abierta).
-- **Estado:** `IN_PROGRESS` — worktree `mp-018-corredores-madrid` abierto desde `mp-017-catalogo-madrid` (`c28d5e4`), dispatchado a Codex.
+- **Evidencia de verificación:** `packages.geo.tests.test_catalog` (11 pruebas: 3 ejecutables en CI sin el ZIP no versionado + 8 contra el catálogo oficial completo), regresión `packages.geo.tests.test_real_feed`; matriz exportada de 103 patrones/12 líneas (`28 validated`, `3 partial`, `72 pending`). Suite Python exacta de CI: **153/153 OK** contra PostgreSQL real, recuentos antes/después `668/484/3/120/0`; frontend Node `22.13.1`: lint/typecheck/5 tests/build en verde; `git diff --check` limpio. Overpass respondió 502 dos veces para C4b Parla→Colmenar (`9174512`), registrado como `pending`, no como ausencia de relación.
+- **Estado:** `REVIEW` — implementación de Codex entregada para auditoría completa de Claude Code en este mismo worktree; no puede pasar a `DONE` sin aprobación explícita del revisor.
 
 ---
 

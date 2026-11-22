@@ -290,7 +290,7 @@ Con Hito 1 ya fusionado a `main`, el caso concreto de MP-012 **deja de requerir 
 
 **MP-018 — Corredores ferroviarios por patrón y sentido**
 
-Ejecutor: OpenAI Codex · Revisor: Claude Code · Estado: **IN_PROGRESS**
+Ejecutor: OpenAI Codex · Revisor: Claude Code · Estado: **REVIEW**
 
 Worktree/rama: `mp-018-corredores-madrid`, ramificada desde `mp-017-catalogo-madrid` (MP-017 `DONE`, `c28d5e4`). Datos del kit repuestos con `instalar.py --solo-datos`.
 
@@ -298,9 +298,64 @@ Worktree/rama: `mp-018-corredores-madrid`, ramificada desde `mp-017-catalogo-mad
 
 Extender `packages/geo` (hoy un único corredor OSM fijo para C5, MP-011) a un catálogo de corredores por patrón/sentido, reutilizando `Corridor`/`build_corridor`/`ChainGap` tal cual. Mínimo real a descargar/verificar: revalidar C5 sin huecos, un ramal de C4 con geometría OSM real (mismo formato que `tests/fixtures/osm_c5_real/MANIFEST.md`), y un tramo compartido entre dos líneas (identificado desde el catálogo de MP-017, confirmado o descartado con datos reales, no forzado). Matriz de cobertura honesta (`validated`/`partial`/`pending`) para los patrones de las 12 líneas — `pending` es el resultado esperado para la mayoría, no un fallo.
 
-### Pendiente de entrega y revisión
+### Implementación entregada para revisión
 
-Dispatchado a Codex; pendiente de implementación, evidencia ejecutada y entrega en `REVIEW`.
+- `packages/geo/catalog.py`: índice por `PatternIdentity` (`route_id` + secuencia
+  ordenada de paradas; el GTFS real no publica `direction_id`, por lo que no se
+  inventa), estados `validated`/`partial`/`pending`, verificación de checksum,
+  continuidad, distancia y orden de estaciones. Reutiliza sin reescribir
+  `Corridor`/`build_corridor`/`ChainGap`.
+- `PositionMatch`: conserva raw y expone `Projection`, `progress_m`,
+  `geometry_version` y `distance_from_raw_m` cuando el corredor es validado.
+  Un patrón `partial`/`pending` conserva GPS bruto etiquetado; raw ausente queda
+  `unlocated`. No implementa `rendered` ni snapshot/API (MP-019).
+- Fixture OSM real C4 versionada en `tests/fixtures/osm_c4_real/`: C4a ambos
+  sentidos (`11332`, `9174510`) y C4b Colmenar→Parla (`9174511`), SHA-256,
+  ODbL/atribución y comando reproducible. Las tres relaciones encadenan sin
+  huecos. `9174510` y `9174511` comparten 77 IDs literales de `way`: vía física
+  común confirmada, no solo estaciones coincidentes.
+- Overpass devolvió `HTTP 502` al solicitar C4b Parla→Colmenar (`9174512`) y
+  volvió a devolverlo al reintentar. El sentido se conserva `pending`; no se
+  interpreta el fallo del endpoint como relación inexistente.
+- Matriz completa reproducible en
+  `docs/evidence/mp-018-corridor-coverage.csv`: **103 patrones / 12 líneas**.
+
+| Línea | validated | partial | pending | Motivo principal |
+|---|---:|---:|---:|---|
+| C1 | 0 | 0 | 4 | sin geometría descargada |
+| C2 | 0 | 0 | 14 | sin geometría descargada |
+| C3 | 0 | 0 | 4 | sin geometría descargada |
+| C4 | 5 | 0 | 0 | tronco verificado sobre relaciones C4a |
+| C4a | 8 | 0 | 0 | ambos sentidos reales verificados |
+| C4b | 3 | 1 | 4 | Colmenar→Parla real; variante de 14 paradas ambigua; sentido opuesto pendiente tras 502 |
+| C5 | 12 | 2 | 0 | regresión MP-011; variantes de 7 paradas sin relación propia quedan partial |
+| C7 | 0 | 0 | 14 | sin geometría descargada |
+| C8a | 0 | 0 | 9 | sin geometría descargada |
+| C8b | 0 | 0 | 4 | sin geometría descargada |
+| C9 | 0 | 0 | 6 | sin geometría descargada |
+| C10 | 0 | 0 | 13 | sin geometría descargada |
+| **Total** | **28** | **3** | **72** | mayoría pending honesta, como exige MP-018 |
+
+### Evidencia ejecutada
+
+- `python3 -m unittest packages.geo.tests.test_catalog packages.geo.tests.test_real_feed -v`
+  → **19/19 OK** (11 catálogo + 8 regresión C5; tras añadir la prueba semántica
+  `partial` para geometría real no utilizable).
+- Lista Python exacta de `.github/workflows/ci.yml`, incluyendo el nuevo módulo
+  `packages.geo.tests.test_catalog`, con el entorno virtual ya instalado de
+  MP-017 y `MADRID_PULSE_DATABASE_URL`/`DSN` a `127.0.0.1:5433` →
+  **Ran 153 tests ... OK**; soak real `rows=668`, `near_corridor=177`,
+  `after=668`.
+- PostgreSQL real antes/después (consultas directas):
+  `vehicle_position_observation=668`, `trip_update_observation=484`,
+  `service_alert=3`, `source_ingestion_run=120`, `data_quality_event=0`.
+- `npm ci` y, con Node `22.13.1`, `npm run lint`, `npm run typecheck`,
+  `npm test`, `npm run build` → lint/typecheck verdes, **5/5 tests**, build
+  Vite verificado (worker MapLibre 550754 bytes).
+- `python3 -m compileall -q packages/geo` y `git diff --check` → sin errores.
+
+Estado `REVIEW`: Codex no marca `DONE`; queda pendiente auditoría independiente
+de Claude Code sobre el diff completo y re-verificación en este worktree.
 
 ## Tareas cerradas de la cadena
 
