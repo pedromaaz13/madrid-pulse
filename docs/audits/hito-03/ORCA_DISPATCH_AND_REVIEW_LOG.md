@@ -20,7 +20,24 @@ Mantenido en vivo por el coordinador (Claude Sonnet) a medida que cada `AUD-ID` 
 | AUD-03 | Revisor | Claude `opus` · high | `ctx_4db56fd6dd34` | `task_5f1319cdd3c0` | `2789ad2` | **CHANGES_REQUESTED** — 3/4 confirmados, 1 mal diagnosticado |
 | AUD-03 | Corrección | Codex `gpt-5.6-sol` · high (follow-up) | `ctx_352eb5227c6d` | `task_a86ea689f4b5` | *(en curso)* | *(en curso)* |
 | AUD-01 | Corrección (rev.2) | Claude `opus` · high (follow-up) | `ctx_82628c4e473d` | `task_e5569e13a76b` | `f88d12f` | **aplicada**, enviada a reevaluación |
-| AUD-01 | Revisor (2ª ronda) | Codex `gpt-5.6-sol` · high (follow-up) | `ctx_264f3fb407d7` | `task_4ac30104d092` | — | *(en curso)* |
+| AUD-01 | Revisor (2ª ronda) | Codex `gpt-5.6-sol` · high (follow-up) | `ctx_264f3fb407d7` | `task_4ac30104d092` | — | **CHANGES_REQUESTED** (4/6 puntos ya APROBADOS, quedan 2: dirección temporal `calculated_at` y criterios de refutación cuantificados en H1-H8) |
+| AUD-01 | Corrección (ronda 3) | Claude `opus` · high (follow-up) | `ctx_349842fc8de0` | `task_5d4d3be6d4fe` | *(en curso)* | *(en curso)* |
+
+## Incidente de alcance real — AUD-06 escribió en la base de desarrollo compartida
+
+**2026-11-23, ~18:05 UTC.** El worker de AUD-06 (`ctx_cf7d40a866d7`) omitió el flag de entorno aislado en un comando de diagnóstico y el colector real ejecutó dos ciclos completos contra `127.0.0.1:5433` (`madrid-pulse-postgres-1`, la base de desarrollo compartida de TODO el proyecto) en vez de su propio contenedor desechable. Se detuvo él mismo al detectarlo (18:05:40Z) y lo reportó con transparencia.
+
+**Verificado por el coordinador, comparando contra la línea base reconfirmada al cierre de cada tarea del proyecto (`668/484/3/120/0`):**
+
+| Tabla | Antes | Ahora | Δ |
+|---|---|---|---|
+| `vehicle_position_observation` | 668 | 895 | +227 |
+| `trip_update_observation` | 484 | 646 | +162 |
+| `service_alert` | 3 | 8 | +5 |
+| `source_ingestion_run` | 120 | 126 | +6 (runs 3090-3095) |
+| `data_quality_event` | 0 | 8 | +8 |
+
+El colector es solo-inserción por diseño (sin ruta de `UPDATE`/`DELETE`), así que esto es aditivo — nada previo debería haberse alterado o perdido, aunque no se ha hecho un diff fila a fila para confirmarlo al 100%. **No se ha tocado la base de desarrollo desde entonces. La decisión de conservar o limpiar estos registros queda exclusivamente para el propietario** — pendiente de respuesta.
 | AUD-06 | Ejecutor | Codex `gpt-5.6-terra` · high | `ctx_cf7d40a866d7` | `task_7982bf79c176` | *(en curso)* | *(en curso)* |
 | AUD-07 | Ejecutor | Claude `sonnet` · medium | `ctx_7f0fde0b7e4f` | `task_a9deb9865cbc` | `44c98cb`, `ea49e6a` | **completado** — revisión independiente real de Codex (`ctx_db3c9aa62ac8`, settled/succeeded) incorporada: 2 P1→P2, 2 P1 confirmados, 1 hallazgo descartado |
 | AUD-01 | — | Claude `opus` · high (pendiente de despachar) | — | `task_8bf54c0799dd` | — | en cola |
