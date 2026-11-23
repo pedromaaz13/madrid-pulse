@@ -55,8 +55,8 @@ El colector es solo-inserción por diseño (sin ruta de `UPDATE`/`DELETE`), así
 | AUD-04 | Corrección (ronda 4) | Claude `opus` · high (follow-up) | `ctx_43c147440bf7` | `task_76fda7df01a6` | `312f05f` | **aplicada** — ancla del test medida con precisión (offset -0,000011m), enviada a veredicto final |
 | AUD-04 | Revisor (ronda final, 3ª vez) | Codex `gpt-5.6-sol` · high (follow-up) | `ctx_e5a4ad50b816` | `task_4c932e94ae41` | — | **APPROVED (definitivo)** — AUD-04 cerrado tras 4 rondas |
 | AUD-06 | — | Codex `gpt-5.6-terra` · high (pendiente de despachar) | — | `task_7982bf79c176` | — | en cola |
-| AUD-08 | — | Codex `gpt-5.6-terra` · high (pendiente, depende de AUD-02/03/04/05/06) | — | `task_e0212d2fd3fe` | — | pendiente de dependencias |
-| AUD-09 | — | Claude `opus` · high (pendiente, depende de todo) | — | `task_2e01f9d87b46` | — | pendiente de dependencias |
+| AUD-08 | Ejecutor | Codex `gpt-5.6-terra` · high | `ctx_1d55182413e3` | `task_e0212d2fd3fe` | *(en curso)* | *(en curso)* |
+| AUD-09 | — | Claude `opus` · high (pendiente, depende de AUD-07 revisión equivalente EGM (ya cerrada) + AUD-08) | — | `task_2e01f9d87b46` | — | pendiente de AUD-08 |
 
 ## Hallazgos reales reportados hasta ahora (resumen, no sustituye los documentos completos)
 
