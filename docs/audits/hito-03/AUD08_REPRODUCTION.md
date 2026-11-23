@@ -9,12 +9,15 @@ específica de AUD-06.
 
 ## Veredicto
 
-La suite de cierre actualmente definida por CI se reproduce contra una base
-PostGIS nueva: **283 casos Python, OK, 5 `skip` esperados**, y frontend
-**89/89**, lint, typecheck y build correctos con Node **22.13.1**. Esto
-confirma el conteo final de MP-022; no demuestra que todos los defectos de las
-auditorías anteriores hayan desaparecido: por ejemplo, AUD-05 encontró un P0
-de semántica de replay que la batería verde no ejerce.
+La lista de cierre actualmente definida por CI contiene 283 casos Python. En
+este worktree, que incluye `data/`, se reproduce como **OK, 5 `skip`**; en un
+checkout limpio como el que verá GitHub Actions, donde el ZIP oficial bajo
+`data/` no está versionado, es **OK, 18 `skip`**. Por tanto, **283/5 no es el
+resultado que reportaría CI**: son 265 casos ejecutados allí. El frontend sí
+reproduce **89/89**, lint, typecheck y build correctos con Node **22.13.1**.
+Esto confirma el conteo final de MP-022, pero no demuestra que todos los
+defectos de las auditorías anteriores hayan desaparecido: por ejemplo, AUD-05
+encontró un P0 de semántica de replay que la batería verde no ejerce.
 
 La única sonda nueva que abrió un hallazgo es una carrera controlada entre el
 colector y el archivador: una exportación puede mezclar generaciones de tablas
@@ -30,12 +33,22 @@ s de MP-021 lo prueban.
   compartido de `5433`.
 - Las migraciones `infra/migrations/0001_init.up.sql` y
   `0002_api_batch_indexes.up.sql` se aplicaron desde una base vacía. Resultado:
-  PostgreSQL `17.5`, PostGIS `3.5.2`, 17 tablas `public`.
+  PostgreSQL `17.5`, PostGIS `3.5.2`, **15 tablas base y 2 vistas PostGIS**
+  (`geometry_columns` y `geography_columns`), no 17 tablas.
 - La lista de módulos invocada fue exactamente la de
   `.github/workflows/ci.yml`. El cargador de `unittest` contó 283 casos en esa
-  lista y la ejecución real terminó con código 0; los cinco `skip` son las
-  pruebas que requieren el soak histórico irrepetible de MP-007, ausente por
-  diseño en una base CI limpia.
+  lista. Se reprodujeron tres resultados de `skip`, según entorno:
+  (1) **5** en esta base aislada con `data/` presente: cuatro
+  `ApiContractTests` que requieren las 24 filas del soak y
+  `test_real_soak_postgres`, que exige exactamente 668; (2) **1** cuando la
+  API recibe `MADRID_PULSE_DATABASE_DSN` de la base compartida con los 24
+  vehículos, mientras colector/snapshotter usan otro
+  `MADRID_PULSE_DATABASE_URL`: los cuatro primeros dejan de saltar y queda el
+  test de 668; (3) **18** en un checkout limpio sin el ZIP GTFS oficial de
+  `data/`, incluidos 13 `skip` adicionales de catálogo/geo real. CI fija
+  explícitamente **ambas** variables de conexión, por lo que (2) es una
+  configuración divergente que explica el «1 skip» histórico, no un resultado
+  CI válido.
 - Para frontend se ejecutó `fnm exec --using 22.13.1 npm ci`, seguido de
   `npm run lint`, `npm run typecheck`, `npm test` y `npm run build`. La primera
   corrida accidental con el Node por defecto `20.20.0` también pasó pero emitió
@@ -43,8 +56,10 @@ s de MP-021 lo prueban.
 
 | Comprobación realmente ejecutada | Resultado | Evidencia |
 |---|---|---|
-| Migrar PostgreSQL vacío | **PASS** | `0001` + `0002`, PostgreSQL 17.5 / PostGIS 3.5.2 / 17 tablas |
-| Suite Python exacta de CI | **PASS** | 283 casos: 278 pasan y 5 `skip` explícitos; salida 0 contra `:5548` |
+| Migrar PostgreSQL vacío | **PASS** | `0001` + `0002`, PostgreSQL 17.5 / PostGIS 3.5.2 / 15 tablas base + 2 vistas |
+| Suite Python, worktree con `data/` | **PASS** | 283 casos: 278 pasan y 5 `skip` explícitos; salida 0 contra `:5548` |
+| Suite Python, CI de checkout limpio | **PASS** | 283 casos: 265 pasan y 18 `skip`; el ZIP GTFS oficial no viaja en Git, así que este es el resultado representativo de CI |
+| Suite Python, DSN/API y URL/colector en BDs distintas | **PASS, no representativo de CI** | 283 casos, 1 `skip`; la API lee su DSN y los otros procesos su URL, mecanismo que explica el conteo histórico |
 | Frontend Node 22.13.1 | **PASS** | lint y typecheck limpios; Vitest 10 archivos, **89/89**; build y worker MapLibre `550754` bytes |
 | Feed caído + hora civil ambigua | **PASS** | error persistido a `2026-10-25T00:30:00Z`; la hora local ambigua `02:30` se resuelve a su primera ocurrencia, `2026-10-25T00:30:00Z`, sin fecha inventada |
 | Ingesta efímera fuera de 1532/1533 | **PASS** | payload sintético válido de 2030, `AUD08-2030` / `1023V19656C5`: ciclo `ok`, 1 fila persistida |
@@ -99,9 +114,14 @@ tablas de una primera exportación concurrente.
 |---|---|
 | Cobertura geométrica | No hay contradicción: AUD-02 reconstruye **103** patrones; AUD-03 y AUD-04 usan los mismos **28** validados. Los **75** no validados son 72 sin prueba geométrica más 3 parciales; dentro de los 72 hay 67 accionables por adquisición, 1 patrón truncado del feed y 4 C4b con alternativa de coste cero aún no incorporada. |
 | `67`, `72` y `75` de AUD-03 | Son universos distintos, no conteos rivales: 75 es todo patrón no `validated`; 72 excluye los 3 `partial`; 67 es el subconjunto de esos 72 para el que falta adquirir/probar una fuente, no los C4b ya contrastables ni el feed truncado. |
+| El residuo `68` | Quedó sin explicar en la primera versión de AUD-08. En AUD-01, 68 equivale a los **67** patrones accionables sin fuente/intento más el **1** patrón C8b truncado por el feed: es un conjunto de «sin explicación geométrica suficiente», no 68 trabajos de adquisición. Esta distinción consta en `RAILWAY_GEOMETRY_AUDIT.md:1244-1264`; AUD-08 debe conservarla para no volver a convertirlo en una cifra rival de 67. |
+| `72` frente a `75` en AUD-04 | `POSITION_MOVEMENT_AUDIT.md:141` y `:543` llaman «72 de 103 sin corredor validado» a una categoría que, por el catálogo de AUD-03, son **75** no validados (72 `pending` + 3 `partial`). Se registra como discrepancia editorial abierta para sus autores o AUD-09: AUD-08 no modifica un informe ya aprobado. El «75–78 anchor» de ese informe es además un rango de circulaciones, no el recuento de patrones. |
+| Horizonte `180` frente a `190` segundos | `POSITION_MOVEMENT_AUDIT.md:455` aún dice «hasta 180 s después del ancla», mientras `:598-663` y los demás informes distinguen 180 s configurados de **190 s efectivos**. Es una discrepancia abierta de redacción: debe decir cuál de las dos magnitudes está midiendo, sin reescribir el informe aprobado en esta tarea. |
 | Movimiento frente a geometría | AUD-04 no afirma que los 28 corredores estén completos: examina únicamente los map-matcheables que AUD-03 permite. Sus fallos de reloj/renderizado no contradicen que la geometría de esos 28 sea utilizable. |
 | P0 de replay de AUD-05 frente a backend verde de AUD-06 | No hay contradicción: AUD-05 demuestra que un `?at=` anterior a un `started_at` existente produce edades negativas y `unknown`; AUD-06 valida contratos, índices y recuperación, pero no afirma que esa combinación temporal esté cubierta. La suite integral de 283 también pasó: es una brecha de cobertura, no una refutación del P0. |
-| 233 / 276 / 283 Python; 49 / 88 / 89 frontend | Son cortes de alcance e historia, no resultados simultáneos del mismo árbol. 233/49 corresponde al cierre MP-020; 276/88 a MP-021 antes de los dos módulos MP-022 incorporados a CI; la lista CI actual cuenta y ejecuta 283, y el frontend actual ejecuta 89. AUD-08 reproduce los dos últimos valores. |
+| 233 / 276 / 283 Python; 49 / 88 / 89 frontend | Son cortes de alcance e historia, no resultados simultáneos del mismo árbol. 233/49 corresponde al cierre MP-020; 276/88 a MP-021 antes de los dos módulos MP-022 incorporados a CI; la lista CI actual cuenta 283 y el frontend actual ejecuta 89. Con `data/` disponible Python da 5 `skip`; el checkout real de CI da 18, distinción que faltaba en el primer informe. |
+| Línea base `5433` e informe AUD-06 | El registro de despacho documenta un incidente de AUD-06: dos ciclos reales del colector tocaron `5433`. La línea base registrada cambió de `668/484/3/120/0` a **`895/646/8/126/8`** (posiciones / actualizaciones / alertas / ejecuciones / eventos), diferencia `+227/+162/+5/+6/+8`. Esto contradice `BACKEND_OPERATIONS_AUDIT.md:25` («usé exclusivamente» su contenedor) y `:281` («la base compartida … no se tocó»); ambas afirmaciones requieren corrección por su autor o consideración de AUD-09. AUD-08 no tocó `5433`; lo declara como antecedente ajeno, no como una acción propia. |
+| «Sin skips contra desarrollo» | Ya no es reproducible como línea base: `test_real_soak_postgres` exige el conteo exacto 668, no los 895 datos actuales. No se volvió a abrir `5433` para esta auditoría, por lo que no se reclaman cifras nuevas de ejecución; se registra que la evidencia histórica de «0 skip» dejó de ser reutilizable. |
 | Operación 24/7 | AUD-01, AUD-04 y AUD-06 coinciden: las capturas 1532/1533 y la ráfaga de 823,2 s/21 ciclos aportan regresiones y recuperación puntual, no una demostración de 24/7. AUD-08 no eleva esa evidencia. |
 
 ## Hallazgos
