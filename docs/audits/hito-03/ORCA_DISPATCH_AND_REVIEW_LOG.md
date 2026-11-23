@@ -22,7 +22,9 @@ Mantenido en vivo por el coordinador (Claude Sonnet) a medida que cada `AUD-ID` 
 | AUD-01 | Corrección (rev.2) | Claude `opus` · high (follow-up) | `ctx_82628c4e473d` | `task_e5569e13a76b` | `f88d12f` | **aplicada**, enviada a reevaluación |
 | AUD-01 | Revisor (2ª ronda) | Codex `gpt-5.6-sol` · high (follow-up) | `ctx_264f3fb407d7` | `task_4ac30104d092` | — | **CHANGES_REQUESTED** (4/6 puntos ya APROBADOS, quedan 2: dirección temporal `calculated_at` y criterios de refutación cuantificados en H1-H8) |
 | AUD-01 | Corrección (ronda 3) | Claude `opus` · high (follow-up) | `ctx_349842fc8de0` | `task_5d4d3be6d4fe` | `574a620` | **aplicada**, enviada a veredicto final |
-| AUD-01 | Revisor (3ª ronda, final) | Codex `gpt-5.6-sol` · high (follow-up) | `ctx_526284cf5474` | `task_4cba05ac92dd` | — | *(en curso)* |
+| AUD-01 | Revisor (3ª ronda, final) | Codex `gpt-5.6-sol` · high (follow-up) | `ctx_526284cf5474` | `task_4cba05ac92dd` | — | **APPROVED (definitivo)** — AUD-01 cerrado tras 3 rondas |
+| AUD-03 | Corrección (ronda 2) | Codex `gpt-5.6-sol` · high (follow-up) | `ctx_352eb5227c6d` | `task_a86ea689f4b5` | `08ce3b8` | **aplicada**, enviada a veredicto final |
+| AUD-03 | Revisor (2ª ronda, final) | Claude `opus` · high (follow-up) | `ctx_045f259f59a2` | `task_789f8d5e7a80` | — | *(en curso)* |
 
 ## Incidente de alcance real — AUD-06 escribió en la base de desarrollo compartida
 
@@ -80,5 +82,7 @@ El colector es solo-inserción por diseño (sin ruta de `UPDATE`/`DELETE`), así
   - 19/19 tests focales en ambas rondas.
 
 - **AUD-06** (backend/operación): 103 tests reales reproducidos contra PostGIS aislado. **P1 principal:** `build_snapshot` puede publicar una `revision` nueva sin incluir el vehículo que la motivó — falta una vista transaccional consistente. **P2:** pérdida de `affected_stop_ids` en algún camino, FKs `trip_id` no pobladas, y confirma lo que AUD-04/AUD-08 deben vigilar: los 823s de operación medidos en MP-021 **no prueban 24/7**.
+
+- **AUD-01 — CERRADO (APPROVED definitivo tras 3 rondas).** Resumen final: 2 P0 reales confirmados independientemente con cifras exactas (ver tabla de dispatch arriba), 8 hipótesis refutables con umbral numérico explícito, 4 hipótesis descartadas acotadas con razón sustantiva. El revisor de la ronda final dejó constancia de que el commit `574a620` también sincronizó la cifra 68→67+1 de P0-002 con la corrección de AUD-03 (fuera de su encargo explícito, no reevaluado por él) — es consistente con lo que AUD-03 estableció de forma independiente, no una afirmación nueva sin verificar.
 
 *(Esta tabla se actualizará según reporten AUD-04 y el resto.)*
