@@ -39,7 +39,7 @@ tareas:
 |---|---|
 | PostgreSQL/PostGIS | Ronda v1: contenedor propio `madrid-pulse-aud05-postgres`, `127.0.0.1:5455`. Ronda v2 (esta corrección): contenedor propio `aud05r-postgres` (`postgis/postgis:17-3.5`), `127.0.0.1:5456`. Nunca 5433. Migraciones `0001_init`/`0002_api_batch_indexes` aplicadas. Ambos destruidos al terminar (§8). |
 | Datos | `data/hito-03/replay/` repuesto vía `instalar.py --worktree "$PWD" --solo-datos` (dos cortes reales Renfe `1532`/`1533`, 2026-11-20, GTFS estático completo del núcleo). |
-| Ingesta | `apps.api.tools.replay_three_snapshots` (colector real, `run_cycle`); salida íntegra de la ronda v2 en `capturas/30-ingesta-replay.log` (snapshots con 119/122 vehículos; recuentos finales `(240, 199, 4, 7, 2)`). |
+| Ingesta | `apps.api.tools.replay_three_snapshots` (colector real, `run_cycle`); salida íntegra de la ronda v2 en `capturas/30-ingesta-replay.txt` (snapshots con 119/122 vehículos; recuentos finales `(240, 199, 4, 7, 2)`). |
 | Histórico | `services.snapshotter 2026-11-20` con `MADRID_PULSE_SHORT_NAME=` (núcleo completo, no el valor por defecto `C5`), solo en la ronda v1. Lo que muestran las capturas 09/10: 1304 programados, 122 observados, 1179 huecos, 3 anuladas y 35 rutas con viajes programados. |
 | API | `uvicorn apps.api.main:app`, `MADRID_PULSE_MODE=replay`, GTFS completo: `127.0.0.1:8010` (v1) y `127.0.0.1:8037` (v2). |
 | Web | `npm run dev` en `apps/web` con `MADRID_PULSE_API_TARGET` apuntando a la API propia: puerto 5180 (v1) y 5191 (v2). |

@@ -1,0 +1,201 @@
+run_cycle: trip_updates falló en la descarga o validación: 1 validation error for RawTripUpdatesFeed
+  Invalid JSON: key must be a string at line 1 column 2 [type=json_invalid, input_value=b'{not json', input_type=bytes]
+    For further information visit https://errors.pydantic.dev/2.13/v/json_invalid
+== Ingesta de la captura 1532 ==
+  ingest 1532/vehicle_positions: status=ok entities=463 inserted=119 deduped=0 skipped=344 error=None
+  ingest 1532/trip_updates: status=ok entities=469 inserted=122 deduped=0 skipped=347 error=None
+  ingest 1532/alerts: status=ok entities=72 inserted=4 deduped=0 skipped=68 error=None
+{
+ "label": "A normal (1532)",
+ "generated_at": "2026-11-20T14:32:14+00:00",
+ "snapshot_id": "sha256:4a222bf3277bcd23bc0b279c8e024dd43aa00197513592fc946d9ce1dbf93e1f",
+ "revision": {
+  "scope": "pg:7711497930039672871",
+  "sequence": 3
+ },
+ "vehicles_total": 119,
+ "rendering_methods": {
+  "anchor": 75,
+  "extrapolated_from_last_anchor": 44
+ },
+ "coordinate_spaces": {
+  "map_matched": 44,
+  "raw": 75
+ },
+ "with_operator_delay": 119,
+ "without_operator_delay": 0,
+ "feeds": {
+  "alerts": "ok",
+  "trip_updates": "ok",
+  "vehicle_positions": "ok"
+ },
+ "degraded": []
+}
+== Ingesta de la captura 1533 ==
+  ingest 1533/vehicle_positions: status=ok entities=468 inserted=121 deduped=0 skipped=347 error=None
+  ingest 1533/trip_updates: status=ok entities=474 inserted=77 deduped=47 skipped=350 error=None
+  ingest 1533/alerts: status=ok entities=73 inserted=0 deduped=4 skipped=69 error=None
+{
+ "label": "B normal (1533)",
+ "generated_at": "2026-11-20T14:33:31+00:00",
+ "snapshot_id": "sha256:7ac6519cc14348727df87b54aa9a49b1cab5eda7de86fbb9dee9b5f349778a19",
+ "revision": {
+  "scope": "pg:7711497930039672871",
+  "sequence": 6
+ },
+ "vehicles_total": 122,
+ "rendering_methods": {
+  "anchor": 78,
+  "extrapolated_from_last_anchor": 44
+ },
+ "coordinate_spaces": {
+  "map_matched": 44,
+  "raw": 78
+ },
+ "with_operator_delay": 122,
+ "without_operator_delay": 0,
+ "feeds": {
+  "alerts": "ok",
+  "trip_updates": "ok",
+  "vehicle_positions": "ok"
+ },
+ "degraded": []
+}
+== Vehículos map-matcheados que avanzaron entre 1532 y 1533: 13 ==
+[
+ {
+  "vehicle_id": "19656",
+  "line": "C5",
+  "pattern_id": "gtfs-pattern:6af8a161a0f2b7a5736d",
+  "progress_m_1532": 39595.0,
+  "progress_m_1533": 41198.7,
+  "distance_from_raw_m": 4.2,
+  "rendering_method": "extrapolated_from_last_anchor",
+  "envelope_speed_mps": 22.04
+ },
+ {
+  "vehicle_id": "19660",
+  "line": "C5",
+  "pattern_id": "gtfs-pattern:6af8a161a0f2b7a5736d",
+  "progress_m_1532": 30046.5,
+  "progress_m_1533": 33092.8,
+  "distance_from_raw_m": 1.7,
+  "rendering_method": "extrapolated_from_last_anchor",
+  "envelope_speed_mps": 13.96
+ },
+ {
+  "vehicle_id": "19664",
+  "line": "C5",
+  "pattern_id": "gtfs-pattern:6af8a161a0f2b7a5736d",
+  "progress_m_1532": 24805.7,
+  "progress_m_1533": 26272.1,
+  "distance_from_raw_m": 0.4,
+  "rendering_method": "extrapolated_from_last_anchor",
+  "envelope_speed_mps": 14.07
+ },
+ {
+  "vehicle_id": "19670",
+  "line": "C5",
+  "pattern_id": "gtfs-pattern:6af8a161a0f2b7a5736d",
+  "progress_m_1532": 5739.1,
+  "progress_m_1533": 7371.1,
+  "distance_from_raw_m": 2.3,
+  "rendering_method": "extrapolated_from_last_anchor",
+  "envelope_speed_mps": 17.62
+ },
+ {
+  "vehicle_id": "19671",
+  "line": "C5",
+  "pattern_id": "gtfs-pattern:43a2743c369c964dc0f4",
+  "progress_m_1532": 29746.8,
+  "progress_m_1533": 31950.8,
+  "distance_from_raw_m": 20.8,
+  "rendering_method": "extrapolated_from_last_anchor",
+  "envelope_speed_mps": 6.78
+ }
+]
+== C) fallo parcial de trip_updates (JSON inválido) ==
+  ciclo trip_updates: status=error error=1 validation error for RawTripUpdatesFeed
+  Invalid JSON: key must be 
+{
+ "label": "C parcial",
+ "generated_at": "2026-11-20T14:34:46+00:00",
+ "snapshot_id": "sha256:946da5aff31dd6af6c2e7adddab20c8ab2a729e60037977d03005741d0f05b55",
+ "revision": {
+  "scope": "pg:7711497930039672871",
+  "sequence": 7
+ },
+ "vehicles_total": 122,
+ "rendering_methods": {
+  "anchor": 78,
+  "extrapolated_from_last_anchor": 44
+ },
+ "coordinate_spaces": {
+  "map_matched": 44,
+  "raw": 78
+ },
+ "with_operator_delay": 122,
+ "without_operator_delay": 0,
+ "feeds": {
+  "alerts": "ok",
+  "trip_updates": "error",
+  "vehicle_positions": "ok"
+ },
+ "degraded": [
+  {
+   "resource": "delays_and_eta",
+   "status": "error"
+  }
+ ]
+}
+== D) congelado (colector detenido, reloj +1 h) ==
+{
+ "label": "D congelado",
+ "generated_at": "2026-11-20T15:33:21+00:00",
+ "snapshot_id": "sha256:08e40b839b4dab8bbb8cdd40a077215592c0ce03799942e5436e56e927b5a7b2",
+ "revision": {
+  "scope": "pg:7711497930039672871",
+  "sequence": 7
+ },
+ "vehicles_total": 122,
+ "rendering_methods": {
+  "stale_frozen": 122
+ },
+ "coordinate_spaces": {
+  "map_matched": 44,
+  "raw": 78
+ },
+ "with_operator_delay": 122,
+ "without_operator_delay": 0,
+ "feeds": {
+  "alerts": "stale",
+  "trip_updates": "error",
+  "vehicle_positions": "stale"
+ },
+ "degraded": [
+  {
+   "resource": "alerts",
+   "status": "stale"
+  },
+  {
+   "resource": "delays_and_eta",
+   "status": "error"
+  },
+  {
+   "resource": "vehicles",
+   "status": "stale"
+  }
+ ]
+}
+== Invariantes comprobadas ==
+{
+ "revision_monotonica_en_ambito": true,
+ "snapshot_id_declarado_no_ordenable": true,
+ "parcial_no_vacia_vehiculos": true,
+ "parcial_degrada_solo_el_recurso_afectado": true,
+ "congelado_conserva_el_ultimo_dato": true,
+ "congelado_no_rejuvenece": true,
+ "congelado_todo_stale_frozen_o_schedule": true
+}
+== Recuentos finales en el contenedor fresco ==
+(240, 199, 4, 7, 2)
