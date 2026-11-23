@@ -221,22 +221,36 @@ circulation_daily_history (gold/circulation_daily_history/date=<fecha>/part.parq
   trip_id
   vehicle_id                 -- NULL si no se observó: no hay vehículo porque no se vio ninguno
   scheduled BOOLEAN          -- el GTFS lo programa ese día (calendar.txt + calendar_dates.txt)
-  observed  BOOLEAN          -- existe al menos una vehicle_position_observation
+  observed  BOOLEAN          -- cobertura de POSICIÓN: al menos una vehicle_position_observation
+  canceled  BOOLEAN          -- el operador lo declaró CANCELED; NULL si no hubo parte de viaje
+  coverage                   -- clasificación única: observed | canceled | operator_only
+                             --                      | unobserved | unscheduled
   headsign, scheduled_first_stop_id, scheduled_first_departure_time,
   scheduled_last_stop_id, scheduled_last_arrival_time   -- NULL en un viaje sin stop_times
   positions_count, first_observed_at, last_observed_at,
   distinct_stops_observed, last_current_status          -- NULL (nunca 0) si observed = false
-  trip_updates_count, delay_reported_count              -- denominador de on_time
+  trip_updates_count, delay_reported_count              -- NULL si no hubo parte de viaje;
+                             -- delay_reported_count = 0 con parte es un CERO MEDIDO, no una ausencia
   latest_reported_delay_seconds
   on_time BOOLEAN            -- NULL (nunca false) si delay_reported_count = 0
   PRIMARY KEY(service_date, trip_id, vehicle_id)
 ```
 
-Los huecos de cobertura son **filas**, no ausencias: un servicio programado que
-nunca se observó aparece con `observed = false` y sus métricas de observación en
-`NULL`. Una circulación observada cuyo `trip_id` no está en el calendario de ese
-día aparece con `scheduled = false` en vez de descartarse -- el GTFS de Renfe no
-es retroactivo y el histórico existe para dejar ver ese desajuste.
+Los huecos de cobertura son **filas**, no ausencias. Pero **no todo lo que no se
+ve es un hueco**: `coverage` separa el hueco real (`unobserved`: ni posición ni
+parte del operador) de una **anulación** (`canceled`: el operador declaró
+`CANCELED` y el tren no circuló) y de un hueco solo de posición
+(`operator_only`). Hallazgo real de la revisión de MP-021: tres viajes anulados
+por Renfe el `2026-11-20` se estaban contando como fallo de captura propio. Una
+circulación observada cuyo `trip_id` no está en el calendario de ese día aparece
+con `scheduled = false` en vez de descartarse -- el GTFS de Renfe no es
+retroactivo y el histórico existe para dejar ver ese desajuste.
+
+La regla de nulos es **cada métrica con el denominador que la sostiene**, no
+"todo `NULL` si no se observó": las de posición son `NULL` exactamente cuando
+`observed = false`; las de parte del operador lo son cuando no hubo ninguno, y
+`delay_reported_count = 0` con parte presente es un **cero medido** (hubo parte
+y no traía retraso), que es justo lo que publica el feed en una cancelación.
 
 Un viaje sin `stop_times` (huérfano) también es fila, con el horario
 explícitamente ausente, para que su denominador coincida con el de

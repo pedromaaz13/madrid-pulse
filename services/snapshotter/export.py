@@ -53,6 +53,14 @@ un Parquet a medio escribir nunca debe poder entrar en un agregado. Empieza
 por punto para que, además, ningún `glob` convencional lo recoja.
 """
 
+QUARANTINE_DIR_NAME = ".quarantine"
+"""Dónde espera la versión anterior de un día mientras se sustituye.
+
+También fuera de `raw/` y de `gold/`, por la misma razón. Su existencia al
+empezar una ejecución significa que la anterior se interrumpió a mitad de una
+sustitución: `recover_interrupted_swaps` lo resuelve antes de tocar nada.
+"""
+
 
 @dataclass(frozen=True)
 class TableSource:
@@ -140,6 +148,109 @@ def _has_parquet(directory: Path) -> bool:
     return directory.is_dir() and any(directory.glob("**/*.parquet"))
 
 
+def _quarantine_path(output_dir: Path, table: str, service_date: date) -> Path:
+    return output_dir / QUARANTINE_DIR_NAME / f"{table}__date={service_date.isoformat()}"
+
+
+def _parse_quarantine_name(name: str) -> tuple[str, str] | None:
+    """`<tabla>__date=<fecha>` -> `(tabla, fecha)`, o `None` si no encaja."""
+    table, separator, partition = name.partition("__date=")
+    if not separator or not table or not partition:
+        return None
+    return table, partition
+
+
+def recover_interrupted_swaps(output_dir: Path) -> list[str]:
+    """Resuelve cualquier sustitución interrumpida antes de exportar nada.
+
+    Sustituir el día de una tabla son **dos renombrados**, cada uno atómico
+    por separado (ver `_replace_service_date_partition`). Un `rename` de
+    POSIX no puede sustituir de un solo paso un directorio destino que ya
+    existe y no está vacío, así que la atomicidad de un solo paso no está
+    disponible para un árbol de particiones; lo que sí se garantiza es que
+    **en ningún instante se destruye el día ya archivado**:
+
+    - interrumpido entre los dos renombrados: `date=<fecha>` no existe y la
+      versión anterior, intacta, espera en cuarentena -> se restaura;
+    - interrumpido después del segundo: `date=<fecha>` ya tiene el contenido
+      nuevo y la cuarentena es basura -> se borra.
+
+    Se distingue un caso del otro por la sola presencia de `date=<fecha>`, sin
+    necesidad de ningún registro aparte. Devuelve la lista de acciones tomadas,
+    para que el operador vea en el log que hubo una interrupción.
+    """
+    quarantine_root = output_dir / QUARANTINE_DIR_NAME
+    if not quarantine_root.is_dir():
+        return []
+    actions: list[str] = []
+    for entry in sorted(quarantine_root.iterdir()):
+        if not entry.is_dir():
+            continue
+        parsed = _parse_quarantine_name(entry.name)
+        if parsed is None:
+            continue
+        table, partition = parsed
+        final_partition = output_dir / "raw" / table / f"date={partition}"
+        if final_partition.exists():
+            shutil.rmtree(entry, ignore_errors=True)
+            actions.append(f"descartada la cuarentena sobrante de {table}/{partition}")
+        else:
+            final_partition.parent.mkdir(parents=True, exist_ok=True)
+            entry.replace(final_partition)
+            actions.append(f"restaurado {table}/{partition} desde la cuarentena")
+        logger.warning(
+            "sustitución interrumpida detectada en %s: %s", entry.name, actions[-1]
+        )
+    return actions
+
+
+def _replace_service_date_partition(
+    staged_partition: Path, final_partition: Path, quarantine: Path
+) -> None:
+    """Sustituye el día archivado por el recién preparado **sin destruirlo antes**.
+
+    La versión de MP-021 hacía `rmtree(final)` y después `replace(staged,
+    final)`. Eso no era una sustitución atómica sino dos pasos con un agujero
+    real en medio: una caída entre ambos borraba el día ya archivado **sin
+    reemplazo**, que es justamente lo que esta tarea existe para impedir.
+    Hallazgo de la revisión de Codex sobre MP-021.
+
+    Aquí no se borra nada hasta que el contenido nuevo está en su sitio:
+
+    1. la versión anterior se **aparta** a la cuarentena con un `rename`
+       atómico (nada se destruye, solo cambia de nombre);
+    2. la preparada ocupa el nombre definitivo con otro `rename` atómico;
+    3. solo entonces se borra la cuarentena.
+
+    Caerse en cualquier punto deja el archivo en un estado del que
+    `recover_interrupted_swaps` sale sin pérdida. No es atomicidad de un solo
+    paso -- `rename(2)` no la ofrece para directorios no vacíos -- y no se
+    afirma que lo sea: es **a prueba de caídas**, que es la propiedad que de
+    verdad protege el histórico.
+    """
+    quarantine.parent.mkdir(parents=True, exist_ok=True)
+    final_partition.parent.mkdir(parents=True, exist_ok=True)
+    # Una cuarentena previa para esta misma clave ya la resolvió
+    # `recover_interrupted_swaps`; si quedara algo, es basura y estorba al
+    # `rename` de abajo.
+    shutil.rmtree(quarantine, ignore_errors=True)
+
+    quarantined = False
+    if final_partition.exists():
+        final_partition.replace(quarantine)  # (1) atómico
+        quarantined = True
+    try:
+        staged_partition.replace(final_partition)  # (2) atómico
+    except BaseException:
+        # No se pudo poner el contenido nuevo: se devuelve el anterior a su
+        # sitio en vez de dejar el día sin archivo.
+        if quarantined and not final_partition.exists():
+            quarantine.replace(final_partition)
+        raise
+    if quarantined:
+        shutil.rmtree(quarantine, ignore_errors=True)  # (3)
+
+
 def export_raw_table(
     con: duckdb.DuckDBPyConnection,
     source: TableSource,
@@ -170,9 +281,11 @@ def export_raw_table(
 
     La estrategia es por tanto **preparar y sustituir**: se escribe el día en
     `.staging/` (fuera del árbol que lee la capa gold) y, solo cuando la
-    escritura ha terminado, se reemplaza el subárbol `date=<fecha>` con un
-    `rename` del sistema de ficheros. El resultado no puede contener restos de
-    una ejecución anterior y ningún otro día se toca.
+    escritura ha terminado, se reemplaza el subárbol `date=<fecha>`
+    apartando antes la versión anterior a la cuarentena, nunca borrándola
+    (`_replace_service_date_partition`). El resultado no puede contener restos
+    de una ejecución anterior, ningún otro día se toca, y una caída a mitad de
+    la sustitución no destruye el día ya archivado.
 
     **Un origen vacío no borra el archivo.** Si el día no tiene filas en la
     tabla hot pero sí existe archivo previo, se conserva y se devuelve
@@ -242,8 +355,11 @@ def export_raw_table(
                 f"ninguna partición en {staged_partition} pese a contar {count} filas"
             )
         table_output_dir.mkdir(parents=True, exist_ok=True)
-        shutil.rmtree(final_partition, ignore_errors=True)
-        staged_partition.replace(final_partition)
+        _replace_service_date_partition(
+            staged_partition,
+            final_partition,
+            _quarantine_path(output_dir, source.table, service_date),
+        )
     finally:
         shutil.rmtree(staging_root, ignore_errors=True)
 
@@ -257,10 +373,18 @@ def export_service_date(
 ) -> list[ExportResult]:
     """Exporta las cinco tablas "hot" para un día de servicio completo.
 
-    Cada tabla reemplaza su propio subárbol `date=<fecha>` de forma atómica
-    (ver `export_raw_table`): reprocesar el mismo día no acumula filas ni deja
-    particiones huérfanas, y no toca ningún otro día ya archivado.
+    Empieza resolviendo cualquier sustitución que una ejecución anterior
+    dejase a medias (`recover_interrupted_swaps`), de modo que un reintento
+    tras una caída es siempre seguro -- es lo que permite que el archivo
+    diario de `infra/operate/daily-archive.sh` se pueda relanzar sin pensarlo.
+
+    Cada tabla reemplaza después su propio subárbol `date=<fecha>` **sin
+    destruirlo antes** (ver `_replace_service_date_partition`): reprocesar el
+    mismo día no acumula filas ni deja particiones huérfanas, no toca ningún
+    otro día ya archivado, y una caída a mitad de la sustitución no puede
+    dejar el día sin archivo.
     """
+    recover_interrupted_swaps(output_dir)
     con = _connect_with_postgres(database_url)
     try:
         return [

@@ -61,6 +61,7 @@ _TRIP_UPDATE_TYPES = {
     "delay_seconds": "INTEGER",
     "delay_coverage": "VARCHAR",
     "observed_at": "TIMESTAMPTZ",
+    "schedule_relationship": "VARCHAR",
 }
 
 
@@ -133,6 +134,110 @@ class CirculationHistoryTests(unittest.TestCase):
 
     # -- huecos ------------------------------------------------------------
 
+    def test_a_canceled_trip_is_not_counted_as_a_coverage_gap(self) -> None:
+        """Hallazgo de la revisión de Codex, con el caso real reproducido.
+
+        En el Parquet real del `2026-11-20` había tres viajes
+        (`1023V20865C5`, `1023V21340C10`, `1023V21748C2`) clasificados como
+        hueco de cobertura con `trip_updates_count = 1` y
+        `delay_reported_count = 0`. El origen: una `trip_update_observation`
+        real con `schedule_relationship = 'CANCELED'` y ninguna posición.
+        Renfe había **anulado** esos servicios; contarlos como hueco culpaba a
+        nuestro colector de trenes que nunca salieron.
+        """
+        self._write_trip_updates(
+            [
+                {
+                    "source_trip_id": SCHEDULED_TRIP_ID,
+                    "delay_seconds": None,
+                    "delay_coverage": "missing",
+                    "observed_at": _at(9),
+                    "schedule_relationship": "CANCELED",
+                }
+            ]
+        )
+        result = self._build()
+        (row,) = self._rows(result.output_path, f"trip_id = '{SCHEDULED_TRIP_ID}'")
+
+        self.assertEqual(row["coverage"], "canceled", "una anulación no es un hueco de cobertura")
+        self.assertTrue(row["canceled"])
+        self.assertTrue(row["scheduled"])
+        self.assertFalse(row["observed"], "no hubo posición, y eso sigue siendo cierto")
+
+        # Métricas de POSICIÓN: ausentes, porque no se observó ninguna.
+        self.assertIsNone(row["positions_count"])
+        self.assertIsNone(row["first_observed_at"])
+        # Métricas del OPERADOR: hubo actualización, así que son recuentos
+        # reales. El `0` es un cero MEDIDO -- la actualización no traía retraso,
+        # que es lo que el feed hace con una cancelación -- no un dato ausente.
+        self.assertEqual(row["trip_updates_count"], 1)
+        self.assertEqual(row["delay_reported_count"], 0)
+        # Y sin muestra de retraso no se emite veredicto.
+        self.assertIsNone(row["on_time"])
+        self.assertIsNone(row["latest_reported_delay_seconds"])
+
+    def test_a_trip_update_without_position_and_without_cancellation_is_operator_only(self) -> None:
+        """El otro caso de «sin posición pero con información»: el operador
+        publicó un parte del viaje y nunca llegó una posición. No es un hueco
+        total ni una anulación: es un hueco de **posición**."""
+        self._write_trip_updates(
+            [
+                {
+                    "source_trip_id": SCHEDULED_TRIP_ID,
+                    "delay_seconds": 120,
+                    "delay_coverage": "reported",
+                    "observed_at": _at(9),
+                    "schedule_relationship": "SCHEDULED",
+                }
+            ]
+        )
+        result = self._build()
+        (row,) = self._rows(result.output_path, f"trip_id = '{SCHEDULED_TRIP_ID}'")
+        self.assertEqual(row["coverage"], "operator_only")
+        self.assertFalse(row["canceled"])
+        self.assertFalse(row["observed"])
+        self.assertIsNone(row["positions_count"], "sin posición sigue siendo ausencia, no cero")
+        # Aquí sí hay retraso reportado, así que el veredicto es legítimo.
+        self.assertEqual(row["delay_reported_count"], 1)
+        self.assertTrue(row["on_time"])
+
+    def test_every_row_classifies_into_exactly_one_coverage_category(self) -> None:
+        """Invariante estructural: `coverage` particiona el mart."""
+        self._write_positions(
+            [
+                {
+                    "source_vehicle_id": "19502",
+                    "source_trip_id": SCHEDULED_TRIP_ID,
+                    "observed_at": _at(8),
+                    "current_stop_id": STOP_ID,
+                    "current_status": "STOPPED_AT",
+                },
+                {
+                    "source_vehicle_id": "99999",
+                    "source_trip_id": "trip-fuera-de-calendario",
+                    "observed_at": _at(10),
+                    "current_stop_id": STOP_ID,
+                    "current_status": "IN_TRANSIT_TO",
+                },
+            ]
+        )
+        result = self._build()
+        rows = self._rows(result.output_path)
+        valid = {"observed", "canceled", "operator_only", "unobserved", "unscheduled"}
+        self.assertTrue(rows)
+        for row in rows:
+            self.assertIn(row["coverage"], valid)
+            # La categoría tiene que ser coherente con las banderas de las que
+            # se deriva, o un consumidor que confíe en una u otra discreparía.
+            if row["coverage"] == "observed":
+                self.assertTrue(row["scheduled"] and row["observed"])
+            elif row["coverage"] == "unscheduled":
+                self.assertTrue(row["observed"] and not row["scheduled"])
+            else:
+                self.assertTrue(row["scheduled"] and not row["observed"])
+            if row["coverage"] == "unobserved":
+                self.assertIsNone(row["trip_updates_count"], "un hueco real no tiene ni parte")
+
     def test_a_scheduled_trip_never_observed_is_a_row_with_nulls_not_zeros(self) -> None:
         result = self._build()
         rows = self._rows(result.output_path, f"trip_id = '{SCHEDULED_TRIP_ID}'")
@@ -141,6 +246,10 @@ class CirculationHistoryTests(unittest.TestCase):
         self.assertTrue(row["scheduled"])
         self.assertFalse(row["observed"])
         self.assertIsNone(row["vehicle_id"], "no hay vehículo porque no se vio ninguno")
+        self.assertEqual(
+            row["coverage"], "unobserved", "sin ninguna señal, el hueco es total"
+        )
+        self.assertIsNone(row["canceled"], "sin parte del operador no se sabe si está anulada")
         for column in (
             "positions_count",
             "first_observed_at",
@@ -304,6 +413,7 @@ class CirculationHistoryTests(unittest.TestCase):
                     "delay_seconds": seconds,
                     "delay_coverage": coverage,
                     "observed_at": _at(hour),
+                    "schedule_relationship": "SCHEDULED",
                 }
                 for hour, seconds, coverage in delays
             ]

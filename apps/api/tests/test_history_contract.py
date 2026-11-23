@@ -50,6 +50,9 @@ UNARCHIVED_DATE = date(2026, 11, 20)
 OBSERVED_TRIP_ID = "1022J19502C5"
 OBSERVED_ROUTE_ID = "10T0017C5"
 OBSERVED_VEHICLE_ID = "19502"
+CANCELED_TRIP_ID = "1022J19503C5"
+"""Segundo viaje real de la misma ruta en la fixture, usado aquí como servicio
+anulado por el operador (parte de viaje `CANCELED`, ninguna posición)."""
 STOP_ID = "35607"
 
 MP019_PATHS = (
@@ -99,13 +102,21 @@ def _build_archive(root: Path) -> None:
             """
             CREATE TEMP TABLE updates (
                 observed_at TIMESTAMPTZ, source_trip_id VARCHAR,
-                delay_seconds INTEGER, delay_coverage VARCHAR, nucleo_prefix VARCHAR
+                delay_seconds INTEGER, delay_coverage VARCHAR, nucleo_prefix VARCHAR,
+                schedule_relationship VARCHAR
             )
             """
         )
         con.execute(
-            "INSERT INTO updates VALUES ($1, $2, 60, 'reported', '10')",
+            "INSERT INTO updates VALUES ($1, $2, 60, 'reported', '10', 'SCHEDULED')",
             [datetime(2026, 11, 19, 9, 6, tzinfo=timezone.utc), OBSERVED_TRIP_ID],
+        )
+        # Un servicio real anulado por el operador: tiene parte de viaje pero
+        # ninguna posición. Es el caso que la revisión de Codex encontró mal
+        # clasificado como hueco de cobertura.
+        con.execute(
+            "INSERT INTO updates VALUES ($1, $2, NULL, 'missing', '10', 'CANCELED')",
+            [datetime(2026, 11, 19, 9, 4, tzinfo=timezone.utc), CANCELED_TRIP_ID],
         )
         con.execute(f"COPY updates TO '{updates_dir / 'part.parquet'}' (FORMAT PARQUET)")
     finally:
@@ -167,13 +178,31 @@ class HistoryContractTests(unittest.TestCase):
             day["rows_total"],
             day["circulations_scheduled"] + day["circulations_unscheduled"],
         )
+        # El denominador del día cierra contra las cuatro categorías en que se
+        # reparte lo programado. La identidad de tres términos que había aquí
+        # antes daba por supuesto que todo lo no observado era hueco, y por eso
+        # no veía las anulaciones.
         self.assertEqual(
             day["circulations_scheduled"],
             (day["circulations_observed"] - day["circulations_unscheduled"])
+            + day["circulations_canceled"]
+            + day["circulations_operator_only"]
             + day["circulations_unobserved"],
             "el denominador del día tiene que cerrar",
         )
         self.assertEqual(day["circulations_unscheduled"], 0)
+        # Y las cinco categorías particionan el día sin solaparse.
+        self.assertEqual(
+            day["rows_total"],
+            (day["circulations_observed"] - day["circulations_unscheduled"])
+            + day["circulations_canceled"]
+            + day["circulations_operator_only"]
+            + day["circulations_unobserved"]
+            + day["circulations_unscheduled"],
+        )
+        self.assertEqual(
+            day["circulations_canceled"], 1, "el servicio anulado debe contarse como anulado"
+        )
         self.assertIsNotNone(day["first_observed_at"])
 
     # -- líneas: puntualidad con cobertura --------------------------------
@@ -218,6 +247,16 @@ class HistoryContractTests(unittest.TestCase):
             self.assertIsNone(row["vehicle_id"])
             self.assertIsNone(row["positions_count"], "un hueco no se publica como 0 posiciones")
             self.assertIsNone(row["on_time"])
+            self.assertEqual(row["coverage"], "unobserved")
+            self.assertIsNone(
+                row["trip_updates_count"],
+                "un hueco REAL no tiene ni parte del operador; si lo tuviera, no es un hueco",
+            )
+            self.assertNotEqual(
+                row["trip_id"],
+                CANCELED_TRIP_ID,
+                "un servicio anulado por el operador no puede salir en el filtro de huecos",
+            )
 
         # La mayoría de los huecos sí se pueden situar en el día; los únicos
         # que no son los viajes huérfanos del GTFS (sin `stop_times`), que se
@@ -258,6 +297,25 @@ class HistoryContractTests(unittest.TestCase):
         ).json()
         self.assertEqual(payload["returned"], 1)
         self.assertTrue(payload["truncated"], "una lista recortada debe decirlo")
+
+    def test_canceled_filter_separates_operator_cancellations_from_coverage_gaps(self) -> None:
+        """Regresión directa del hallazgo: un servicio anulado por el operador
+        no es un fallo de captura nuestro y no debe engordar el hueco."""
+        payload = self.client.get(
+            "/api/v1/history/circulations",
+            params={"service_date": SERVICE_DATE.isoformat(), "only": "canceled"},
+        ).json()
+        self.assertEqual(payload["returned"], 1)
+        (row,) = payload["circulations"]
+        self.assertEqual(row["trip_id"], CANCELED_TRIP_ID)
+        self.assertEqual(row["coverage"], "canceled")
+        self.assertTrue(row["canceled"])
+        self.assertFalse(row["observed"])
+        # Posición ausente; parte del operador presente, con su cero medido.
+        self.assertIsNone(row["positions_count"])
+        self.assertEqual(row["trip_updates_count"], 1)
+        self.assertEqual(row["delay_reported_count"], 0)
+        self.assertIsNone(row["on_time"], "sin retraso reportado no hay veredicto")
 
     # -- detalle por identidad de Live ------------------------------------
 

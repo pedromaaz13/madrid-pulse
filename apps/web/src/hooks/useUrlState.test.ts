@@ -30,6 +30,16 @@ describe("estado de URL del histórico (MP-021)", () => {
     expect(parse("?view=history&hf=inventado").historyFilter).toBe("all");
   });
 
+  it("acepta las cinco categorías reales de cobertura del mart", () => {
+    // Regresión: la lista en tiempo de ejecución se quedó corta al añadir
+    // `canceled`/`operator_only` y el enlace caía silenciosamente a «Todas»,
+    // mostrando 120 circulaciones donde se habían pedido 3 anuladas.
+    for (const filter of ["observed", "unobserved", "canceled", "operator_only", "unscheduled"]) {
+      expect(parse(`?view=history&hf=${filter}`).historyFilter).toBe(filter);
+      expect(serialize(parse(`?view=history&hf=${filter}`))).toContain(`hf=${filter}`);
+    }
+  });
+
   it("la identidad de circulación es la misma en Live y en History", () => {
     const live = parse("?train=19656&trip=1023V19656C5&sd=2026-11-20");
     const history = parse("?view=history&train=19656&trip=1023V19656C5&sd=2026-11-20");

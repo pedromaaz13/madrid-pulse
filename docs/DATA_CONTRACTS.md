@@ -307,6 +307,7 @@ GET /api/v1/history/days                                    -- días archivados,
 GET /api/v1/history/lines?service_date=                     -- daily_line_metrics del día
 GET /api/v1/history/stations?service_date=&limit=           -- station_daily_metrics del día
 GET /api/v1/history/circulations?service_date=&line=&only=  -- circulation_daily_history, filtrable
+    only = all | observed | unobserved | canceled | operator_only | unscheduled
 GET /api/v1/history/circulations/{vehicle_id}/{trip_id}?service_date=   -- detalle + observaciones crudas
 ```
 
@@ -321,10 +322,21 @@ Reglas que el contrato garantiza:
   siempre con `trips_scheduled`, y `on_time_pct_of_covered` con
   `trips_with_delay_data`. Este último es `null` -- nunca `0.0` -- cuando no
   hay muestra (DEC-009).
-- **Los huecos son datos, no ausencias.** `only=unobserved` devuelve
-  exactamente los servicios programados que nunca se observaron, y
-  `/history/days` publica `circulations_unobserved` y
-  `circulations_unscheduled` como recuentos propios del día.
+- **Los huecos son datos, no ausencias — y una anulación no es un hueco.**
+  `coverage` clasifica cada circulación en una sola categoría y
+  `/history/days` publica un recuento por cada una
+  (`circulations_unobserved`, `circulations_canceled`,
+  `circulations_operator_only`, `circulations_unscheduled`), de modo que las
+  cinco particionan el día. `only=unobserved` devuelve el hueco **real** (ni
+  posición ni parte del operador); un servicio que el operador declaró
+  `CANCELED` sale por `only=canceled`, porque el tren no circuló y atribuirlo
+  a un fallo de captura sería culpar al colector de algo que no hizo.
+- **`NULL` y cero medido no son lo mismo.** Las métricas de posición son
+  `null` exactamente cuando `observed` es `false`; las de parte del operador,
+  cuando no hubo ninguno. `delay_reported_count: 0` con
+  `trip_updates_count >= 1` es un cero **medido** — hubo parte y no traía
+  retraso — y es el caso normal de una cancelación, porque el feed no publica
+  `delay` cuando `scheduleRelationship` es `CANCELED`.
 - **Un día no archivado responde `404`**, con el comando que lo archivaría en
   el detalle del error -- nunca un día vacío con métricas a cero, que se leería
   como "ese día no hubo servicio".

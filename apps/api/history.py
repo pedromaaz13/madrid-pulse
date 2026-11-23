@@ -128,14 +128,22 @@ def day_index(archive: Archive) -> list[dict[str, Any]]:
     summary: list[dict[str, Any]] = []
     for service_date in archive.available_service_dates():
         directory = archive.mart_dir(MART_NAME, service_date)
+        # Los recuentos se derivan de `coverage`, que es una clasificación de
+        # una sola categoría por fila (ver `services/snapshotter/history.py`):
+        # así los cinco cierran contra `rows_total` sin solaparse. Antes
+        # `circulations_unobserved` contaba como hueco de cobertura cualquier
+        # viaje sin posición, incluidos los que el operador había **anulado** --
+        # culpaba al colector de trenes que nunca salieron.
         (row,) = _rows(
             f"""
             SELECT
                 count(*) AS rows_total,
                 count(*) FILTER (WHERE scheduled) AS circulations_scheduled,
                 count(*) FILTER (WHERE observed) AS circulations_observed,
-                count(*) FILTER (WHERE scheduled AND NOT observed) AS circulations_unobserved,
-                count(*) FILTER (WHERE observed AND NOT scheduled) AS circulations_unscheduled,
+                count(*) FILTER (WHERE coverage = 'unobserved') AS circulations_unobserved,
+                count(*) FILTER (WHERE coverage = 'canceled') AS circulations_canceled,
+                count(*) FILTER (WHERE coverage = 'operator_only') AS circulations_operator_only,
+                count(*) FILTER (WHERE coverage = 'unscheduled') AS circulations_unscheduled,
                 count(DISTINCT line_short_name) FILTER (WHERE line_short_name <> '') AS lines_present,
                 {_utc_iso('min(first_observed_at)')} AS first_observed_at,
                 {_utc_iso('max(last_observed_at)')} AS last_observed_at
@@ -196,15 +204,21 @@ def circulations(
 ) -> list[dict[str, Any]]:
     """Circulaciones archivadas del día, filtrables por línea y por hueco.
 
-    `only`:
+    `only` selecciona por la categoría `coverage` del mart, que es única por
+    fila:
 
-    - `all`: todo lo que el día contiene, programado u observado.
-    - `observed`: solo circulaciones con posiciones reales.
-    - `unobserved`: solo el **hueco** -- programadas sin ninguna observación.
+    - `all`: todo lo que el día contiene.
+    - `observed`: programadas con al menos una posición real.
+    - `unobserved`: el **hueco de verdad** -- programadas sin posición y sin
+      ninguna actualización de viaje.
+    - `canceled`: programadas que el operador declaró `CANCELED`. No son un
+      hueco de cobertura: el tren no circuló, y el feed nos lo dijo.
+    - `operator_only`: programadas sin posición pero con actualización de
+      viaje -- el operador las conocía y nunca las localizamos.
     - `unscheduled`: observadas cuyo `trip_id` no estaba en el calendario.
 
     El orden pone primero lo observado y, dentro, lo que más posiciones tiene:
-    el hueco no se esconde (sigue siendo consultable con `only=unobserved` y
+    lo demás no se esconde (sigue siendo consultable por su categoría y
     contabilizado en `day_index`), pero la vista por omisión empieza por lo que
     de verdad se vio.
     """
@@ -216,18 +230,15 @@ def circulations(
     if line is not None:
         clauses.append("line_short_name = $line")
         params["line"] = line
-    if only == "observed":
-        clauses.append("observed")
-    elif only == "unobserved":
-        clauses.append("scheduled AND NOT observed")
-    elif only == "unscheduled":
-        clauses.append("observed AND NOT scheduled")
+    if only in {"observed", "unobserved", "canceled", "operator_only", "unscheduled"}:
+        clauses.append("coverage = $coverage")
+        params["coverage"] = only
     where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
     return _rows(
         f"""
         SELECT
             service_date, route_id, line_short_name, trip_id, vehicle_id,
-            scheduled, observed, headsign,
+            scheduled, observed, canceled, coverage, headsign,
             scheduled_first_stop_id, scheduled_first_departure_time,
             scheduled_last_stop_id, scheduled_last_arrival_time,
             positions_count,
@@ -275,7 +286,7 @@ def circulation_detail(
         f"""
         SELECT
             service_date, route_id, line_short_name, trip_id, vehicle_id,
-            scheduled, observed, headsign,
+            scheduled, observed, canceled, coverage, headsign,
             scheduled_first_stop_id, scheduled_first_departure_time,
             scheduled_last_stop_id, scheduled_last_arrival_time,
             positions_count,

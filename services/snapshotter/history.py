@@ -18,23 +18,62 @@ conjuntos, y cada fila dice a cuál pertenece:
   aplicando `calendar.txt` + `calendar_dates.txt` (vía
   `services.snapshotter.gold.scheduled_trip_ids_by_route`).
 - `observed`: existe al menos una `vehicle_position_observation` real de ese
-  vehículo en ese viaje.
+  vehículo en ese viaje. Es **cobertura de posición**, no "sabemos algo del
+  viaje": el operador puede publicar una actualización de viaje sin que haya
+  ninguna posición GPS.
 
-Un servicio programado del que nunca se vio una posición aparece con
-`scheduled=true, observed=false` y **todas** sus métricas de observación en
-`NULL`, no en `0`: no se observó, que no es lo mismo que haber observado cero
-(docs/DATA_QUALITY.md). Simétricamente, una circulación observada cuyo
-`trip_id` no está en el calendario de ese día aparece con `scheduled=false,
-observed=true`: una observación real no se oculta porque el calendario no la
-esperase -- se marca como lo que es, un viaje observado fuera de programación
-(o un desajuste real entre feed en vivo y GTFS estático, que es precisamente
-lo que un histórico debe dejar ver).
+Una circulación observada cuyo `trip_id` no está en el calendario de ese día
+aparece con `scheduled=false, observed=true`: una observación real no se oculta
+porque el calendario no la esperase -- se marca como lo que es, un viaje
+observado fuera de programación (o un desajuste real entre feed en vivo y GTFS
+estático, que es precisamente lo que un histórico debe dejar ver).
 
-**Puntualidad siempre con su denominador.** `on_time` es `NULL` -- nunca
-`false` -- cuando la circulación no tiene ni un solo retraso reportado.
-`delay_reported_count` es el denominador de esa fila y viaja siempre con ella;
-`positions_count` es el de la cobertura GPS. Ninguna métrica de este mart se
-puede presentar sin el recuento que la sostiene.
+**No todo lo que no se ve es un hueco: `coverage` (MP-021, segunda ronda).**
+La primera versión de este mart clasificaba como "programada sin observar"
+cualquier viaje sin posición, y afirmaba que todas sus métricas eran `NULL`.
+Las dos cosas eran falsas, y la revisión de Codex las encontró en el Parquet
+real del `2026-11-20`: tres viajes (`1023V20865C5`, `1023V21340C10`,
+`1023V21748C2`) salían como huecos con `trip_updates_count = 1` y
+`delay_reported_count = 0`. Al mirar el origen, los tres tenían una
+`trip_update_observation` real con `schedule_relationship = 'CANCELED'` y
+ninguna posición: **Renfe había anulado ese servicio**. No eran un fallo de
+captura nuestro; eran un hecho operativo que el operador nos comunicó, y
+contarlos como hueco de cobertura culpaba a nuestro colector de un tren que
+nunca salió. `apps/api/snapshot.py` ya trataba la cancelación como ciudadana de
+primera (ETA `trip_canceled`, MP-019); este mart la ignoraba.
+
+`coverage` clasifica cada fila en **una sola** categoría, por orden de
+prioridad, para que ningún consumidor tenga que rederivarla:
+
+| `coverage` | Qué significa |
+|---|---|
+| `unscheduled` | Observada, pero su `trip_id` no está en el calendario del día |
+| `observed` | Programada y con al menos una posición real |
+| `canceled` | Programada, sin posición, y el operador la declaró `CANCELED`: el tren no circuló |
+| `operator_only` | Programada, sin posición, pero con actualización de viaje: el operador la conocía y nunca la localizamos |
+| `unobserved` | Programada y **ni una sola señal**: el hueco de cobertura de verdad |
+
+`canceled` se publica además como columna booleana propia, porque una
+circulación puede estar anulada *y* tener posiciones (dato real y llamativo que
+no debe quedar escondido bajo una categoría).
+
+**Qué es `NULL` y qué es un cero medido.** La regla no es "todo `NULL` si no se
+observó", que era la afirmación equivocada; es **cada métrica junto al
+denominador que la sostiene**:
+
+- métricas de posición (`positions_count`, `first_observed_at`,
+  `last_observed_at`, `distinct_stops_observed`, `last_current_status`) son
+  `NULL` exactamente cuando `observed = false`;
+- métricas de actualización de viaje (`trip_updates_count`,
+  `delay_reported_count`) son `NULL` exactamente cuando no hubo ninguna
+  actualización. Si la hubo, `delay_reported_count = 0` es un **cero medido**
+  -- hubo actualización y no traía retraso -- y no un dato ausente; es
+  justamente lo que ocurre con una cancelación, porque el feed real no publica
+  `delay` cuando `scheduleRelationship` es `CANCELED` (ver
+  `packages/contracts/raw.py`);
+- `latest_reported_delay_seconds` y `on_time` son `NULL` cuando
+  `delay_reported_count` es `NULL` o `0`: sin muestra no hay veredicto, nunca
+  `false`.
 
 Como `gold.py`, lee únicamente el Parquet ya exportado (nunca vuelve a
 PostgreSQL) y escribe con `ORDER BY` explícito, para que reprocesar el mismo
@@ -140,7 +179,8 @@ def build_circulation_daily_history(
             con,
             tu_dir,
             "NULL::VARCHAR AS source_trip_id, NULL::INTEGER AS delay_seconds, "
-            "NULL::VARCHAR AS delay_coverage, NULL::TIMESTAMPTZ AS observed_at",
+            "NULL::VARCHAR AS delay_coverage, NULL::TIMESTAMPTZ AS observed_at, "
+            "NULL::VARCHAR AS schedule_relationship",
         )
 
         con.execute(
@@ -196,7 +236,11 @@ def build_circulation_daily_history(
                 count(*) AS trip_updates_count,
                 count(*) FILTER (WHERE delay_coverage = 'reported') AS delay_reported_count,
                 arg_max(delay_seconds, observed_at) FILTER (WHERE delay_coverage = 'reported')
-                    AS latest_reported_delay_seconds
+                    AS latest_reported_delay_seconds,
+                -- Una sola actualización que declare CANCELED basta para que el
+                -- viaje quede anulado: el operador no la retira publicando
+                -- después otra sin esa marca.
+                bool_or(upper(coalesce(schedule_relationship, '')) = 'CANCELED') AS canceled
             FROM {tu_source}
             WHERE source_trip_id IS NOT NULL
             GROUP BY source_trip_id
@@ -225,7 +269,17 @@ def build_circulation_daily_history(
             CASE
                 WHEN coalesce(d.delay_reported_count, 0) = 0 THEN NULL
                 ELSE abs(d.latest_reported_delay_seconds) <= $on_time_threshold
-            END AS on_time
+            END AS on_time,
+            -- `NULL` cuando no hay ninguna actualización de viaje: no es que no
+            -- esté anulada, es que no lo sabemos.
+            d.canceled AS canceled,
+            CASE
+                WHEN s.trip_id IS NULL THEN 'unscheduled'
+                WHEN o.source_vehicle_id IS NOT NULL THEN 'observed'
+                WHEN coalesce(d.canceled, FALSE) THEN 'canceled'
+                WHEN d.trip_updates_count IS NOT NULL THEN 'operator_only'
+                ELSE 'unobserved'
+            END AS coverage
         FROM scheduled_trips s
         FULL OUTER JOIN observed_circulations o ON o.source_trip_id = s.trip_id
         LEFT JOIN trip_delays d ON d.source_trip_id = coalesce(s.trip_id, o.source_trip_id)

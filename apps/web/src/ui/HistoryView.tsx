@@ -9,6 +9,7 @@ import type {
 } from "../domain/contract";
 import {
   circulationCoverageLabel,
+  COVERAGE_DETAILS,
   formatCount,
   formatGtfsTime,
   formatHistoryOnTime,
@@ -18,7 +19,14 @@ import {
 import type { CirculationId } from "../domain/identity";
 import { lineColor } from "../domain/palette";
 
-const FILTERS: HistoryFilter[] = ["all", "observed", "unobserved", "unscheduled"];
+const FILTERS: HistoryFilter[] = [
+  "all",
+  "observed",
+  "unobserved",
+  "canceled",
+  "operator_only",
+  "unscheduled",
+];
 
 interface Props {
   index: CatalogIndex | null;
@@ -158,12 +166,10 @@ export function HistoryView({
         ) : (
           <>
             <p className="meta">
-              {circulationCoverageLabel(
-                detail.circulation.scheduled,
-                detail.circulation.observed,
-              )}{" "}
-              · viaje <span className="mono">{detail.circulation.trip_id}</span>
+              {circulationCoverageLabel(detail.circulation.coverage)} · viaje{" "}
+              <span className="mono">{detail.circulation.trip_id}</span>
             </p>
+            <p className="meta">{COVERAGE_DETAILS[detail.circulation.coverage]}</p>
             <div className="pills">
               {detail.circulation.line_short_name !== "" && (
                 <span
@@ -250,8 +256,11 @@ export function HistoryView({
 
             {detail.positions.length === 0 ? (
               <p className="notice">
-                No hay ninguna posición archivada de esta circulación. Es un hueco de cobertura
-                real, no un cero: el servicio estaba programado y no se observó.
+                {detail.circulation.coverage === "canceled"
+                  ? "No hay ninguna posición porque el operador anuló este servicio: el tren no circuló. No es un hueco de captura."
+                  : detail.circulation.coverage === "operator_only"
+                    ? "El operador publicó una actualización de este viaje, pero nunca llegó una posición. Es un hueco de posición, no de información."
+                    : "No llegó ni una señal de esta circulación: ni posición ni actualización de viaje. Es un hueco de cobertura real, no un cero."}
               </p>
             ) : (
               <>
@@ -320,8 +329,16 @@ export function HistoryView({
           <dd>{day.circulations_observed}</dd>
         </div>
         <div>
-          <dt>Huecos</dt>
+          <dt>Huecos (sin ninguna señal)</dt>
           <dd>{day.circulations_unobserved}</dd>
+        </div>
+        <div>
+          <dt>Anuladas por el operador</dt>
+          <dd>{day.circulations_canceled}</dd>
+        </div>
+        <div>
+          <dt>Solo parte del operador</dt>
+          <dd>{day.circulations_operator_only}</dd>
         </div>
         <div>
           <dt>Fuera de programación</dt>
@@ -336,6 +353,13 @@ export function HistoryView({
           </dd>
         </div>
       </dl>
+      {day.circulations_canceled > 0 && (
+        <p className="notice" role="status">
+          {day.circulations_canceled} circulación(es) de ese día están <b>anuladas</b> por el
+          operador. No cuentan como hueco de cobertura: el tren no circuló y el feed lo dijo, así
+          que atribuirlo a un fallo de captura sería culpar al colector de algo que no hizo.
+        </p>
+      )}
       {day.circulations_unscheduled > 0 && (
         <p className="notice notice--warn" role="status">
           {day.circulations_unscheduled} circulación(es) observada(s) ese día no figuran en el
@@ -423,7 +447,7 @@ export function HistoryView({
                         : formatGtfsTime(circulation.scheduled_first_departure_time)}
                     </b>
                     <small>
-                      {circulationCoverageLabel(circulation.scheduled, circulation.observed)} ·{" "}
+                      {circulationCoverageLabel(circulation.coverage)} ·{" "}
                       {formatCount(circulation.positions_count)} posición(es)
                     </small>
                     <small className="row__provenance">

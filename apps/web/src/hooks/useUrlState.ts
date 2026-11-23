@@ -5,7 +5,14 @@ import type { Selection } from "../domain/identity";
 export type View = "live" | "history" | "explore";
 
 const VIEWS: readonly View[] = ["live", "history", "explore"];
-const FILTERS: readonly HistoryFilter[] = ["all", "observed", "unobserved", "unscheduled"];
+const FILTERS: readonly HistoryFilter[] = [
+  "all",
+  "observed",
+  "unobserved",
+  "canceled",
+  "operator_only",
+  "unscheduled",
+];
 const SERVICE_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
 export interface UrlState {

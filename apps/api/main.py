@@ -346,10 +346,12 @@ def history_circulations(
     line: str | None = Query(default=None, description="Línea comercial (`route_short_name`)."),
     only: str = Query(
         default="all",
-        pattern="^(all|observed|unobserved|unscheduled)$",
+        pattern="^(all|observed|unobserved|canceled|operator_only|unscheduled)$",
         description=(
-            "`unobserved` devuelve exactamente el hueco de cobertura: servicios "
-            "programados de los que nunca se observó una posición."
+            "`unobserved` devuelve el hueco de cobertura real: servicios programados "
+            "sin posición y sin ninguna actualización de viaje. `canceled` son los que "
+            "el operador anuló (el tren no circuló: no es un fallo de captura) y "
+            "`operator_only` los que tenían actualización pero nunca se localizaron."
         ),
     ),
     limit: int = Query(default=200, ge=1, le=2000),

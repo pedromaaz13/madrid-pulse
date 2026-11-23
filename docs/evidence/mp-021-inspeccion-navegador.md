@@ -128,3 +128,152 @@ otro día.
 
 **Corrección:** la nota se deriva ahora de los datos del propio día (la ventana
 real de observación archivada), o declara que no hay ninguna observación.
+
+---
+
+## Segunda ronda — correcciones tras la revisión de Codex
+
+Codex encontró **dos hallazgos bloqueantes reales** sobre la primera entrega
+(`b0a1d2f`/`db3dd1a`). Los dos eran ciertos. Esto es la evidencia de su
+corrección, pensada para que la re-verificación sea rápida.
+
+### Hallazgo 1 — la sustitución no era atómica
+
+**Lo que dijo Codex:** `services/snapshotter/export.py` hacía
+`shutil.rmtree(final_partition)` **antes** de `replace()`. No es una sustitución
+atómica: una caída entre ambos borra el día ya archivado sin reemplazo, que es
+exactamente lo que ADR-0015/DEC-040 dicen prevenir. **Correcto.**
+
+**Qué se cambió.** La versión anterior ya no se borra: se **aparta** a
+`.quarantine/` con un `rename` atómico, la preparada ocupa el nombre definitivo
+con un segundo `rename` atómico, y solo entonces se borra la cuarentena. Toda
+exportación empieza por `recover_interrupted_swaps`, que resuelve una
+interrupción anterior distinguiendo los dos casos por la sola presencia de
+`date=<fecha>`.
+
+**Qué se dejó de afirmar.** Ya no se dice "sustitución atómica": `rename(2)` no
+puede reemplazar de un solo paso un directorio destino no vacío, y las dos vías
+que sí lo lograrían se descartan con su razón en ADR-0015 (enlace simbólico:
+`pathlib.Path.glob("**/...")` no desciende por enlaces en Python 3.12 y el
+`glob` de DuckDB a través de enlaces no está garantizado, así que cambiaría el
+contrato de lectura de toda la capa gold; `renameat2`/`renamex_np`: extensiones
+de Linux y macOS sin equivalente portable). Lo que se afirma ahora, y es lo que
+protege el histórico, es **a prueba de caídas con recuperación automática**.
+
+**Prueba de inyección de fallo**, en la costura exacta — `Path.replace`
+instrumentado para caer justo antes del segundo renombrado:
+
+```text
+$ python -m unittest services.snapshotter.tests.test_idempotency -v
+test_a_crash_between_the_two_renames_never_destroys_the_archived_day ... ok
+test_rerunning_after_a_crash_completes_the_pending_replacement ... ok
+test_a_crash_after_installing_the_new_day_keeps_the_new_content ... ok
+Ran 8 tests -- OK
+```
+
+El primero compara el inventario completo (ruta + SHA-256 de cada Parquet)
+antes de la caída y después de la recuperación: el día archivado sobrevive
+**byte a byte**, no solo "existe algo".
+
+**Verificado también contra el mecanismo anterior**, restaurando el
+`rmtree`+`replace` de la primera entrega y ejecutando los mismos tests:
+
+```text
+FAIL: test_a_crash_between_the_two_renames_never_destroys_the_archived_day
+AssertionError: False is not true : la versión anterior no está en cuarentena: se ha perdido
+```
+
+Es decir: el test falla con el síntoma exacto del hallazgo cuando el defecto
+está presente, y pasa cuando está corregido. (El segundo test pasa con ambos
+mecanismos, porque comprueba que un reintento deja el día completo --y
+reexportar desde el origen también lo consigue--; el que fija la destrucción de
+datos es el primero.)
+
+### Hallazgo 2 — huecos con métricas no nulas
+
+**Lo que dijo Codex:** en el Parquet real del `2026-11-20` había 3 huecos
+`scheduled=true/observed=false` con `trip_updates_count=1` y
+`delay_reported_count=0` (no `NULL`) para `1023V21340C10`, `1023V21748C2` y
+`1023V20865C5`, contradiciendo el criterio "huecos con métricas NULL, nunca 0"
+que la propia entrega daba por cumplido. **Correcto.**
+
+**Origen exacto, rastreado hasta el dato crudo.** No era un defecto de
+agregación que calculase `0` en vez de `NULL`: los tres viajes tienen una
+`trip_update_observation` **real** y ninguna posición.
+
+```text
+source_trip_id   observed_at   delay_seconds  delay_coverage  schedule_relationship
+1023V20865C5     14:32:04Z     None           missing         CANCELED
+1023V21340C10    14:32:04Z     None           missing         CANCELED
+1023V21748C2     14:32:04Z     None           missing         CANCELED
+  posiciones de los tres viajes: 0, 0, 0
+```
+
+**Renfe había anulado esos tres servicios.** El tren no circuló, y el operador
+nos lo dijo. Clasificarlos como hueco de cobertura culpaba a nuestro colector
+de trenes que nunca salieron -- y `apps/api/snapshot.py` ya trataba la
+cancelación como ciudadana de primera desde MP-019 (ETA `trip_canceled`),
+mientras este mart la ignoraba. El `delay_coverage='missing'` tampoco es
+casual: `packages/contracts/raw.py` ya documenta que el feed real no publica
+`delay` cuando `scheduleRelationship` es `CANCELED`.
+
+**Semántica corregida y documentada.** El mart publica `canceled` y una columna
+`coverage` que clasifica cada fila en **una sola** categoría:
+
+| `coverage` | Qué significa |
+|---|---|
+| `unscheduled` | Observada, fuera del calendario del día |
+| `observed` | Programada y con al menos una posición real |
+| `canceled` | Programada, sin posición, anulada por el operador: el tren no circuló |
+| `operator_only` | Programada, sin posición, con parte del operador: nunca se localizó |
+| `unobserved` | Programada y sin ninguna señal: el hueco de cobertura real |
+
+Y la regla de nulos se corrige a lo que de verdad se cumple -- **cada métrica
+con el denominador que la sostiene**, no "todo `NULL` si no se observó":
+
+- métricas de **posición** -> `NULL` exactamente cuando `observed = false`;
+- métricas de **parte del operador** -> `NULL` cuando no hubo ninguna; si la
+  hubo, `delay_reported_count = 0` es un **cero medido** (hubo parte y no traía
+  retraso), que es justo el caso de una cancelación;
+- `on_time` -> `NULL`, nunca `false`, mientras `delay_reported_count` sea
+  `NULL` o `0`.
+
+**Parquet regenerado** para los dos días archivados, y comprobado sobre él:
+
+```text
+$ /api/v1/history/days
+2026-11-20: scheduled 1304 · observed 122 · unobserved 1179 · canceled 3 · operator_only 0 · unscheduled 0
+2026-11-19: scheduled    0 · observed  24 · unobserved    0 · canceled 0 · operator_only 0 · unscheduled 24
+  -> las cinco categorías particionan el día: 122 + 1179 + 3 = 1304
+
+$ SELECT count(*) ... WHERE coverage='unobserved'
+    AND (trip_updates_count IS NOT NULL OR delay_reported_count IS NOT NULL
+         OR positions_count IS NOT NULL OR on_time IS NOT NULL)
+0
+```
+
+Y sobre los **1 179 huecos completos** que devuelve la API (no una muestra),
+comprobado desde el navegador: `anuladasEnElFiltroDeHuecos: 0`,
+`huecosConMetricasNoNulas: 0`.
+
+**Caso `operator_only` cubierto aunque no aparezca en estos dos días.** El
+archivo actual no contiene ninguna circulación con parte del operador sin
+cancelar y sin posición (`circulations_operator_only: 0`), así que se cubre con
+un test sintético explícito
+(`test_a_trip_update_without_position_and_without_cancellation_is_operator_only`):
+no se declara verificado sobre datos que no existen.
+
+### Defecto adicional encontrado al re-verificar en navegador
+
+Al abrir `?view=history&hf=canceled` la vista mostraba «Todas» y 120 filas en
+vez de las 3 anuladas: la lista blanca en tiempo de ejecución de
+`hooks/useUrlState.ts` se quedó con las cuatro categorías antiguas y el enlace
+caía en silencio a `all`. Corregido y fijado con regresión
+(`acepta las cinco categorías reales de cobertura del mart`).
+
+### Capturas de esta ronda
+
+| Captura | Qué demuestra |
+|---|---|
+| `09-history-anuladas-no-son-huecos.png` | El día con las cinco categorías separadas (1 179 huecos reales / 3 anuladas), el aviso que explica por qué una anulación no es un fallo de captura, y el filtro «Anuladas» devolviendo exactamente 3 filas |
+| `10-history-detalle-circulacion-anulada.png` | Detalle de `1023V20865C5`: «Anulada por el operador», «el tren no circuló. No es un hueco de captura», posiciones `sin dato`/`—` y «Actualizaciones del viaje: 1 · 0 con retraso reportado» (el cero medido, con su contexto) |

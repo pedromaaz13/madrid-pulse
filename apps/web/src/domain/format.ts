@@ -1,6 +1,7 @@
 import type {
   BoardEntry,
   Eta,
+  HistoryCoverage,
   RenderingMethod,
   SnapshotDelay,
   SnapshotVehicle,
@@ -220,20 +221,38 @@ export function formatHistoryOnTime(
 }
 
 /**
- * Qué es una fila del histórico. El cruce de `scheduled`/`observed` es la
- * información de cobertura del mart: las cuatro combinaciones tienen nombre
- * propio y ninguna se presenta como "sin datos".
+ * Qué es una fila del histórico, según la clasificación única que publica el
+ * mart. Ninguna categoría se presenta como "sin datos", y **anulada** no es lo
+ * mismo que hueco de cobertura: en una el tren no circuló y el operador lo
+ * dijo; en la otra no llegó ninguna señal.
  */
-export function circulationCoverageLabel(scheduled: boolean, observed: boolean): string {
-  if (scheduled && observed) return "Programada y observada";
-  if (scheduled && !observed) return "Programada sin observar";
-  if (!scheduled && observed) return "Observada fuera de programación";
-  return "Sin clasificar";
+export const COVERAGE_LABELS: Record<HistoryCoverage, string> = {
+  observed: "Programada y observada",
+  canceled: "Anulada por el operador",
+  operator_only: "Sin posición, con parte del operador",
+  unobserved: "Programada sin ninguna señal",
+  unscheduled: "Observada fuera de programación",
+};
+
+export const COVERAGE_DETAILS: Record<HistoryCoverage, string> = {
+  observed: "Se vio al menos una posición real de este tren",
+  canceled:
+    "El operador declaró el servicio CANCELED: el tren no circuló. No es un hueco de captura",
+  operator_only:
+    "El operador publicó una actualización de este viaje, pero nunca llegó una posición",
+  unobserved: "Ni posición ni actualización de viaje: hueco de cobertura real",
+  unscheduled: "Observada de verdad, pero su viaje no está en el calendario de ese día",
+};
+
+export function circulationCoverageLabel(coverage: HistoryCoverage): string {
+  return COVERAGE_LABELS[coverage] ?? "Sin clasificar";
 }
 
 export const HISTORY_FILTER_LABELS: Record<string, string> = {
   all: "Todas",
   observed: "Observadas",
   unobserved: "Huecos de cobertura",
+  canceled: "Anuladas",
+  operator_only: "Solo parte del operador",
   unscheduled: "Fuera de programación",
 };

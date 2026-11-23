@@ -122,6 +122,13 @@ export function ExploreView({
           <dt>Huecos de cobertura</dt>
           <dd>{day.circulations_unobserved}</dd>
         </div>
+        <div>
+          <dt>Anuladas por el operador</dt>
+          <dd>
+            {day.circulations_canceled}
+            {day.circulations_canceled > 0 && " · el tren no circuló, no es un hueco de captura"}
+          </dd>
+        </div>
       </dl>
       <p className="meta">
         La cobertura de este día depende de cuánto tiempo estuvo el colector en marcha, no de la

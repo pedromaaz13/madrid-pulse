@@ -348,8 +348,12 @@ export interface HistoryDay {
   /** Denominador del día: circulaciones que el GTFS programaba. */
   circulations_scheduled: number;
   circulations_observed: number;
-  /** El hueco explícito: programadas que nunca se observaron. */
+  /** El hueco real: ni posición ni actualización de viaje. */
   circulations_unobserved: number;
+  /** Anuladas por el operador: el tren no circuló, no es un fallo de captura. */
+  circulations_canceled: number;
+  /** Con actualización de viaje pero sin posición: nunca se localizaron. */
+  circulations_operator_only: number;
   /** Observadas cuyo `trip_id` no estaba en el calendario de ese día. */
   circulations_unscheduled: number;
   lines_present: number;
@@ -380,7 +384,14 @@ export interface HistoryLines {
   lines: HistoryLineMetric[];
 }
 
-export type HistoryFilter = "all" | "observed" | "unobserved" | "unscheduled";
+export type HistoryCoverage =
+  | "observed"
+  | "canceled"
+  | "operator_only"
+  | "unobserved"
+  | "unscheduled";
+
+export type HistoryFilter = "all" | HistoryCoverage;
 
 export interface HistoryCirculation {
   service_date: string;
@@ -390,7 +401,12 @@ export interface HistoryCirculation {
   /** `null` cuando no se observó: no hay vehículo porque no se vio ninguno. */
   vehicle_id: string | null;
   scheduled: boolean;
+  /** Cobertura de **posición**, no "sabemos algo del viaje". */
   observed: boolean;
+  /** `null` si no hubo actualización de viaje: no se sabe si está anulada. */
+  canceled: boolean | null;
+  /** Clasificación única de la fila; no se rederiva en el cliente. */
+  coverage: HistoryCoverage;
   headsign: string | null;
   scheduled_first_stop_id: string | null;
   scheduled_first_departure_time: string | null;
@@ -402,7 +418,11 @@ export interface HistoryCirculation {
   distinct_stops_observed: number | null;
   last_current_status: string | null;
   trip_updates_count: number | null;
-  /** Denominador de `on_time`. */
+  /**
+   * Denominador de `on_time`. `null` si no hubo ninguna actualización de
+   * viaje; `0` con `trip_updates_count >= 1` es un **cero medido** (hubo
+   * actualización, sin retraso), que es el caso de una cancelación.
+   */
   delay_reported_count: number | null;
   latest_reported_delay_seconds: number | null;
   on_time: boolean | null;

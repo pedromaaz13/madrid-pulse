@@ -5,6 +5,7 @@ import {
   formatGtfsTime,
   formatHistoryOnTime,
   formatPctWithDenominator,
+  COVERAGE_DETAILS,
 } from "./format";
 
 describe("formatPctWithDenominator", () => {
@@ -64,9 +65,18 @@ describe("formatHistoryOnTime", () => {
 });
 
 describe("circulationCoverageLabel", () => {
-  it("nombra las cuatro combinaciones de cobertura sin llamarlas «sin datos»", () => {
-    expect(circulationCoverageLabel(true, true)).toBe("Programada y observada");
-    expect(circulationCoverageLabel(true, false)).toBe("Programada sin observar");
-    expect(circulationCoverageLabel(false, true)).toBe("Observada fuera de programación");
+  it("nombra las cinco categorías sin llamar «sin datos» a ninguna", () => {
+    expect(circulationCoverageLabel("observed")).toBe("Programada y observada");
+    expect(circulationCoverageLabel("unobserved")).toBe("Programada sin ninguna señal");
+    expect(circulationCoverageLabel("unscheduled")).toBe("Observada fuera de programación");
+    expect(circulationCoverageLabel("operator_only")).toBe("Sin posición, con parte del operador");
+  });
+
+  it("una circulación anulada no se presenta como hueco de cobertura", () => {
+    // El tren no circuló y el operador lo dijo: llamarlo hueco culparía al
+    // colector de un fallo de captura que no existió.
+    expect(circulationCoverageLabel("canceled")).toBe("Anulada por el operador");
+    expect(circulationCoverageLabel("canceled")).not.toContain("hueco");
+    expect(COVERAGE_DETAILS.canceled).toContain("no circuló");
   });
 });

@@ -9,6 +9,7 @@ import type {
 } from "./contract";
 import {
   circulationCoverageLabel,
+  COVERAGE_DETAILS,
   formatGtfsTime,
   formatHistoryOnTime,
   formatPctWithDenominator,
@@ -32,7 +33,9 @@ const days = fixture.days as unknown as HistoryDays;
 const lines = fixture.lines as unknown as HistoryLines;
 const observed = fixture.circulations_observed as unknown as HistoryCirculations;
 const gaps = fixture.circulations_unobserved as unknown as HistoryCirculations;
+const canceled = fixture.circulations_canceled as unknown as HistoryCirculations;
 const detail = fixture.circulation_detail as unknown as HistoryCirculationDetail;
+const canceledDetail = fixture.circulation_detail_canceled as unknown as HistoryCirculationDetail;
 const stations = fixture.stations as unknown as HistoryStations;
 
 describe("índice de días archivados", () => {
@@ -41,15 +44,29 @@ describe("índice de días archivados", () => {
     expect(dates).toEqual([...dates].sort().reverse());
   });
 
-  it("los recuentos de cada día cierran: nada se pierde ni se cuenta dos veces", () => {
+  it("las cinco categorías de cobertura particionan el día sin solaparse", () => {
     for (const day of days.days) {
-      // Toda fila del mart es, o programada, o observada fuera de programación.
-      expect(day.rows_total).toBe(day.circulations_scheduled + day.circulations_unscheduled);
-      // Y de lo programado, lo que no se observó es exactamente el hueco.
       const scheduledAndObserved = day.circulations_observed - day.circulations_unscheduled;
-      expect(day.circulations_scheduled).toBe(scheduledAndObserved + day.circulations_unobserved);
       expect(scheduledAndObserved).toBeGreaterThanOrEqual(0);
+      // Cada fila cae en exactamente una categoría, así que las cinco suman el total.
+      expect(day.rows_total).toBe(
+        scheduledAndObserved +
+          day.circulations_canceled +
+          day.circulations_operator_only +
+          day.circulations_unobserved +
+          day.circulations_unscheduled,
+      );
+      expect(day.rows_total).toBe(day.circulations_scheduled + day.circulations_unscheduled);
     }
+  });
+
+  it("las anuladas no se cuentan dentro del hueco de cobertura", () => {
+    const day = days.days.find((item) => item.service_date === "2026-11-20")!;
+    // Dato real: Renfe anuló 3 servicios ese día. Antes de la corrección
+    // engordaban `circulations_unobserved` (1182) como si fueran un fallo de
+    // captura nuestro; ahora son su propia categoría y el hueco real es 1179.
+    expect(day.circulations_canceled).toBe(3);
+    expect(day.circulations_unobserved).toBe(1179);
   });
 
   it("un día real con observaciones pero sin calendario se marca fuera de programación", () => {
@@ -127,9 +144,10 @@ describe("circulaciones observadas y huecos", () => {
       expect(row.positions_count).toBeNull();
       expect(row.on_time).toBeNull();
       expect(row.delay_reported_count).toBeNull();
-      expect(circulationCoverageLabel(row.scheduled, row.observed)).toBe(
-        "Programada sin observar",
-      );
+      expect(row.coverage).toBe("unobserved");
+      expect(circulationCoverageLabel(row.coverage)).toBe("Programada sin ninguna señal");
+      // Un hueco real no tiene ninguna señal: tampoco actualización de viaje.
+      expect(row.trip_updates_count).toBeNull();
       expect(formatHistoryOnTime(row.on_time, row.latest_reported_delay_seconds, row.delay_reported_count)).toBe(
         "Sin dato de retraso",
       );
@@ -158,6 +176,46 @@ describe("circulaciones observadas y huecos", () => {
     expect(orphan!.scheduled).toBe(true);
     expect(orphan!.scheduled_first_stop_id).toBeNull();
     expect(formatGtfsTime(orphan!.scheduled_first_departure_time)).toBe("—");
+  });
+});
+
+describe("circulaciones anuladas por el operador (hallazgo de la revisión)", () => {
+  it("las tres anuladas reales se clasifican como anuladas, no como huecos", () => {
+    expect(canceled.returned).toBe(3);
+    expect(new Set(canceled.circulations.map((row) => row.trip_id))).toEqual(
+      new Set(["1023V20865C5", "1023V21340C10", "1023V21748C2"]),
+    );
+    for (const row of canceled.circulations) {
+      expect(row.coverage).toBe("canceled");
+      expect(row.canceled).toBe(true);
+      expect(row.scheduled).toBe(true);
+      expect(row.observed).toBe(false);
+    }
+  });
+
+  it("sin posición las métricas de posición son null; las del operador, ceros medidos", () => {
+    for (const row of canceled.circulations) {
+      // Posición: no se observó -> ausente, no cero.
+      expect(row.positions_count).toBeNull();
+      expect(row.first_observed_at).toBeNull();
+      // Operador: SÍ hubo actualización -> recuento real, y un 0 que significa
+      // «la actualización no traía retraso», no «no sabemos».
+      expect(row.trip_updates_count).toBe(1);
+      expect(row.delay_reported_count).toBe(0);
+      // Y sin muestra de retraso no se emite veredicto.
+      expect(row.on_time).toBeNull();
+      expect(row.latest_reported_delay_seconds).toBeNull();
+      expect(
+        formatHistoryOnTime(row.on_time, row.latest_reported_delay_seconds, row.delay_reported_count),
+      ).toBe("Sin dato de retraso");
+    }
+  });
+
+  it("el detalle de una anulada trae su parte del operador y ninguna posición", () => {
+    expect(canceledDetail.circulation.coverage).toBe("canceled");
+    expect(canceledDetail.positions).toEqual([]);
+    expect(canceledDetail.delays.length).toBeGreaterThan(0);
+    expect(COVERAGE_DETAILS.canceled).toContain("no circuló");
   });
 });
 

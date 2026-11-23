@@ -32,6 +32,7 @@ import shutil
 import tempfile
 import unittest
 from datetime import date, datetime, timezone
+from unittest import mock
 from pathlib import Path
 
 import duckdb
@@ -40,7 +41,11 @@ import psycopg
 from packages.gtfs import load_feed
 from services.collector.config import CollectorConfig
 from services.snapshotter.config import SnapshotterConfig
-from services.snapshotter.export import export_service_date
+from services.snapshotter.export import (
+    QUARANTINE_DIR_NAME,
+    export_service_date,
+    recover_interrupted_swaps,
+)
 from services.snapshotter.gold import (
     build_line_daily_metrics,
     build_nucleo_daily_summary,
@@ -328,6 +333,135 @@ class ArchiveIdempotencyTests(unittest.TestCase):
         raw_before = {k: v for k, v in before.items() if k.startswith("raw/")}
         raw_after = {k: v for k, v in _inventory(self.output_dir).items() if k.startswith("raw/")}
         self.assertEqual(raw_before, raw_after)
+
+    # -- caída a mitad de la sustitución (hallazgo de la revisión de Codex) --
+
+    def test_a_crash_between_the_two_renames_never_destroys_the_archived_day(self) -> None:
+        """Inyección de fallo en la costura exacta que rompía la atomicidad.
+
+        La primera versión de MP-021 hacía `rmtree(final)` y después
+        `replace(staged, final)`: caerse entre ambos borraba el día ya
+        archivado **sin reemplazo**. Aquí se provoca esa caída justo antes del
+        segundo renombrado y se comprueba que el día anterior sobrevive
+        **intacto** -- byte a byte, no solo "existe algo".
+
+        Se interrumpe con un `Path.replace` instrumentado en vez de matando un
+        subproceso porque hay que caer en una costura concreta entre dos
+        llamadas al sistema: matar un proceso real acierta esa ventana de
+        microsegundos solo por casualidad, y un test que falla por azar no
+        prueba nada.
+        """
+        self._insert_position(EARLY, "mp021-vehicle-a", "mp021-trip-a")
+        self._process(DAY_A)
+        archived_before = _inventory(self.output_dir)
+        rows_before = _row_counts(self.output_dir, "vehicle_position_observation")
+        self.assertEqual(rows_before, 1)
+
+        # Una segunda fila en el origen: la exportación que se va a interrumpir
+        # produciría un día distinto del archivado, de modo que confundir uno
+        # con otro sería detectable.
+        self._insert_position(LATE, "mp021-vehicle-b", "mp021-trip-b")
+
+        real_replace = Path.replace
+        crashed: list[str] = []
+
+        def replace_but_crash_before_installing(self_path, target):
+            # El renombrado (1) aparta la versión anterior a la cuarentena; el
+            # (2) instala la preparada. Se cae justo antes del (2).
+            if QUARANTINE_DIR_NAME not in str(target):
+                crashed.append(str(target))
+                raise KeyboardInterrupt("caída simulada entre los dos renombrados")
+            return real_replace(self_path, target)
+
+        with mock.patch.object(Path, "replace", replace_but_crash_before_installing):
+            with self.assertRaises(KeyboardInterrupt):
+                export_service_date(self.config.database_url, DAY_A, self.output_dir)
+        self.assertTrue(crashed, "la inyección de fallo no llegó a dispararse")
+
+        # Estado tras la caída: el día está apartado, no destruido.
+        quarantine_root = self.output_dir / QUARANTINE_DIR_NAME
+        self.assertTrue(
+            any(quarantine_root.glob("**/*.parquet")),
+            "la versión anterior no está en cuarentena: se ha perdido",
+        )
+
+        # Y la recuperación la devuelve a su sitio, byte a byte.
+        actions = recover_interrupted_swaps(self.output_dir)
+        self.assertTrue(actions, "la recuperación no detectó la interrupción")
+        self.assertEqual(
+            archived_before,
+            _inventory(self.output_dir),
+            "el día archivado no sobrevivió intacto a la caída",
+        )
+        self.assertEqual(_row_counts(self.output_dir, "vehicle_position_observation"), 1)
+
+    def test_rerunning_after_a_crash_completes_the_pending_replacement(self) -> None:
+        """Un reintento tras la caída deja el día completo, no a medias.
+
+        Es el caso real de `infra/operate/daily-archive.sh`: si una ejecución
+        se cae, la siguiente —del temporizador o lanzada a mano— tiene que
+        dejar el archivo correcto sin intervención.
+        """
+        self._insert_position(EARLY, "mp021-vehicle-a", "mp021-trip-a")
+        self._process(DAY_A)
+        self._insert_position(LATE, "mp021-vehicle-b", "mp021-trip-b")
+
+        real_replace = Path.replace
+
+        def replace_but_crash_before_installing(self_path, target):
+            if QUARANTINE_DIR_NAME not in str(target):
+                raise KeyboardInterrupt("caída simulada entre los dos renombrados")
+            return real_replace(self_path, target)
+
+        with mock.patch.object(Path, "replace", replace_but_crash_before_installing):
+            with self.assertRaises(KeyboardInterrupt):
+                export_service_date(self.config.database_url, DAY_A, self.output_dir)
+
+        # Reintento limpio, sin tocar nada a mano.
+        self._process(DAY_A)
+
+        self.assertEqual(
+            _row_counts(self.output_dir, "vehicle_position_observation"),
+            2,
+            "el reintento no dejó el día completo con las dos observaciones del origen",
+        )
+        self.assertFalse(
+            any((self.output_dir / QUARANTINE_DIR_NAME).glob("**/*.parquet")),
+            "quedó basura en cuarentena tras un reproceso correcto",
+        )
+
+    def test_a_crash_after_installing_the_new_day_keeps_the_new_content(self) -> None:
+        """La otra mitad de la ventana: caerse **después** del segundo
+        renombrado debe conservar el contenido NUEVO y limpiar la cuarentena,
+        no retroceder al anterior."""
+        self._insert_position(EARLY, "mp021-vehicle-a", "mp021-trip-a")
+        self._process(DAY_A)
+        self._insert_position(LATE, "mp021-vehicle-b", "mp021-trip-b")
+
+        # Se reproduce a mano el estado exacto de esa interrupción: el día
+        # nuevo instalado y la cuarentena todavía sin borrar.
+        final_partition = (
+            self.output_dir
+            / "raw"
+            / "vehicle_position_observation"
+            / f"date={DAY_A.isoformat()}"
+        )
+        quarantine = (
+            self.output_dir
+            / QUARANTINE_DIR_NAME
+            / f"vehicle_position_observation__date={DAY_A.isoformat()}"
+        )
+        quarantine.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copytree(final_partition, quarantine)
+        self._process(DAY_A)  # instala el día nuevo (2 filas)
+
+        actions = recover_interrupted_swaps(self.output_dir)
+        self.assertEqual(
+            _row_counts(self.output_dir, "vehicle_position_observation"),
+            2,
+            "la recuperación retrocedió al día anterior en vez de conservar el nuevo",
+        )
+        self.assertFalse(quarantine.exists(), f"la cuarentena sobrante no se limpió: {actions}")
 
     def test_a_day_absent_from_both_hot_and_archive_reports_absent_not_zero(self) -> None:
         results = export_service_date(self.config.database_url, DAY_B, self.output_dir)

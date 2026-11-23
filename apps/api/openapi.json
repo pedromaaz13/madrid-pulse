@@ -827,6 +827,28 @@
       },
       "HistoryCirculationOut": {
         "properties": {
+          "canceled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Canceled"
+          },
+          "coverage": {
+            "enum": [
+              "observed",
+              "canceled",
+              "operator_only",
+              "unobserved",
+              "unscheduled"
+            ],
+            "title": "Coverage",
+            "type": "string"
+          },
           "delay_reported_count": {
             "anyOf": [
               {
@@ -1027,6 +1049,8 @@
           "vehicle_id",
           "scheduled",
           "observed",
+          "canceled",
+          "coverage",
           "headsign",
           "scheduled_first_stop_id",
           "scheduled_first_departure_time",
@@ -1074,6 +1098,8 @@
               "all",
               "observed",
               "unobserved",
+              "canceled",
+              "operator_only",
               "unscheduled"
             ],
             "title": "Only",
@@ -1111,8 +1137,16 @@
       },
       "HistoryDayOut": {
         "properties": {
+          "circulations_canceled": {
+            "title": "Circulations Canceled",
+            "type": "integer"
+          },
           "circulations_observed": {
             "title": "Circulations Observed",
+            "type": "integer"
+          },
+          "circulations_operator_only": {
+            "title": "Circulations Operator Only",
             "type": "integer"
           },
           "circulations_scheduled": {
@@ -1169,6 +1203,8 @@
           "circulations_scheduled",
           "circulations_observed",
           "circulations_unobserved",
+          "circulations_canceled",
+          "circulations_operator_only",
           "circulations_unscheduled",
           "lines_present",
           "rows_total",
@@ -3047,14 +3083,14 @@
             }
           },
           {
-            "description": "`unobserved` devuelve exactamente el hueco de cobertura: servicios programados de los que nunca se observ\u00f3 una posici\u00f3n.",
+            "description": "`unobserved` devuelve el hueco de cobertura real: servicios programados sin posici\u00f3n y sin ninguna actualizaci\u00f3n de viaje. `canceled` son los que el operador anul\u00f3 (el tren no circul\u00f3: no es un fallo de captura) y `operator_only` los que ten\u00edan actualizaci\u00f3n pero nunca se localizaron.",
             "in": "query",
             "name": "only",
             "required": false,
             "schema": {
               "default": "all",
-              "description": "`unobserved` devuelve exactamente el hueco de cobertura: servicios programados de los que nunca se observ\u00f3 una posici\u00f3n.",
-              "pattern": "^(all|observed|unobserved|unscheduled)$",
+              "description": "`unobserved` devuelve el hueco de cobertura real: servicios programados sin posici\u00f3n y sin ninguna actualizaci\u00f3n de viaje. `canceled` son los que el operador anul\u00f3 (el tren no circul\u00f3: no es un fallo de captura) y `operator_only` los que ten\u00edan actualizaci\u00f3n pero nunca se localizaron.",
+              "pattern": "^(all|observed|unobserved|canceled|operator_only|unscheduled)$",
               "title": "Only",
               "type": "string"
             }

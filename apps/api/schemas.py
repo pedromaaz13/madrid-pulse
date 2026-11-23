@@ -524,9 +524,17 @@ class HistoryDayOut(BaseModel):
     `calendar_dates.txt` aplicado, MP-021)."""
     circulations_observed: int
     circulations_unobserved: int
-    """El hueco explícito: programadas de las que nunca se vio una posición.
-    Se publica como recuento propio para que ninguna cobertura del día pueda
+    """El hueco de cobertura **real**: programadas sin posición y sin ninguna
+    actualización de viaje, es decir, de las que no llegó ni una señal. Se
+    publica como recuento propio para que ninguna cobertura del día pueda
     presentarse sin él."""
+    circulations_canceled: int
+    """Programadas que el operador declaró `CANCELED`. **No** son un hueco de
+    cobertura: el tren no circuló y el feed lo dijo, así que contarlas como
+    fallo de captura culparía al colector de algo que no hizo."""
+    circulations_operator_only: int
+    """Programadas sin posición pero con actualización de viaje: el operador
+    las conocía y nunca se localizaron. Hueco de posición, no de información."""
     circulations_unscheduled: int
     """Observadas cuyo `trip_id` no estaba en el calendario de ese día. No es
     un error de datos a ocultar: es un desajuste real entre el feed en vivo y
@@ -569,6 +577,14 @@ class HistoryCirculationOut(BaseModel):
     vehículo porque no se vio ninguno, no porque se desconozca su nombre."""
     scheduled: bool
     observed: bool
+    """Cobertura de **posición**: al menos una `vehicle_position_observation`.
+    No significa "sabemos algo del viaje" -- ver `coverage`."""
+    canceled: bool | None
+    """El operador declaró el viaje `CANCELED`. `None` cuando no hubo ninguna
+    actualización de viaje: no es que no esté anulado, es que no se sabe."""
+    coverage: Literal["observed", "canceled", "operator_only", "unobserved", "unscheduled"]
+    """Clasificación única de la fila; evita que cada consumidor la rederive a
+    partir de `scheduled`/`observed`/`canceled` y se equivoque al hacerlo."""
     headsign: str | None
     scheduled_first_stop_id: str | None
     scheduled_first_departure_time: str | None
@@ -581,8 +597,11 @@ class HistoryCirculationOut(BaseModel):
     last_current_status: str | None
     trip_updates_count: int | None
     delay_reported_count: int | None
-    """Denominador de `on_time`. Todas las métricas de observación son `None`
-    -- no `0` -- cuando la circulación no se observó."""
+    """Denominador de `on_time`. `None` cuando no hubo ninguna actualización de
+    viaje; `0` con `trip_updates_count >= 1` es un **cero medido** (hubo
+    actualización y no traía retraso), que es lo que ocurre con una
+    cancelación. Las métricas de posición, en cambio, son `None` exactamente
+    cuando `observed` es `false`."""
     latest_reported_delay_seconds: int | None
     on_time: bool | None
 
@@ -591,7 +610,7 @@ class HistoryCirculationsOut(BaseModel):
     schema_version: str = HISTORY_SCHEMA_VERSION
     service_date: str
     line: str | None
-    only: Literal["all", "observed", "unobserved", "unscheduled"]
+    only: Literal["all", "observed", "unobserved", "canceled", "operator_only", "unscheduled"]
     returned: int
     limit: int
     truncated: bool

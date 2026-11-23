@@ -316,11 +316,20 @@ Con conexión PostgreSQL por petición, ~66 ms de los ~69 ms de p50 de `/api/v1/
 
 ### Entregado en MP-021 (pendiente de auditoría de Codex)
 
-1. **Idempotencia real del archivo frío** — preparación en `.staging/` y sustitución atómica por día de servicio; un origen vacío nunca borra un día archivado. Los cuatro agregados son byte-estables. DEC-040, [ADR-0015](adr/0015-cold-archive-and-history-contract.md).
-2. **Histórico consultable por circulación** — mart `circulation_daily_history` (vehículo + viaje + día de servicio) con los huecos como filas y métricas `NULL`, nunca `0`; expuesto en `/api/v1/history/*` sin tocar el contrato de MP-019.
+1. **Idempotencia real del archivo frío, a prueba de caídas** — preparación en `.staging/`, cuarentena de la versión anterior y dos renombrados atómicos, con recuperación automática de una sustitución interrumpida; un origen vacío nunca borra un día archivado. Los cuatro agregados son byte-estables. DEC-040, [ADR-0015](adr/0015-cold-archive-and-history-contract.md).
+2. **Histórico consultable por circulación** — mart `circulation_daily_history` (vehículo + viaje + día de servicio) con los huecos como filas y una columna `coverage` que separa el hueco real de una anulación del operador; expuesto en `/api/v1/history/*` sin tocar el contrato de MP-019. DEC-042.
 3. **Mart sobre el catálogo Madrid completo** — 42 rutas / 12 líneas vía `SnapshotterConfig.line_filter`; límite (a) de DEC-033 cerrado con `packages.gtfs.scheduled_service_ids_for_date`.
 4. **History y Explore navegables** — botones de `TopBar.tsx` conectados, ida y vuelta Live ↔ History con la misma identidad, inspección visual real con 8 capturas.
 5. **Operación continua supervisada con coste medido** — `infra/operate/` y `docs/evidence/mp-021-coste-colector-continuo.md`.
+
+### Revisión de Codex (1ª ronda, 2026-11-23): dos hallazgos bloqueantes, corregidos
+
+Los dos eran ciertos y están corregidos en este mismo worktree:
+
+1. **La sustitución no era atómica**: `export.py` borraba el subárbol del día antes de renombrar encima, así que una caída entre ambos pasos lo destruía sin reemplazo. Ahora la versión anterior se aparta a `.quarantine/` y solo se borra cuando la nueva está en su sitio, con recuperación automática al empezar cualquier exportación. Se deja de afirmar "atomicidad" y se afirma lo que se garantiza de verdad: **a prueba de caídas**. Fijado con inyección de fallo en la costura exacta, verificada contra el mecanismo anterior (falla con `la versión anterior no está en cuarentena: se ha perdido`).
+2. **Tres "huecos" del `2026-11-20` tenían métricas no nulas**: eran servicios que **Renfe había anulado** (`schedule_relationship='CANCELED'`, sin posición). Clasificarlos como hueco culpaba al colector de trenes que nunca salieron. Nueva columna `coverage` con cinco categorías disjuntas, Parquet regenerado y documentación alineada: el día cierra como `1304 = 122 + 1179 + 3`, y de los 1 179 huecos reales ninguno tiene métricas no nulas. DEC-042.
+
+Evidencia para re-verificar rápido: sección "Segunda ronda" de `docs/evidence/mp-021-inspeccion-navegador.md`, con las capturas `09`/`10`.
 
 ### Lo que MP-021 deja explícitamente sin hacer
 
