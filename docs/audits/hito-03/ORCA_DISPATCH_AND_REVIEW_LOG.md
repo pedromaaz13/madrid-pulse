@@ -111,3 +111,8 @@ El colector es solo-inserción por diseño (sin ruta de `UPDATE`/`DELETE`), así
 | AUD-08 | Corrección | Codex `gpt-5.6-terra` · high (follow-up) | `ctx_eb57aa06e6d3` | `task_0312f23463c1` | *(en curso)* | *(en curso)* |
 | AUD-06 | Corrección documental (afirmación falsa sobre 5433) | Codex `gpt-5.6-terra` · high (follow-up) | `ctx_5c1add5b519c` | `task_a05e3c7878cb` | *(en curso)* | *(en curso)* |
 | AUD-08 | Revisor (ronda final) | Claude `sonnet` · high (follow-up) | `ctx_82199cab02ca` | `task_6f3985126a2a` | `aed1fc0` | **APPROVED** — AUD-08 cerrado; 2 observaciones no bloqueantes pasadas a AUD-09 |
+
+## Corrección de registro (a petición de AUD-09, 2026-11-24)
+- **AUD-05:** el único veredicto previo de Codex Terra (`ctx_41022ed63263`) fue "CHANGES_REQUESTED por P0-1": reprodujo el hallazgo P0-1, pero no evaluó formalmente el documento ni hubo re-revisión. **No estaba APPROVED.** Re-revisión formal despachada: Codex `gpt-5.6-terra` · high, `ctx_53f6eb860b17`, `task_55fbb3c5ce04` *(en curso)*.
+- **AUD-07:** el revisor `ctx_db3c9aa62ac8` lo creó el propio ejecutor (profundidad 2), con modelo/esfuerzo no verificables, veredicto "verificado con matices" y correcciones `ea49e6a` sin re-verificar. **No conforme a la matriz.** Revisión formal despachada: Codex `gpt-5.6-terra` · medium, `ctx_1626c278cd8f`, `task_40fad4c8898e` *(en curso)*.
+- Observación de Orca: el default actual de `~/.codex/config.toml` es `gpt-6.2-sol`, familia excluida por el encargo; todos los despachos de esta auditoría fijan `--model` explícitamente y el recibo confirma el modelo efectivo.
