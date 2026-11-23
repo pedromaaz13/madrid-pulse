@@ -46,7 +46,8 @@ El colector es solo-inserción por diseño (sin ruta de `UPDATE`/`DELETE`), así
 | AUD-06 | Revisor | Claude `sonnet` · high | `ctx_6afc827ab5e6` | `task_cb72e0e1c0c5` | — | *(en curso, advertido explícitamente sobre el incidente de 5433)* |
 | AUD-07 | Ejecutor | Claude `sonnet` · medium | `ctx_7f0fde0b7e4f` | `task_a9deb9865cbc` | `44c98cb`, `ea49e6a` | **completado** — revisión independiente real de Codex (`ctx_db3c9aa62ac8`, settled/succeeded) incorporada: 2 P1→P2, 2 P1 confirmados, 1 hallazgo descartado |
 | AUD-01 | — | Claude `opus` · high (pendiente de despachar) | — | `task_8bf54c0799dd` | — | en cola |
-| AUD-04 | — | Claude `opus` · high (pendiente de despachar) | — | `task_e6d1bf8a933e` | — | en cola |
+| AUD-04 | Ejecutor | Claude `opus` · high | `ctx_079d97438512` | `task_e6d1bf8a933e` | `c8263a0` | **completado** — 1 P0 nuevo independiente de AUD-01 |
+| AUD-04 | Revisor | Codex `gpt-5.6-sol` · high | `ctx_4cc1f0959029` | `task_e3355549167a` | — | *(en curso)* |
 | AUD-06 | — | Codex `gpt-5.6-terra` · high (pendiente de despachar) | — | `task_7982bf79c176` | — | en cola |
 | AUD-08 | — | Codex `gpt-5.6-terra` · high (pendiente, depende de AUD-02/03/04/05/06) | — | `task_e0212d2fd3fe` | — | pendiente de dependencias |
 | AUD-09 | — | Claude `opus` · high (pendiente, depende de todo) | — | `task_2e01f9d87b46` | — | pendiente de dependencias |
@@ -89,4 +90,11 @@ El colector es solo-inserción por diseño (sin ruta de `UPDATE`/`DELETE`), así
 - **AUD-03 — CERRADO (APPROVED definitivo tras 2 rondas).** El recuento final es 72 patrones sin prueba geométrica, 67 accionables por descarga, 1 irreparable (feed truncado), 4 con alternativa de coste cero ya en el repo. Nota advisory para quien corrija esto en producto (no bloquea el cierre de la auditoría): la celda "0: dato ausente" del CSV debería ser un guion, no un `0`, por el propio principio "dato ausente ≠ cero" de `AGENTS.md` — un pequeño recordatorio de que hasta los documentos de auditoría deben honrar las convenciones del proyecto que auditan.
 - **AUD-06 — CERRADO (APPROVED).**
 
-*(Esta tabla se actualizará según reporte AUD-04 — último audit primario pendiente, dispatch `ctx_079d97438512`, Claude Opus·High. Con AUD-01/02/03/05/06/07 ya todos APPROVED, solo quedan AUD-04, y después AUD-08 (reproducción/reconciliación) y AUD-09 (síntesis final GO/CONDITIONAL/NO-GO).)*
+- **AUD-04** (raw/matched/rendered, movimiento) — **1 P0 nuevo, independiente del de AUD-01, confirmado en mecanismo por el coordinador leyendo código:**
+  - **P0:** `packages/movement/schedule.py:120` usa `tolerance_m: float = 1.0` **hardcodeado** para decidir si una posición observada está "en" una parada con espera programada — un orden de magnitud más estricto que el error real de map-matching medido (p95≈20,8m). El ejecutor midió un caso real: el tren `1023V19656C5`, con 60s de espera programada en Fuenlabrada, se dibuja saliendo a **75,2 km/h** (1252,7m en 60s) porque su desvío real de 5,38m excede la tolerancia de 1,0m. **Esta cohorte (post-llegada, offset plausible +321s) está explícitamente separada de AUD01-P0-001 (pre-salida)** — el motor de movimiento tiene **al menos dos mecanismos de fallo independientes** alrededor de las paradas, no uno solo.
+  - **P1 #1:** al cruzar `stale_after_s`, el símbolo retrocede una mediana de **2357,9m** (25/25 circulaciones en ruta, máximo 3959,2m) — y el aviso que explicaría la congelación **desaparece justo en ese instante**, porque depende de `valid_until`, que `stale_frozen` pone a `null`.
+  - **P1 #2:** el mapa no distingue visualmente observación real de proyección sobre vía — una sola entrada de `METHOD_STYLES` para "anchor", con un texto de detalle que afirma (falsamente) que la proyección es la coordenada de la fuente.
+  - **8 P2**, incluido un **segundo bug de DST** en `_envelope` (distinto del ya corregido en MP-019/DEC-039) y un umbral de velocidad implausible fijado en 900 km/h que deja pasar un evento real de 200 km/h sin que llegue al directo.
+  - **4 NO-VERIFICADO declarados explícitamente** (sin `pytest` instalado y sin autorización para instalarlo; sin ventana de feed en vivo; sin navegador; sin contenedor PostgreSQL) — la suite del cliente (10/10) y su propio arnés vitest (3/3) sí se ejecutaron.
+
+*(Esta tabla se actualizará según reporte la revisión de AUD-04 (dispatch `ctx_4cc1f0959029`) y después AUD-08/AUD-09.)*
