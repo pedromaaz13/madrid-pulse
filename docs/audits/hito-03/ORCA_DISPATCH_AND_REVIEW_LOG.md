@@ -21,7 +21,8 @@ Mantenido en vivo por el coordinador (Claude Sonnet) a medida que cada `AUD-ID` 
 | AUD-03 | Corrección | Codex `gpt-5.6-sol` · high (follow-up) | `ctx_352eb5227c6d` | `task_a86ea689f4b5` | *(en curso)* | *(en curso)* |
 | AUD-01 | Corrección (rev.2) | Claude `opus` · high (follow-up) | `ctx_82628c4e473d` | `task_e5569e13a76b` | `f88d12f` | **aplicada**, enviada a reevaluación |
 | AUD-01 | Revisor (2ª ronda) | Codex `gpt-5.6-sol` · high (follow-up) | `ctx_264f3fb407d7` | `task_4ac30104d092` | — | **CHANGES_REQUESTED** (4/6 puntos ya APROBADOS, quedan 2: dirección temporal `calculated_at` y criterios de refutación cuantificados en H1-H8) |
-| AUD-01 | Corrección (ronda 3) | Claude `opus` · high (follow-up) | `ctx_349842fc8de0` | `task_5d4d3be6d4fe` | *(en curso)* | *(en curso)* |
+| AUD-01 | Corrección (ronda 3) | Claude `opus` · high (follow-up) | `ctx_349842fc8de0` | `task_5d4d3be6d4fe` | `574a620` | **aplicada**, enviada a veredicto final |
+| AUD-01 | Revisor (3ª ronda, final) | Codex `gpt-5.6-sol` · high (follow-up) | `ctx_526284cf5474` | `task_4cba05ac92dd` | — | *(en curso)* |
 
 ## Incidente de alcance real — AUD-06 escribió en la base de desarrollo compartida
 
