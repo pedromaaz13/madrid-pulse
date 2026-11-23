@@ -1,10 +1,11 @@
 # MP-022 — Validación integral de cierre
 
-Resultado del ejecutor: **PARTIAL, entregado a revisión**. Las puertas 1–6
-quedan reproducidas; la 7 conserva evidencia real de MP-020 y añade una
-secuencia sintética controlada, pero no pudo revalidarse visualmente en esta
-sesión; las puertas 8 y 9 no se cierran porque Orca no expuso navegador. No se
-marca el hito ni la tarea `DONE`.
+Resultado del ejecutor tras la inspección independiente: **las nueve puertas
+quedan cerradas y la tarea se entrega a `REVIEW`**. Las puertas 1–6 se
+reprodujeron en el entorno propio del ejecutor; el revisor ejecutó las puertas
+7–9 en una sesión nueva con navegador real sobre el frontend integrado. No se
+marca el hito ni la tarea `DONE`: esa promoción corresponde al revisor tras
+auditar la corrección del hallazgo descrito al final.
 
 ## Entorno exclusivo de la auditoría
 
@@ -74,14 +75,14 @@ un retraso de otro servicio.
 
 ### 6. Respuestas fuera de orden — PASS
 
-Los 88 tests frontend incluyen `revision.test.ts`: una respuesta de secuencia
+Los 89 tests frontend incluyen `revision.test.ts`: una respuesta de secuencia
 3 se descarta cuando la vigente es 9; un `snapshot_id`/hash distinto con la
 misma revisión tampoco reemplaza el estado. El backend verificó en el replay
 revisión `3 → 6 → 7` dentro del mismo scope y declaró
 `snapshot_id_is_sortable=false`. La selección y la cámara dependen de
 identidad/estado React, no del hash.
 
-### 7. Tres capturas con reloj controlado y movimiento reducido — PARTIAL
+### 7. Tres capturas con reloj controlado y movimiento reducido — PASS
 
 La nueva prueba
 `test_three_controlled_clocks_advance_then_freeze_at_the_horizon` usa tres
@@ -90,26 +91,32 @@ físico de velocidad y se congela en `max_progress_m` al agotar horizonte.
 Los tests del motor cubren espera de estación y sentido; los del cliente
 congelan `frameFor` tras `valid_until`.
 
-La inspección real de MP-020 ya observó en Chrome deriva 0 durante 4 s con
-`prefers-reduced-motion`, un único repintado por snapshot y contenido
-accesible. Se auditó esa evidencia y sigue respaldada por el código, pero no
-se reejecutó en navegador durante MP-022 porque no había navegador disponible.
-Por eso esta puerta no se eleva a cierre final nuevo.
+En la inspección MP-022 del revisor, `window.matchMedia` se forzó a
+`prefers-reduced-motion: reduce` **antes de montar React**. Se muestrearon
+centro y zoom de `window.__mpMap` cada 700 ms durante 3,5 s: las seis muestras
+fueron idénticas (deriva 0), mientras el reloj REPLAY y el snapshot seguían
+actualizándose hasta 12:11:59. Se conserva así la información accesible sin
+animación espacial automática.
 
-### 8. UX completa desktop/móvil/teclado/sin WebGL — PARTIAL
+### 8. UX completa desktop/móvil/teclado/sin WebGL — PASS
 
-Las capturas reales heredadas de MP-020 demuestran mapa integrado (no el
-prototipo), C4/C5, Atocha/Alcorcón, tren, Seguir → arrastrar → Volver al tren,
-390 px, teclado, Atrás y fallback sin WebGL. MP-021 demuestra History,
-identidad Live↔History y 390 px con el frontend integrado.
+La sesión nueva del revisor recorrió el frontend integrado —nunca
+`diseno/live.html`— así: Live → filtros C4a+C4b (`?lines=C4a,C4b`) → tren C4a
+20277 (Alcobendas-San Sebastián de los Reyes) → Seguir tren → arrastre real
+del lienzo MapLibre (`pointerdown`, 15 `mousemove`, `pointerup`) → aparición de
+«Volver al tren» → clic y recentrado confirmado visualmente → History del
+2026-11-20 → detalle real de 19656 con «no se puede abrir en Live» → Atrás.
+El navegador restauró exactamente la URL con C5, tren 19656, `trip` y
+`sd=2026-11-20`.
 
-Para MP-022 se levantó el entorno propio y se verificaron API/tablero/archivo,
-pero `agent.browsers.list()` devolvió `[]` después del diagnóstico obligatorio
-de la skill. No existen capturas o vídeo nuevos de esta sesión y no se usó
-`diseno/live.html`. La navegación completa combinada queda pendiente de
-repetición por el revisor o en una sesión con navegador disponible.
+La emulación móvil fue real (`390x844x2,mobile,touch`), no un resize:
+`scrollWidth == clientWidth == 390`, sin recorte. Con teclado, Tab alcanzó
+buscador y filtros, el foco mostró outline de 3 px y Enter activó un filtro y
+cambió la URL. Con `HTMLCanvasElement.prototype.getContext` anulado mediante
+un script previo al montaje, apareció «Mapa no disponible · Este navegador no
+ofrece WebGL» y lista/tablero siguieron navegables.
 
-### 9. Benchmark reproducible — PARTIAL
+### 9. Benchmark reproducible — PASS con límite declarado
 
 [`mp-022-benchmark.md`](mp-022-benchmark.md) publica equipo, dataset, reloj,
 p50/p95 de API, edad y cobertura. Snapshot: 254,73/418,23 ms; tablero Atocha:
@@ -117,9 +124,15 @@ p50/p95 de API, edad y cobertura. Snapshot: 254,73/418,23 ms; tablero Atocha:
 legado (1 621,14/2 110,15 ms) en vez de ocultarlo. API/Vite ya calentados:
 13,1/3,6 MiB RSS.
 
-No se pudo medir duración de frames, heap ni memoria del navegador en el
-recorrido MP-022. Las medidas de 60 s de MP-020 se conservan como evidencia
-heredada, no se renombran como una corrida nueva. Puerta `PARTIAL`.
+La sesión MP-022 midió `requestAnimationFrame` durante 3 s de zoom+pan+zoom:
+182 frames, 60,3 fps, p50 16,70 ms, p95 18,30 ms y máximo 18,50 ms. El heap
+real de `performance.memory` fue 96,2 MiB usados / 154,2 MiB totales / límite
+4 192 MiB.
+
+Límite honesto: el único corte disponible estaba ya congelado y tenía 68,7 h
+de edad. Esta corrida mide fluidez de **interacción de mapa**, no animación de
+posiciones ni 60 s de circulaciones avanzando. La medición continua de MP-020
+se mantiene separada y no se atribuye a esta corrida.
 
 ## Replay congelado frente a producción
 
@@ -139,7 +152,7 @@ Python 3.12.3 + PostgreSQL limpio 5438
   focal MP-022: 7/7 — OK
 
 Frontend, Node 22.13.1
-  vitest: 9 ficheros, 88/88
+  vitest: 10 ficheros, 89/89 (incluye regresión HistoryView 1/1)
   eslint --max-warnings 0: limpio
   tsc -b: limpio
   vite build: OK; worker MapLibre 550754 bytes verificado
@@ -157,10 +170,13 @@ esa segunda corrida es la válida y quedó en verde.
 
 ## Veredicto del ejecutor
 
-No apareció un bloqueante de producto en catálogo/datos: las 12 líneas están,
-C4 permanece seleccionable con 0 GPS, 121/121 observaciones del corte resuelven
-sin atribución falsa y los 75 patrones sin map matching usan fallback honesto.
-Sin embargo, las puertas 7–9 exigen evidencia de navegador nueva que esta
-sesión no pudo producir. MP-022 queda `REVIEW (PARTIAL)`, no `DONE`; el revisor
-debe repetir la inspección integrada y completar frames/memoria antes de poder
-aprobar el cierre del Hito 3.
+No apareció un bloqueante de catálogo/datos: las 12 líneas están, C4 permanece
+seleccionable con 0 GPS, 121/121 observaciones del corte resuelven sin
+atribución falsa y los 75 patrones sin map matching usan fallback honesto. La
+inspección sí encontró un defecto real: History sustituía silenciosamente un
+día URL no archivado por el primero disponible en encabezado y breadcrumb. Se
+corrigió para mostrar «Día no archivado», conservar la fecha solicitada y
+ofrecer los días reales solo como opciones; la regresión renderizada impide
+volver a presentar 2026-11-20 como si fuera el 2026-11-23 solicitado. MP-022
+queda `REVIEW`, nunca `DONE` por el ejecutor, pendiente de la auditoría final
+de Claude.

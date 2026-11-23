@@ -10,12 +10,12 @@
 | MP-019 | Snapshot/API | catálogo cacheable, revisión monotónica, raw/matched/rendered, tablero y ETA | DONE |
 | MP-020 | Mapa/tablero | map-first, búsqueda, selección, seguimiento, móvil, teclado, sin WebGL | DONE |
 | MP-021 | History/Explore | archivo idempotente, histórico por circulación, cobertura y huecos | DONE |
-| MP-022 | Auditoría integral | matriz, replay, fixtures sintéticas, benchmark API y dossier; inspección visual final no reejecutada | REVIEW (PARTIAL) |
+| MP-022 | Auditoría integral | matriz, replay, fixtures sintéticas, benchmark API/frames/memoria y recorrido navegador completo | REVIEW |
 
-El propietario **no debe integrar todavía como Hito 3 cerrado**: falta que el
-revisor complete las puertas visuales 7–9 señaladas en
-[`mp-022-validacion-integrada.md`](mp-022-validacion-integrada.md). No hay push,
-PR ni merge efectuados por agentes.
+Las nueve puertas tienen evidencia y el hallazgo de History tiene corrección y
+regresión. El propietario **no debe integrar todavía como Hito 3 cerrado**:
+falta que el revisor audite el diff corregido y promueva explícitamente la
+tarea a `DONE`. No hay push, PR ni merge efectuados por agentes.
 
 ## Cobertura de Madrid
 
@@ -77,11 +77,11 @@ Ninguno se presenta como trabajo parcial de Hito 3 ni como cobertura actual.
 ## Checklist del propietario
 
 - [ ] Revisor Claude inspecciona el diff completo y repite suites críticas.
-- [ ] Revisor repite el recorrido integrado desktop y móvil 390 px con
+- [x] Revisor ejecutó recorrido integrado desktop y móvil 390 px con
   navegador real, teclado, reduced motion y fallback sin WebGL.
-- [ ] Revisor registra frames y memoria del recorrido; decide si el endpoint
-  legado de 1,6/2,1 s requiere acción o queda fuera del camino de producto.
-- [ ] Si las puertas 7–9 quedan completas, revisor cambia MP-022 a `DONE` y
-  documenta su aprobación en TASKS/STATUS/CHANGELOG.
+- [x] Revisor registró frames y memoria, separados de la animación continua;
+  el endpoint legado de 1,6/2,1 s queda registrado fuera del camino frontend.
+- [ ] Revisor audita la corrección del día no archivado y, si no hay nuevos
+  hallazgos, cambia MP-022 a `DONE` en TASKS/STATUS/CHANGELOG.
 - [ ] Propietario decide ADR-0014/0015 y DECs abiertas.
 - [ ] Solo el propietario realiza push, PR y merge.

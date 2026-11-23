@@ -61,7 +61,18 @@ geometría validada para todos los patrones. Véase
 
 ## Fotogramas y memoria
 
-La evidencia heredada de MP-020 (frontend integrado, Chrome) midió 60 s y 13
+La inspección MP-022 del revisor midió `requestAnimationFrame` real durante
+3 s de zoom+pan+zoom sobre `window.__mpMap`: **182 frames**, **60,3 fps**, p50
+**16,70 ms**, p95 **18,30 ms** y máximo **18,50 ms**. `performance.memory`
+registró **96,2 MiB** de heap JS usado, **154,2 MiB** total y límite de
+**4 192 MiB**.
+
+El corte REPLAY disponible ya estaba congelado y tenía 68,7 h de antigüedad.
+Por tanto, esta cifra mide fluidez de interacción de mapa (zoom/pan), **no**
+animación continua de posición ni una circulación que avance durante 60 s.
+No se mezclan ambas magnitudes.
+
+Como evidencia separada, MP-020 (frontend integrado, Chrome) midió 60 s y 13
 fotogramas intermedios de la circulación 19656: 1 316,7 m a 22,0 m/s, pasos
 de 110,1–110,5 m cada 5 s, sin teletransporte; también validó movimiento
 reducido y el fallback sin WebGL. Esa evidencia sigue en
@@ -69,8 +80,6 @@ reducido y el fallback sin WebGL. Esa evidencia sigue en
 se atribuye a una nueva corrida MP-022**.
 
 En esta ejecución se midió RSS de los procesos servidor ya calentados: API
-13,1 MiB y Vite 3,6 MiB. Esto no es memoria del navegador ni del recorrido de
-usuario. Orca no expuso ningún navegador controlable en la sesión del
-ejecutor; por tanto duración de frames, heap del navegador y memoria del
-recorrido completo quedan **sin re-medición MP-022**. Esta carencia mantiene
-la puerta 9 en `PARTIAL` y prohíbe afirmar fluidez final nueva.
+13,1 MiB y Vite 3,6 MiB. Es RSS de servidor y se mantiene separado del heap de
+navegador anterior. Con estas mediciones y el límite declarado, la puerta 9
+queda cerrada sin afirmar fluidez de trenes sobre un feed continuo.

@@ -4,7 +4,7 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 
 ## [Unreleased]
 
-### MP-022 — Validación integral de cierre (`REVIEW (PARTIAL)`)
+### MP-022 — Validación integral de cierre (`REVIEW`)
 
 Auditoría final sobre un entorno desechable propio. No añade features ni cambia arquitectura.
 
@@ -16,12 +16,15 @@ Auditoría final sobre un entorno desechable propio. No añade features ni cambi
 #### Verified
 - Replay congelado intacto: 1532 = 119/119/49; 1533 = 121/121/49. Cuatro snapshots normal/normal/parcial/congelado con revisión 3→6→7, conservación de 122 últimos conocidos y timestamps sin rejuvenecer.
 - Archivo del 2026-11-20 reprocesado dos veces con los mismos 9 ficheros y SHA-256; base replay propia `240/199/4/7/2` y base de suite limpia al terminar.
-- Python final 283/283 (5 `skip` esperados) sobre PostGIS fresco. Frontend Node 22.13.1: 88/88, lint, typecheck y build; worker MapLibre 550754 bytes.
+- Python final 283/283 (5 `skip` esperados) sobre PostGIS fresco. Frontend Node 22.13.1: 89/89, lint, typecheck y build; worker MapLibre 550754 bytes.
 - Benchmark reproducible de 30 iteraciones: snapshot 254,73/418,23 ms p50/p95; tablero Atocha 103,14/179,75 ms; salud 75,23/83,14 ms. Se registra el endpoint legado lento y DEC-038 permanece abierta.
+- Inspección nueva del frontend integrado: reduced-motion con deriva 0 en seis muestras; recorrido Live→History en desktop, móvil 390×844, teclado y fallback sin WebGL; interacción MapLibre con 182 frames/60,3 fps, p50/p95 16,70/18,30 ms y heap 96,2 MiB usado. El replay tenía 68,7 h y estaba congelado: la cifra mide zoom/pan, no animación continua de trenes.
+
+#### Fixed
+- `HistoryView` ya no sustituye silenciosamente un día URL no archivado por el primero disponible en encabezado y breadcrumb: muestra un estado explícito, conserva la fecha solicitada y ofrece los días reales como opciones. Frontend 89/89, typecheck y lint limpios.
 
 #### Not done
-- Orca no expuso navegador controlable al ejecutor (`agent.browsers.list() == []`). No se fabricaron capturas ni se usó el prototipo como sustituto. La inspección combinada Live→History, frames y memoria queda para la revisión; puertas 7–9 `PARTIAL`.
-- La tarea no se marca `DONE`; ADR-0014/0015 siguen `Propuesto`, DECs 033(b)/(c), 038 y 004 abiertas, y no se afirma 24/7 ni trabajo de AV/LD/MD.
+- La tarea no se marca `DONE` hasta la auditoría final de Claude; ADR-0014/0015 siguen `Propuesto`, DECs 033(b)/(c), 038 y 004 abiertas, y no se afirma 24/7 ni trabajo de AV/LD/MD.
 
 ### MP-021 — Histórico y continuidad analítica
 

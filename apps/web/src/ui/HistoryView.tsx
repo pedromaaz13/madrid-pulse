@@ -148,7 +148,26 @@ export function HistoryView({
     );
   }
 
-  const day = days.days.find((item) => item.service_date === serviceDate) ?? days.days[0];
+  const day =
+    serviceDate === null
+      ? days.days[0]
+      : days.days.find((item) => item.service_date === serviceDate);
+
+  if (day === undefined) {
+    return (
+      <div className="panel-body">
+        <p className="label">Histórico · archivo frío</p>
+        <h1>Día no archivado</h1>
+        <p className="notice" role="status">
+          El día solicitado <span className="mono">{serviceDate}</span> no está disponible en este
+          archivo. No se ha sustituido por otro día.
+        </p>
+        <p className="meta">Días archivados disponibles:</p>
+        <DayPicker days={days.days} serviceDate={null} onPickDate={onPickDate} />
+      </div>
+    );
+  }
+
   const availableLines = index === null ? [] : index.catalog.lines.map((item) => item.line_id);
 
   if (selected !== null) {
