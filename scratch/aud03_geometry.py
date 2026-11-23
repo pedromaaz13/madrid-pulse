@@ -6,9 +6,7 @@ from __future__ import annotations
 import argparse
 import csv
 import hashlib
-import json
 import sys
-import urllib.request
 from collections import Counter, defaultdict
 from pathlib import Path
 
@@ -20,10 +18,9 @@ from packages.geo import (
     arc_length_to,
     build_corridor,
     corridor_length_m,
+    haversine_m,
     load_relation_geometry_json,
     project_point_to_polyline,
-    haversine_m,
-    RelationGeometry,
 )
 from packages.geo.madrid import build_madrid_corridor_catalog, madrid_source_specs
 from packages.gtfs import build_catalog, load_feed
@@ -165,9 +162,9 @@ def summary():
         if entry.status is CoverageStatus.PARTIAL:
             cause = "caveat_explicita_pese_a_geometria_valida"
         elif len(entry.identity.stop_ids) < 2:
-            cause = "patron_degenerado_una_parada"
+            cause = "feed_origen_truncado"
         elif entry.identity.route_id == "10T0016C4b":
-            cause = "fuente_direccional_9174512_no_congelada"
+            cause = "sentido_inverso_no_admitido_y_fuente_propia_no_congelada"
         elif viable:
             cause = "allowlist_route_id_excluye_geometria_reutilizable"
         else:
@@ -210,6 +207,15 @@ def summary():
             "track_km", f"{corridor_length_m(corridor)/1000:.3f}",
         )
     print("CAUSES", dict(classes))
+    orphan_trip_ids = {
+        trip.trip_id for trip in topology.trips
+        if not topology.stop_times_for_trip(trip.trip_id)
+    }
+    print(
+        "NETWORK_TRIPS", len(topology.trips),
+        "CATALOG_TRIPS", sum(entry.trip_count for entry in catalog.entries),
+        "ORPHAN_TRIPS", len(orphan_trip_ids),
+    )
     print("REUSABLE_FULL", len(reusable))
     print("REUSED_RUNS")
     for (relation_id, stop_run), (patterns, trips, lines) in sorted(
@@ -239,73 +245,43 @@ def summary():
     writer.writerows(rows)
 
 
-def live_c4b():
-    """Contraste puntual de la relación opuesta que MP-018 no congeló."""
-    relation_id = 9174512
-    request = urllib.request.Request(
-        f"https://api.openstreetmap.org/api/0.6/relation/{relation_id}/full.json",
-        headers={"User-Agent": "madrid-pulse-aud03/1.0"},
-    )
-    with urllib.request.urlopen(request, timeout=90) as response:
-        body = response.read()
-    payload = json.loads(body)
-    elements = payload["elements"]
-    relation = next(
-        item for item in elements
-        if item["type"] == "relation" and item["id"] == relation_id
-    )
-    geometry = RelationGeometry(
-        relation_id=relation_id,
-        tags=relation.get("tags", {}),
-        nodes={
-            item["id"]: (item["lat"], item["lon"])
-            for item in elements if item["type"] == "node"
-        },
-        ways={
-            item["id"]: tuple(item["nodes"])
-            for item in elements if item["type"] == "way"
-        },
-        member_refs=tuple(
-            (member["type"], member["ref"], member.get("role", ""))
-            for member in relation.get("members", ())
-        ),
-    )
-    corridor = build_corridor(geometry)
+def offline_c4b():
+    """Contrasta el sentido pendiente con la relación opuesta ya congelada."""
     topology, _, catalog = load()
     stops = {stop.stop_id: (stop.latitude, stop.longitude) for stop in topology.stops}
-    print(
-        "RELATION", relation_id,
-        "version", relation.get("version"),
-        "timestamp", relation.get("timestamp"),
-        "sha256", hashlib.sha256(body).hexdigest(),
-        "name", relation.get("tags", {}).get("name"),
-    )
-    print(
-        "GEOMETRY", "nodes", len(geometry.nodes), "ways", len(geometry.ways),
-        "gaps", len(corridor.gaps), "track_km", f"{corridor_length_m(corridor)/1000:.3f}",
-    )
+    source = next(spec for spec in madrid_source_specs(FIXTURES) if spec.relation_id == 9174511)
+    corridor = build_corridor(load_relation_geometry_json(source.path))
+    validated_sequences = {
+        tuple(reversed(entry.identity.stop_ids))
+        for entry in catalog.entries
+        if entry.identity.route_id == "10T0015C4b"
+        and entry.status is CoverageStatus.VALIDATED
+    }
+    print("RELATION", 9174511, "gaps", len(corridor.gaps))
     for entry in catalog.entries:
         if entry.identity.route_id != "10T0016C4b":
             continue
-        max_distance, monotonic, _, arcs = evaluate(
+        max_distance, increasing, _, arcs = evaluate(
             corridor, entry.identity.stop_ids, stops
         )
+        decreasing = list(arcs) == sorted(arcs, reverse=True)
         print(
             entry.identity.pattern_id, entry.identity.direction_key,
             "trips", entry.trip_count, "stops", len(entry.identity.stop_ids),
-            "max_m", f"{max_distance:.1f}", "monotonic", monotonic,
-            "arc_km", f"{(arcs[-1]-arcs[0])/1000:.3f}",
+            "max_m", f"{max_distance:.1f}", "increasing", increasing,
+            "decreasing", decreasing,
+            "exact_reverse", entry.identity.stop_ids in validated_sequences,
         )
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("command", choices=("summary", "live-c4b"))
+    parser.add_argument("command", choices=("summary", "offline-c4b"))
     args = parser.parse_args()
     if args.command == "summary":
         summary()
-    elif args.command == "live-c4b":
-        live_c4b()
+    elif args.command == "offline-c4b":
+        offline_c4b()
 
 
 if __name__ == "__main__":
