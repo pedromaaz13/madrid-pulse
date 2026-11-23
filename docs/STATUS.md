@@ -290,7 +290,7 @@ Con Hito 1 ya fusionado a `main`, el caso concreto de MP-012 **deja de requerir 
 
 **MP-022 — Validación integral de cierre (Madrid completo)**
 
-Ejecutor: OpenAI Codex · Revisor: Claude (Sonnet) · Estado: **IN_PROGRESS**
+Ejecutor: OpenAI Codex · Revisor: Claude (Sonnet) · Estado: **REVIEW (PARTIAL)**
 
 Worktree/rama: `mp-022-validacion-integrada`, ramificada desde `mp-021-historico` (MP-021 `DONE`, `1ecbc8f`). Datos del kit repuestos con `instalar.py --solo-datos` (10 ficheros). Es la última tarea de la cadena `MP-016`→`MP-022`.
 
@@ -307,6 +307,19 @@ Auditoría final cruzada: recorrido completo Live → History con la misma ident
 ### Entorno heredado (disponible, comprobar antes de asumir que sigue vivo)
 
 MP-021 dejó API en `127.0.0.1:8011` y Vite en `127.0.0.1:5182` sobre su propio worktree, con el archivo frío de `data/parquet/` (días `2026-11-19`/`2026-11-20` ya archivados). MP-020 mantuvo API `8010`/Vite `5181`/`mp020-replay-db` (`5434`) hasta el cierre de MP-021; se le indicó que podía parar el entorno una vez MP-021 quedó `DONE`. MP-022 debe levantar su propio entorno en este worktree (mismo patrón: contenedor PostgreSQL desechable propio, nunca reutilizar las bases de desarrollo/réplica de otras tareas para escribir en ellas).
+
+### Entrega del ejecutor para revisión (2026-11-23)
+
+- **Matriz contractual:** `docs/evidence/mp-022-coverage.csv` y `.md`, generadas por `apps.api.tools.build_closure_matrix`. Esquema exacto de 21 columnas; 12 líneas/42 rutas/103 patrones; 121/121 observaciones del corte resueltas, pero C4 con 0 GPS y porcentaje `null`; solo 28/103 patrones map-matcheables, sin declarar geometría plena.
+- **Nueve puertas:** evidencia una a una en `docs/evidence/mp-022-validacion-integrada.md`. Puertas 1–6 reproducidas; la 7 combina prueba sintética nueva con evidencia visual heredada, y 7–9 siguen `PARTIAL` porque no hubo navegador controlable para reejecutar UX/frames/memoria.
+- **Fixtures nuevas:** `tests/fixtures/mp022_synthetic/` declara `is_official_capture=false` e `is_live_production=false`; cubre recuperación tras estimación, límite físico, horizonte y calendario excluido con 24:xx. No se modificaron 1532/1533.
+- **Benchmark:** `docs/evidence/mp-022-benchmark.md`, 30 iteraciones válidas por endpoint sobre Atocha y replay propio. Snapshot p50/p95 254,73/418,23 ms; tablero 103,14/179,75 ms; salud 75,23/83,14 ms; endpoint legado `/live/vehicles` 1 621,14/2 110,15 ms, registrado sin ocultarlo. DEC-038 sigue abierta.
+- **Histórico:** export propio del 2026-11-20 (240/199/4/7/2), dos reprocesados con inventario de 9 ficheros byte-idéntico; mart 1 304 circulaciones. API `8012`, Vite `5183`, PostgreSQL `mp022-validation-db:5437`; suite sobre `mp022-ci-db:5438`, que termina vacío.
+- **Verificación:** replay 119/119/49 y 121/121/49; Python final 283/283 con 5 `skip` sobre PostGIS fresco; frontend Node 22.13.1 88/88 + lint + typecheck + build, worker MapLibre 550754 bytes. La corrida Python inicialmente mal configurada contra GTFS completo/base ingerida falló y se descartó explícitamente; la válida usó fixture/configuración por defecto y base limpia.
+- **Bloqueo de evidencia, no hallazgo de producto:** la skill de navegador completó bootstrap y diagnóstico, pero `agent.browsers.list()` devolvió `[]`. No se sustituyó por una herramienta no autorizada ni por el prototipo. Claude debe repetir la navegación integrada desktop/móvil/teclado/reduced-motion/sin WebGL y medir frames/memoria antes de aprobar.
+- **Dossier:** `docs/evidence/mp-022-dossier-integracion.md` conserva ADR-0014/0015 como `Propuesto`, DECs 033(b)/(c), 038 y 004 abiertas, y AV/LD/MD + operación 24/7 como roadmap no iniciado.
+
+**Veredicto del ejecutor:** `REVIEW (PARTIAL)`, nunca `DONE`. No se observó bloqueante de catálogo/datos, pero las puertas visuales incompletas impiden cerrar Hito 3.
 
 ## Tareas cerradas de la cadena
 

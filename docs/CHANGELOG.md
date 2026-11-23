@@ -4,9 +4,24 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 
 ## [Unreleased]
 
-### MP-022 — Validación integral de cierre (en curso)
+### MP-022 — Validación integral de cierre (`REVIEW (PARTIAL)`)
 
-Tarea abierta tras la aprobación de MP-021 el 2026-11-23. Worktree `mp-022-validacion-integrada`, ramificado desde `mp-021-historico` (`1ecbc8f`) — última tarea de la cadena `MP-016`→`MP-022`. Sin cambios de código todavía; entregables previstos: recorrido completo Live→History verificado en navegador, matriz de cobertura real por línea/variante/patrón, pruebas E2E que distinguen captura congelada de producción, métricas de rendimiento por línea, y un dossier final para la integración del propietario.
+Auditoría final sobre un entorno desechable propio. No añade features ni cambia arquitectura.
+
+#### Added
+- Generador reproducible `apps/api/tools/build_closure_matrix.py` y matriz CSV/Markdown con el esquema vinculante exacto: 12 líneas, 42 rutas, 103 patrones, 1 299 instancias con horario y denominadores explícitos. C4 conserva horario/catálogo con GPS 0 y cobertura `null`; 28/103 patrones map-matcheables, fallback raw/tablero declarado.
+- Fixture `tests/fixtures/mp022_synthetic/`, marcada inequívocamente como sintética derivada, no oficial y no producción, más E2E de recuperación tras estimación, tres relojes/horizonte y excepción de calendario junto a 24:xx.
+- Evidencia integral, benchmark y dossier de integración en `docs/evidence/mp-022-{validacion-integrada,benchmark,dossier-integracion}.md`.
+
+#### Verified
+- Replay congelado intacto: 1532 = 119/119/49; 1533 = 121/121/49. Cuatro snapshots normal/normal/parcial/congelado con revisión 3→6→7, conservación de 122 últimos conocidos y timestamps sin rejuvenecer.
+- Archivo del 2026-11-20 reprocesado dos veces con los mismos 9 ficheros y SHA-256; base replay propia `240/199/4/7/2` y base de suite limpia al terminar.
+- Python final 283/283 (5 `skip` esperados) sobre PostGIS fresco. Frontend Node 22.13.1: 88/88, lint, typecheck y build; worker MapLibre 550754 bytes.
+- Benchmark reproducible de 30 iteraciones: snapshot 254,73/418,23 ms p50/p95; tablero Atocha 103,14/179,75 ms; salud 75,23/83,14 ms. Se registra el endpoint legado lento y DEC-038 permanece abierta.
+
+#### Not done
+- Orca no expuso navegador controlable al ejecutor (`agent.browsers.list() == []`). No se fabricaron capturas ni se usó el prototipo como sustituto. La inspección combinada Live→History, frames y memoria queda para la revisión; puertas 7–9 `PARTIAL`.
+- La tarea no se marca `DONE`; ADR-0014/0015 siguen `Propuesto`, DECs 033(b)/(c), 038 y 004 abiertas, y no se afirma 24/7 ni trabajo de AV/LD/MD.
 
 ### MP-021 — Histórico y continuidad analítica
 
