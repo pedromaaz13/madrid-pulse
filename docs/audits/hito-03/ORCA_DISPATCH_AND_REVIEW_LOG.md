@@ -47,7 +47,8 @@ El colector es solo-inserción por diseño (sin ruta de `UPDATE`/`DELETE`), así
 | AUD-07 | Ejecutor | Claude `sonnet` · medium | `ctx_7f0fde0b7e4f` | `task_a9deb9865cbc` | `44c98cb`, `ea49e6a` | **completado** — revisión independiente real de Codex (`ctx_db3c9aa62ac8`, settled/succeeded) incorporada: 2 P1→P2, 2 P1 confirmados, 1 hallazgo descartado |
 | AUD-01 | — | Claude `opus` · high (pendiente de despachar) | — | `task_8bf54c0799dd` | — | en cola |
 | AUD-04 | Ejecutor | Claude `opus` · high | `ctx_079d97438512` | `task_e6d1bf8a933e` | `c8263a0` | **completado** — 1 P0 nuevo independiente de AUD-01 |
-| AUD-04 | Revisor | Codex `gpt-5.6-sol` · high | `ctx_4cc1f0959029` | `task_e3355549167a` | — | *(en curso)* |
+| AUD-04 | Revisor | Codex `gpt-5.6-sol` · high | `ctx_4cc1f0959029` | `task_e3355549167a` | — | **CHANGES_REQUESTED** — mecanismo P0 confirmado, 2 imprecisiones a corregir |
+| AUD-04 | Corrección | Claude `opus` · high (follow-up) | `ctx_df3d184f2548` | `task_28d2a39bb8db` | *(en curso)* | *(en curso)* |
 | AUD-06 | — | Codex `gpt-5.6-terra` · high (pendiente de despachar) | — | `task_7982bf79c176` | — | en cola |
 | AUD-08 | — | Codex `gpt-5.6-terra` · high (pendiente, depende de AUD-02/03/04/05/06) | — | `task_e0212d2fd3fe` | — | pendiente de dependencias |
 | AUD-09 | — | Claude `opus` · high (pendiente, depende de todo) | — | `task_2e01f9d87b46` | — | pendiente de dependencias |
