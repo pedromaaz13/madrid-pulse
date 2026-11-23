@@ -1,6 +1,6 @@
 # Incidente PostgreSQL 5433 — investigación y propuesta (sin ejecución)
 
-**Estado:** investigado en solo lectura. **No se ha ejecutado ningún `DELETE`, `UPDATE` ni `INSERT`.** La resolución requiere aprobación expresa del propietario.
+**Estado: RESUELTO por decisión del propietario (2026-11-24): CONSERVAR.** Investigado en solo lectura. **No se ha ejecutado ningún `DELETE`, `UPDATE` ni `INSERT`.**
 **Fecha:** 2026-11-23 · **Investigó:** coordinador (Claude), solo consultas `SELECT`/`pg_dump`.
 
 ## 1. Qué es la base 5433
@@ -82,3 +82,9 @@ Ejecutable solo con tu aprobación expresa; no se ha ejecutado.
 
 ### Medida preventiva (independiente de A/B, para H4)
 Quitar el valor por defecto que apunta a 5433 en `services/collector/config.py` y `apps/api/config.py` (fallar si falta la variable) o exigir confirmación explícita. No se implementa en esta auditoría.
+
+## 7. Decisión del propietario (2026-11-24)
+- **CONSERVAR** los datos añadidos por AUD-06. **No se autoriza** ningún `DELETE`, `TRUNCATE`, restauración ni modificación adicional sobre la base 5433. La "Opción B" de la sección 6 queda **descartada y no debe ejecutarse**; se conserva solo como registro.
+- Se mantienen este documento, las claves de las filas afectadas (sección 3), la evidencia de procedencia y la copia de seguridad existente. **El dump no se incorpora al repositorio** (permanece fuera, en el scratchpad de la sesión).
+- **Limitación de reproducibilidad conservada explícitamente:** la base 5433 **no debe usarse** para establecer resultados de pruebas reproducibles que dependan de su estado original. La verificación histórica "suite sin skips contra desarrollo" (`668/484/3/120/0`) **ya no es reproducible** contra 5433; la nueva línea base de esa base es `895/646/8/126/8`. Cualquier prueba reproducible debe usar un PostgreSQL desechable con migraciones desde cero.
+- **Hito 4 (planificación autorizada, implementación no):** tarea específica para eliminar defaults peligrosos de PostgreSQL en `services/collector/config.py` y `apps/api/config.py` (configuración explícita por entorno, protección contra escrituras accidentales, aislamiento de tests, fallo seguro si falta configuración). Ejecutor propuesto `gpt-6.2-sol` Medium; revisor independiente `claude-sonnet-5-5` High (en Orca: `sonnet`); con pruebas de regresión y criterios de aceptación reproducibles. Debe verificarse la disponibilidad real del modelo al despachar.

@@ -116,3 +116,6 @@ El colector es solo-inserción por diseño (sin ruta de `UPDATE`/`DELETE`), así
 - **AUD-05:** el único veredicto previo de Codex Terra (`ctx_41022ed63263`) fue "CHANGES_REQUESTED por P0-1": reprodujo el hallazgo P0-1, pero no evaluó formalmente el documento ni hubo re-revisión. **No estaba APPROVED.** Re-revisión formal despachada: Codex `gpt-5.6-terra` · high, `ctx_53f6eb860b17`, `task_55fbb3c5ce04` *(en curso)*.
 - **AUD-07:** el revisor `ctx_db3c9aa62ac8` lo creó el propio ejecutor (profundidad 2), con modelo/esfuerzo no verificables, veredicto "verificado con matices" y correcciones `ea49e6a` sin re-verificar. **No conforme a la matriz.** Revisión formal despachada: Codex `gpt-5.6-terra` · medium, `ctx_1626c278cd8f`, `task_40fad4c8898e` *(en curso)*.
 - Observación de Orca: el default actual de `~/.codex/config.toml` es `gpt-6.2-sol`, familia excluida por el encargo; todos los despachos de esta auditoría fijan `--model` explícitamente y el recibo confirma el modelo efectivo.
+
+## Decisión del propietario sobre 5433 (2026-11-24)
+CONSERVAR los datos. Sin DELETE/TRUNCATE/restauración. Dump fuera del repo. 5433 no sirve para pruebas reproducibles que dependan de su estado original. Tarea H4 de defaults peligrosos autorizada solo a planificación. Ver `INCIDENT_5433.md` §7.
