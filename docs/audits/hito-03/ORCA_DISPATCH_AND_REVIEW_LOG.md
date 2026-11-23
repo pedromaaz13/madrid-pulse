@@ -119,3 +119,4 @@ El colector es solo-inserción por diseño (sin ruta de `UPDATE`/`DELETE`), así
 
 ## Decisión del propietario sobre 5433 (2026-11-24)
 CONSERVAR los datos. Sin DELETE/TRUNCATE/restauración. Dump fuera del repo. 5433 no sirve para pruebas reproducibles que dependan de su estado original. Tarea H4 de defaults peligrosos autorizada solo a planificación. Ver `INCIDENT_5433.md` §7.
+- **AUD-07:** revisión formal conforme a matriz (Codex `gpt-5.6-terra` · medium, `ctx_1626c278cd8f` + follow-up `ctx_c95f2e3ad3ce`): CHANGES_REQUESTED (2 correcciones de redacción) -> correcciones `48dd53f` -> **APPROVED**.
