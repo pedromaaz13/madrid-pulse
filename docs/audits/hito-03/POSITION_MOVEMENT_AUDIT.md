@@ -342,14 +342,29 @@ mientras las 44 que sí tienen trazado verificado se dibujan con el símbolo dis
      lado positivo de la tolerancia y deja la ventana efectiva en **~1 m de los 45 165 m**
      del recorrido, medida en «Ventana real de alcanzabilidad». Es una ventana muy
      estrecha, no una imposibilidad.
-- **Por qué el test de regresión no puede fallar aquí:**
+- **Por qué el test de regresión no cubre este caso:**
   `packages/movement/tests/test_rendering.py:145`
   (`test_scheduled_dwell_holds_the_train_at_the_anchor`) construye la observación con
   `self.observation(progress_m=point.progress_m)` (`:66-77`), que genera lat/lon con
-  `point_at_arc_length` **exactamente** sobre el progreso del punto de horario. El ancla
-  del test tiene error de map-matching **cero** por construcción, que es justo la única
-  condición bajo la cual la tolerancia de 1,0 m pasa. El test verifica que el mecanismo
-  funciona cuando se le entrega un ancla imposible en la realidad.
+  `point_at_arc_length` **exactamente** sobre el progreso del punto de horario. El test
+  coloca así su ancla, de forma determinista, en el **borde superior inclusivo** de la
+  ventana estrecha `[-0,999, 0,000]` m, por el lado que la guarda de `_envelope` no recorta
+  — reproducido con su propia fixture en `.venv/bin/python scratch/aud04_test_anchor.py`:
+  ```
+  dwell_index=11  tramo plano en progreso 20428.270700 m (espera 60 s)
+  progreso tras el map-match de ida y vuelta: 20428.270689 m
+  offset respecto al tramo plano: -0.000011 m
+  distancia GPS->via del ancla del test: 0.000000 m
+  => el ancla del test cae DENTRO de la ventana, en su borde superior inclusivo
+  ```
+  No es, por tanto, la **única** condición que activa la espera —cualquier ancla del
+  intervalo `[-0,999, 0,000]` m la activa— ni un ancla imposible: 11 µm de residuo de
+  ida y vuelta es un valor real y determinista. Lo que el test **no** cubre es el caso
+  realista de error de proyección: el ancla real del corte `1533` cayó a **+5,38 m**, fuera
+  de la ventana, y ahí el mecanismo falla. Dicho de otro modo, el test fija el
+  comportamiento en el único punto del recorrido donde el ancla y la parada proyectan al
+  mismo progreso, y no hay ninguna prueba que ejercite la vecindad inmediata de ese punto,
+  que es donde cae cualquier observación real.
 - **Alternativas:**
   (A) Subir `tolerance_m` a un valor derivado del error medido (p. ej. p95 = 20,8 m, o el
   `off_track_distance_m` ya existente). **Insuficiente por sí sola:** el contrafactual B
