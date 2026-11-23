@@ -1,0 +1,101 @@
+# EGM_REVIEW.md — Revisión adversarial equivalente (AUD-07)
+
+**Esto NO es una ejecución oficial de Elephant-Goldfish Model (EGM, https://github.com/google/elephant-goldfish-model).** EGM no está instalado en este entorno — no hay binario `egm`, carpeta ni paquete Python (confirmado en `docs/audits/hito-03/BASELINE.md`, AUD-00) — y el propietario no ha autorizado instalar software externo para esta auditoría. Lo que sigue es una **revisión equivalente, con el mismo espíritu** (contexto fresco, especificación autocontenida construida solo desde los documentos de producto, sin leer las conclusiones de AUD-01 a AUD-06 para no contaminar el juicio), ejecutada por un agente (Claude, este worktree) con razonamiento explícito y evidencia citada archivo:línea, más una ronda de verificación independiente por Codex antes de cerrar. Donde no se pudo verificar algo contra el código real, se marca `NO VERIFICADO` en vez de asumirlo.
+
+## Metodología
+
+1. Se construyó la especificación autocontenida (sección siguiente) leyendo únicamente `docs/PLAN.md`, `docs/DATA_MODEL.md`, `docs/DATA_CONTRACTS.md`, `docs/ARCHITECTURE.md` y los ADR (`docs/adr/0001` a `0015`) — **sin** abrir `docs/audits/hito-03/AUD-01*` a `AUD-06*` ni ningún hallazgo previo de esta cadena de auditoría.
+2. Las 9 perspectivas se evaluaron con razonamiento explícito propio (no se delegó a sub-agentes para esta ronda: el volumen de contexto necesario — leer el código real para cada perspectiva — hacía más fiable mantenerlo en un único hilo de razonamiento que fragmentarlo).
+3. El drift report se construyó leyendo el código real (`infra/migrations/*.sql`, `apps/api/main.py`, `packages/contracts/canonical.py`, `packages/quality/engine.py`, `services/snapshotter/*.py`, `apps/web/vite.config.ts`, `docs/evidence/*`, `docs/DECISIONS.md`) y comparándolo línea a línea contra lo que los documentos afirman.
+4. Antes de cerrar, se delega a Codex (contexto nuevo) una verificación técnica independiente de los hallazgos P0/P1 antes de que el propietario los acepte.
+
+## Especificación autocontenida de Madrid Pulse
+
+**Qué es:** un sistema de observación en tiempo casi real de Cercanías Madrid (inicialmente línea C5, ampliado en Hito 3 a toda la red), construido sobre los feeds públicos GTFS estático y GTFS-Realtime de Renfe (vehicle_positions, trip_updates, alerts), sin inventar campos no observados empíricamente.
+
+**Arquitectura declarada** (`docs/ARCHITECTURE.md`): monorepo / modular monolith. `services/collector` hace polling idempotente (hash de payload, reintentos, timeout) y persiste crudo + metadata (`source_ingestion_run`). Una capa de normalización/calidad (`packages/contracts`, `packages/quality`) produce el contrato canónico interno y flags de calidad (`stale`, `implausible_speed`, `missing_id`, `duplicate_snapshot`, `clock_anomaly`). PostgreSQL/PostGIS almacena estado operativo + histórico caliente corto; `services/snapshotter` exporta a Parquet particionado (histórico frío), procesado con DuckDB bajo disciplina dbt sin el motor dbt literal (ADR-0013). FastAPI (`apps/api`) expone `/api/v1/*` versionado, nunca passthrough de Renfe. React/TypeScript/MapLibre (`apps/web`) consume solo la API propia.
+
+**Modelo de datos** (`docs/DATA_MODEL.md`): entidades `network`, `route` (con `source_route_id` completo, nunca solo el `short_name`, porque "C5" se repite entre núcleos distintos de Renfe a nivel nacional), `station`, `service_date`, `trip`, `trip_stop`, `source_ingestion_run`, `vehicle_position_observation`, `trip_update_observation`, `service_alert`, agregados diarios (`daily_line_metrics`, `station_daily_metrics`) y, desde Hito 3 (MP-021), `circulation_daily_history` con grano vehículo+viaje+día de servicio, que clasifica cada circulación en `observed | canceled | operator_only | unobserved | unscheduled` — una partición exhaustiva y excluyente del día.
+
+**Contrato de API** (`docs/DATA_CONTRACTS.md`): `/api/v1/health`, `/api/v1/live/vehicles[/{id}]`, `/api/v1/lines[/{id}]`, `/api/v1/stations[/{id}]`, `/api/v1/catalog` (cacheable, ETag), `/api/v1/snapshot` (no-store), `/api/v1/stations/{id}/board`, y desde MP-021 `/api/v1/history/*` (días, líneas, estaciones, circulaciones, detalle) servido desde Parquet vía DuckDB en solo lectura. Reglas no negociables declaradas: ningún porcentaje se publica sin su cobertura/denominador; un dato ausente nunca es `0`; posición observada y estimada nunca se funden; identidad de histórico = identidad de Live (vehículo+viaje+día de servicio).
+
+**Decisiones de alcance declaradas:** sin microservicios/Kafka/Spark/Kubernetes en el MVP; sin ocupación en tiempo real inferida (NOGO explícito); sin reutilizar la API de Valfiguer como dependencia de producción; sin contratar ningún proveedor cloud antes de validar MP-001–MP-009.
+
+## Revisión por perspectivas
+
+### 1. Viabilidad de producto
+
+La propuesta de valor (mapa en vivo con incertidumbre de posición explícita, histórico con cobertura verificable, en vez de "puntualidad maquillada") es clara y diferenciada de paneles oficiales que presentan el dato como si no tuviera huecos. El riesgo de viabilidad real no es técnico sino de **dependencia de fuente**: todo el producto depende de que Renfe siga publicando GTFS-RT en abierto y sin cambios de contrato no anunciados — no hay SLA ni acuerdo con Renfe (`docs/legal/DATA_SOURCES.md` no fue releído para esta ronda por diseño, pero el propio `ARCHITECTURE.md` lo admite implícitamente al no mencionar ningún acuerdo). **P1.**
+
+### 2. Arquitectura
+
+El modular monolith con procesos separados solo donde aporta aislamiento real (collector/API/frontend/snapshotter) es proporcional al volumen medido (~1300 filas/día en el soak de MP-009, ~19 MB/día proyectados en MP-021 — ver drift report, punto 3). No hay sobre-ingeniería evidente: no hay colas de mensajería, no hay microservicios por dominio. El único riesgo arquitectónico real es la separación PostgreSQL (caliente) / Parquet-DuckDB (frío) sin un mecanismo de reconciliación automática documentado entre ambos más allá del snapshotter — si el snapshotter falla un día, ¿hay alerta, o el hueco se descubre al consultar `/api/v1/history/days` y recibir 404? El contrato declara que un día no archivado responde `404` (bien, no fabrica ceros), pero no hay evidencia de un proceso de monitorización de esa falta. **P2.**
+
+### 3. Modelado geoespacial
+
+El modelo distingue correctamente `raw` / `map_matched` / `rendered` como tres coordenadas separadas, nunca fundidas, y publica `geometry_candidate_version` en vez de fabricar un `geometry_version` falso cuando no hubo map-matching real. Los índices `GIST` sobre `geom` en `station` y `vehicle_position_observation` (confirmados en `infra/migrations/0001_init.up.sql:179-181`) son correctos para las consultas espaciales que la API necesita. Un riesgo real: `route.source_route_id` exige que la C5 de Madrid tenga 5 filas distintas (`10T0017C5`, `10T0018C5`, `10T0035C5`, `10T0047C5`, `10T0048C5`) agrupadas por `(network_id, short_name)` en vez de por un único `route.id` — el propio documento admite que esto fue un hallazgo de revisión cruzada porque la redacción anterior era contradictoria con el `UNIQUE` declarado (`DATA_MODEL.md:40-46`). Es una corrección ya aplicada, no un hallazgo nuevo, pero demuestra que el modelo de "línea" como concepto de negocio vs. `route_id` técnico sigue siendo un punto frágil para cualquier futura extensión fuera de la C5. **P2 (riesgo residual, no bloqueante).**
+
+### 4. Calidad de datos
+
+Los cinco flags de calidad (`stale`, `implausible_speed`, `missing_id`, `duplicate_snapshot`, `clock_anomaly`) están implementados de forma consistente entre `packages/quality/engine.py:18-20`, la restricción `CHECK` de `data_quality_event.flag` en `infra/migrations/0001_init.up.sql:167-169` y `DATA_MODEL.md:157`. La regla "dato ausente ≠ cero" se aplica consistentemente en los contratos (`delay_seconds` nullable, `speed_kmh`/`bearing` nullable y documentados como no observados empíricamente en Renfe — `packages/contracts/canonical.py:70-76,100`). Punto débil real: los umbrales de calidad (`stale_after_seconds=180`, `implausible_speed_kmh=200`, etc., `packages/quality/engine.py:24-29`) siguen siendo "puntos de partida calibrables" sin evidencia de haberse recalibrado con datos reales acumulados — el propio código lo admite en el docstring. **P2, ya declarado como deuda conocida.**
+
+### 5. Rendimiento / escalabilidad
+
+El volumen real medido (DEC-004, `docs/DECISIONS.md:60`) proyecta ≈7 GB/año de histórico frío — trivial para cualquier object storage. El problema de rendimiento real ya fue encontrado y corregido por el propio equipo: `infra/migrations/0002_api_batch_indexes.up.sql` documenta tres `Seq Scan` reales medidos con `EXPLAIN (ANALYZE, BUFFERS)` antes de añadir los índices que faltaban. Esto es una señal positiva (el equipo mide antes de optimizar), pero también confirma que **la cobertura de índices se fue descubriendo reactivamente, no por diseño anticipado** — ver drift report, punto 1, sobre `trip_id` sin poblar. **P2.**
+
+### 6. Seguridad / operación
+
+No se encontró ningún middleware CORS configurado en `apps/api/main.py` (grep sobre `CORSMiddleware`/`allow_origins` sin resultados) ni ninguna autenticación/autorización en ningún endpoint. Esto es defendible para el alcance actual (frontend servido bajo el mismo origen vía proxy en dev — `apps/web/vite.config.ts` — y reverse proxy en producción futura, según el propio comentario del archivo), pero significa que **si la API se expone alguna vez directamente a un origen distinto o a consumo externo, no hay ninguna barrera** — ni rate limiting, ni API key, ni CORS explícito que lo documente como decisión consciente en vez de ausencia. No se encontraron secretos hardcodeados en el código revisado. **P1** (no es una vulnerabilidad activa en el despliegue actual documentado, pero es una ausencia de control no declarada como decisión en ningún ADR).
+
+### 7. UX / accesibilidad
+
+No se evaluó la UI en navegador real para esta ronda (fuera del alcance delegado: no se autorizó instalar/levantar servicios). `docs/DATA_CONTRACTS.md` exige que toda respuesta de vehículo en vivo incluya `position.mode`/`confidence`/`quality.flags`, lo cual es la base correcta para que el frontend pueda **representar incertidumbre visualmente** en vez de ocultarla — pero si el frontend realmente lo hace (contraste de color, leyenda, lectura por lector de pantalla del estado "estimado" vs "observado") es algo que esta revisión documental no puede confirmar. **NO VERIFICADO.**
+
+### 8. Costes / mantenimiento
+
+Ningún proveedor cloud está contratado (`ARCHITECTURE.md:82`, confirmado como todavía cierto por la ausencia de credenciales o configuración de Supabase/R2 en el código revisado). El coste proyectado (~19 MB/día, ~7 GB/año) es bajo. El coste de mantenimiento real más alto no es de infraestructura sino de **disciplina documental**: el volumen de ADRs (15), decisiones (`DECISIONS.md`) y la propia existencia de dos modelos de datos candidatos sin resolver del todo en la superficie documental (ver drift report) añade carga cognitiva a cualquier persona nueva que se incorpore. **P2.**
+
+### 9. Complejidad innecesaria
+
+No se encontró complejidad innecesaria estructural: no hay microservicios por dominio, no hay colas, no hay un ORM pesado sustituyendo SQL explícito. El único candidato a complejidad evitable es el **contrato temporal de snapshot** (`snapshot_id` de contenido + `revision.sequence`/`scope`/`tiebreak` para evitar que un hash se trate como secuencia — `DATA_CONTRACTS.md:114-141`): es una solución correcta a un problema real (no ordenar hashes), pero el nivel de detalle (tres campos de desambiguación: `scope`, `sequence`, `tiebreak`) es más de lo que un cliente típico necesitará usar completo. No es un hallazgo bloqueante, es una observación de superficie de API. **DESCARTADO** como hallazgo (la complejidad está justificada por el problema que resuelve: `scope` distinto = discontinuidad real, no rebobinado).
+
+## Drift report — documentos vs. código real
+
+| # | Documento afirma | Código real | Evidencia | Severidad |
+|---|---|---|---|---|
+| 1 | `DATA_MODEL.md:90` describe `trip_id FK nullable` en `vehicle_position_observation`, resuelto contra GTFS estático, y `ARCHITECTURE.md` presenta la resolución trip↔ruta como parte del flujo normal. | La columna existe (`infra/migrations/0001_init.up.sql:84`) pero **el colector nunca la rellena**: el propio comentario de la migración de índices lo dice explícitamente — *"`trip_id` sigue sin poblarse desde el colector"* — y por eso la API tuvo que indexar por `source_trip_id`, no por `trip_id`, para resolver `Seq Scan`s reales medidos con `EXPLAIN ANALYZE`. | `infra/migrations/0002_api_batch_indexes.up.sql:13-16,28-29` | **P1** — el modelo de datos documentado da por hecha una resolución que el pipeline real no ejecuta; cualquier consulta histórica por `route_id`/`trip_id` vía FK relacional sobre observaciones crudas no funciona como el documento sugiere. |
+| 2 | `DATA_MODEL.md:128` documenta el campo `affected_routes jsonb` en `service_alert`. | El contrato canónico y el esquema real usan `affected_route_ids` (`packages/contracts/canonical.py:121`, `infra/migrations/0001_init.up.sql:134`), con un nombre distinto. Además el contrato canónico incluye `affected_stop_ids` (`canonical.py:122`), un campo que `DATA_MODEL.md` no menciona en absoluto. | `packages/contracts/canonical.py:113-124` vs `docs/DATA_MODEL.md:128` | **P2** — nombre y campo real divergen del documento; quien implemente contra la documentación tal cual está escrita se confundirá con el nombre, y desconocerá `affected_stop_ids` por completo. |
+| 3 | `docs/PLAN.md:29` fija como *exit gate* de F3: *"24 h de ingesta sin errores críticos... dedupe verificado"*. | La medición real citada como evidencia del volumen de producción (DEC-004, usada también para proyectar coste anual) cubre **13 minutos** de operación continua, no 24 h: *"La ventana medida son 13 min, no 24–72 h, así que es una proyección"* (admitido explícitamente en el propio `DECISIONS.md`). | `docs/DECISIONS.md:60` (DEC-004) vs `docs/PLAN.md:29` | **P1** — el gate de salida de F3 tal como está escrito nunca se cumplió con una medición de 24h; toda proyección de volumen/coste posterior (incluida la de 7 GB/año) se apoya en una muestra de 13 minutos extrapolada, no en la ventana que el propio plan exigía antes de "continuar". |
+| 4 | `DATA_MODEL.md` presenta la lista compacta de columnas de `vehicle_position_observation`, `trip_update_observation` y `source_ingestion_run` como el contrato completo de esas tablas. | El esquema real tiene columnas adicionales no documentadas en esa lista compacta: `raw_vehicle_label`, `nucleo_prefix`, `nucleo_name` en `vehicle_position_observation`; `next_stop_id`, `nucleo_prefix` en `trip_update_observation`; `source_timestamp` en `source_ingestion_run`. | `infra/migrations/0001_init.up.sql:78-125` vs `docs/DATA_MODEL.md:84-119` | **P2** — no es un error funcional (el código es más rico que el documento, no al revés), pero la documentación del modelo de datos no es la fuente de verdad del esquema real; alguien que diseñe una query nueva basándose solo en `DATA_MODEL.md` no sabrá que existen esas columnas. |
+| 5 | `DATA_MODEL.md:192-203` presenta una tabla de retención completa (7–14 días, 30 días, 90 días, 180 días, 12 meses) como la política de retención del sistema. | No existe ninguna implementación de retención/purga en el código (sin cron, sin `DELETE` programado, sin script de retención localizado en todo el repo). El propio documento ya lo señala como "propuesta, no confirmada" en su encabezado — **no es una contradicción**, pero conviene que quede explícito que a fecha de esta revisión siguen siendo cero líneas de código. | Búsqueda en todo el repo sin resultados para `retention`/`pg_cron`/scripts de purga | **NO VERIFICADO → confirmado como PENDING real** (consistente con el propio caveat del documento, no es un hallazgo de discrepancia sino de alcance aún no cubierto). |
+| 6 | `ARCHITECTURE.md` y `DATA_CONTRACTS.md` describen la API como la única superficie pública, sin mencionar explícitamente controles de acceso. | No hay CORS, autenticación ni rate limiting en `apps/api/main.py`. Esto es coherente con el alcance MVP declarado, pero **ningún ADR documenta esta ausencia como decisión deliberada** — no hay un "ADR-0016: sin autenticación en MVP" o equivalente, es simplemente lo que no está. | `apps/api/main.py:1-40` (sin `CORSMiddleware`); búsqueda de `ADR` relacionado sin resultado | **P2** — ausencia de control razonable para el alcance actual, pero no está registrada como decisión, lo que la deja vulnerable a decisión implícita en vez de explícita si el alcance cambia. |
+
+## Hallazgos consolidados
+
+### P0 — Bloqueante
+Ninguno encontrado en esta revisión equivalente. No se halló ninguna discrepancia que invalide el funcionamiento declarado de un flujo crítico (ingesta, calidad, API, histórico) tal como opera hoy.
+
+### P1 — Importante, no bloqueante
+- **P1-1 (drift #1):** `trip_id` FK documentado como poblado y usado para resolución relacional no se rellena nunca desde el colector; la API y los agregados dependen de `source_trip_id` como workaround real, no documentado como la vía canónica en `DATA_MODEL.md`.
+- **P1-2 (drift #3):** el *exit gate* de F3 (`PLAN.md`) exige 24h de ingesta medida; la medición real que sustenta el volumen/coste proyectado (DEC-004) es de 13 minutos. El gate, tal como está redactado, no se ha cumplido todavía con la ventana que el propio plan pedía.
+- **P1-3 (perspectiva 6):** ausencia de CORS/autenticación/rate limiting en la API sin registro explícito en ningún ADR de que sea una decisión deliberada para el alcance actual.
+- **P1-4 (perspectiva 1):** dependencia total de que Renfe siga publicando GTFS-RT en abierto sin cambios de contrato, sin SLA ni acuerdo documentado — riesgo de producto estructural, no técnico.
+
+### P2 — Menor / deuda conocida
+- **P2-1 (drift #2):** `service_alert.affected_routes` documentado vs `affected_route_ids` real, más `affected_stop_ids` no documentado en absoluto.
+- **P2-2 (drift #4):** columnas reales adicionales (`raw_vehicle_label`, `nucleo_prefix`, `nucleo_name`, `next_stop_id`, `source_timestamp`) no reflejadas en la lista compacta de `DATA_MODEL.md`.
+- **P2-3 (perspectiva 3):** el modelo "línea de negocio" vs `route_id` técnico (5 filas por la C5) sigue siendo frágil para cualquier extensión futura fuera de Madrid.
+- **P2-4 (perspectiva 4):** umbrales de calidad (`stale_after_seconds`, `implausible_speed_kmh`, etc.) siguen sin recalibrarse con datos reales acumulados — deuda ya admitida en el propio código.
+- **P2-5 (perspectiva 5):** cobertura de índices de PostgreSQL se descubrió reactivamente (vía `EXPLAIN ANALYZE` tras detectar `Seq Scan`s reales) en vez de por diseño anticipado.
+- **P2-6 (perspectiva 8):** carga cognitiva alta para onboarding (15 ADRs, dos modelos de datos candidatos históricos, documentación extensa) frente al tamaño real del sistema.
+
+### DESCARTADO
+- El nivel de detalle del contrato temporal de snapshot (`scope`/`sequence`/`tiebreak`) — complejidad justificada por el problema real que resuelve (hashes de contenido no son secuencias ordenables), no es sobre-ingeniería.
+
+### NO VERIFICADO
+- **UX/accesibilidad real del frontend** (perspectiva 7): si la distinción visual `observed/estimated/stale/scheduled` es efectivamente legible, con contraste suficiente y soporte de lector de pantalla, no se pudo confirmar sin levantar la aplicación en navegador — fuera del alcance autorizado para esta tarea (no se instaló ni ejecutó ningún servicio).
+- **Política de retención** (drift #5): confirmado que no existe implementación, pero no se pudo verificar si hay un plan a corto plazo fuera de los documentos revisados (p. ej. en `docs/TASKS.md` como tarea futura no leída en detalle para esta ronda).
+
+## Verificación independiente (Codex)
+
+Pendiente de delegación directa vía Orca en este mismo worktree, en contexto nuevo, antes de que el propietario acepte estos hallazgos — conforme a la instrucción de la tarea de no autoaprobarse. Revisor: Codex Terra · Medium.
