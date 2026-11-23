@@ -49,6 +49,7 @@ jobs:
         run: |
           python -m unittest \
             apps.api.tests.test_api_contract \
+            apps.api.tests.test_closure_matrix \
             apps.api.tests.test_history_contract \
             apps.api.tests.test_snapshot_contract \
             packages.contracts.tests.test_canonical_normalization \
@@ -73,6 +74,7 @@ jobs:
             services.snapshotter.tests.test_history \
             services.snapshotter.tests.test_idempotency \
             tests.fixtures.test_parse_fixtures \
+            tests.e2e.test_mp022_synthetic_derived \
             tests.e2e.test_replay \
             -v
 

@@ -146,9 +146,32 @@ se mantiene separada y no se atribuye a esta corrida.
 
 ## Suites ejecutadas
 
+### Cobertura del pipeline
+
+La revisión detectó que los siete tests nuevos pasaban al ejecutarse
+directamente pero no figuraban en la lista explícita de CI. El workflow queda
+corregido con este diff verificable:
+
+```diff
+             apps.api.tests.test_api_contract \
++            apps.api.tests.test_closure_matrix \
+             apps.api.tests.test_history_contract \
+@@
+             tests.fixtures.test_parse_fixtures \
++            tests.e2e.test_mp022_synthetic_derived \
+             tests.e2e.test_replay \
+```
+
+El comando **exacto ya actualizado** de `.github/workflows/ci.yml` se ejecutó
+contra `mp022-ci-db:5438`: 283 tests, OK, 5 `skip` en ese entorno. Como control
+independiente, el revisor ejecutó antes la lista CI de 276 tests sobre su
+PostgreSQL fresco `5439`: OK, 1 `skip`. Los recuentos de saltos se registran
+con su entorno y alcance respectivos; no se atribuye uno a la corrida del otro
+ni se presenta como constante universal.
+
 ```text
 Python 3.12.3 + PostgreSQL limpio 5438
-  Ran 283 tests in 41.429s — OK (skipped=5)
+  workflow actualizado: Ran 283 tests in 32.517s — OK (skipped=5)
   focal MP-022: 7/7 — OK
 
 Frontend, Node 22.13.1
@@ -177,6 +200,8 @@ inspección sí encontró un defecto real: History sustituía silenciosamente un
 día URL no archivado por el primero disponible en encabezado y breadcrumb. Se
 corrigió para mostrar «Día no archivado», conservar la fecha solicitada y
 ofrecer los días reales solo como opciones; la regresión renderizada impide
-volver a presentar 2026-11-20 como si fuera el 2026-11-23 solicitado. MP-022
-queda `REVIEW`, nunca `DONE` por el ejecutor, pendiente de la auditoría final
-de Claude.
+volver a presentar 2026-11-20 como si fuera el 2026-11-23 solicitado. Una
+segunda revisión encontró que los siete tests MP-022 no estaban en la lista
+explícita de CI; ambos módulos ya forman parte del workflow y el comando
+actualizado pasa 283/283. MP-022 queda `REVIEW`, nunca `DONE` por el ejecutor,
+pendiente de la promoción final de Claude.
