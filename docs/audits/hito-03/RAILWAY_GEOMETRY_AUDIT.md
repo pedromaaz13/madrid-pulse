@@ -551,7 +551,448 @@ suite completa: esta tarea no modifica producto.
 
 ## Geometría OSM (AUD-03)
 
-<!-- AUD-03: sustituir este placeholder sin modificar la sección "GTFS y catálogo". -->
+**Ejecuta AUD-03:** OpenAI Codex (auditoría adversarial)
 
-Pendiente de auditoría independiente de relations, ways, continuidad,
-sentido y proyección de estaciones.
+**Revisa AUD-03:** Claude Opus · High (pendiente)
+
+**Fecha:** 2026-11-23
+
+### Veredicto
+
+Los 75 patrones no `validated` no son 75 ausencias independientes de vía en
+OSM. La causa que el código realmente demuestra es esta:
+
+| Causa demostrada | Patrones | Circulaciones del feed | Llamadas a estación | Diagnóstico |
+|---|---:|---:|---:|---|
+| inventario de fuentes incompleto: no existe `GeometrySourceSpec` utilizable para la línea/sentido | 67 | 20.273 | 269.988 | insuficiencia de información congelada; **no** demuestra geometría ausente en OSM |
+| relación C4b opuesta no congelada después de dos `502` de Overpass | 4 | 1.740 | 25.434 | omisión de fuente: la relación OSM `9174512` existe y hoy pasa todos los criterios |
+| `PatternCaveat` manual rebaja una geometría que sí pasa continuidad/distancia/orden | 3 | 31 | 294 | falso negativo del criterio; omitir paradas no prueba otra vía |
+| patrón GTFS degenerado de una sola parada | 1 | 54 | 54 | secuencia insuficiente para definir desplazamiento |
+| **Total** | **75** | **22.098** | **295.770** | 3 `partial` + 72 `pending` |
+
+El resultado operativo sigue siendo honesto: `can_map_match` solo es verdadero
+para `validated` y `match_position` devuelve GPS `raw` etiquetado para
+`partial`/`pending`; no encontré una proyección fabricada. El defecto es de
+cobertura y de clasificación conservadora, no de presentar un punto estimado
+como observado.
+
+### Criterio exacto auditado
+
+`PatternIdentity.from_pattern()` forma la identidad con
+`route_id + "\0" + stop_ids ordenados`, aplica SHA-256 y conserva 20
+hexadecimales. Origen/destino y `direction_key` salen de la primera y última
+parada; no se usa un `direction_id` inexistente.
+
+`build_corridor_catalog()` solo considera una fuente cuando el `route_id` del
+patrón figura literalmente en `GeometrySourceSpec.route_ids`. Para cada fuente
+admitida exige, por este orden: relación sin `ChainGap`, todas las paradas
+presentes, distancia máxima de cada parada al eje `<=150 m` y arcos monótonos
+en el sentido del patrón. Si no hay candidato ni fallo parcial, el patrón queda
+`pending`. Si hay candidato válido, una entrada manual en `_known_caveats()`
+todavía puede rebajarlo a `partial`. Por tanto:
+
+- `pending` significa en 67 casos «ninguna de las cinco fuentes configuradas
+  fue siquiera candidata para ese `route_id`», no «OSM carece de vía»;
+- el algoritmo asigna una relación completa por patrón: no compone tramos
+  compartidos de varias relaciones ni valida solo la parte ya conocida;
+- los tres `partial` actuales pasan el test geométrico automático y son
+  `partial` exclusivamente por `PatternCaveat`;
+- `PositionMatch` preserva `raw_lat/raw_lon`; solo crea `Projection`,
+  `progress_m` y residuo cuando el estado es `validated`.
+
+### Procedencia e integridad de las fixtures
+
+Los siete JSON son extractos reales con estructura relation/ways/nodes, tags
+`route=train`, `ref=C-4`/`C-5` y `network=Cercanías Madrid`. Todos los hashes
+recalculados coinciden byte a byte con sus `MANIFEST.md`; las siete relaciones
+encadenan con cero `ChainGap`. Las dos C5 truncadas se conservan como evidencia
+real aunque MP-018 no las registre en `madrid_source_specs()`.
+
+| Fixture | Relación | SHA-256 recalculado | `gaps` | longitud dirigida |
+|---|---:|---|---:|---:|
+| C5 | `11331` | `ec9d7decaf8d452b267df965d154c66abc7eb33d2e7cc4991db8f4dcbcab2948` | 0 | 45,284 km |
+| C5 | `3418148` | `60416292689abedfe3ff20fee855c0e0bfad5e05b79cd54c8d22db1ee579cc8b` | 0 | 41,296 km |
+| C5 | `3418149` | `4af4497190bbac1b08f924b8bb751294fd63698d2dcec5798a0d67bfb76bee93` | 0 | 41,286 km |
+| C5 | `3418150` | `79f9966b2b7f3fdcebf1f41083d13ff58de39a496eca80caeb274c9b9f4d375a` | 0 | 45,186 km |
+| C4 | `11332` | `0351d94fdb5fe70c7b61cf45e5550f6f115785ddcdadcd32f80b256b672a63d4` | 0 | 48,400 km |
+| C4 | `9174510` | `e057b86b2b28a2d99d2e85f91657c6f34cb6f07295758b42e8ed643a326f1439` | 0 | 48,415 km |
+| C4 | `9174511` | `986a41bfdd843fe674700abc53fd23d0c9742367d28b4f1fe162798315610e60` | 0 | 59,306 km |
+
+La API oficial de OSM confirmó el mismo 2026-11-23 los siete IDs, nombres,
+`ref` y red. Confirmó además `9174512` versión 42, timestamp
+`2026-09-11T19:22:39Z`, «Parla → Atocha → Sol → Chamartín →
+Cantoblanco → Colmenar Viejo». La respuesta `full.json` observada
+(`sha256:03d87e1cdac58353fbec8d88ee3a16afc6f42e8b6456ab27401b8f535c403155`)
+forma un corredor de 59,440 km, 1.223 nodos, 111 ways y cero huecos. Sus cuatro
+patrones `10T0016C4b` proyectan en orden con máximos de 33,2–36,6 m. Esto
+descarta que el `pending` de ese sentido sea geometría OSM ausente o un
+problema de direccionalidad: fue una descarga no completada tras un fallo
+transitorio del servicio.
+
+### Cobertura ponderada
+
+`Circulaciones` es el denominador fiable de AUD-02: los 35.976 trips con
+`stop_times` del feed de 30 días. `Llamadas` pondera cada patrón por
+`trip_count * stop_count`. Las estaciones únicas se solapan entre estados, por
+lo que no suman 95.
+
+| Medida | `validated` | `partial` | `pending` | Denominador |
+|---|---:|---:|---:|---:|
+| patrones | 28 (27,184 %) | 3 (2,913 %) | 72 (69,903 %) | 103 |
+| circulaciones | 13.878 (38,576 %) | 31 (0,086 %) | 22.067 (61,338 %) | 35.976 |
+| llamadas programadas a estación | 242.129 (45,014 %) | 294 (0,055 %) | 295.476 (54,932 %) | 537.899 |
+| estaciones únicas tocadas | 39 (41,053 %) | 19 (20,000 %) | 72 (75,789 %) | 95; conjuntos solapados |
+| suma de cuerdas entre paradas, sin ponderar | 746,849 km (21,261 %) | 87,980 km (2,505 %) | 2.677,877 km (76,234 %) | 3.512,706 km |
+| cuerdas entre paradas ponderadas por circulación | 537.052,699 km (36,201 %) | 930,800 km (0,063 %) | 945.533,615 km (63,736 %) | 1.483.517,115 km |
+
+La cuerda geodésica es una cota inferior reproducible, **no longitud de vía**.
+El porcentaje de longitud ferroviaria OSM única queda `NO VERIFICADO`: AUD-02
+no aporta un grafo físico completo y sumar los siete corredores (329,173 km)
+duplica sentidos y tramos comunes. Como contraste adicional, 90/103 patrones
+tienen un tramo medible sobre su `shape_id` a <=150 m; dentro de ese subconjunto
+la geometría `validated` cubre 819,614/3.175,569 km-patrón (25,810 %), pero los
+13 patrones cuyo shape no cubre/ordena todas sus paradas impiden elevarlo a
+denominador global fiable.
+
+Congelar `9174512` y retirar las tres caveats no sustentadas elevaría, sin
+descargar ninguna otra línea, a 35/103 patrones, 15.649/35.976 circulaciones
+(43,498 %) y 267.857/537.899 llamadas (49,797 %). No cambia 39/95 estaciones
+únicas porque todas esas estaciones ya aparecen en otros patrones validados.
+
+### No son 75 trabajos: lotes y tramos reutilizables
+
+| Lote propuesto | Patrones | Circulaciones | Prioridad | Solución común |
+|---|---:|---:|---|---|
+| C1 | 4 | 4.262 | P1 | congelar ambos sentidos completos y validar los dos orígenes |
+| C10 | 13 | 4.159 | P1 | dos sentidos del eje Chamartín–Príncipe Pío–Villalba/El Escorial |
+| C2 | 14 | 3.744 | P1 | ambos sentidos Guadalajara/Alcalá–Chamartín y variantes cortas |
+| C3 | 4 | 3.216 | P1 | ambos sentidos Chamartín–Aranjuez |
+| C7 | 14 | 2.160 | P1 | componer los troncos este, centro y Príncipe Pío |
+| C4b `9174512` | 4 | 1.740 | P1 | congelar la relación ya validada en vivo |
+| C8a | 9 | 1.346 | P1 | eje Chamartín–El Escorial y subtramos occidentales |
+| C8b utilizable | 3 | 1.132 | P1 | ambos sentidos Chamartín–Cercedilla |
+| C9 | 6 | 254 | P2 | un corredor Cercedilla–Cotos sirve a seis patrones |
+| patrón de una parada C8b | 1 | 54 | P2 | clasificar como no animable; la geometría no puede arreglarlo |
+| caveats C4b/C5 | 3 | 31 | P2 | sustituir la caveat por evidencia de bifurcación real, si existe |
+
+Las fixtures ya contienen piezas reutilizables. Ignorando solo el allowlist de
+`route_id`, `9174511` cubre `17000→18002` en 16 patrones/4.917 viajes y
+`11332` cubre el inverso en 14 patrones/4.911 viajes de C1/C2/C7/C10. La C3
+comparte con C4 los cinco stops `Chamartín–Nuevos Ministerios–Sol–Atocha–
+Villaverde Bajo` (1.582 viajes) y su inverso (1.569). Para el C4b opuesto,
+`11332` ya cubre 12/15 estaciones del patrón principal (1.632 viajes) antes de
+la bifurcación a Colmenar. Las C5 parciales encajan 7/7 en sus corredores.
+Esto favorece un catálogo de segmentos/nodos compartidos, o al menos descarga
+por corredor físico, frente a repetir una relación completa por cada patrón.
+
+### Matriz de los 75 patrones
+
+Leyenda de causas/evidencias/soluciones:
+
+- **C1 / E1 / S1-línea:** no hay fuente configurada para ese `route_id`; las
+  cinco fixtures usadas no cubren el patrón completo. Descargar y congelar el
+  lote direccional de la línea. No se afirma ausencia en OSM.
+- **C2 / E2 / S2:** `9174512` faltaba; el `full.json` real pasa continuidad,
+  <=150 m y monotonicidad para los cuatro patrones. Congelar con checksum y
+  añadirla al inventario.
+- **C3 / E3-distancia / S3:** el corredor configurado es continuo, monótono y
+  todas las paradas están a la distancia máxima indicada; solo la caveat
+  manual impide `validated`. No confundir parada omitida con bifurcación.
+- **C4 / E4 / S4:** una sola parada (`12006`) no define recorrido; excluir de
+  cobertura animable o publicar un estado específico, sin fabricar vía.
+
+| Línea | `route_id` | `pattern_id` | sentido | Estado | Causa | Evidencia | Circulaciones | Solución | Prioridad |
+|---|---|---|---|---|---|---|---:|---|---|
+| C1 | `10T0001C1` | `gtfs-pattern:ee12e9eb1a1224f4ac7f` | `17000>98305` | pending | C1 | E1 | 2101 | S1-C1 | **P1** |
+| C1 | `10T0001C1` | `gtfs-pattern:4e5c013c758882160600` | `18000>98305` | pending | C1 | E1 | 30 | S1-C1 | **P1** |
+| C1 | `10T0002C1` | `gtfs-pattern:c365d6201ef0bc55dfb4` | `98305>17000` | pending | C1 | E1 | 2101 | S1-C1 | **P1** |
+| C1 | `10T0002C1` | `gtfs-pattern:14ecf4fae803a8d6a0a1` | `98305>18000` | pending | C1 | E1 | 30 | S1-C1 | **P1** |
+| C10 | `10T0003C10` | `gtfs-pattern:35ae4619aea5c7f9a3de` | `10200>18002` | pending | C1 | E1 | 13 | S1-C10 | **P1** |
+| C10 | `10T0003C10` | `gtfs-pattern:ead8d642689d07ca663d` | `10200>17000` | pending | C1 | E1 | 1035 | S1-C10 | **P1** |
+| C10 | `10T0003C10` | `gtfs-pattern:81d383ed03be94a83290` | `10203>17000` | pending | C1 | E1 | 36 | S1-C10 | **P1** |
+| C10 | `10T0003C10` | `gtfs-pattern:8992a542ef8e1dfb1584` | `10203>17000` | pending | C1 | E1 | 16 | S1-C10 | **P1** |
+| C10 | `10T0004C10` | `gtfs-pattern:85d35496ac5c04d64df8` | `17000>10200` | pending | C1 | E1 | 50 | S1-C10 | **P1** |
+| C10 | `10T0004C10` | `gtfs-pattern:4409c87fe76b4dbf61ef` | `17000>10200` | pending | C1 | E1 | 1014 | S1-C10 | **P1** |
+| C10 | `10T0004C10` | `gtfs-pattern:a35fd85c3df19e2f8800` | `18000>10200` | pending | C1 | E1 | 11 | S1-C10 | **P1** |
+| C10 | `10T0064C10` | `gtfs-pattern:c1d6f7376aa652314f0c` | `10000>17000` | pending | C1 | E1 | 30 | S1-C10 | **P1** |
+| C10 | `10T0064C10` | `gtfs-pattern:58db9fec216bdb96b264` | `18000>10203` | pending | C1 | E1 | 4 | S1-C10 | **P1** |
+| C10 | `10T0064C10` | `gtfs-pattern:02c721a4ca792906fc6d` | `18002>10203` | pending | C1 | E1 | 4 | S1-C10 | **P1** |
+| C10 | `10T0075C10` | `gtfs-pattern:6f6542a6b514975d679a` | `10100>17000` | pending | C1 | E1 | 959 | S1-C10 | **P1** |
+| C10 | `10T0076C10` | `gtfs-pattern:4e476bce27a86a616efb` | `17000>18000` | pending | C1 | E1 | 29 | S1-C10 | **P1** |
+| C10 | `10T0076C10` | `gtfs-pattern:46b153560fc31eec0dbd` | `17000>10100` | pending | C1 | E1 | 958 | S1-C10 | **P1** |
+| C2 | `10T0005C2` | `gtfs-pattern:77f078b7dcb1e2219c68` | `18000>17000` | pending | C1 | E1 | 14 | S1-C2 | **P1** |
+| C2 | `10T0005C2` | `gtfs-pattern:82c46f245cedf52ad207` | `70103>17000` | pending | C1 | E1 | 28 | S1-C2 | **P1** |
+| C2 | `10T0005C2` | `gtfs-pattern:0e0746ec63d6a0a06c2a` | `70103>17000` | pending | C1 | E1 | 455 | S1-C2 | **P1** |
+| C2 | `10T0005C2` | `gtfs-pattern:afe0e8e7a27b5102d28f` | `70108>17000` | pending | C1 | E1 | 80 | S1-C2 | **P1** |
+| C2 | `10T0005C2` | `gtfs-pattern:3ab68161404b6c8bbed6` | `70200>17000` | pending | C1 | E1 | 99 | S1-C2 | **P1** |
+| C2 | `10T0005C2` | `gtfs-pattern:435db564be42a7b46972` | `70200>18002` | pending | C1 | E1 | 14 | S1-C2 | **P1** |
+| C2 | `10T0005C2` | `gtfs-pattern:0e3114a0f692e9f96101` | `70200>17000` | pending | C1 | E1 | 1203 | S1-C2 | **P1** |
+| C2 | `10T0006C2` | `gtfs-pattern:3c60b65138aeff87e8fe` | `17000>70108` | pending | C1 | E1 | 80 | S1-C2 | **P1** |
+| C2 | `10T0006C2` | `gtfs-pattern:c30ef24469a619bb34f8` | `17000>70103` | pending | C1 | E1 | 419 | S1-C2 | **P1** |
+| C2 | `10T0006C2` | `gtfs-pattern:7c47b452823ec2d11bdc` | `17000>70105` | pending | C1 | E1 | 1 | S1-C2 | **P1** |
+| C2 | `10T0006C2` | `gtfs-pattern:da0c04c8de41dc1a95a1` | `17000>70200` | pending | C1 | E1 | 1261 | S1-C2 | **P1** |
+| C2 | `10T0006C2` | `gtfs-pattern:2acd3dc86c0098a93c48` | `17000>70200` | pending | C1 | E1 | 70 | S1-C2 | **P1** |
+| C2 | `10T0006C2` | `gtfs-pattern:52f68c811f69760c3dc0` | `18002>70200` | pending | C1 | E1 | 19 | S1-C2 | **P1** |
+| C2 | `10T0037C2` | `gtfs-pattern:46e333a087272762de5a` | `70103>18002` | pending | C1 | E1 | 1 | S1-C2 | **P1** |
+| C3 | `10T0007C3` | `gtfs-pattern:1e7106bd6a15584a8d57` | `17000>60200` | pending | C1 | E1 | 1582 | S1-C3 | **P1** |
+| C3 | `10T0007C3` | `gtfs-pattern:a9734feb1f801e518f27` | `17000>60200` | pending | C1 | E1 | 26 | S1-C3 | **P1** |
+| C3 | `10T0008C3` | `gtfs-pattern:90d9031bf80dba7580c7` | `60200>17000` | pending | C1 | E1 | 1569 | S1-C3 | **P1** |
+| C3 | `10T0008C3` | `gtfs-pattern:c3cfe69314e5e1c10a62` | `60200>17000` | pending | C1 | E1 | 39 | S1-C3 | **P1** |
+| C4b | `10T0015C4b` | `gtfs-pattern:cec92b20eec83ba3577a` | `17005>37012` | partial | C3 | E3-48,3 | 11 | S3 | **P2** |
+| C4b | `10T0016C4b` | `gtfs-pattern:0e30aa9375f3971ffd8d` | `17000>17005` | pending | C2 | E2 | 30 | S2 | **P1** |
+| C4b | `10T0016C4b` | `gtfs-pattern:eb14c27202bd7a1fe15b` | `18000>17005` | pending | C2 | E2 | 60 | S2 | **P1** |
+| C4b | `10T0016C4b` | `gtfs-pattern:3d0e2a689cefd948df88` | `37002>17005` | pending | C2 | E2 | 18 | S2 | **P1** |
+| C4b | `10T0016C4b` | `gtfs-pattern:3ca1c650c302d356a36c` | `37012>17005` | pending | C2 | E2 | 1632 | S2 | **P1** |
+| C5 | `10T0047C5` | `gtfs-pattern:bffbd086a5199ea38342` | `18000>35002` | partial | C3 | E3-37,3 | 10 | S3 | **P2** |
+| C5 | `10T0048C5` | `gtfs-pattern:2bc1cf546f0e8b6a52f6` | `35002>18000` | partial | C3 | E3-28,4 | 10 | S3 | **P2** |
+| C7 | `10T0051C7` | `gtfs-pattern:69ad56964cee4a99bf03` | `10000>17000` | pending | C1 | E1 | 26 | S1-C7 | **P1** |
+| C7 | `10T0051C7` | `gtfs-pattern:e282bfe6fe5751be0625` | `10000>18002` | pending | C1 | E1 | 5 | S1-C7 | **P1** |
+| C7 | `10T0051C7` | `gtfs-pattern:25e204c3d59bad0ea0ca` | `10000>70103` | pending | C1 | E1 | 938 | S1-C7 | **P1** |
+| C7 | `10T0051C7` | `gtfs-pattern:67e2e97984a8fb84942d` | `10000>70200` | pending | C1 | E1 | 28 | S1-C7 | **P1** |
+| C7 | `10T0052C7` | `gtfs-pattern:6dd0894ae50db2f63550` | `17000>18000` | pending | C1 | E1 | 14 | S1-C7 | **P1** |
+| C7 | `10T0052C7` | `gtfs-pattern:cbe03abcaf7c5ff0efda` | `17000>10000` | pending | C1 | E1 | 4 | S1-C7 | **P1** |
+| C7 | `10T0052C7` | `gtfs-pattern:58314c69fb3b1b69c552` | `70103>10000` | pending | C1 | E1 | 937 | S1-C7 | **P1** |
+| C7 | `10T0052C7` | `gtfs-pattern:68bac78acf1bfd2d7e1d` | `70200>10000` | pending | C1 | E1 | 78 | S1-C7 | **P1** |
+| C7 | `10T0053C7` | `gtfs-pattern:e7696ec38b161b1c90e8` | `10000>18000` | pending | C1 | E1 | 29 | S1-C7 | **P1** |
+| C7 | `10T0053C7` | `gtfs-pattern:dbc1a9bad1df4153786e` | `70103>18000` | pending | C1 | E1 | 3 | S1-C7 | **P1** |
+| C7 | `10T0054C7` | `gtfs-pattern:4a6dab210e7e57c1ed6b` | `18000>10000` | pending | C1 | E1 | 30 | S1-C7 | **P1** |
+| C7 | `10T0054C7` | `gtfs-pattern:2b21570a7ab4c0219880` | `18000>70103` | pending | C1 | E1 | 3 | S1-C7 | **P1** |
+| C7 | `10T0059C7` | `gtfs-pattern:3c87e867d746837c08ba` | `17000>70103` | pending | C1 | E1 | 57 | S1-C7 | **P1** |
+| C7 | `10T0060C7` | `gtfs-pattern:65eba9bd8f6b817f1d65` | `70103>17000` | pending | C1 | E1 | 8 | S1-C7 | **P1** |
+| C8a | `10T0027C8a` | `gtfs-pattern:1be9550be3c2d5ad2130` | `10206>10203` | pending | C1 | E1 | 18 | S1-C8a | **P1** |
+| C8a | `10T0061C8a` | `gtfs-pattern:b77fc4fc842dce6862db` | `10200>17000` | pending | C1 | E1 | 31 | S1-C8a | **P1** |
+| C8a | `10T0061C8a` | `gtfs-pattern:1dbb00baccc5e3a00d9f` | `10203>17000` | pending | C1 | E1 | 550 | S1-C8a | **P1** |
+| C8a | `10T0061C8a` | `gtfs-pattern:0720c40a47c5fcff3f09` | `10203>10206` | pending | C1 | E1 | 79 | S1-C8a | **P1** |
+| C8a | `10T0062C8a` | `gtfs-pattern:23a5fbc1050d0d39003b` | `10206>10203` | pending | C1 | E1 | 5 | S1-C8a | **P1** |
+| C8a | `10T0062C8a` | `gtfs-pattern:2911a37447d6aa980d18` | `17000>10200` | pending | C1 | E1 | 28 | S1-C8a | **P1** |
+| C8a | `10T0062C8a` | `gtfs-pattern:547d33b828170d61d7f7` | `17000>10203` | pending | C1 | E1 | 557 | S1-C8a | **P1** |
+| C8a | `10T0085C8a` | `gtfs-pattern:97f9caac022175204b64` | `10206>10203` | pending | C1 | E1 | 74 | S1-C8a | **P1** |
+| C8a | `10T0107C8a` | `gtfs-pattern:f46ca1a0a986b44ec7e4` | `10101>10005` | pending | C1 | E1 | 4 | S1-C8a | **P1** |
+| C8b | `10T0087C8b` | `gtfs-pattern:a4fa126ae6af0667dbee` | `17000>12006` | pending | C1 | E1 | 11 | S1-C8b | **P1** |
+| C8b | `10T0087C8b` | `gtfs-pattern:2348c5eaadb44da2bb4c` | `17000>12006` | pending | C1 | E1 | 555 | S1-C8b | **P1** |
+| C8b | `10T0088C8b` | `gtfs-pattern:7ead496e1732c678d8f6` | `12006>17000` | pending | C1 | E1 | 566 | S1-C8b | **P1** |
+| C8b | `10T0098C8b` | `gtfs-pattern:574a2681305065df5673` | `12006>12006` | pending | C4 | E4 | 54 | S4 | **P2** |
+| C9 | `10T0025C9` | `gtfs-pattern:a214fa6209608bbd032d` | `12006>12020` | pending | C1 | E1 | 11 | S1-C9 | **P2** |
+| C9 | `10T0025C9` | `gtfs-pattern:13f722c0ba862f541da6` | `12006>12023` | pending | C1 | E1 | 21 | S1-C9 | **P2** |
+| C9 | `10T0026C9` | `gtfs-pattern:c1d2ecc346ced29e0b46` | `12020>12006` | pending | C1 | E1 | 11 | S1-C9 | **P2** |
+| C9 | `10T0026C9` | `gtfs-pattern:6b1fb0c2c7976b3e51af` | `12023>12006` | pending | C1 | E1 | 21 | S1-C9 | **P2** |
+| C9 | `10T0110C9` | `gtfs-pattern:3b4f4505852fb3968d7f` | `12006>12023` | pending | C1 | E1 | 95 | S1-C9 | **P2** |
+| C9 | `10T0111C9` | `gtfs-pattern:56544bc08bc28bc27ffb` | `12023>12006` | pending | C1 | E1 | 95 | S1-C9 | **P2** |
+
+### Hallazgos
+
+No se identificó ningún P0: el fallback `raw` evita fabricar posiciones y la
+API/UI ya etiqueta la falta de map-matching. Los déficits son amplios, pero no
+corrompen la procedencia del punto mostrado.
+
+#### AUD03-P1-001 — El 56,35 % de las circulaciones queda fuera por inventario de fuentes, no por fallo geométrico demostrado
+
+- **Identificador:** `AUD03-P1-001`.
+- **Componente:** `packages/geo/madrid.py::madrid_source_specs` y
+  `packages/geo/catalog.py::build_corridor_catalog`.
+- **Severidad:** **P1**.
+- **Evidencia reproducible:** `python3 scratch/aud03_geometry.py summary`
+  clasifica 67 patrones, 20.273 circulaciones y 269.988 llamadas como
+  `sin_fuente_osm_suficiente_en_fixture`. Ningún `GeometrySourceSpec` admite
+  sus `route_id`; por diseño, no se prueba geometría. El cruce sin allowlist
+  encuentra además tramos comunes de miles de circulaciones en las fixtures
+  C4/C5 ya presentes.
+- **Archivo/símbolo/dato:** cinco specs usados (`11331`, `3418150`, `11332`,
+  `9174510`, `9174511`), 67 filas C1/C2/C3/C7/C8a/C8b/C9/C10 de
+  `docs/evidence/mp-018-corridor-coverage.csv`.
+- **Riesgo:** el mapa conserva GPS bruto en 56,35 % del horario aunque buena
+  parte comparte infraestructura; la frase «Madrid completo» puede confundirse
+  con cobertura geométrica completa si se omite el denominador ponderado.
+- **Causa raíz:** MP-018 cerró con un alcance mínimo de C4+C5 y un allowlist por
+  `route_id`; `pending` fue una salida honesta, pero el hito lo trató como
+  cobertura de catálogo suficiente.
+- **Alternativas:** (A) descargar relaciones completas por línea/sentido; (B)
+  modelar un grafo de segmentos OSM reutilizables y componer corredores; (C)
+  mantener GPS raw y el estado actual; (D) reutilizar una relación por nombre,
+  inaceptable sin validación física.
+- **Recomendación:** primero A por volumen (C1, C10, C2, C3, C7, C8a, C8b,
+  C9); evaluar B mediante ADR antes de cambiar el modelo. Publicar siempre
+  13.878/35.976, no solo 28/103.
+- **Prueba de cierre:** fixture atribuida y con checksum por cada lote; cero
+  huecos, <=150 m, orden correcto y test de dirección; matriz regenerada con
+  numerador de circulaciones y llamadas, no solo patrones.
+
+#### AUD03-P1-002 — Cuatro patrones C4b siguen `pending` aunque la relación `9174512` es válida
+
+- **Identificador:** `AUD03-P1-002`.
+- **Componente:** inventario C4b de `madrid_source_specs`.
+- **Severidad:** **P1**.
+- **Evidencia reproducible:** `python3 scratch/aud03_geometry.py live-c4b`
+  descarga de la API oficial OSM la versión 42 de `9174512`: 59,440 km, 1.223
+  nodos, 111 ways, cero gaps. Los cuatro patrones `10T0016C4b` son monótonos
+  y su distancia máxima es 33,2–36,6 m; representan 1.740 viajes, incluido el
+  principal de 1.632.
+- **Archivo/símbolo/dato:** `tests/fixtures/osm_c4_real/MANIFEST.md` documenta
+  dos `502`; `packages/geo/madrid.py` omite `9174512`.
+- **Riesgo:** 4,836 % de todas las circulaciones queda en raw por un incidente
+  transitorio ya resuelto, y el sentido contrario de la misma línea tiene una
+  asimetría artificial de calidad.
+- **Causa raíz:** los `502` se documentaron correctamente como «no ausencia»,
+  pero no hubo reintento posterior, endpoint alternativo ni gate de cierre que
+  exigiera completar la cuarta relación.
+- **Alternativas:** (A) congelar ahora `9174512`; (B) reintentar con backoff y
+  espejo; (C) seguir raw pese a evidencia suficiente.
+- **Recomendación:** A, conservando ODbL, atribución, fecha y SHA-256; B para
+  la herramienta de adquisición futura.
+- **Prueba de cierre:** los cuatro pattern IDs pasan a `validated`, la relación
+  congelada reproduce cero gaps y <=36,6 m, y la cobertura ponderada sube en
+  exactamente 1.740 circulaciones sin alterar el sentido opuesto.
+
+#### AUD03-P2-001 — Tres caveats confunden «no para» con «no pasa por esa vía»
+
+- **Identificador:** `AUD03-P2-001`.
+- **Componente:** `packages/geo/madrid.py::_known_caveats`.
+- **Severidad:** **P2** por volumen (31 viajes), aunque el defecto conceptual
+  afecta a futuras variantes exprés.
+- **Evidencia reproducible:** al evaluar sin la caveat, C4b `17005>37012`
+  encaja 14/14 sobre `9174511`, máximo 48,3 m; C5 `18000>35002` encaja 7/7
+  sobre `3418150`, 37,3 m; el inverso encaja 7/7 sobre `11331`, 28,4 m. Los
+  tres corredores son continuos y monótonos. La caveat es la única diferencia
+  entre `partial` y `validated`.
+- **Archivo/símbolo/dato:** dos condicionales por `route_id` y longitud de
+  secuencia en `_known_caveats`; 3 filas `partial`.
+- **Riesgo:** cualquier servicio sin parada comercial en una estación
+  intermedia puede perder map-matching aunque use exactamente la misma vía.
+- **Causa raíz:** se usó contigüidad de la lista de paradas como sustituto de
+  topología física. Una parada omitida no demuestra bifurcación.
+- **Alternativas:** (A) validar corredor continuo, distancia, orden y shape,
+  permitiendo paradas saltadas; (B) exigir evidencia de bifurcación concreta;
+  (C) conservar caveats manuales.
+- **Recomendación:** A+B. La caveat solo debe bloquear si dos trazados físicos
+  distintos satisfacen las mismas anclas o el shape contradice el corredor.
+- **Prueba de cierre:** pruebas que distingan skip-stop sobre la misma vía de
+  una bifurcación sintética/real; los tres patrones pasan a `validated` sin
+  relajar 150 m, continuidad ni orden.
+
+#### AUD03-P2-002 — El patrón C8b de una parada infla la cobertura geométrica posible
+
+- **Identificador:** `AUD03-P2-002`.
+- **Componente:** identidad de cobertura y denominador de geometría.
+- **Severidad:** **P2**.
+- **Evidencia reproducible:** `gtfs-pattern:574a2681305065df5673` contiene solo
+  `12006` (Cercedilla), suma 54 trips y no posee un par origen/destino ni
+  longitud. AUD-02 ya demostró que el motor rechaza horarios con menos de dos
+  stop_times.
+- **Archivo/símbolo/dato:** `route_id=10T0098C8b`, `PatternIdentity` admite una
+  parada, `packages.movement.schedule` exige al menos dos.
+- **Riesgo:** usar 103 como denominador de trayectorias animables hace parecer
+  que existe un corredor pendiente solucionable para este patrón.
+- **Causa raíz:** el catálogo preserva fielmente cualquier secuencia no vacía,
+  pero el resumen de geometría no separa fuente de animabilidad.
+- **Alternativas:** (A) conservarlo con estado `non_traversable`; (B) excluirlo
+  del catálogo; (C) fabricar un recorrido, inaceptable.
+- **Recomendación:** A; publicar 102 patrones con >=2 paradas junto a 103 de
+  fuente.
+- **Prueba de cierre:** contrato y matriz distinguen el patrón degenerado; no
+  se intenta descargar ni asignar geometría para convertirlo en movimiento.
+
+#### AUD03-DESCARTADO-001 — «Los 75 fallan porque OSM no tiene geometría»
+
+- **Identificador:** `AUD03-DESCARTADO-001`.
+- **Componente:** interpretación de `partial`/`pending`.
+- **Severidad:** **DESCARTADO**.
+- **Evidencia reproducible:** tres `partial` pasan las cinco comprobaciones
+  geométricas; cuatro `pending` pasan sobre la relación real `9174512`; decenas
+  de patrones reutilizan tramos de C4/C5 ya congelados. Para los otros 67 no
+  hay fuente completa local con la que afirmar presencia o ausencia.
+- **Archivo/símbolo/dato:** `CorridorCoverage.reason`, `_known_caveats`, salida
+  de `scratch/aud03_geometry.py`.
+- **Riesgo:** buscar 75 trazados independientes desperdiciaría trabajo y podría
+  duplicar vía compartida.
+- **Causa raíz:** el texto `sin geometría OSM descargada` es correcto, pero se
+  puede abreviar indebidamente como `sin geometría OSM`.
+- **Alternativas:** ausencia física, fuente no adquirida, criterio conservador
+  o patrón degenerado; la auditoría separa las cuatro.
+- **Recomendación:** mantener esa separación en API, UI y documentación.
+- **Prueba de cierre:** ninguna fila usa «geometría ausente en OSM» sin una
+  consulta/fuente que lo demuestre.
+
+#### AUD03-DESCARTADO-002 — Las fixtures C4/C5 versionadas están inventadas o corruptas
+
+- **Identificador:** `AUD03-DESCARTADO-002`.
+- **Componente:** procedencia OSM y carga de relaciones.
+- **Severidad:** **DESCARTADO**.
+- **Evidencia reproducible:** 7/7 SHA-256 coinciden con ambos manifiestos;
+  7/7 IDs/tags existen en la API oficial OSM; 7/7 corredores tienen cero
+  gaps; los tests focales ejecutados dan 19/19 OK.
+- **Archivo/símbolo/dato:** `tests/fixtures/osm_c4_real/`,
+  `tests/fixtures/osm_c5_real/`, sus `MANIFEST.md`.
+- **Riesgo:** una fixture corrupta invalidaría toda conclusión de continuidad y
+  distancia.
+- **Causa raíz:** no aplica; la hipótesis no se reprodujo.
+- **Alternativas:** confiar solo en el manifiesto o recalcular y contrastar la
+  fuente; se hizo lo segundo.
+- **Recomendación:** conservar checksum como gate obligatorio y verificar
+  también helpers que lean la fixture fuera de `_load_source`.
+- **Prueba de cierre:** ya satisfecha para estos bytes; repetir ante cualquier
+  recaptura OSM.
+
+#### AUD03-NO-VERIFICADO-001 — Longitud ferroviaria OSM única de todo Madrid
+
+- **Identificador:** `AUD03-NO-VERIFICADO-001`.
+- **Componente:** denominador físico de cobertura.
+- **Severidad:** **NO VERIFICADO**.
+- **Evidencia reproducible:** los siete corredores suman 329,173 km dirigidos,
+  pero contienen ambos sentidos y tramos solapados; AUD-02 no construye un
+  grafo de rail ways únicos para las 12 líneas. Los proxies por shape/cuerda se
+  declaran aparte y no se renombran como vía.
+- **Archivo/símbolo/dato:** fixtures C4/C5 y shapes GTFS.
+- **Riesgo:** publicar un porcentaje de kilómetros aparentemente preciso pero
+  duplicado por dirección o incompleto por línea.
+- **Causa raíz:** falta de inventario OSM completo y de una definición de
+  deduplicación física (way dirigido, way no dirigido o tramo operacional).
+- **Alternativas:** (A) unión de IDs OSM `way` con longitud geodésica; (B) grafo
+  de segmentos entre nodos; (C) proxy GTFS claramente etiquetado.
+- **Recomendación:** A o B tras adquirir todas las fuentes; hasta entonces
+  publicar `NO VERIFICADO` y los proxies honestos.
+- **Prueba de cierre:** conjunto completo de ways, regla de deduplicación,
+  numerador/denominador reproducibles y verificación de que los sentidos no
+  duplican longitud física.
+
+#### AUD03-NO-VERIFICADO-002 — Causa física individual de los otros 67 patrones
+
+- **Identificador:** `AUD03-NO-VERIFICADO-002`.
+- **Componente:** correspondencia completa GTFS/OSM fuera de C4/C5.
+- **Severidad:** **NO VERIFICADO** en OSM; la causa de producto «fuente no
+  configurada» sí está verificada.
+- **Evidencia reproducible:** ninguna de las cinco fuentes usadas cubre el
+  patrón completo; eso no permite distinguir geometría ausente, relación OSM
+  disponible, bifurcación o error de secuencia fuera del tramo común.
+- **Archivo/símbolo/dato:** 67 filas C1 de la matriz.
+- **Riesgo:** inventar una causa física por patrón a partir de ausencia local,
+  violando la regla de no asumir contratos externos.
+- **Causa raíz:** el conjunto de evidencia congelada solo contiene C4/C5.
+- **Alternativas:** adquirir relaciones reales por lotes, o dejar causa física
+  como no verificada; no vale extrapolar por nombre comercial.
+- **Recomendación:** adquirir en el orden ponderado de la tabla de lotes y
+  reemplazar C1/E1 por una causa física solo después de esa prueba.
+- **Prueba de cierre:** cada lote tiene fuente/hash y cada fila demuestra
+  continuidad, distancia, orden, dirección y, cuando aplique, bifurcación.
+
+### Comandos reproducibles ejecutados
+
+```sh
+shasum -a 256 tests/fixtures/osm_c4_real/*.json \
+  tests/fixtures/osm_c5_real/*.json
+
+for id in 11331 3418148 3418149 3418150 11332 9174510 9174511 9174512; do
+  curl -fsS "https://api.openstreetmap.org/api/0.6/relation/$id.json" | \
+    jq -r '.elements[0] | [.id,.version,.timestamp,.tags.ref,.tags.official_ref,.tags.network,.tags.name] | @tsv'
+done
+
+.venv/bin/python scratch/aud03_geometry.py summary
+.venv/bin/python scratch/aud03_geometry.py live-c4b
+
+.venv/bin/python -m unittest \
+  packages.geo.tests.test_catalog \
+  packages.geo.tests.test_real_feed -v
+```
+
+Resultado focal: **19/19 OK**. `compileall` del script y `git diff --check`
+terminaron sin errores. No se modificó código de producto ni se declara la
+suite completa.
