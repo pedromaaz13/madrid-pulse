@@ -120,3 +120,90 @@ El colector es solo-inserción por diseño (sin ruta de `UPDATE`/`DELETE`), así
 ## Decisión del propietario sobre 5433 (2026-11-24)
 CONSERVAR los datos. Sin DELETE/TRUNCATE/restauración. Dump fuera del repo. 5433 no sirve para pruebas reproducibles que dependan de su estado original. Tarea H4 de defaults peligrosos autorizada solo a planificación. Ver `INCIDENT_5433.md` §7.
 - **AUD-07:** revisión formal conforme a matriz (Codex `gpt-5.6-terra` · medium, `ctx_1626c278cd8f` + follow-up `ctx_c95f2e3ad3ce`): CHANGES_REQUESTED (2 correcciones de redacción) -> correcciones `48dd53f` -> **APPROVED**.
+
+---
+
+## Consolidación verificada por AUD-09 (2026-11-23/24)
+
+**Elabora:** AUD-09, Claude `opus` · high (`ctx_d10350eb24d0`). Las secciones anteriores de este registro son el histórico vivo del coordinador y **no se reescriben**; esta sección las reconcilia contra los recibos de Orca. Cuando hay diferencia, manda esta sección.
+
+**Método (reproducible):**
+
+```sh
+orca orchestration worker-list --run run_3b3bfaf88f3d --limit 100 --json          # 33 dispatches + 3 posteriores
+orca orchestration worker-show --dispatch <ctx_id> --json --full                   # startOptions.launch.{requested,effective}, dispatchedAt/completedAt, followUpOf, creatorDispatchId, depth
+orca orchestration inbox --run run_3b3bfaf88f3d --limit 500 --full --json          # veredictos textuales (worker_done)
+git log --format='%h %ad %s' --date=iso-strict beb9434..HEAD                        # commits de cada ronda
+```
+
+**Qué es «efectivo» aquí:** el campo `launch.effective` que Orca registra al crear el worker. Los *follow-up* (`followUpOf ≠ null`) reutilizan la misma sesión y Orca no registra un lanzamiento nuevo (`model = null`); su modelo efectivo es el de la sesión original de la cadena. **Orca no expone duración de razonamiento ni consumo de tokens: no se reporta ninguna cifra de consumo** (no se inventa). Las horas son UTC (`dispatchedAt` → `completedAt`).
+
+### Tabla por AUD-ID
+
+| AUD | Rol | Dispatch (task) | Modelo · esfuerzo solicitado = efectivo (recibo) | Matriz del encargo | Ventana UTC | Commit | Veredicto (mensaje) |
+|---|---|---|---|---|---|---|---|
+| 00 | Ejecutor | — (coordinador) | **no verificable por recibo** (el coordinador no es un worker; consta como Claude Sonnet) | Sonnet · medium | — | `0fbabe3` | — |
+| 00 | Revisor | `ctx_34a13efbb75a` (`task_71d356947672`) | `gpt-5.6-terra` · medium | Terra · medium ✔ | 13:04:28→13:05:59 | — | **APPROVED** (`msg_0fad39dfd97e`) |
+| 01 | Ejecutor | `ctx_e69bfe336e92` (`task_8bf54c0799dd`) | `opus` · high | Opus · high ✔ | 15:28:24→15:59:24 | `9553be0` | entregado |
+| 01 | Revisor r1 | `ctx_f31a48ded8a6` | `gpt-5.6-sol` · high | Sol · high ✔ | 16:01:02→16:06:50 | — | CHANGES_REQUESTED (`msg_d25fe39c0caf`; ambos P0 confirmados) |
+| 01 | Corrección r1 | `ctx_82628c4e473d` (fu `ctx_e69bfe336e92`) | heredado `opus` · high | — | 16:07:21→17:04:06 (pausa por límite de sesión Claude) | `f88d12f` | aplicada |
+| 01 | Revisor r2 | `ctx_264f3fb407d7` (fu `ctx_f31a48ded8a6`) | heredado `gpt-5.6-sol` · high | — | 17:04:37→17:06:38 | — | CHANGES_REQUESTED (`msg_65b44df80992`) |
+| 01 | Corrección r2 | `ctx_349842fc8de0` | heredado `opus` · high | — | 17:07:00→17:11:34 | `574a620` | aplicada |
+| 01 | Revisor r3 | `ctx_526284cf5474` | heredado `gpt-5.6-sol` · high | — | 17:11:47→17:13:29 | — | **APPROVED** (`msg_9e1879a32878`; deja constancia de *hunks* de P0-002 no reevaluados) |
+| 02 | Ejecutor | `ctx_99b3f28c3b64` (`task_b03ab623492c`) | `gpt-5.6-sol` · high | Sol · high ✔ | 13:04:37→13:27:51 | `81b246c` | entregado |
+| 02 | Revisor | `ctx_10b070f167d5` | `sonnet` · high | Sonnet · high ✔ | 15:13:02→15:15:57 | — | **APPROVED 5/5** (`msg_6a9c33a1e7ec`) |
+| 03 | Ejecutor | `ctx_8e6da472a2f5` (`task_cc9d4fbec491`) | `gpt-5.6-sol` · high | Sol · high ✔ | 15:12:57→16:02:24 (pausa por límite de uso Codex) | `1c28163` | entregado |
+| 03 | Revisor r1 | `ctx_4db56fd6dd34` | `opus` · high | Opus · high ✔ | 16:02:47→17:03:50 (pausa por límite de sesión Claude) | `2789ad2` | CHANGES_REQUESTED (`msg_fb6aa3ea1a2a`; 3/4 confirmados) |
+| 03 | Corrección | `ctx_352eb5227c6d` | heredado `gpt-5.6-sol` · high | — | 17:04:13→17:13:25 | `08ce3b8` | aplicada |
+| 03 | Revisor r2 | `ctx_045f259f59a2` | heredado `opus` · high | — | 17:13:47→17:17:44 | `68e1e16` | **APPROVED** (`msg_925370d8e9a5`) |
+| 04 | Ejecutor | `ctx_079d97438512` (`task_e6d1bf8a933e`) | `opus` · high | **Sonnet · high ✘ (desviación al alza, registrada)** | 17:18:38→17:52:38 | `c8263a0` | entregado |
+| 04 | Revisor r1 | `ctx_4cc1f0959029` | `gpt-5.6-sol` · high | Sol · high ✔ | 17:53:31→17:56:58 | — | CHANGES_REQUESTED (`msg_854bd6103c7c`) |
+| 04 | Corr. r1 / Rev. r2 | `ctx_df3d184f2548` / `ctx_f6e4d425460c` | heredados | — | 17:57:15→18:05:50 | `6aff045` | CHANGES_REQUESTED (`msg_8e45cec8ed75`) |
+| 04 | Corr. r2 / Rev. r3 | `ctx_b3f6965ae197` / `ctx_e9d9a104948e` | heredados | — | 18:06:04→21:57:05 (pausa por límite de sesión Claude) | `90b0a3e` | CHANGES_REQUESTED (`msg_2fb8db32b926`) |
+| 04 | Corr. r3 / Rev. r4 | `ctx_43c147440bf7` / `ctx_e5a4ad50b816` | heredados | — | 21:57:15→22:01:19 | `312f05f` | **APPROVED** (`msg_6cb1fbf48ac8`); severidad P0/P1 abierta → resuelta en `FINDINGS_REGISTER.md` §2 |
+| 05 | Ejecutor | `ctx_f88f1e4cca5e` (`task_f3b4f5788326`) | `sonnet` · high | Sonnet · high ✔ | 13:04:40→15:27:00 (pausa por límite de sesión Claude) | `861da95` | entregado |
+| 05 | Revisor r1 | `ctx_41022ed63263` | `gpt-5.6-terra` · high | Terra · high ✔ | 15:28:10→15:57:54 (pausa por límite Codex) | — | «CHANGES_REQUESTED por P0-1» (`msg_dd824ccd8ec2`); **no era APPROVED** |
+| 05 | Revisor formal | `ctx_53f6eb860b17` (`task_55fbb3c5ce04`) | `gpt-5.6-terra` · high | Terra · high ✔ | 22:25:41→22:29:28 | — | CHANGES_REQUESTED **documental**, P0-1 confirmado (`msg_4a816dbcd13f`) |
+| 05 | Corrección v2 | ejecutor original (misma sesión) | heredado `sonnet` · high | — | →22:40:35 | `39b3e06`, `28f696e` | aplicada (`msg_b0252f0c42d2`); entorno propio 5456, nunca 5433 |
+| 05 | Re-verificación formal de la v2 | *(pendiente al redactar)* | — | Terra · high | — | — | **PENDIENTE** |
+| 06 | Ejecutor | `ctx_cf7d40a866d7` (`task_7982bf79c176`) | `gpt-5.6-terra` · high | Terra · high ✔ | 16:58:49→17:10:32 | `75f97af` | entregado; **incidente 5433** (`msg_08baf811cc62`, 17:05:56) |
+| 06 | Revisor | `ctx_6afc827ab5e6` | `sonnet` · high | Sonnet · high ✔ | 17:10:55→17:17:34 | `1a1dcbb` (commit del coordinador) | **APPROVED** (`msg_59ca65b8b6b7`) |
+| 06 | Corrección de divulgación | `ctx_5c1add5b519c` (fu `ctx_cf7d40a866d7`) | heredado `gpt-5.6-terra` · high | — | 22:20:06→22:21:02 | `2d02227` | aplicada; contrastada por el revisor final de AUD-08 (`msg_c82b2aa19e5a`) |
+| 07 | Ejecutor | `ctx_7f0fde0b7e4f` (`task_a9deb9865cbc`) | `sonnet` · medium | Sonnet · medium ✔ | 13:04:47→15:18:04 (pausa por límite de sesión Claude) | `44c98cb`, `ea49e6a` | entregado |
+| 07 | «Verificación» no conforme | `ctx_db3c9aa62ac8` (`task_31c89ba48f1f`) | **`null` / `null`** (sin modelo ni esfuerzo); `creatorDispatchId = ctx_7f0fde0b7e4f`, `depth = 2` | Terra · medium ✘ | 15:13:41→15:15:46 | — | «verificado con matices» (`msg_54257fc49b9f`): **no cuenta como revisión** |
+| 07 | Revisor formal | `ctx_1626c278cd8f` (`task_40fad4c8898e`) | `gpt-5.6-terra` · medium | Terra · medium ✔ | 22:25:45→22:27:59 | — | CHANGES_REQUESTED (`msg_c0c0a380e4d1`) |
+| 07 | Corrección | ejecutor original (misma sesión; sin dispatch nuevo en Orca) | `sonnet` · medium | — | →22:28:29 | `48dd53f` | aplicada (`msg_94588f8b26f9`) |
+| 07 | Revisor formal r2 | `ctx_c95f2e3ad3ce` (fu `ctx_1626c278cd8f`) | heredado `gpt-5.6-terra` · medium | — | 22:28:38→22:28:59 | `26251cd` (registro) | **APPROVED** (`msg_cc461fada634`) |
+| 08 | Ejecutor | `ctx_1d55182413e3` (`task_e0212d2fd3fe`) | `gpt-5.6-terra` · high | Terra · high ✔ | 22:01:40→22:12:14 | `a794c0e` | entregado |
+| 08 | Revisor r1 | `ctx_bfb72a618d4b` | `sonnet` · high | Sonnet · high ✔ | 22:12:28→22:19:49 | `f290b76` (registro) | CHANGES_REQUESTED documental (`msg_50065e316974`) |
+| 08 | Corrección | `ctx_eb57aa06e6d3` | heredado `gpt-5.6-terra` · high | — | 22:20:02→22:22:18 | `aed1fc0` | aplicada |
+| 08 | Revisor r2 | `ctx_82199cab02ca` | heredado `sonnet` · high | — | 22:22:29→22:22:51 | — | **APPROVED** (`msg_c82b2aa19e5a`; 2 observaciones no bloqueantes absorbidas en `FINDINGS_REGISTER.md` §9) |
+| 09 | Ejecutor | `ctx_d10350eb24d0` (`task_2e01f9d87b46`) | `opus` · high | Opus · high ✔ | 22:22:59→(en curso) | este commit | — |
+| 09 | Revisor | *pendiente de despacho* | Codex `gpt-5.6-sol` · high (solicitado) | Sol · high | — | — | — |
+
+### HEAD auditado, comandos y resultados principales
+
+| AUD | Código auditado | Comandos decisivos | Resultado reproducido |
+|---|---|---|---|
+| 00 | `beb9434`; cadena `990c95d→92c1b09→c28d5e4→728c667→7b87e6b→b616ae6→1ecbc8f→beb9434` | `git merge-base --is-ancestor`, `git ls-remote --heads origin`, `~/.codex/models_cache.json` | 7/7 ascendencias OK; ninguna rama en `origin`; EGM no instalado |
+| 01 | `beb9434` + cortes `1532`/`1533` | `scratch/aud01_*.py` (7) | 17/121 pre-salida; salto p50 1 237,09 m / máx 3 274,23 m; 31/44 inmóviles; 65/73 = 89,0 % |
+| 02 | ZIP `fomento_transit.zip` (SHA del manifiesto) | `scratch/aud02_rebuild.py`; 14 tests focales | 12/42/103/95 exactos; 121 huérfanos; 40/102 |
+| 03 | 7 fixtures OSM (SHA-256 7/7) | `scratch/aud03_geometry.py summary|offline-c4b`; 19/19 tests focales | 28/3/72; 67+4+1; C4b ≤ 48,3 m sobre `9174511` |
+| 04 | `beb9434` + cortes | `scratch/aud04_*.py` (11) + `scratch/aud04_web/` (vitest 3/3); `movement.test.ts` 10/10 | P0/P1 de movimiento; ventana `[-0,999, 0,000]` m |
+| 05 | `d349465` (docs) / `beb9434` (código); PostgreSQL desechable 5455 | Chrome DevTools MCP; 3 `curl` de P0-1 | P0-1 reproducido 4 veces por 3 agentes |
+| 06 | `beb9434`; PostgreSQL desechable 5546/5799 | 103 tests `unittest`; `EXPLAIN (ANALYZE, BUFFERS)`; `docker restart` | 103 OK; carrera de `build_snapshot` reproducida |
+| 07 | `44c98cb`→`48dd53f` (documentos y código citados) | lectura con citas `archivo:línea` | sin P0; 2 P1 de proceso/riesgo |
+| 08 | `beb9434`; PostgreSQL desechable 5548/5561 | lista exacta de `.github/workflows/ci.yml`; `npm` con Node 22.13.1 | 283 casos (5/1/18 skips según entorno); 89/89; carrera de exportación |
+| 09 | `beb9434` + cortes; sin base de datos | `scratch/aud04_dwell*.py`, `aud04_cohorte_19656.py` (reproducidos) y **`scratch/aud09_stop_crossing.py` (nuevo)** | 28/44 `STOPPED_AT` con avance; 30/44 cruzan estación; espera declarada 1+5/44 |
+
+### Desviaciones y observaciones de proceso (verificadas)
+
+1. **Incidente 5433** (AUD-06, `ctx_cf7d40a866d7`): escritura aditiva en la base persistente compartida — 6 runs (3090–3095) / 227 / 162 / 5 / 8 filas, 17:04:46Z–17:05:18Z, sin dependencias entrantes, `n_tup_upd = 0`. Causa raíz de diseño: defaults de `services/collector/config.py:34` y `apps/api/config.py:34-35` a `127.0.0.1:5433`. **Decisión del propietario: CONSERVAR** (`INCIDENT_5433.md` §7). Efecto: la verificación histórica «sin skips contra desarrollo» deja de reproducirse; skips 5/1/18 según entorno. Ver `FINDINGS_REGISTER.md` FR-17, PR-01.
+2. **AUD-07:** la verificación inicial la lanzó el ejecutor (profundidad 2, contra «profundidad 1» del encargo) sin modelo/esfuerzo; el default local de Codex al redactar es `gpt-6.2-sol` (familia excluida por el encargo) y `BASELINE.md` registraba `gpt-6-luna`: **no se puede saber qué modelo la ejecutó**. Sustituida por revisión formal conforme.
+3. **AUD-05:** registrado como «CONFIRMADO» cuando el veredicto era CHANGES_REQUESTED sin re-revisión; corregido en `112a655` y re-revisado formalmente.
+4. **AUD-04:** ejecutado por `opus` · high en lugar de `sonnet` · high (mejora de capacidad). Cuatro rondas de revisión: el límite del encargo («tras dos rondas fallidas **sin nueva evidencia**, BLOCKED») no se activó porque cada ronda aportó medida nueva (`aud04_cohorte_19656.py`, `aud04_dwell_window.py`, `aud04_test_anchor.py`).
+5. **Pausas por límites del proveedor**, sin pérdida de contexto (las tareas conservaron historial): Claude a las 13:06Z (AUD-05, AUD-07), 16:12Z (AUD-01 corrección, AUD-03 revisión) y 18:06Z (AUD-04 r3, reanudado 21:55Z); Codex a las 15:21Z (AUD-03) y 15:28Z (AUD-05 revisión).
+6. **Independencia proveedor contrario:** se cumple en todas las revisiones que cuentan (Claude↔Codex). Ningún agente revisó sus propias conclusiones como única validación, salvo la verificación no conforme de AUD-07, que no cuenta.
+7. **Autoría:** `git log beb9434..HEAD` → 53 commits, todos `Pedro Matute <pedromaaz13@gmail.com>`, 0 `Co-authored-by` (comprobado antes de este commit). Ningún push, PR ni merge.
+8. **Modelos para el H4:** `gpt-6.2-sol` está en `~/.codex/models_cache.json` (`visibility: list`) y es el default de `config.toml`, pero **no tiene recibo de Orca en esta ejecución**; la excepción del propietario lo limita a la tarea H4-11 y debe verificarse `effective.model` al despacharla.
+- **AUD-05:** revisión formal (Codex `gpt-5.6-terra` · high, `ctx_53f6eb860b17` + follow-up `ctx_7a5b7c7a3912`): CHANGES_REQUESTED documental -> v2 `39b3e06`/`28f696e` (artefacto por afirmación, P2-3 rectificado, P0-1 con cita corregida) -> **APPROVED documentalmente**. Limitación: el revisor no tuvo navegador; coordenadas/zooms de 18/19 y DevTools no repetidos independientemente. P0-1 verificado de forma independiente por API (x2 revisores) y por captura 20 (coordinador).
