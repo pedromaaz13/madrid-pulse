@@ -56,7 +56,7 @@ El colector es solo-inserción por diseño (sin ruta de `UPDATE`/`DELETE`), así
 | AUD-04 | Revisor (ronda final, 3ª vez) | Codex `gpt-5.6-sol` · high (follow-up) | `ctx_e5a4ad50b816` | `task_4c932e94ae41` | — | **APPROVED (definitivo)** — AUD-04 cerrado tras 4 rondas |
 | AUD-06 | — | Codex `gpt-5.6-terra` · high (pendiente de despachar) | — | `task_7982bf79c176` | — | en cola |
 | AUD-08 | Ejecutor | Codex `gpt-5.6-terra` · high | `ctx_1d55182413e3` | `task_e0212d2fd3fe` | `a794c0e` | **completado** — 283 tests/5 skips, 89/89 frontend, 1 P2 (carrera colector-archivador) |
-| AUD-08 | Revisor | Claude `sonnet` · high | `ctx_bfb72a618d4b` | `task_6d6e71ee602d` | — | *(en curso; se le pide aclarar 5 skips vs 1 skip de otros ejecutores y revisar cifras contradictorias)* |
+| AUD-08 | Revisor | Claude `sonnet` · high | `ctx_bfb72a618d4b` | `task_6d6e71ee602d` | — | **CHANGES_REQUESTED** (solo documental: skips 5/1/18, discrepancias 68/72-75/180-190s, línea base 5433, 17 tablas=15+2 vistas) *(histórico del encargo: se le pide aclarar 5 skips vs 1 skip de otros ejecutores y revisar cifras contradictorias)* |
 | AUD-09 | — | Claude `opus` · high (pendiente, depende de AUD-07 revisión equivalente EGM (ya cerrada) + AUD-08) | — | `task_2e01f9d87b46` | — | pendiente de AUD-08 |
 
 ## Hallazgos reales reportados hasta ahora (resumen, no sustituye los documentos completos)
@@ -107,3 +107,6 @@ El colector es solo-inserción por diseño (sin ruta de `UPDATE`/`DELETE`), así
 - **Nota de severidad abierta (AUD-04 P0), para que AUD-09/el propietario la resuelva, no decidida por ningún agente:** al corregir la cohorte, el ejecutor encontró que la velocidad calculada por la envolvente en este caso (75,2 km/h) **coincide casi exactamente con la velocidad real observada** entre los dos cortes (75,0 km/h) — a diferencia de AUD01-P0-001, aquí no hay una observación que contradiga directamente la cifra calculada. El defecto real es estructural: la rama de espera programada es inalcanzable (0 de 44 casos) pese a que `rendering.py:185-187` afirma lo contrario, y el contrafactual correcto sería 0m a los 30s (espera honrada) frente a los 626,4m que publica hoy. Queda abierto si esto cumple el listón de P0 ("afecta a la veracidad de los datos, la integridad ferroviaria...") o si, sin una observación directamente contradictoria, es más propiamente un P1.
 
 *(Esta tabla se actualizará según reporte la revisión final de AUD-04 (dispatch `ctx_f6e4d425460c`) y después AUD-08/AUD-09.)*
+
+| AUD-08 | Corrección | Codex `gpt-5.6-terra` · high (follow-up) | `ctx_eb57aa06e6d3` | `task_0312f23463c1` | *(en curso)* | *(en curso)* |
+| AUD-06 | Corrección documental (afirmación falsa sobre 5433) | Codex `gpt-5.6-terra` · high (follow-up) | `ctx_5c1add5b519c` | `task_a05e3c7878cb` | *(en curso)* | *(en curso)* |
