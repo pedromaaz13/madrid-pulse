@@ -110,3 +110,4 @@ El colector es solo-inserción por diseño (sin ruta de `UPDATE`/`DELETE`), así
 
 | AUD-08 | Corrección | Codex `gpt-5.6-terra` · high (follow-up) | `ctx_eb57aa06e6d3` | `task_0312f23463c1` | *(en curso)* | *(en curso)* |
 | AUD-06 | Corrección documental (afirmación falsa sobre 5433) | Codex `gpt-5.6-terra` · high (follow-up) | `ctx_5c1add5b519c` | `task_a05e3c7878cb` | *(en curso)* | *(en curso)* |
+| AUD-08 | Revisor (ronda final) | Claude `sonnet` · high (follow-up) | `ctx_82199cab02ca` | `task_6f3985126a2a` | `aed1fc0` | **APPROVED** — AUD-08 cerrado; 2 observaciones no bloqueantes pasadas a AUD-09 |
