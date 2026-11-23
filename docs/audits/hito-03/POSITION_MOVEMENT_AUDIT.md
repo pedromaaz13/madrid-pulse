@@ -49,8 +49,11 @@ programada del viaje (`scratch/aud04_sweep.py`):
 | `pre_salida` | 17 | `anchor_s < first_departure` — **es exactamente el conjunto de AUD01-P0-001** |
 | `post_llegada` | 2 | `anchor_s > last_arrival` |
 
-Todos los hallazgos cuantitativos de este documento se dan **sobre la cohorte
-`en_ventana`** salvo que se indique lo contrario.
+Los hallazgos **agregados** de este documento (`AUD04-P1-001`, `AUD04-P2-002`) se dan
+sobre la cohorte `en_ventana`. `AUD04-P0-001` es la excepción y se declara como tal: su
+caso cae en `post_llegada`, por 141 s (ver el hallazgo). Esa excepción **no** lo acerca a
+`AUD01-P0-001`, cuyo conjunto es exactamente `pre_salida`: son cohortes disjuntas y
+mecanismos distintos.
 
 ### 0.3 Medidas base de la cadena
 
@@ -144,16 +147,26 @@ mientras las 44 que sí tienen trazado verificado se dibujan con el símbolo dis
 
 ## 2. Hallazgos
 
-### AUD04-P0-001 — Un tren realmente parado en una estación con espera declarada se dibuja saliendo a 75,2 km/h: la detección de espera exige 1,0 m de precisión y, además, se autocancela
+### AUD04-P0-001 — La espera programada en parada es inexpresable para cualquier ancla real: la detección exige 1,0 m de precisión y, además, se autocancela, así que la posición dibujada atraviesa la parada sin detenerse
 
 - **Identificador:** `AUD04-P0-001`
 - **Componente:** `packages/movement/schedule.py` (`TripSchedule.dwell_end_seconds`) +
   `packages/movement/rendering.py` (`_envelope`). Consumido por `apps/api/snapshot.py` y
   evaluado por `apps/web/src/domain/movement.ts`.
-- **Severidad:** **P0** — se dibuja como hecho un movimiento que no ocurrió, que es el
-  único error que el proyecto declara inaceptable en todos sus documentos («no inventar un
-  tren», `MATRIZ-CIERRE-MADRID.md:42`). **Es independiente de `AUD01-P0-001` y ninguna de
+- **Severidad:** **P0** — la rama «espera programada en parada» del contrato es
+  **estructuralmente inalcanzable** (0 de 44 circulaciones del corte obtienen
+  `dwell_until`, incluida la única que está sobre una parada con espera declarada), de modo
+  que la posición publicada avanza a través de todas las paradas programadas de la red y
+  `rendering.py:185-187` —que afirma que la envolvente «la respeta de verdad (retiene el
+  progreso)»— es falso en producción. **Es independiente de `AUD01-P0-001` y ninguna de
   las dos correcciones que AUD-01 recomienda lo resuelve** (ver «Relación con AUD-01»).
+  **Acotación honesta de la severidad, tras la revisión de Codex Sol:** lo que el dato
+  observado sostiene es que el horario declara la espera y el contrato no puede expresarla;
+  **no** que exista una observación del tren detenido (ver «Qué sostiene el dato observado
+  y qué no»). Si el propietario considera que el listón de P0 exige una observación
+  contradicha —como sí ocurre en `AUD01-P0-001`, con mediana real de 0,0 km/h—, este
+  hallazgo es un P1. No lo rebajo por mi cuenta: el mecanismo está confirmado por el
+  revisor y la decisión de listón es suya.
 - **Evidencia reproducible:**
   ```sh
   .venv/bin/python scratch/aud04_dwell.py
@@ -181,11 +194,27 @@ mientras las 44 que sí tienen trazado verificado se dibujan con el símbolo dis
     rendering_method=extrapolated_from_last_anchor
     reason='sin ancla futura: avance estimado desde la última ancla'
   ```
-  El tren es el **único** de las 44 circulaciones del corte que está realmente sobre una
-  parada con espera declarada: el hueco mediano al tramo plano más cercano en la cohorte
-  `en_ventana` es de **8 733,8 m** y el mínimo de **2 824,6 m**
-  (`scratch/aud04_sweep.py`). Es decir, el caso se midió sobre el único tren donde el
-  contrato tenía que funcionar, y no funcionó.
+  El tren es el **único** de las 44 circulaciones del corte que llega a estar a menos de
+  2,8 km de una parada con espera declarada: sobre las 44, el hueco al tramo plano más
+  cercano tiene mínimo **5,38 m** (este caso) y segundo mínimo **2 824,6 m**
+  (`scratch/aud04_sweep.py`, cohorte `en_ventana`). Es decir, el caso se midió sobre el
+  único tren donde el contrato tenía que funcionar, y no funcionó.
+
+  **Cohorte real del caso (corregida tras la revisión de Codex Sol):** este ancla **no**
+  está `en_ventana` sino **`post_llegada` por 141 s** — lo verifica
+  `.venv/bin/python scratch/aud04_cohorte_19656.py`:
+  ```
+  primera salida programada :    52200 s (14.50 h)
+  ultima llegada programada :    55860 s (15.52 h)
+  ancla (observed_at 1533)  :    56001 s (15.56 h)
+  -> cohorte = post_llegada;  ancla - ultima_llegada = +141 s
+  progreso del ancla 41198.73 m de 45165.47 m -> faltan 3966.7 m
+  ```
+  Esto explica de dónde sale el `speed_mps = 20,88` publicado y hay que decirlo: al estar
+  141 s pasada su última llegada programada, el horario desplazado sitúa al tren ya en el
+  término, así que `span_m` es **todo** el trayecto restante (3 966,7 m) y la envolvente lo
+  reparte en los 190 s del horizonte → 20,87 m/s. La velocidad no es arbitraria ni
+  implausible; lo que falla es que **nada la interrumpe en la parada**.
 
   **Dos causas, no una.** El contrafactual del mismo arnés las separa:
   ```
@@ -200,6 +229,33 @@ mientras las 44 que sí tienen trazado verificado se dibujan con el símbolo dis
     candidate = 2026-11-20T14:33:20.756218+00:00 ; anchor_at = 2026-11-20T14:33:21+00:00
     anchor_at < candidate ? False  ->  dwell_until DESCARTADO igualmente
   ```
+- **Qué sostiene el dato observado y qué no (añadido tras la revisión de Codex Sol):**
+  la versión anterior de este hallazgo afirmaba que el tren estaba «realmente parado
+  durante 60 s». **El dato no lo sostiene y la frase estaba de más.** Lo que las dos
+  observaciones reales dicen (`scratch/aud04_cohorte_19656.py`):
+  ```
+  corte 1532: observed_at=14:32:04Z current_status='IN_TRANSIT_TO' current_stop_id='35011'
+           progreso dirigido=39595.01 m  dist_via=2.07 m
+  corte 1533: observed_at=14:33:21Z current_status='INCOMING_AT'   current_stop_id='35002'
+           progreso dirigido=41198.73 m  dist_via=4.23 m
+  entre los dos cortes: 77 s, arco dirigido +1603.72 m, cuerda 1603.38 m -> 75.0 km/h
+  ```
+  - **Sostenido:** el horario programa 60 s de espera en esta parada (tramo plano a
+    41 193,35 m, de 55 620 s a 55 680 s); el operador sitúa al tren **aproximándose** a esa
+    misma parada (`INCOMING_AT`, `stop_id=35002`, Fuenlabrada); y el contrato publica
+    `dwell_until = None`, es decir, no puede expresar esa espera.
+  - **No sostenido:** que el tren estuviera detenido. Ninguna de las dos observaciones
+    tiene `current_status='STOPPED_AT'`, y la anterior lo sitúa **1 603,72 m** antes, 77 s
+    atrás. No se dispone de ninguna observación que confirme la parada en sí: los dos
+    cortes del kit están a 77 s y la espera dura 60 s, así que puede caer entera entre
+    ellos sin dejar rastro (`AUD04-NO-VERIFICADO-002`).
+  - **Dato que conviene no ocultar:** la velocidad observada entre los dos cortes
+    (**75,0 km/h** sobre el arco) coincide casi exactamente con la que publica la
+    envolvente (**75,2 km/h**). En este caso la envolvente **no** está inventando una
+    velocidad implausible; el defecto es que atraviesa una parada programada a esa
+    velocidad en vez de retener el progreso, y el contrafactual A lo cuantifica: con la
+    espera honrada el símbolo avanza **0 m** a los 30 s, frente a los **626,4 m** que
+    avanza hoy.
 - **Archivo/símbolo/dato afectado:**
   `packages/movement/schedule.py:120-133` (`dwell_end_seconds`, `tolerance_m: float = 1.0`)
   y `:106-118` (`seconds_at_progress`); `packages/movement/rendering.py:188-194`
@@ -207,11 +263,13 @@ mientras las 44 que sí tienen trazado verificado se dibujan con el símbolo dis
   Dato: corte `data/hito-03/replay/1533`, entidad `VP_C5-19656`.
 - **Riesgo de producto:** la parada en estación es el momento en que un usuario de
   Cercanías mira el mapa (está en el andén, o espera a alguien que llega). Durante los 60 s
-  que el tren está detenido en Fuenlabrada, el símbolo recorre **1 252,7 m** y después
-  vuelve atrás de golpe cuando llega la siguiente observación. Y lo hace rotulado
-  «Proyectada — Avance estimado desde la última observación», que es cierto como
-  procedencia pero no advierte de que el avance contradice una espera que el propio
-  horario declara.
+  que el horario programa de espera en Fuenlabrada, el símbolo recorre **1 252,7 m** —se
+  sale de la estación— en vez de retener el progreso, y después vuelve atrás de golpe
+  cuando llega la siguiente observación. Y lo hace rotulado «Proyectada — Avance estimado
+  desde la última observación», que es cierto como procedencia pero no advierte de que el
+  avance contradice una espera que el propio horario declara. El efecto no es particular de
+  este tren: al ser `dwell_until` inalcanzable para cualquier ancla real, **ninguna** de las
+  paradas programadas de la red detiene nunca el símbolo.
 - **Causa raíz (confirmada en código):**
   1. **Tolerancia mal calibrada por un orden de magnitud.** `dwell_end_seconds` exige que
      el progreso del ancla caiga a ≤ 1,0 m del progreso del tramo plano. El error real de
@@ -260,19 +318,31 @@ mientras las 44 que sí tienen trazado verificado se dibujan con el símbolo dis
   plano. Nada de esto toca `engine.py` ni el contrato publicado: solo la traducción de
   MP-019, así que cabe dentro de ADR-0014 sin enmendarlo.
 - **Relación con AUD-01 (por qué es un hallazgo separado y no el mismo):** AUD01-P0-001
-  recomienda (A) acotar `temporal_offset_s` a un rango defendible y (B) detectar la
-  ventana de viaje para trenes pre-salida. Este caso **no** lo cubre ninguna de las dos:
-  `1023V19656C5` está `en_ventana` (su `anchor_s=56001` cae entre
-  `first_departure` y `last_arrival`) y su `temporal_offset_s = +321 s` (5,35 min de
-  retraso) es físicamente plausible y quedaría dentro de cualquier acotación razonable. El
-  mecanismo es distinto: no es un offset absurdo, es una espera real que se pierde.
+  recomienda (A) acotar `temporal_offset_s` a un rango defendible y (B) detectar la ventana
+  de viaje para emitir `speed_mps = 0` con `dwell_until = primera_salida` **cuando el ancla
+  es anterior a la primera salida programada**. Este caso **no** lo cubre ninguna de las
+  dos, y la corrección de cohorte lo deja más claro, no menos:
+  - (B) no aplica: su conjunto es `pre_salida` (17 circulaciones) y `1023V19656C5` es
+    `post_llegada` (+141 s). Son cohortes **disjuntas**; la comprobación de ventana que
+    AUD-01 propone se dispara antes de la primera salida y no dice nada de una parada
+    intermedia con espera declarada.
+  - (A) no aplica: `temporal_offset_s = +321 s` (5,35 min de retraso) es físicamente
+    plausible y quedaría dentro de cualquier acotación razonable —por ejemplo los 600 s de
+    `operator_delay_max_age_s` que AUD-01 cita como referencia—, así que acotar el offset
+    deja este caso exactamente igual.
+  El mecanismo es distinto: no es un offset absurdo ni un tren sin salir, es una espera
+  declarada en el horario que el contrato no puede expresar.
 - **Prueba necesaria para cerrar el hallazgo:** regresión que, partiendo del **GPS bruto
   real** del corte `1533` para `19656` (`40.283237, -3.7991464`, no de un punto generado
-  sobre la geometría), exija `progress_envelope.speed_mps == 0` con `dwell_until` poblado
-  hasta `55680 s` de día de servicio, y que falle contra el código actual con
-  `dwell_until is None`. Más la comprobación del caso simétrico: un ancla 20 m **pasada**
-  la parada debe seguir publicando la espera si la parada sigue siendo la actual según el
-  operador.
+  sobre la geometría), exija `progress_envelope.dwell_until` poblado hasta el final del
+  tramo plano (`55 680 s` de día de servicio) y, con él, progreso **retenido** en el ancla
+  mientras `display_at < dwell_until` (0 m de avance a los 30 s, frente a los 626,4 m
+  actuales). Falla contra el código actual con `dwell_until is None`. Nótese que la
+  condición correcta es «retiene», no `speed_mps == 0`: la implementación publica
+  `dwell_until` **junto con** la velocidad posterior a la espera, y es ADR-0014 §2 el que
+  dice lo contrario (ver `AUD04-P2-006`). Más la comprobación del caso simétrico: un ancla
+  20 m **pasada** la parada debe seguir publicando la espera si la parada sigue siendo la
+  actual según el operador.
 
 ---
 
@@ -1111,7 +1181,7 @@ ejecutado. `AUD-06` cubre el camino de base de datos del snapshot.
 
 | ID | Severidad | Una línea |
 |---|---|---|
-| `AUD04-P0-001` | **P0** | Un tren real parado en Fuenlabrada con 60 s de espera declarada se dibuja saliendo a 75,2 km/h: la detección de espera exige 1,0 m frente a un error de map-matching de p95 20,8 m, y además se autocancela para cualquier ancla pasada la parada. Ninguna de las dos correcciones de AUD01-P0-001 lo cubre |
+| `AUD04-P0-001` | **P0** | La espera programada en parada es inexpresable para cualquier ancla real (0 de 44 obtienen `dwell_until`): la detección exige 1,0 m frente a un error de map-matching de p95 20,8 m —el único tren sobre una parada con espera declarada queda a 5,38 m— y además se autocancela para cualquier ancla pasada la parada, así que el símbolo atraviesa la estación a 75,2 km/h (1 252,7 m en los 60 s programados) en vez de retener el progreso. Ninguna de las dos correcciones de AUD01-P0-001 lo cubre: cohortes disjuntas (`post_llegada` +141 s vs `pre_salida`) y offset plausible (+321 s) |
 | `AUD04-P1-001` | **P1** | Al caer el feed el símbolo retrocede 2 357,9 m de mediana (25 de 25 circulaciones en ruta) y el aviso que explicaba la congelación desaparece en ese mismo instante |
 | `AUD04-P1-002` | **P1** | El mapa no distingue observación real de proyección sobre vía —una sola entrada de estilo para `anchor`— y su etiqueta afirma que la proyección es «la coordenada que publicó la fuente» |
 | `AUD04-P2-001` | P2 | `_envelope` mezcla reloj de pared con segundos reales: 8 444 m fabricados el 2026-03-29 y congelación de una hora el 2026-10-25. Latente: el último tren pasa 56 min antes del salto |
