@@ -15,6 +15,8 @@ Mantenido en vivo por el coordinador (Claude Sonnet) a medida que cada `AUD-ID` 
 | AUD-05 | Revisor | Codex `gpt-5.6-terra` · high | `ctx_41022ed63263` | `task_cb75c33efaca` | — | **CONFIRMADO** (reproducción independiente vía API pura, sin navegador) |
 | AUD-01 | Ejecutor | Claude `opus` · high | `ctx_e69bfe336e92` | `task_8bf54c0799dd` | `9553be0` | **completado** — 2 P0 reales, mecanismo confirmado por el coordinador |
 | AUD-01 | Revisor | Codex `gpt-5.6-sol` · high | `ctx_f31a48ded8a6` | `task_befe7c4069bd` | — | *(en curso)* |
+| AUD-03 | Ejecutor | Codex `gpt-5.6-sol` · high | `ctx_8e6da472a2f5` | `task_cc9d4fbec491` | `1c28163` | **completado** |
+| AUD-03 | Revisor | Claude `opus` · high | `ctx_4db56fd6dd34` | `task_5f1319cdd3c0` | — | *(en curso)* |
 | AUD-07 | Ejecutor | Claude `sonnet` · medium | `ctx_7f0fde0b7e4f` | `task_a9deb9865cbc` | `44c98cb`, `ea49e6a` | **completado** — revisión independiente real de Codex (`ctx_db3c9aa62ac8`, settled/succeeded) incorporada: 2 P1→P2, 2 P1 confirmados, 1 hallazgo descartado |
 | AUD-01 | — | Claude `opus` · high (pendiente de despachar) | — | `task_8bf54c0799dd` | — | en cola |
 | AUD-04 | — | Claude `opus` · high (pendiente de despachar) | — | `task_e6d1bf8a933e` | — | en cola |
@@ -45,4 +47,6 @@ Mantenido en vivo por el coordinador (Claude Sonnet) a medida que cada `AUD-ID` 
   - **P1-009:** ninguna puerta de aceptación del hito es falsable — documentar un hueco basta para dejar de bloquear el cierre (`AMPLIACION:40`, `MATRIZ-CIERRE:15`). Explica, sin suponer mala fe, cómo una cadena con 28/103 de geometría real pudo cerrar afirmando "las nueve puertas tienen evidencia".
   - Hipótesis H1-H4 con evidencia a favor medida sobre cortes congelados, necesitan confirmación con feed en vivo ≥2h y más días. H7 (escalado: 255ms p50 de snapshot/10s por espectador, sin pool ni CDN pese a ser principio declarado en `ARCHITECTURE.md:68-69`) derivada aritméticamente, no medida con red real. H5/H6/H8 (usuarios reales) quedan abiertas: los tres hitos no contienen ni una sola observación de una persona usando el producto.
 
-*(Esta tabla se actualizará según reporten AUD-03, AUD-04, AUD-06 y el resto.)*
+- **AUD-03** (75 patrones sin corredor validado, pendiente revisión): 67 sin fuente congelada; **4 patrones C4b que la relación OSM real `9174512` SÍ validaría** (refuerza directamente P0-002 de AUD-01: esa geometría existe y no se usó); 3 falsos negativos por caveats manuales incorrectos; 1 patrón degenerado de una sola parada. 19/19 tests focales.
+
+*(Esta tabla se actualizará según reporten AUD-04, AUD-06 y el resto.)*
