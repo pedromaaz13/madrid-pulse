@@ -270,3 +270,88 @@ no convierte la proyección de **≈19 MB/día** (199.989 B de una ventana de
 - La API no persiste una coordenada renderizada ni trata `snapshot_id` como
   orden; los tests de caducidad confirman que, al detener la ingesta y agotar
   horizonte, las posiciones quedan `stale_frozen` y no rejuvenecidas.
+
+## Revisión independiente (contexto nuevo) — 2026-11-23
+
+**Revisor:** Claude (Sonnet 5) · contexto nuevo, sin memoria de la ejecución de Codex.
+**Entorno:** contenedor desechable propio `aud06-review-postgis`,
+`postgis/postgis:17-3.5`, publicado en `127.0.0.1:5799` (nunca `127.0.0.1:5433`,
+confirmado por `grep` del DSN antes de cada ejecución). `0001_init.up.sql` y
+`0002_api_batch_indexes.up.sql` aplicados desde cero. Contenedor eliminado al
+cerrar la revisión; la base compartida de desarrollo no se tocó en ningún
+momento.
+
+**Veredicto: APPROVED.** Los cuatro puntos del encargo se reprodujeron de
+forma independiente y el informe de Codex resultó preciso en cada uno:
+
+1. **AUD06-P1-001 (race de `build_snapshot`).** Reproducido con un guion
+   propio (no el de Codex, que no quedó en el repo): se monkeypatcheó
+   `apps.api.db.latest_vehicle_histories` para insertar el punto de carrera
+   exacto que describe el informe -- entre la lectura de vehículos (ya vacía)
+   y la lectura del marcador de revisión -- y una segunda conexión real de
+   `psycopg` confirmó un ciclo de ingesta completo en ese hueco. Resultado
+   propio: `{'vehicles_total': 0, 'revision_sequence': 1,
+   'contains_race_vehicle': False}` mientras una tercera conexión de
+   verificación confirmaba `max(source_ingestion_run.id) == 1` y el vehículo
+   de la carrera persistido. Confirma exactamente el mecanismo descrito:
+   `psycopg.connect()` sin aislamiento explícito deja la transacción de
+   lectura en `READ COMMITTED`, con snapshot nuevo por sentencia, así que
+   `revision_marker()` (la última consulta) puede ver un commit posterior a
+   `latest_vehicle_histories()` (la primera). La causa raíz, el riesgo y las
+   alternativas A/B/C del informe son correctos.
+2. **Los 103 tests.** Confirmado el conteo y el resultado `OK`. Primera
+   ejecución propia: 3 fallos -- pero por contaminación de **mi propia**
+   sonda de carrera (el `INSERT` de verificación quedó confirmado con
+   `autocommit=True` en la misma base). Tras `TRUNCATE ... RESTART IDENTITY
+   CASCADE` sobre las tablas afectadas, segunda ejecución limpia: `Ran 103
+   tests in 28.115s` / `OK (skipped=4)`. El conteo exacto, el resultado `OK`
+   y los 4 `skipped` coinciden con lo declarado por Codex; el tiempo total
+   difiere (18,7 s vs 28,1 s) pero es variación de máquina/carga, no una
+   discrepancia de resultado.
+3. **Recuperación del supervisor tras reinicio de PostgreSQL.** Reproducido
+   con el supervisor y el colector reales (`infra/operate/supervise-collector.sh`
+   + `python -m services.collector`) contra feeds GTFS-RT de Renfe en vivo y
+   mi base desechable (`COLLECTOR_POLL_INTERVAL_SECONDS=5`). Tras
+   `docker restart aud06-review-postgis` con el colector en marcha: el
+   proceso terminó con código **75** (`EXIT_DATABASE_LOST`) a los 20 s de
+   iniciado el reinicio; el supervisor registró el código, esperó exactamente
+   **5 s** de backoff y relanzó el colector, que abrió una conexión nueva y
+   continuó ingiriendo con éxito (`run_id` siguió avanzando de forma
+   contigua tras el reinicio). Coincide con la afirmación de Codex
+   (código 75, backoff de 5 s, conexión nueva, ciclos posteriores
+   completos) y con el mecanismo documentado en el docstring de
+   `services/collector/__main__.py`.
+4. **Hallazgos P2.** Ambos confirmados por inspección directa de código y
+   esquema, sin necesidad de PostgreSQL:
+   - `AUD06-P2-001`: `ServiceAlert.affected_stop_ids` existe en el modelo
+     canónico (`packages/contracts/canonical.py:122`) y se usa para decidir
+     relevancia de núcleo (`services/collector/collector.py:255`), pero
+     `service_alert` (`infra/migrations/0001_init.up.sql:127-140`) solo
+     tiene columnas `affected_route_ids`/`nucleo_prefixes`; `INSERT INTO
+     service_alert` (`services/collector/db.py:171-196`) no incluye ninguna
+     columna de estaciones. Confirmado.
+   - `AUD06-P2-002`: `vehicle_position_observation.trip_id` y
+     `trip_update_observation.trip_id` son FKs nullable reales hacia
+     `trip(id)` (`infra/migrations/0001_init.up.sql:83-84,111-112`), y el
+     comentario de la migración 0002 documenta explícitamente que
+     `trip_id` sigue sin poblarse. `insert_vehicle_position_observation` e
+     `insert_trip_update_observation` (`services/collector/db.py`) en
+     efecto no incluyen `trip_id` en su `INSERT`. Confirmado.
+5. **El límite "823 s no prueba 24/7".** No se intentó una ventana larga
+   propia (fuera de alcance de esta revisión y del mismo encargo de Codex);
+   se verificó que el informe etiqueta correctamente esa cifra como no
+   representativa de operación continua y no la usa para sostener ninguna
+   afirmación de estabilidad -- juicio correcto, no una omisión.
+
+**Nota metodológica:** el primer intento de reproducir el punto 2 dio tres
+fallos reales causados por mi propio script de la prueba 1 (que confirmó una
+fila con `autocommit=True` sobre la base desechable). Antes de atribuir esa
+discrepancia al informe de Codex, se limpió la base y se repitió la
+ejecución completa, que dio `OK`. Se señala explícitamente porque un revisor
+menos cuidadoso habría reportado un falso `CHANGES_REQUESTED` por
+contaminación propia de la base, no por un defecto real del informe
+auditado.
+
+No se han encontrado afirmaciones no verificables, cifras infladas ni
+razonamiento incorrecto en `BACKEND_OPERATIONS_AUDIT.md`. No se ha modificado
+código de producto durante esta revisión.
