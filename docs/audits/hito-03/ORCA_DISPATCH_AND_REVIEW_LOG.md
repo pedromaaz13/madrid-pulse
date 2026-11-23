@@ -15,9 +15,10 @@ Mantenido en vivo por el coordinador (Claude Sonnet) a medida que cada `AUD-ID` 
 | AUD-05 | Revisor | Codex `gpt-5.6-terra` · high | `ctx_41022ed63263` | `task_cb75c33efaca` | — | **CONFIRMADO** (reproducción independiente vía API pura, sin navegador) |
 | AUD-01 | Ejecutor | Claude `opus` · high | `ctx_e69bfe336e92` | `task_8bf54c0799dd` | `9553be0` | **completado** — 2 P0 reales, mecanismo confirmado por el coordinador |
 | AUD-01 | Revisor (1ª ronda) | Codex `gpt-5.6-sol` · high | `ctx_f31a48ded8a6` | `task_befe7c4069bd` | — | **CHANGES_REQUESTED** — ambos P0 confirmados, cifras a corregir |
-| AUD-01 | Corrección | Claude `opus` · high (misma sesión, follow-up) | `ctx_82628c4e473d` | `task_e5569e13a76b` | *(en curso)* | *(en curso)* |
+| AUD-01 | Corrección | Claude `opus` · high (misma sesión, follow-up) | `ctx_82628c4e473d` | `task_e5569e13a76b` | *(pausado — límite de sesión Claude, reset 21:10 CET)* | *(en curso)* |
 | AUD-03 | Ejecutor | Codex `gpt-5.6-sol` · high | `ctx_8e6da472a2f5` | `task_cc9d4fbec491` | `1c28163` | **completado** |
-| AUD-03 | Revisor | Claude `opus` · high | `ctx_4db56fd6dd34` | `task_5f1319cdd3c0` | — | *(en curso)* |
+| AUD-03 | Revisor | Claude `opus` · high | `ctx_4db56fd6dd34` | `task_5f1319cdd3c0` | — | *(pausado — límite de sesión Claude, reset 21:10 CET)* |
+| AUD-06 | Ejecutor | Codex `gpt-5.6-terra` · high | `ctx_cf7d40a866d7` | `task_7982bf79c176` | *(en curso)* | *(en curso)* |
 | AUD-07 | Ejecutor | Claude `sonnet` · medium | `ctx_7f0fde0b7e4f` | `task_a9deb9865cbc` | `44c98cb`, `ea49e6a` | **completado** — revisión independiente real de Codex (`ctx_db3c9aa62ac8`, settled/succeeded) incorporada: 2 P1→P2, 2 P1 confirmados, 1 hallazgo descartado |
 | AUD-01 | — | Claude `opus` · high (pendiente de despachar) | — | `task_8bf54c0799dd` | — | en cola |
 | AUD-04 | — | Claude `opus` · high (pendiente de despachar) | — | `task_e6d1bf8a933e` | — | en cola |
