@@ -553,7 +553,7 @@ suite completa: esta tarea no modifica producto.
 
 **Ejecuta AUD-03:** OpenAI Codex (auditoría adversarial)
 
-**Revisa AUD-03:** Claude Opus · High — **CHANGES_REQUESTED** (ver «Revisión independiente de AUD-03» al final de este documento)
+**Revisa AUD-03:** Claude Opus · High — ronda 1 **CHANGES_REQUESTED**, ronda 2 **APPROVED** (ver las dos secciones de revisión al final de este documento)
 
 **Fecha:** 2026-11-23
 
@@ -1310,3 +1310,57 @@ patrones `10T0016C4b` sobre `9174511`; contraste `shapes.txt` vs corredor OSM re
 al tramo de cada patrón; lectura del ZIP crudo con `strip()` de campos) son scripts de
 revisión de un solo uso, no versionados: su salida está transcrita íntegra arriba y
 cada uno es reconstruible a partir de `packages.geo` y `packages.gtfs` sin red.
+
+---
+
+## Revisión independiente de AUD-03 — ronda 2 (veredicto final)
+
+**Revisa:** Claude Opus · High (`task_789f8d5e7a80`, `ctx_045f259f59a2`)
+
+**Fecha:** 2026-11-23 · **Corrección evaluada:** commit `08ce3b8` sobre `2789ad2`
+
+**Veredicto final: `APPROVED`.** Los cuatro puntos del `CHANGES_REQUESTED` están
+resueltos, y dos de ellos mejor de lo pedido. La sección de la ronda 1 queda intacta
+(`sha256` del bloque idéntico en `2789ad2` y en `08ce3b8`), la matriz conserva sus 75
+filas con **0 discrepancias** contra `mp-018-corridor-coverage.csv`, el CSV canónico no
+se tocó y los 19/19 tests focales siguen en verde aquí.
+
+| Punto de la ronda 1 | Estado | Verificación propia |
+|---|---|---|
+| 1. P2-002 mal diagnosticado | **resuelto** | Retitulado «El feed C8b llega truncado…». Causa raíz ahora «truncamiento del feed de origen»; `non_traversable` pasa de recomendación (A) a alternativa (C) explícitamente rechazada («consagra el defecto»), y la recomendación es evento de calidad + corrección upstream. La evidencia cita `stop_sequence` **032 (43) / 025 (11)**, extremo de `route_long_name` en blanco y la ruta espejo con 114 viajes sin `stop_times`: coincide exactamente con lo que medí sobre el ZIP crudo. Los 121 huérfanos (114 + 7 de `10T0035C5`) están incorporados a denominadores, lotes y prueba de cierre. |
+| 2. Cifras de `9174512` | **resuelto** | Versión 42, timestamp, 59,440 km, 1.223 nodos, 111 ways, `03d87e1c…` y 33,2–36,6 m marcados **NO VERIFICADAS** con la razón correcta (una sola llamada, no congelada). La existencia se sostiene sobre `MANIFEST.md` y `STATUS.md:850-852`. No queda ninguna mención de esas cifras fuera del marco NO VERIFICADO, y la conclusión ya no depende de ellas. |
+| 3. Alternativa de coste cero en P1-002 | **resuelto** | Alternativas reescritas a (A) congelar `9174512` / (B) coste cero invirtiendo `9174511` / (C) backoff / (D) raw, con el riesgo físico citado del manifiesto (vía contigua de la plataforma doble, `way_id` no compartidos). Recomendación (A) con (B) solo si el contrato explicita esa incertidumbre lateral. La causa raíz añade el bloqueo real de código: `build_corridor_catalog` solo acepta arcos crecientes. |
+| 4. Recuento 72 vs 67 | **resuelto** | Veredicto y «Criterio exacto auditado» dicen ahora **72 sin prueba geométrica alguna**, con 67 / 4 / 1 como refinación probatoria que el producto no conserva; P1-001 retitulado en consecuencia. |
+
+**Mejora no pedida y bien hecha:** `scratch/aud03_geometry.py` sustituyó `live-c4b` por
+`offline-c4b`, que reproduce la conclusión C4b **sin red**, contra la `9174511` ya
+congelada. Ejecutado aquí da exactamente lo que medí de forma independiente en la ronda
+1: 48,3 m en los cuatro patrones, `increasing False` / `decreasing True`, y
+`exact_reverse True` en 3 de 4. `summary` añade además
+`NETWORK_TRIPS 36097 / CATALOG_TRIPS 35976 / ORPHAN_TRIPS 121`, que confirma el hallazgo
+de los huérfanos desde el propio instrumento. La auditoría ya no depende de ninguna
+descarga en vivo.
+
+**Aritmética nueva verificada** (las cifras nuevas son riesgo nuevo; todas cuadran):
+13.878/36.097 = 38,446 %; 31/36.097 = 0,086 %; 22.067/36.097 = 61,133 %;
+121/36.097 = 0,335 %; la fila suma 36.097 exacto; 20.273/36.097 = 56,163 %;
+1.740/36.097 = 4,820 %; 15.649/36.097 = 43,353 % y 15.649/35.976 = 43,498 %;
+267.857/537.899 = 49,797 %; 54 + 114 = 168 en la fila del lote C8b. Matriz: 75 filas,
+22.098 viajes.
+
+**Dos observaciones advisory, que no condicionan el `APPROVED`:**
+
+1. `offline_c4b()` carga la fixture con `load_relation_geometry_json(source.path)` en vez
+   de pasar por `_load_source(spec)`, así que **no comprueba el SHA-256** antes de usarla.
+   Como toda la fuerza del argumento offline está en que la fuente es congelada *y con
+   checksum*, el propio diagnóstico debería verificarlo. `summary` sí lo hace
+   (`9174511 sha_ok True`), y lo verifiqué aparte, por lo que la evidencia es correcta;
+   es la ergonomía del guion lo que cojea.
+2. La celda «`0`: dato ausente» para las llamadas de los huérfanos resuelve bien el fondo
+   (anotada, no silenciosa), pero la forma roza el principio «dato ausente ≠ cero» de
+   `AGENTS.md`; un `—` sería más limpio que un `0` anotado.
+
+Con esto, AUD-03 queda cerrado por la revisión: veredicto de fondo sostenido —75 ≠ 75
+ausencias de vía en OSM, ningún P0, fallback `raw` honesto—, los cuatro recuentos
+reproducidos exactos y los cuatro hallazgos con causa y recomendación que resisten
+evidencia independiente.
