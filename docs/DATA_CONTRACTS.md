@@ -294,16 +294,51 @@ modo replay**; en `live` se rechaza con `400`, porque un instante arbitrario
 permitiría falsificar edades. La respuesta siempre publica `generated_at` y
 `display_at` realmente usados, además de `mode`.
 
-## Endpoints diferidos (propuesta, no implementada)
+## Histórico frío (`/api/v1/history/*`, MP-021)
+
+Recursos **nuevos**, no una extensión de los de MP-019: se sirven desde el
+Parquet que escribe `services/snapshotter` leyéndolo con DuckDB en solo
+lectura, sin tocar PostgreSQL. `/api/v1/snapshot` y `/api/v1/catalog`
+(ADR-0014) quedan exactamente como estaban. Ver
+[ADR-0015](adr/0015-cold-archive-and-history-contract.md).
 
 ```text
-GET /api/v1/history/lines/{line_id}
-GET /api/v1/history/trips/{trip_id}
+GET /api/v1/history/days                                    -- días archivados, con sus denominadores
+GET /api/v1/history/lines?service_date=                     -- daily_line_metrics del día
+GET /api/v1/history/stations?service_date=&limit=           -- station_daily_metrics del día
+GET /api/v1/history/circulations?service_date=&line=&only=  -- circulation_daily_history, filtrable
+GET /api/v1/history/circulations/{vehicle_id}/{trip_id}?service_date=   -- detalle + observaciones crudas
+```
+
+Reglas que el contrato garantiza:
+
+- **La identidad es la de Live.** La ruta de detalle usa vehículo + viaje + día
+  de servicio, los mismos tres valores que lleva la URL del frontend
+  (`?train=&trip=&sd=`), para que ir de Live al histórico y volver no requiera
+  traducir ninguna clave. Un viaje programado sin observar se direcciona con
+  `vehicle_id` = `-`, porque no tiene vehículo.
+- **Ningún porcentaje viaja sin su denominador.** `delay_coverage_pct` va
+  siempre con `trips_scheduled`, y `on_time_pct_of_covered` con
+  `trips_with_delay_data`. Este último es `null` -- nunca `0.0` -- cuando no
+  hay muestra (DEC-009).
+- **Los huecos son datos, no ausencias.** `only=unobserved` devuelve
+  exactamente los servicios programados que nunca se observaron, y
+  `/history/days` publica `circulations_unobserved` y
+  `circulations_unscheduled` como recuentos propios del día.
+- **Un día no archivado responde `404`**, con el comando que lo archivaría en
+  el detalle del error -- nunca un día vacío con métricas a cero, que se leería
+  como "ese día no hubo servicio".
+- **`truncated`** declara que una lista alcanzó el límite de consulta, para que
+  nadie tome una lista recortada por el total del día.
+
+### Endpoints diferidos (propuesta, no implementada)
+
+```text
 GET /api/v1/metrics/lines/{line_id}
 GET /api/v1/metrics/stations/{station_id}
 ```
 
-**Actualizado en MP-015 (DEC-033):** `daily_line_metrics`/`station_daily_metrics` ya se calculan de verdad en `services/snapshotter/gold.py` (diferidas desde MP-009, DEC-021, hasta que la resolución `route_id`/`station_id` existiera). Los endpoints `history/metrics` de arriba siguen sin implementarse en la API (`apps/api/`) -- las tablas gold existen y se calculan, pero ningún endpoint las expone todavía; queda como alcance de Hito 3 si el propietario lo prioriza (ver `apps/api/README.md` y ADR-0005).
+**Actualizado en MP-015 (DEC-033) y MP-021 (DEC-040):** `daily_line_metrics`/`station_daily_metrics` se calculan de verdad desde MP-015 en `services/snapshotter/gold.py` (diferidas desde MP-009, DEC-021, hasta que la resolución `route_id`/`station_id` existiera), y desde MP-021 **sí** están expuestas, por `/api/v1/history/lines` y `/api/v1/history/stations`. Lo que sigue sin implementarse son los `metrics/*` de arriba, pensados como series por línea/estación a lo largo de varios días; con dos días archivados no hay serie que publicar todavía.
 
 Todos bajo versionado explícito `/api/v1/`; un cambio incompatible de contrato requiere `/api/v2/`, nunca una mutación silenciosa de `/v1/`.
 

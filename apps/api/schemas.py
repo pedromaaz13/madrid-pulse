@@ -507,3 +507,144 @@ class StationBoardOut(BaseModel):
     entries: list[BoardEntryOut]
     coverage: BoardCoverageOut
     limitations: list[str]
+
+
+# --------------------------------------------------------------------------
+# MP-021: histórico frío. Recursos NUEVOS -- el contrato de MP-019
+# (`/api/v1/snapshot`, `/api/v1/catalog`) no se toca.
+# --------------------------------------------------------------------------
+
+HISTORY_SCHEMA_VERSION = "history-1.0"
+
+
+class HistoryDayOut(BaseModel):
+    service_date: str
+    circulations_scheduled: int
+    """Denominador del día: circulaciones que el GTFS programaba (con
+    `calendar_dates.txt` aplicado, MP-021)."""
+    circulations_observed: int
+    circulations_unobserved: int
+    """El hueco explícito: programadas de las que nunca se vio una posición.
+    Se publica como recuento propio para que ninguna cobertura del día pueda
+    presentarse sin él."""
+    circulations_unscheduled: int
+    """Observadas cuyo `trip_id` no estaba en el calendario de ese día. No es
+    un error de datos a ocultar: es un desajuste real entre el feed en vivo y
+    el GTFS estático, y el histórico existe para dejarlo ver."""
+    lines_present: int
+    rows_total: int
+    first_observed_at: datetime | None
+    last_observed_at: datetime | None
+    """`None` cuando el día solo tiene servicios programados sin observar."""
+
+
+class HistoryDaysOut(BaseModel):
+    schema_version: str = HISTORY_SCHEMA_VERSION
+    archive_root: str
+    """Ruta del archivo frío leído, para que una vista vacía se pueda
+    diagnosticar sin adivinar qué directorio se consultó."""
+    days: list[HistoryDayOut]
+
+
+class HistoryLineMetricOut(BaseModel):
+    route_id: str
+    line_short_name: str
+    trips_scheduled: int
+    """Denominador de `delay_coverage_pct`."""
+    trips_with_delay_data: int
+    """Denominador de `on_time_pct_of_covered`."""
+    delay_coverage_pct: float | None
+    on_time_pct_of_covered: float | None
+    """`None` -- nunca `0.0` -- cuando ningún viaje de la ruta tuvo retraso
+    reportado ese día (DEC-009)."""
+
+
+class HistoryCirculationOut(BaseModel):
+    service_date: str
+    route_id: str
+    line_short_name: str
+    trip_id: str
+    vehicle_id: str | None
+    """`None` en una circulación programada que nunca se observó: no hay
+    vehículo porque no se vio ninguno, no porque se desconozca su nombre."""
+    scheduled: bool
+    observed: bool
+    headsign: str | None
+    scheduled_first_stop_id: str | None
+    scheduled_first_departure_time: str | None
+    scheduled_last_stop_id: str | None
+    scheduled_last_arrival_time: str | None
+    positions_count: int | None
+    first_observed_at: datetime | None
+    last_observed_at: datetime | None
+    distinct_stops_observed: int | None
+    last_current_status: str | None
+    trip_updates_count: int | None
+    delay_reported_count: int | None
+    """Denominador de `on_time`. Todas las métricas de observación son `None`
+    -- no `0` -- cuando la circulación no se observó."""
+    latest_reported_delay_seconds: int | None
+    on_time: bool | None
+
+
+class HistoryCirculationsOut(BaseModel):
+    schema_version: str = HISTORY_SCHEMA_VERSION
+    service_date: str
+    line: str | None
+    only: Literal["all", "observed", "unobserved", "unscheduled"]
+    returned: int
+    limit: int
+    truncated: bool
+    """`True` cuando la consulta alcanzó `limit`: la lista está recortada y los
+    recuentos del día (`/history/days`) siguen siendo la referencia."""
+    circulations: list[HistoryCirculationOut]
+
+
+class HistoryPositionOut(BaseModel):
+    observed_at: datetime
+    received_at: datetime | None
+    latitude: float | None
+    longitude: float | None
+    current_status: str | None
+    current_stop_id: str | None
+    speed_kmh: float | None
+    bearing: float | None
+    quality_flags: str | None
+    """Tal como se archivó: son las banderas crudas de la observación, sin
+    reinterpretar."""
+
+
+class HistoryDelayOut(BaseModel):
+    observed_at: datetime
+    delay_seconds: int | None
+    delay_coverage: str
+
+
+class HistoryCirculationDetailOut(BaseModel):
+    schema_version: str = HISTORY_SCHEMA_VERSION
+    circulation: HistoryCirculationOut
+    positions: list[HistoryPositionOut]
+    """Observaciones crudas archivadas de esa circulación, en orden temporal.
+    Vacía -- y coherente con `observed=false` -- cuando no se observó."""
+    delays: list[HistoryDelayOut]
+    """Actualizaciones de viaje del `trip_id`. El operador publica el retraso
+    contra el VIAJE, no contra el vehículo, así que se devuelven del viaje y no
+    se atribuyen a un tren concreto."""
+
+
+class HistoryStationMetricOut(BaseModel):
+    station_id: str
+    observations_count: int
+
+
+class HistoryStationsOut(BaseModel):
+    schema_version: str = HISTORY_SCHEMA_VERSION
+    service_date: str
+    returned: int
+    stations: list[HistoryStationMetricOut]
+
+
+class HistoryLinesOut(BaseModel):
+    schema_version: str = HISTORY_SCHEMA_VERSION
+    service_date: str
+    lines: list[HistoryLineMetricOut]

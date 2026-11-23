@@ -1,0 +1,625 @@
+{
+  "captured_at": "2026-11-23T05:19:00Z",
+  "captured_from": "API real de MP-021 en 127.0.0.1:8011 sobre el archivo frío de los días 2026-11-19 (soak real de MP-007, 668 posiciones) y 2026-11-20 (cortes 1532/1533 del kit de Hito 3, 240 posiciones)",
+  "days": {
+    "schema_version": "history-1.0",
+    "archive_root": "<archivo frío de la grabación>",
+    "days": [
+      {
+        "service_date": "2026-11-20",
+        "circulations_scheduled": 1304,
+        "circulations_observed": 122,
+        "circulations_unobserved": 1182,
+        "circulations_unscheduled": 0,
+        "lines_present": 12,
+        "rows_total": 1304,
+        "first_observed_at": "2026-11-20T14:32:04Z",
+        "last_observed_at": "2026-11-20T14:33:21Z"
+      },
+      {
+        "service_date": "2026-11-19",
+        "circulations_scheduled": 0,
+        "circulations_observed": 24,
+        "circulations_unobserved": 0,
+        "circulations_unscheduled": 24,
+        "lines_present": 0,
+        "rows_total": 24,
+        "first_observed_at": "2026-11-18T23:31:42Z",
+        "last_observed_at": "2026-11-18T23:51:42Z"
+      }
+    ]
+  },
+  "lines": {
+    "schema_version": "history-1.0",
+    "service_date": "2026-11-20",
+    "lines": [
+      {
+        "route_id": "10T0001C1",
+        "line_short_name": "C1",
+        "trips_scheduled": 72,
+        "trips_with_delay_data": 4,
+        "delay_coverage_pct": 5.56,
+        "on_time_pct_of_covered": 75.0
+      },
+      {
+        "route_id": "10T0002C1",
+        "line_short_name": "C1",
+        "trips_scheduled": 72,
+        "trips_with_delay_data": 4,
+        "delay_coverage_pct": 5.56,
+        "on_time_pct_of_covered": 100.0
+      },
+      {
+        "route_id": "10T0003C10",
+        "line_short_name": "C10",
+        "trips_scheduled": 38,
+        "trips_with_delay_data": 4,
+        "delay_coverage_pct": 10.53,
+        "on_time_pct_of_covered": 50.0
+      },
+      {
+        "route_id": "10T0004C10",
+        "line_short_name": "C10",
+        "trips_scheduled": 38,
+        "trips_with_delay_data": 4,
+        "delay_coverage_pct": 10.53,
+        "on_time_pct_of_covered": 75.0
+      },
+      {
+        "route_id": "10T0064C10",
+        "line_short_name": "C10",
+        "trips_scheduled": 1,
+        "trips_with_delay_data": 0,
+        "delay_coverage_pct": 0.0,
+        "on_time_pct_of_covered": null
+      },
+      {
+        "route_id": "10T0075C10",
+        "line_short_name": "C10",
+        "trips_scheduled": 34,
+        "trips_with_delay_data": 3,
+        "delay_coverage_pct": 8.82,
+        "on_time_pct_of_covered": 66.67
+      },
+      {
+        "route_id": "10T0076C10",
+        "line_short_name": "C10",
+        "trips_scheduled": 34,
+        "trips_with_delay_data": 2,
+        "delay_coverage_pct": 5.88,
+        "on_time_pct_of_covered": 100.0
+      },
+      {
+        "route_id": "10T0005C2",
+        "line_short_name": "C2",
+        "trips_scheduled": 84,
+        "trips_with_delay_data": 9,
+        "delay_coverage_pct": 10.71,
+        "on_time_pct_of_covered": 44.44
+      },
+      {
+        "route_id": "10T0006C2",
+        "line_short_name": "C2",
+        "trips_scheduled": 80,
+        "trips_with_delay_data": 8,
+        "delay_coverage_pct": 10.0,
+        "on_time_pct_of_covered": 37.5
+      },
+      {
+        "route_id": "10T0007C3",
+        "line_short_name": "C3",
+        "trips_scheduled": 59,
+        "trips_with_delay_data": 7,
+        "delay_coverage_pct": 11.86,
+        "on_time_pct_of_covered": 85.71
+      },
+      {
+        "route_id": "10T0008C3",
+        "line_short_name": "C3",
+        "trips_scheduled": 59,
+        "trips_with_delay_data": 6,
+        "delay_coverage_pct": 10.17,
+        "on_time_pct_of_covered": 83.33
+      },
+      {
+        "route_id": "10T0011C4",
+        "line_short_name": "C4",
+        "trips_scheduled": 7,
+        "trips_with_delay_data": 0,
+        "delay_coverage_pct": 0.0,
+        "on_time_pct_of_covered": null
+      },
+      {
+        "route_id": "10T0012C4",
+        "line_short_name": "C4",
+        "trips_scheduled": 6,
+        "trips_with_delay_data": 0,
+        "delay_coverage_pct": 0.0,
+        "on_time_pct_of_covered": null
+      },
+      {
+        "route_id": "10T0013C4a",
+        "line_short_name": "C4a",
+        "trips_scheduled": 62,
+        "trips_with_delay_data": 5,
+        "delay_coverage_pct": 8.06,
+        "on_time_pct_of_covered": 60.0
+      },
+      {
+        "route_id": "10T0014C4a",
+        "line_short_name": "C4a",
+        "trips_scheduled": 62,
+        "trips_with_delay_data": 5,
+        "delay_coverage_pct": 8.06,
+        "on_time_pct_of_covered": 60.0
+      },
+      {
+        "route_id": "10T0015C4b",
+        "line_short_name": "C4b",
+        "trips_scheduled": 61,
+        "trips_with_delay_data": 6,
+        "delay_coverage_pct": 9.84,
+        "on_time_pct_of_covered": 83.33
+      },
+      {
+        "route_id": "10T0016C4b",
+        "line_short_name": "C4b",
+        "trips_scheduled": 61,
+        "trips_with_delay_data": 6,
+        "delay_coverage_pct": 9.84,
+        "on_time_pct_of_covered": 50.0
+      },
+      {
+        "route_id": "10T0017C5",
+        "line_short_name": "C5",
+        "trips_scheduled": 146,
+        "trips_with_delay_data": 14,
+        "delay_coverage_pct": 9.59,
+        "on_time_pct_of_covered": 71.43
+      },
+      {
+        "route_id": "10T0018C5",
+        "line_short_name": "C5",
+        "trips_scheduled": 147,
+        "trips_with_delay_data": 14,
+        "delay_coverage_pct": 9.52,
+        "on_time_pct_of_covered": 57.14
+      },
+      {
+        "route_id": "10T0035C5",
+        "line_short_name": "C5",
+        "trips_scheduled": 1,
+        "trips_with_delay_data": 0,
+        "delay_coverage_pct": 0.0,
+        "on_time_pct_of_covered": null
+      },
+      {
+        "route_id": "10T0051C7",
+        "line_short_name": "C7",
+        "trips_scheduled": 34,
+        "trips_with_delay_data": 5,
+        "delay_coverage_pct": 14.71,
+        "on_time_pct_of_covered": 40.0
+      },
+      {
+        "route_id": "10T0052C7",
+        "line_short_name": "C7",
+        "trips_scheduled": 36,
+        "trips_with_delay_data": 5,
+        "delay_coverage_pct": 13.89,
+        "on_time_pct_of_covered": 60.0
+      },
+      {
+        "route_id": "10T0053C7",
+        "line_short_name": "C7",
+        "trips_scheduled": 1,
+        "trips_with_delay_data": 0,
+        "delay_coverage_pct": 0.0,
+        "on_time_pct_of_covered": null
+      },
+      {
+        "route_id": "10T0054C7",
+        "line_short_name": "C7",
+        "trips_scheduled": 1,
+        "trips_with_delay_data": 0,
+        "delay_coverage_pct": 0.0,
+        "on_time_pct_of_covered": null
+      },
+      {
+        "route_id": "10T0059C7",
+        "line_short_name": "C7",
+        "trips_scheduled": 2,
+        "trips_with_delay_data": 0,
+        "delay_coverage_pct": 0.0,
+        "on_time_pct_of_covered": null
+      },
+      {
+        "route_id": "10T0027C8a",
+        "line_short_name": "C8a",
+        "trips_scheduled": 1,
+        "trips_with_delay_data": 0,
+        "delay_coverage_pct": 0.0,
+        "on_time_pct_of_covered": null
+      },
+      {
+        "route_id": "10T0061C8a",
+        "line_short_name": "C8a",
+        "trips_scheduled": 24,
+        "trips_with_delay_data": 3,
+        "delay_coverage_pct": 12.5,
+        "on_time_pct_of_covered": 66.67
+      },
+      {
+        "route_id": "10T0062C8a",
+        "line_short_name": "C8a",
+        "trips_scheduled": 21,
+        "trips_with_delay_data": 2,
+        "delay_coverage_pct": 9.52,
+        "on_time_pct_of_covered": 50.0
+      },
+      {
+        "route_id": "10T0085C8a",
+        "line_short_name": "C8a",
+        "trips_scheduled": 3,
+        "trips_with_delay_data": 0,
+        "delay_coverage_pct": 0.0,
+        "on_time_pct_of_covered": null
+      },
+      {
+        "route_id": "10T0087C8b",
+        "line_short_name": "C8b",
+        "trips_scheduled": 20,
+        "trips_with_delay_data": 2,
+        "delay_coverage_pct": 10.0,
+        "on_time_pct_of_covered": 50.0
+      },
+      {
+        "route_id": "10T0088C8b",
+        "line_short_name": "C8b",
+        "trips_scheduled": 20,
+        "trips_with_delay_data": 3,
+        "delay_coverage_pct": 15.0,
+        "on_time_pct_of_covered": 66.67
+      },
+      {
+        "route_id": "10T0097C8b",
+        "line_short_name": "C8b",
+        "trips_scheduled": 4,
+        "trips_with_delay_data": 0,
+        "delay_coverage_pct": 0.0,
+        "on_time_pct_of_covered": null
+      },
+      {
+        "route_id": "10T0098C8b",
+        "line_short_name": "C8b",
+        "trips_scheduled": 3,
+        "trips_with_delay_data": 0,
+        "delay_coverage_pct": 0.0,
+        "on_time_pct_of_covered": null
+      },
+      {
+        "route_id": "10T0110C9",
+        "line_short_name": "C9",
+        "trips_scheduled": 5,
+        "trips_with_delay_data": 1,
+        "delay_coverage_pct": 20.0,
+        "on_time_pct_of_covered": 100.0
+      },
+      {
+        "route_id": "10T0111C9",
+        "line_short_name": "C9",
+        "trips_scheduled": 5,
+        "trips_with_delay_data": 0,
+        "delay_coverage_pct": 0.0,
+        "on_time_pct_of_covered": null
+      }
+    ]
+  },
+  "circulations_observed": {
+    "schema_version": "history-1.0",
+    "service_date": "2026-11-20",
+    "line": "C5",
+    "only": "observed",
+    "returned": 4,
+    "limit": 4,
+    "truncated": true,
+    "circulations": [
+      {
+        "service_date": "2026-11-20",
+        "route_id": "10T0017C5",
+        "line_short_name": "C5",
+        "trip_id": "1023V19656C5",
+        "vehicle_id": "19656",
+        "scheduled": true,
+        "observed": true,
+        "headsign": "",
+        "scheduled_first_stop_id": "35607",
+        "scheduled_first_departure_time": "14:30:00",
+        "scheduled_last_stop_id": "35012",
+        "scheduled_last_arrival_time": "15:31:00",
+        "positions_count": 2,
+        "first_observed_at": "2026-11-20T14:32:04Z",
+        "last_observed_at": "2026-11-20T14:33:21Z",
+        "distinct_stops_observed": 2,
+        "last_current_status": "INCOMING_AT",
+        "trip_updates_count": 2,
+        "delay_reported_count": 2,
+        "latest_reported_delay_seconds": 300,
+        "on_time": true
+      },
+      {
+        "service_date": "2026-11-20",
+        "route_id": "10T0017C5",
+        "line_short_name": "C5",
+        "trip_id": "1023V19660C5",
+        "vehicle_id": "19660",
+        "scheduled": true,
+        "observed": true,
+        "headsign": "",
+        "scheduled_first_stop_id": "35607",
+        "scheduled_first_departure_time": "14:44:00",
+        "scheduled_last_stop_id": "35012",
+        "scheduled_last_arrival_time": "15:45:00",
+        "positions_count": 2,
+        "first_observed_at": "2026-11-20T14:32:04Z",
+        "last_observed_at": "2026-11-20T14:33:21Z",
+        "distinct_stops_observed": 2,
+        "last_current_status": "INCOMING_AT",
+        "trip_updates_count": 2,
+        "delay_reported_count": 2,
+        "latest_reported_delay_seconds": 180,
+        "on_time": true
+      },
+      {
+        "service_date": "2026-11-20",
+        "route_id": "10T0018C5",
+        "line_short_name": "C5",
+        "trip_id": "1023V19661C5",
+        "vehicle_id": "19661",
+        "scheduled": true,
+        "observed": true,
+        "headsign": "",
+        "scheduled_first_stop_id": "35012",
+        "scheduled_first_departure_time": "14:30:00",
+        "scheduled_last_stop_id": "35607",
+        "scheduled_last_arrival_time": "15:31:00",
+        "positions_count": 2,
+        "first_observed_at": "2026-11-20T14:32:04Z",
+        "last_observed_at": "2026-11-20T14:33:21Z",
+        "distinct_stops_observed": 1,
+        "last_current_status": "IN_TRANSIT_TO",
+        "trip_updates_count": 2,
+        "delay_reported_count": 2,
+        "latest_reported_delay_seconds": 600,
+        "on_time": false
+      },
+      {
+        "service_date": "2026-11-20",
+        "route_id": "10T0017C5",
+        "line_short_name": "C5",
+        "trip_id": "1023V19664C5",
+        "vehicle_id": "19664",
+        "scheduled": true,
+        "observed": true,
+        "headsign": "",
+        "scheduled_first_stop_id": "35607",
+        "scheduled_first_departure_time": "14:51:00",
+        "scheduled_last_stop_id": "35012",
+        "scheduled_last_arrival_time": "15:52:00",
+        "positions_count": 2,
+        "first_observed_at": "2026-11-20T14:32:04Z",
+        "last_observed_at": "2026-11-20T14:33:21Z",
+        "distinct_stops_observed": 2,
+        "last_current_status": "STOPPED_AT",
+        "trip_updates_count": 2,
+        "delay_reported_count": 2,
+        "latest_reported_delay_seconds": 240,
+        "on_time": true
+      }
+    ]
+  },
+  "circulations_unobserved": {
+    "schema_version": "history-1.0",
+    "service_date": "2026-11-20",
+    "line": "C5",
+    "only": "unobserved",
+    "returned": 4,
+    "limit": 4,
+    "truncated": true,
+    "circulations": [
+      {
+        "service_date": "2026-11-20",
+        "route_id": "10T0035C5",
+        "line_short_name": "C5",
+        "trip_id": "1023V17707C5",
+        "vehicle_id": null,
+        "scheduled": true,
+        "observed": false,
+        "headsign": "",
+        "scheduled_first_stop_id": null,
+        "scheduled_first_departure_time": null,
+        "scheduled_last_stop_id": null,
+        "scheduled_last_arrival_time": null,
+        "positions_count": null,
+        "first_observed_at": null,
+        "last_observed_at": null,
+        "distinct_stops_observed": null,
+        "last_current_status": null,
+        "trip_updates_count": null,
+        "delay_reported_count": null,
+        "latest_reported_delay_seconds": null,
+        "on_time": null
+      },
+      {
+        "service_date": "2026-11-20",
+        "route_id": "10T0017C5",
+        "line_short_name": "C5",
+        "trip_id": "1023V19502C5",
+        "vehicle_id": null,
+        "scheduled": true,
+        "observed": false,
+        "headsign": "",
+        "scheduled_first_stop_id": "35607",
+        "scheduled_first_departure_time": "04:59:00",
+        "scheduled_last_stop_id": "35012",
+        "scheduled_last_arrival_time": "05:58:00",
+        "positions_count": null,
+        "first_observed_at": null,
+        "last_observed_at": null,
+        "distinct_stops_observed": null,
+        "last_current_status": null,
+        "trip_updates_count": null,
+        "delay_reported_count": null,
+        "latest_reported_delay_seconds": null,
+        "on_time": null
+      },
+      {
+        "service_date": "2026-11-20",
+        "route_id": "10T0018C5",
+        "line_short_name": "C5",
+        "trip_id": "1023V19503C5",
+        "vehicle_id": null,
+        "scheduled": true,
+        "observed": false,
+        "headsign": "",
+        "scheduled_first_stop_id": "35012",
+        "scheduled_first_departure_time": "05:12:00",
+        "scheduled_last_stop_id": "35607",
+        "scheduled_last_arrival_time": "06:12:00",
+        "positions_count": null,
+        "first_observed_at": null,
+        "last_observed_at": null,
+        "distinct_stops_observed": null,
+        "last_current_status": null,
+        "trip_updates_count": null,
+        "delay_reported_count": null,
+        "latest_reported_delay_seconds": null,
+        "on_time": null
+      },
+      {
+        "service_date": "2026-11-20",
+        "route_id": "10T0017C5",
+        "line_short_name": "C5",
+        "trip_id": "1023V19504C5",
+        "vehicle_id": null,
+        "scheduled": true,
+        "observed": false,
+        "headsign": "",
+        "scheduled_first_stop_id": "35607",
+        "scheduled_first_departure_time": "05:14:00",
+        "scheduled_last_stop_id": "35012",
+        "scheduled_last_arrival_time": "06:14:00",
+        "positions_count": null,
+        "first_observed_at": null,
+        "last_observed_at": null,
+        "distinct_stops_observed": null,
+        "last_current_status": null,
+        "trip_updates_count": null,
+        "delay_reported_count": null,
+        "latest_reported_delay_seconds": null,
+        "on_time": null
+      }
+    ]
+  },
+  "circulation_detail": {
+    "schema_version": "history-1.0",
+    "circulation": {
+      "service_date": "2026-11-20",
+      "route_id": "10T0017C5",
+      "line_short_name": "C5",
+      "trip_id": "1023V19656C5",
+      "vehicle_id": "19656",
+      "scheduled": true,
+      "observed": true,
+      "headsign": "",
+      "scheduled_first_stop_id": "35607",
+      "scheduled_first_departure_time": "14:30:00",
+      "scheduled_last_stop_id": "35012",
+      "scheduled_last_arrival_time": "15:31:00",
+      "positions_count": 2,
+      "first_observed_at": "2026-11-20T14:32:04Z",
+      "last_observed_at": "2026-11-20T14:33:21Z",
+      "distinct_stops_observed": 2,
+      "last_current_status": "INCOMING_AT",
+      "trip_updates_count": 2,
+      "delay_reported_count": 2,
+      "latest_reported_delay_seconds": 300,
+      "on_time": true
+    },
+    "positions": [
+      {
+        "observed_at": "2026-11-20T14:32:04Z",
+        "received_at": "2026-11-20T14:32:04Z",
+        "latitude": 40.29673,
+        "longitude": -3.7924793,
+        "current_status": "IN_TRANSIT_TO",
+        "current_stop_id": "35011",
+        "speed_kmh": null,
+        "bearing": null,
+        "quality_flags": "[]"
+      },
+      {
+        "observed_at": "2026-11-20T14:33:21Z",
+        "received_at": "2026-11-20T14:33:21Z",
+        "latitude": 40.283237,
+        "longitude": -3.7991464,
+        "current_status": "INCOMING_AT",
+        "current_stop_id": "35002",
+        "speed_kmh": null,
+        "bearing": null,
+        "quality_flags": "[]"
+      }
+    ],
+    "delays": [
+      {
+        "observed_at": "2026-11-20T14:32:04Z",
+        "delay_seconds": 660,
+        "delay_coverage": "reported"
+      },
+      {
+        "observed_at": "2026-11-20T14:33:21Z",
+        "delay_seconds": 300,
+        "delay_coverage": "reported"
+      }
+    ]
+  },
+  "stations": {
+    "schema_version": "history-1.0",
+    "service_date": "2026-11-20",
+    "returned": 8,
+    "stations": [
+      {
+        "station_id": "17000",
+        "observations_count": 29
+      },
+      {
+        "station_id": "35607",
+        "observations_count": 12
+      },
+      {
+        "station_id": "35012",
+        "observations_count": 10
+      },
+      {
+        "station_id": "10100",
+        "observations_count": 9
+      },
+      {
+        "station_id": "37012",
+        "observations_count": 9
+      },
+      {
+        "station_id": "70103",
+        "observations_count": 8
+      },
+      {
+        "station_id": "17005",
+        "observations_count": 7
+      },
+      {
+        "station_id": "35002",
+        "observations_count": 7
+      }
+    ]
+  }
+}

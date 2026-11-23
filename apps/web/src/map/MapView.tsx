@@ -436,7 +436,16 @@ export function MapView(props: MapViewProps) {
       labelsRef.current.delete("selected-vehicle");
       return;
     }
-    const vehicle = vehicleIndexRef.current.get(selectedVehicleKey);
+    // Se busca en el array de vehículos, no en `vehicleIndexRef`: ese índice
+    // lo puebla el efecto de la fuente «última lectura», que **retorna antes
+    // de poblarlo** mientras el estilo del mapa no está listo. Al abrir un
+    // enlace con circulación ya seleccionada (lo normal al volver desde el
+    // histórico), el primer snapshot llegaba antes que el mapa y el rótulo se
+    // quedaba fijo en «Sin línea» para siempre: `vehicles` no vuelve a cambiar
+    // de identidad si el siguiente sondeo trae la misma revisión, así que el
+    // efecto no se repetía nunca. Defecto real encontrado mirando el
+    // navegador en MP-021, no detectado por ningún test.
+    const vehicle = vehicles.find((item) => vehicleKey(item) === selectedVehicleKey);
     const label = `${vehicle?.line ?? "Sin línea"} · ${selectedVehicleKey.split("|")[0]}`;
     if (existing !== undefined) {
       existing.getElement().textContent = label;

@@ -290,7 +290,7 @@ Con Hito 1 ya fusionado a `main`, el caso concreto de MP-012 **deja de requerir 
 
 **MP-021 — Histórico y continuidad analítica**
 
-Ejecutor: Claude (escalado a Opus) · Revisor: OpenAI Codex · Estado: **IN_PROGRESS**
+Ejecutor: Claude (escalado a Opus) · Revisor: OpenAI Codex · Estado: **REVIEW**
 
 Worktree/rama: `mp-021-historico`, ramificada desde `mp-020-mapa-y-tablero` (MP-020 `DONE`, `b616ae6`). Datos del kit repuestos con `instalar.py --solo-datos` (10 ficheros).
 
@@ -312,7 +312,26 @@ Con conexión PostgreSQL por petición, ~66 ms de los ~69 ms de p50 de `/api/v1/
 
 ### Nota heredada de MP-020 (limitación conocida, no divergencia)
 
-`route_color` real de Renfe no se expone en `/api/v1/catalog`; el frontend usa una paleta propia determinista por `line_id`. Queda abierto si MP-021/MP-022 deciden publicarlo.
+`route_color` real de Renfe no se expone en `/api/v1/catalog`; el frontend usa una paleta propia determinista por `line_id`. Sigue abierto: MP-021 **no** lo ha cambiado, porque tocar `/api/v1/catalog` habría modificado el contrato de MP-019, que el encargo prohíbe. Queda para MP-022 o para el propietario. (El dato existe: `packages.gtfs.Route.color` lo parsea desde `routes.txt`.)
+
+### Entregado en MP-021 (pendiente de auditoría de Codex)
+
+1. **Idempotencia real del archivo frío** — preparación en `.staging/` y sustitución atómica por día de servicio; un origen vacío nunca borra un día archivado. Los cuatro agregados son byte-estables. DEC-040, [ADR-0015](adr/0015-cold-archive-and-history-contract.md).
+2. **Histórico consultable por circulación** — mart `circulation_daily_history` (vehículo + viaje + día de servicio) con los huecos como filas y métricas `NULL`, nunca `0`; expuesto en `/api/v1/history/*` sin tocar el contrato de MP-019.
+3. **Mart sobre el catálogo Madrid completo** — 42 rutas / 12 líneas vía `SnapshotterConfig.line_filter`; límite (a) de DEC-033 cerrado con `packages.gtfs.scheduled_service_ids_for_date`.
+4. **History y Explore navegables** — botones de `TopBar.tsx` conectados, ida y vuelta Live ↔ History con la misma identidad, inspección visual real con 8 capturas.
+5. **Operación continua supervisada con coste medido** — `infra/operate/` y `docs/evidence/mp-021-coste-colector-continuo.md`.
+
+### Lo que MP-021 deja explícitamente sin hacer
+
+- **No hay «24/7 verificado»**: la ventana medida son 13 min 43 s; las cifras de 24/72 h son proyecciones marcadas como tales. No se ha contratado ningún servicio de pago ni desplegado ningún host persistente (ADR-0007), ni instalado el agente `launchd` en el equipo del propietario.
+- **DEC-004** (retención del histórico) ya tiene por fin la medición que esperaba (≈19 MB/día, ≈7 GB/año en Parquet ZSTD), pero la decisión sigue siendo del propietario.
+- **DEC-033 (b) y (c)** siguen abiertos: el umbral de puntualidad de 300 s no tiene histórico con el que calibrarse, y `data_quality_event.entity_ref` sigue sin referenciar nunca una parada.
+- **DEC-038** (pool de conexiones) sigue pendiente del propietario; MP-021 no la toma.
+
+### Entorno levantado por MP-021 (se puede parar cuando el revisor termine)
+
+API `127.0.0.1:8011` y Vite `127.0.0.1:5182` sirviendo **este** worktree, sobre la base de replay `mp020-replay-db` (`5434`, solo lectura) y un archivo frío en el scratchpad de la sesión. Contenedor desechable propio `mp021-collector-db` (`5435`) creado para la medición de coste; no se ha borrado ningún contenedor, worktree ni fixture de otra tarea. El entorno de MP-020 (`8010`/`5181`) se dejó intacto.
 
 ## Tareas cerradas de la cadena
 

@@ -9,6 +9,7 @@ base de datos real -- el test de replay con PostgreSQL vive en
 
 from __future__ import annotations
 
+import hashlib
 import shutil
 import tempfile
 import unittest
@@ -17,12 +18,21 @@ from pathlib import Path
 
 import duckdb
 
-from packages.gtfs import load_feed
+from packages.gtfs import (
+    CalendarException,
+    CalendarService,
+    Route,
+    Stop,
+    StopTime,
+    Topology,
+    Trip,
+    load_feed,
+)
 from services.snapshotter.gold import (
     GoldThresholds,
-    _scheduled_trip_ids_by_route,
     build_line_daily_metrics,
     build_station_daily_metrics,
+    scheduled_trip_ids_by_route,
 )
 
 FIXTURE_DIR = Path(__file__).resolve().parents[3] / "tests" / "fixtures" / "gtfs_c5_real"
@@ -67,12 +77,12 @@ class ScheduledTripsByRouteTests(unittest.TestCase):
         self.topology = load_feed(FIXTURE_DIR, network_id="10", short_name="C5")
 
     def test_trip_active_on_its_single_day_service_window(self) -> None:
-        by_route = _scheduled_trip_ids_by_route(self.topology, ACTIVE_SERVICE_DATE)
+        by_route = scheduled_trip_ids_by_route(self.topology, ACTIVE_SERVICE_DATE)
         self.assertIn(REAL_ROUTE_ID, by_route)
         self.assertIn(REAL_TRIP_ID, by_route[REAL_ROUTE_ID])
 
     def test_trip_absent_outside_its_single_day_service_window(self) -> None:
-        by_route = _scheduled_trip_ids_by_route(self.topology, INACTIVE_SERVICE_DATE)
+        by_route = scheduled_trip_ids_by_route(self.topology, INACTIVE_SERVICE_DATE)
         self.assertNotIn(REAL_TRIP_ID, by_route.get(REAL_ROUTE_ID, set()))
 
 
@@ -273,6 +283,177 @@ class StationDailyMetricsTests(unittest.TestCase):
     def test_no_observations_produces_zero_rows_not_a_fabricated_zero_row(self) -> None:
         result = build_station_daily_metrics(self.raw_dir, ACTIVE_SERVICE_DATE, self.raw_dir, self.topology)
         self.assertEqual(result.row_count, 0)
+
+
+class CalendarExceptionDenominatorTests(unittest.TestCase):
+    """`trips_scheduled` -- el **denominador** de toda métrica de puntualidad
+    del día -- tiene que respetar `calendar_dates.txt`.
+
+    Era el límite (a) de DEC-033: `gold.py` reimplementaba el calendario a
+    mano y solo leía `calendar.txt`, así que un servicio añadido o suprimido un
+    día concreto no cambiaba el denominador. Desde MP-021 el calendario lo
+    resuelve una sola implementación (`packages.gtfs.scheduled_service_ids_for_date`,
+    MP-017), la misma que usa el tablero de estación. El ZIP oficial de Renfe no
+    publica `calendar_dates.txt` (verificado en MP-017 y de nuevo en MP-021:
+    `topology.calendar_dates` es `()` con el ZIP del kit), así que una topología
+    sintética mínima es la única forma realista de probarlo hoy.
+    """
+
+    def _topology(self, calendar_dates: tuple[CalendarException, ...] = ()) -> Topology:
+        return Topology(
+            routes=(Route("10T9999C9", "C9", "Línea sintética", 2, "000000", "ffffff"),),
+            trips=(Trip("10T9999C9", "WEEKDAY", "trip-weekday", "Destino", 1, "", "shape-1"),),
+            stops=(Stop("90001", "Origen", 40.0, -3.0, 1), Stop("90002", "Destino", 40.1, -3.1, 1)),
+            stop_times=(
+                StopTime("trip-weekday", "08:00:00", "08:00:00", "90001", 1),
+                StopTime("trip-weekday", "08:30:00", "08:30:00", "90002", 2),
+            ),
+            shape_points=(),
+            calendar=(
+                CalendarService(
+                    "WEEKDAY", True, True, True, True, True, False, False, "20260101", "20261231"
+                ),
+            ),
+            calendar_dates=calendar_dates,
+        )
+
+    def setUp(self) -> None:
+        self.raw_dir = Path(tempfile.mkdtemp(prefix="mp021_calendar_"))
+        self.addCleanup(lambda: shutil.rmtree(self.raw_dir, ignore_errors=True))
+
+    def _trips_scheduled(self, topology: Topology, service_date: date) -> int | None:
+        result = build_line_daily_metrics(self.raw_dir, service_date, self.raw_dir, topology)
+        con = duckdb.connect()
+        try:
+            row = con.execute(
+                f"SELECT trips_scheduled FROM read_parquet('{result.output_path}/part.parquet') "
+                f"WHERE route_id = '10T9999C9'"
+            ).fetchone()
+        finally:
+            con.close()
+        return None if row is None else row[0]
+
+    def test_exception_type_2_removes_the_trip_from_the_denominator(self) -> None:
+        monday = date(2026, 11, 23)
+        self.assertEqual(monday.weekday(), 0)
+        self.assertEqual(self._trips_scheduled(self._topology(), monday), 1)
+        suppressed = self._topology(
+            calendar_dates=(CalendarException("WEEKDAY", "20261123", exception_type=2),)
+        )
+        self.assertIsNone(
+            self._trips_scheduled(suppressed, monday),
+            "un servicio suprimido ese día no debe contar en trips_scheduled",
+        )
+
+    def test_exception_type_1_adds_the_trip_to_the_denominator(self) -> None:
+        saturday = date(2026, 11, 21)
+        self.assertEqual(saturday.weekday(), 5)
+        self.assertIsNone(
+            self._trips_scheduled(self._topology(), saturday),
+            "el servicio es de lunes a viernes: sin excepción no debe aparecer en sábado",
+        )
+        added = self._topology(
+            calendar_dates=(CalendarException("WEEKDAY", "20261121", exception_type=1),)
+        )
+        self.assertEqual(
+            self._trips_scheduled(added, saturday),
+            1,
+            "un servicio añadido ese día debe contar en trips_scheduled",
+        )
+
+    def test_scheduled_trip_ids_by_route_and_the_station_board_share_one_calendar(self) -> None:
+        """Regresión de coherencia: el mart y el catálogo no pueden discrepar.
+
+        Si alguien volviese a reimplementar el calendario dentro de `gold.py`,
+        este test lo detectaría: ambos conjuntos se derivan de la misma
+        función desde MP-021.
+        """
+        saturday = date(2026, 11, 21)
+        topology = self._topology(
+            calendar_dates=(CalendarException("WEEKDAY", "20261121", exception_type=1),)
+        )
+        from packages.gtfs import scheduled_trip_instances_for_date
+
+        mart_trips = scheduled_trip_ids_by_route(topology, saturday)
+        catalog_trips: dict[str, set[str]] = {}
+        for instance in scheduled_trip_instances_for_date(topology, saturday):
+            catalog_trips.setdefault(instance.route_id, set()).add(instance.trip_id)
+        self.assertEqual(mart_trips, catalog_trips)
+
+
+class GoldDeterminismTests(unittest.TestCase):
+    """Recalcular un agregado sobre los mismos Parquet debe dar el mismo fichero.
+
+    Hallazgo de MP-021: el conjunto de filas ya era el mismo, pero su **orden**
+    no -- el `GROUP BY` paralelo de DuckDB no garantiza orden de salida, así que
+    dos corridas consecutivas con la misma entrada producían ficheros con
+    SHA-256 distintos (medido sobre el catálogo completo de Madrid del
+    2026-11-20: 35 filas de línea, 69 de estación). Se comprueban las dos
+    propiedades: el fichero es byte-idéntico al recalcularlo, y sus filas están
+    en orden ascendente por la clave del mart (que es lo que el `ORDER BY`
+    garantiza y lo que hace comparable un mart entre dos reprocesos).
+    """
+
+    def setUp(self) -> None:
+        self.topology = load_feed(FIXTURE_DIR, network_id="10", short_name="C5")
+        self.raw_dir = Path(tempfile.mkdtemp(prefix="mp021_determinism_"))
+        self.addCleanup(lambda: shutil.rmtree(self.raw_dir, ignore_errors=True))
+        vp_dir = self.raw_dir / "raw" / "vehicle_position_observation" / f"date={ACTIVE_SERVICE_DATE}"
+        con = duckdb.connect()
+        try:
+            _write_parquet(
+                con,
+                vp_dir,
+                [{"current_stop_id": stop.stop_id} for stop in self.topology.stops] * 2,
+            )
+        finally:
+            con.close()
+
+    @staticmethod
+    def _digest(path: Path) -> str:
+        return hashlib.sha256((path / "part.parquet").read_bytes()).hexdigest()
+
+    def _column(self, output_path: Path, column: str) -> list:
+        con = duckdb.connect()
+        try:
+            return [
+                row[0]
+                for row in con.execute(
+                    f"SELECT {column} FROM read_parquet('{output_path}/part.parquet')"
+                ).fetchall()
+            ]
+        finally:
+            con.close()
+
+    def test_line_metrics_are_byte_identical_and_ordered_by_route(self) -> None:
+        first = build_line_daily_metrics(
+            self.raw_dir, ACTIVE_SERVICE_DATE, self.raw_dir, self.topology
+        )
+        digest = self._digest(first.output_path)
+        routes = self._column(first.output_path, "route_id")
+        self.assertGreater(len(routes), 1, "con una sola fila el orden no probaría nada")
+        self.assertEqual(routes, sorted(routes), "daily_line_metrics no sale ordenado por route_id")
+        second = build_line_daily_metrics(
+            self.raw_dir, ACTIVE_SERVICE_DATE, self.raw_dir, self.topology
+        )
+        self.assertEqual(digest, self._digest(second.output_path))
+
+    def test_station_metrics_are_byte_identical_and_ordered_by_station(self) -> None:
+        first = build_station_daily_metrics(
+            self.raw_dir, ACTIVE_SERVICE_DATE, self.raw_dir, self.topology
+        )
+        digest = self._digest(first.output_path)
+        stations = self._column(first.output_path, "station_id")
+        self.assertGreater(len(stations), 1, "con una sola fila el orden no probaría nada")
+        self.assertEqual(
+            stations,
+            sorted(stations),
+            "station_daily_metrics no sale ordenado por station_id",
+        )
+        second = build_station_daily_metrics(
+            self.raw_dir, ACTIVE_SERVICE_DATE, self.raw_dir, self.topology
+        )
+        self.assertEqual(digest, self._digest(second.output_path))
 
 
 if __name__ == "__main__":

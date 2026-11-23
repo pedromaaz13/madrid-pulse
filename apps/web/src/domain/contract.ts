@@ -340,3 +340,118 @@ export interface Health {
   gtfs_valid_from: string | null;
   gtfs_valid_until: string | null;
 }
+
+// --- Histórico frío (MP-021, /api/v1/history/*) ---------------------------
+
+export interface HistoryDay {
+  service_date: string;
+  /** Denominador del día: circulaciones que el GTFS programaba. */
+  circulations_scheduled: number;
+  circulations_observed: number;
+  /** El hueco explícito: programadas que nunca se observaron. */
+  circulations_unobserved: number;
+  /** Observadas cuyo `trip_id` no estaba en el calendario de ese día. */
+  circulations_unscheduled: number;
+  lines_present: number;
+  rows_total: number;
+  first_observed_at: string | null;
+  last_observed_at: string | null;
+}
+
+export interface HistoryDays {
+  schema_version: string;
+  archive_root: string;
+  days: HistoryDay[];
+}
+
+export interface HistoryLineMetric {
+  route_id: string;
+  line_short_name: string;
+  trips_scheduled: number;
+  trips_with_delay_data: number;
+  delay_coverage_pct: number | null;
+  /** `null` -- nunca `0` -- si ningún viaje de la ruta tuvo retraso reportado. */
+  on_time_pct_of_covered: number | null;
+}
+
+export interface HistoryLines {
+  schema_version: string;
+  service_date: string;
+  lines: HistoryLineMetric[];
+}
+
+export type HistoryFilter = "all" | "observed" | "unobserved" | "unscheduled";
+
+export interface HistoryCirculation {
+  service_date: string;
+  route_id: string;
+  line_short_name: string;
+  trip_id: string;
+  /** `null` cuando no se observó: no hay vehículo porque no se vio ninguno. */
+  vehicle_id: string | null;
+  scheduled: boolean;
+  observed: boolean;
+  headsign: string | null;
+  scheduled_first_stop_id: string | null;
+  scheduled_first_departure_time: string | null;
+  scheduled_last_stop_id: string | null;
+  scheduled_last_arrival_time: string | null;
+  positions_count: number | null;
+  first_observed_at: string | null;
+  last_observed_at: string | null;
+  distinct_stops_observed: number | null;
+  last_current_status: string | null;
+  trip_updates_count: number | null;
+  /** Denominador de `on_time`. */
+  delay_reported_count: number | null;
+  latest_reported_delay_seconds: number | null;
+  on_time: boolean | null;
+}
+
+export interface HistoryCirculations {
+  schema_version: string;
+  service_date: string;
+  line: string | null;
+  only: HistoryFilter;
+  returned: number;
+  limit: number;
+  truncated: boolean;
+  circulations: HistoryCirculation[];
+}
+
+export interface HistoryPosition {
+  observed_at: string;
+  received_at: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  current_status: string | null;
+  current_stop_id: string | null;
+  speed_kmh: number | null;
+  bearing: number | null;
+  quality_flags: string | null;
+}
+
+export interface HistoryDelayRow {
+  observed_at: string;
+  delay_seconds: number | null;
+  delay_coverage: string;
+}
+
+export interface HistoryCirculationDetail {
+  schema_version: string;
+  circulation: HistoryCirculation;
+  positions: HistoryPosition[];
+  delays: HistoryDelayRow[];
+}
+
+export interface HistoryStationMetric {
+  station_id: string;
+  observations_count: number;
+}
+
+export interface HistoryStations {
+  schema_version: string;
+  service_date: string;
+  returned: number;
+  stations: HistoryStationMetric[];
+}

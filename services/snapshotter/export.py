@@ -30,14 +30,28 @@ de observación real, igual que para el resto de tablas.
 
 from __future__ import annotations
 
+import logging
+import shutil
 from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta
 from pathlib import Path
+from typing import Literal
 from zoneinfo import ZoneInfo
 
 import duckdb
 
 MADRID_TZ = ZoneInfo("Europe/Madrid")
+
+logger = logging.getLogger(__name__)
+
+STAGING_DIR_NAME = ".staging"
+"""Directorio de preparación, **fuera** de `raw/`.
+
+Está deliberadamente fuera del árbol que lee la capa gold
+(`services/snapshotter/gold.py` glosa `raw/<tabla>/date=<fecha>/**/*.parquet`):
+un Parquet a medio escribir nunca debe poder entrar en un agregado. Empieza
+por punto para que, además, ningún `glob` convencional lo recoja.
+"""
 
 
 @dataclass(frozen=True)
@@ -88,11 +102,27 @@ def service_date_utc_bounds(service_date: date) -> tuple[datetime, datetime]:
     return start_local.astimezone(ZoneInfo("UTC")), end_local.astimezone(ZoneInfo("UTC"))
 
 
+ArchiveAction = Literal["written", "absent", "preserved_existing"]
+"""Qué le ocurrió al archivo frío del día en esta ejecución.
+
+- `written`: el día tenía filas en la tabla hot y su subárbol
+  `date=<fecha>` se ha reemplazado por completo (idempotente).
+- `absent`: el día no tenía filas y tampoco había archivo previo -- nada
+  que escribir y nada que conservar.
+- `preserved_existing`: el día no tenía filas en la tabla hot pero SÍ existe
+  archivo previo. Ver `export_raw_table` -- no se borra.
+"""
+
+
 @dataclass(frozen=True)
 class ExportResult:
     table: str
     row_count: int
     output_path: Path
+    action: ArchiveAction = "written"
+    """Qué se hizo con el archivo del día. `row_count` es siempre el recuento
+    leído de la tabla hot, no el del archivo: con `preserved_existing` vale
+    `0` y el archivo conserva las filas de la exportación anterior."""
 
 
 def _connect_with_postgres(database_url: str) -> duckdb.DuckDBPyConnection:
@@ -100,6 +130,14 @@ def _connect_with_postgres(database_url: str) -> duckdb.DuckDBPyConnection:
     con.execute("INSTALL postgres; LOAD postgres;")
     con.execute(f"ATTACH '{database_url}' AS pg (TYPE POSTGRES, READ_ONLY)")
     return con
+
+
+def _service_date_partition(table_output_dir: Path, service_date: date) -> Path:
+    return table_output_dir / f"date={service_date.isoformat()}"
+
+
+def _has_parquet(directory: Path) -> bool:
+    return directory.is_dir() and any(directory.glob("**/*.parquet"))
 
 
 def export_raw_table(
@@ -115,9 +153,38 @@ def export_raw_table(
     necesariamente una columna propia de esa tabla -- ver docstring del
     módulo); la columna de partición `date`/`hour` se deriva de la misma
     expresión, convertida a hora local.
+
+    **Idempotencia por día de servicio (MP-021).** Escribir directamente sobre
+    `raw/<tabla>/` con `OVERWRITE_OR_IGNORE` NO es idempotente: ese modo deja
+    intactas las particiones que la nueva ejecución ya no produce. Medido en
+    MP-021 con DuckDB 2.0: tras escribir `hour=10` (3 filas) + `hour=11`
+    (2 filas) y reprocesar con una única fila en `hour=10`, el glob del archivo
+    seguía devolviendo **3 filas** -- las 2 de `hour=11` sobrevivían como
+    fantasmas. Con la tabla hot purgada (DEC-011) o corregida, el agregado gold
+    heredaba filas que ya no existen en el origen.
+
+    `OVERWRITE` tampoco sirve: es **destructivo a nivel de raíz**. Verificado
+    en el mismo banco: exportar `2026-11-20` con `OVERWRITE` sobre
+    `raw/<tabla>/` borró el `date=2026-11-19` ya archivado. Un reproceso de un
+    día no puede llevarse por delante el resto del histórico.
+
+    La estrategia es por tanto **preparar y sustituir**: se escribe el día en
+    `.staging/` (fuera del árbol que lee la capa gold) y, solo cuando la
+    escritura ha terminado, se reemplaza el subárbol `date=<fecha>` con un
+    `rename` del sistema de ficheros. El resultado no puede contener restos de
+    una ejecución anterior y ningún otro día se toca.
+
+    **Un origen vacío no borra el archivo.** Si el día no tiene filas en la
+    tabla hot pero sí existe archivo previo, se conserva y se devuelve
+    `action="preserved_existing"`. El Parquet es el almacén permanente y la
+    tabla hot se purga por diseño (DEC-011/NOGO-003): la ausencia de filas
+    calientes no es prueba de que el día no tuviera observaciones -- dato
+    ausente no es cero (docs/DATA_QUALITY.md). Vaciar el archivo del día
+    exigiría una orden explícita, no un reproceso rutinario.
     """
     utc_start, utc_end = service_date_utc_bounds(service_date)
     table_output_dir = output_dir / "raw" / source.table
+    final_partition = _service_date_partition(table_output_dir, service_date)
 
     (count,) = con.execute(
         f"""
@@ -127,8 +194,30 @@ def export_raw_table(
         (utc_start, utc_end),
     ).fetchone()
 
-    if count > 0:
-        table_output_dir.mkdir(parents=True, exist_ok=True)
+    if count == 0:
+        if _has_parquet(final_partition):
+            logger.warning(
+                "%s: 0 filas calientes para %s pero el archivo frío ya tiene datos de ese día; "
+                "se conserva (dato ausente no es cero -- DEC-011)",
+                source.table,
+                service_date.isoformat(),
+            )
+            return ExportResult(
+                table=source.table,
+                row_count=0,
+                output_path=table_output_dir,
+                action="preserved_existing",
+            )
+        return ExportResult(
+            table=source.table, row_count=0, output_path=table_output_dir, action="absent"
+        )
+
+    staging_root = (
+        output_dir / STAGING_DIR_NAME / f"{source.table}-{service_date.isoformat()}"
+    )
+    shutil.rmtree(staging_root, ignore_errors=True)
+    staging_root.mkdir(parents=True, exist_ok=True)
+    try:
         con.execute(
             f"""
             COPY (
@@ -137,18 +226,41 @@ def export_raw_table(
                     strftime({source.time_expr} AT TIME ZONE 'Europe/Madrid', '%H') AS hour
                 FROM {source.from_clause}
                 WHERE {source.time_expr} >= ? AND {source.time_expr} < ?
-            ) TO '{table_output_dir}'
+            ) TO '{staging_root}'
             (FORMAT PARQUET, COMPRESSION ZSTD, PARTITION_BY (date, hour), OVERWRITE_OR_IGNORE)
             """,
             (utc_start, utc_end),
         )
-    return ExportResult(table=source.table, row_count=count, output_path=table_output_dir)
+        staged_partition = _service_date_partition(staging_root, service_date)
+        if not _has_parquet(staged_partition):
+            # No puede ocurrir con el filtro de arriba (los límites UTC son los
+            # del propio día local, así que toda fila seleccionada particiona en
+            # `date=<fecha>`); si ocurriese, fallar es la única opción honesta --
+            # dejar el archivo del día a medias sería peor.
+            raise RuntimeError(
+                f"{source.table}: la preparación de {service_date.isoformat()} no produjo "
+                f"ninguna partición en {staged_partition} pese a contar {count} filas"
+            )
+        table_output_dir.mkdir(parents=True, exist_ok=True)
+        shutil.rmtree(final_partition, ignore_errors=True)
+        staged_partition.replace(final_partition)
+    finally:
+        shutil.rmtree(staging_root, ignore_errors=True)
+
+    return ExportResult(
+        table=source.table, row_count=count, output_path=table_output_dir, action="written"
+    )
 
 
 def export_service_date(
     database_url: str, service_date: date, output_dir: Path
 ) -> list[ExportResult]:
-    """Exporta las cinco tablas "hot" para un día de servicio completo."""
+    """Exporta las cinco tablas "hot" para un día de servicio completo.
+
+    Cada tabla reemplaza su propio subárbol `date=<fecha>` de forma atómica
+    (ver `export_raw_table`): reprocesar el mismo día no acumula filas ni deja
+    particiones huérfanas, y no toca ningún otro día ya archivado.
+    """
     con = _connect_with_postgres(database_url)
     try:
         return [

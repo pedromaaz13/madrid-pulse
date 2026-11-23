@@ -792,6 +792,687 @@
         "title": "HealthOut",
         "type": "object"
       },
+      "HistoryCirculationDetailOut": {
+        "properties": {
+          "circulation": {
+            "$ref": "#/components/schemas/HistoryCirculationOut"
+          },
+          "delays": {
+            "items": {
+              "$ref": "#/components/schemas/HistoryDelayOut"
+            },
+            "title": "Delays",
+            "type": "array"
+          },
+          "positions": {
+            "items": {
+              "$ref": "#/components/schemas/HistoryPositionOut"
+            },
+            "title": "Positions",
+            "type": "array"
+          },
+          "schema_version": {
+            "default": "history-1.0",
+            "title": "Schema Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "circulation",
+          "positions",
+          "delays"
+        ],
+        "title": "HistoryCirculationDetailOut",
+        "type": "object"
+      },
+      "HistoryCirculationOut": {
+        "properties": {
+          "delay_reported_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delay Reported Count"
+          },
+          "distinct_stops_observed": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Distinct Stops Observed"
+          },
+          "first_observed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Observed At"
+          },
+          "headsign": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Headsign"
+          },
+          "last_current_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Current Status"
+          },
+          "last_observed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Observed At"
+          },
+          "latest_reported_delay_seconds": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latest Reported Delay Seconds"
+          },
+          "line_short_name": {
+            "title": "Line Short Name",
+            "type": "string"
+          },
+          "observed": {
+            "title": "Observed",
+            "type": "boolean"
+          },
+          "on_time": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "On Time"
+          },
+          "positions_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Positions Count"
+          },
+          "route_id": {
+            "title": "Route Id",
+            "type": "string"
+          },
+          "scheduled": {
+            "title": "Scheduled",
+            "type": "boolean"
+          },
+          "scheduled_first_departure_time": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scheduled First Departure Time"
+          },
+          "scheduled_first_stop_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scheduled First Stop Id"
+          },
+          "scheduled_last_arrival_time": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scheduled Last Arrival Time"
+          },
+          "scheduled_last_stop_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scheduled Last Stop Id"
+          },
+          "service_date": {
+            "title": "Service Date",
+            "type": "string"
+          },
+          "trip_id": {
+            "title": "Trip Id",
+            "type": "string"
+          },
+          "trip_updates_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trip Updates Count"
+          },
+          "vehicle_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vehicle Id"
+          }
+        },
+        "required": [
+          "service_date",
+          "route_id",
+          "line_short_name",
+          "trip_id",
+          "vehicle_id",
+          "scheduled",
+          "observed",
+          "headsign",
+          "scheduled_first_stop_id",
+          "scheduled_first_departure_time",
+          "scheduled_last_stop_id",
+          "scheduled_last_arrival_time",
+          "positions_count",
+          "first_observed_at",
+          "last_observed_at",
+          "distinct_stops_observed",
+          "last_current_status",
+          "trip_updates_count",
+          "delay_reported_count",
+          "latest_reported_delay_seconds",
+          "on_time"
+        ],
+        "title": "HistoryCirculationOut",
+        "type": "object"
+      },
+      "HistoryCirculationsOut": {
+        "properties": {
+          "circulations": {
+            "items": {
+              "$ref": "#/components/schemas/HistoryCirculationOut"
+            },
+            "title": "Circulations",
+            "type": "array"
+          },
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "line": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Line"
+          },
+          "only": {
+            "enum": [
+              "all",
+              "observed",
+              "unobserved",
+              "unscheduled"
+            ],
+            "title": "Only",
+            "type": "string"
+          },
+          "returned": {
+            "title": "Returned",
+            "type": "integer"
+          },
+          "schema_version": {
+            "default": "history-1.0",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "service_date": {
+            "title": "Service Date",
+            "type": "string"
+          },
+          "truncated": {
+            "title": "Truncated",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "service_date",
+          "line",
+          "only",
+          "returned",
+          "limit",
+          "truncated",
+          "circulations"
+        ],
+        "title": "HistoryCirculationsOut",
+        "type": "object"
+      },
+      "HistoryDayOut": {
+        "properties": {
+          "circulations_observed": {
+            "title": "Circulations Observed",
+            "type": "integer"
+          },
+          "circulations_scheduled": {
+            "title": "Circulations Scheduled",
+            "type": "integer"
+          },
+          "circulations_unobserved": {
+            "title": "Circulations Unobserved",
+            "type": "integer"
+          },
+          "circulations_unscheduled": {
+            "title": "Circulations Unscheduled",
+            "type": "integer"
+          },
+          "first_observed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Observed At"
+          },
+          "last_observed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Observed At"
+          },
+          "lines_present": {
+            "title": "Lines Present",
+            "type": "integer"
+          },
+          "rows_total": {
+            "title": "Rows Total",
+            "type": "integer"
+          },
+          "service_date": {
+            "title": "Service Date",
+            "type": "string"
+          }
+        },
+        "required": [
+          "service_date",
+          "circulations_scheduled",
+          "circulations_observed",
+          "circulations_unobserved",
+          "circulations_unscheduled",
+          "lines_present",
+          "rows_total",
+          "first_observed_at",
+          "last_observed_at"
+        ],
+        "title": "HistoryDayOut",
+        "type": "object"
+      },
+      "HistoryDaysOut": {
+        "properties": {
+          "archive_root": {
+            "title": "Archive Root",
+            "type": "string"
+          },
+          "days": {
+            "items": {
+              "$ref": "#/components/schemas/HistoryDayOut"
+            },
+            "title": "Days",
+            "type": "array"
+          },
+          "schema_version": {
+            "default": "history-1.0",
+            "title": "Schema Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "archive_root",
+          "days"
+        ],
+        "title": "HistoryDaysOut",
+        "type": "object"
+      },
+      "HistoryDelayOut": {
+        "properties": {
+          "delay_coverage": {
+            "title": "Delay Coverage",
+            "type": "string"
+          },
+          "delay_seconds": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delay Seconds"
+          },
+          "observed_at": {
+            "format": "date-time",
+            "title": "Observed At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "observed_at",
+          "delay_seconds",
+          "delay_coverage"
+        ],
+        "title": "HistoryDelayOut",
+        "type": "object"
+      },
+      "HistoryLineMetricOut": {
+        "properties": {
+          "delay_coverage_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delay Coverage Pct"
+          },
+          "line_short_name": {
+            "title": "Line Short Name",
+            "type": "string"
+          },
+          "on_time_pct_of_covered": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "On Time Pct Of Covered"
+          },
+          "route_id": {
+            "title": "Route Id",
+            "type": "string"
+          },
+          "trips_scheduled": {
+            "title": "Trips Scheduled",
+            "type": "integer"
+          },
+          "trips_with_delay_data": {
+            "title": "Trips With Delay Data",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "route_id",
+          "line_short_name",
+          "trips_scheduled",
+          "trips_with_delay_data",
+          "delay_coverage_pct",
+          "on_time_pct_of_covered"
+        ],
+        "title": "HistoryLineMetricOut",
+        "type": "object"
+      },
+      "HistoryLinesOut": {
+        "properties": {
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/HistoryLineMetricOut"
+            },
+            "title": "Lines",
+            "type": "array"
+          },
+          "schema_version": {
+            "default": "history-1.0",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "service_date": {
+            "title": "Service Date",
+            "type": "string"
+          }
+        },
+        "required": [
+          "service_date",
+          "lines"
+        ],
+        "title": "HistoryLinesOut",
+        "type": "object"
+      },
+      "HistoryPositionOut": {
+        "properties": {
+          "bearing": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bearing"
+          },
+          "current_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Status"
+          },
+          "current_stop_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Stop Id"
+          },
+          "latitude": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latitude"
+          },
+          "longitude": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Longitude"
+          },
+          "observed_at": {
+            "format": "date-time",
+            "title": "Observed At",
+            "type": "string"
+          },
+          "quality_flags": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quality Flags"
+          },
+          "received_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Received At"
+          },
+          "speed_kmh": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Speed Kmh"
+          }
+        },
+        "required": [
+          "observed_at",
+          "received_at",
+          "latitude",
+          "longitude",
+          "current_status",
+          "current_stop_id",
+          "speed_kmh",
+          "bearing",
+          "quality_flags"
+        ],
+        "title": "HistoryPositionOut",
+        "type": "object"
+      },
+      "HistoryStationMetricOut": {
+        "properties": {
+          "observations_count": {
+            "title": "Observations Count",
+            "type": "integer"
+          },
+          "station_id": {
+            "title": "Station Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "station_id",
+          "observations_count"
+        ],
+        "title": "HistoryStationMetricOut",
+        "type": "object"
+      },
+      "HistoryStationsOut": {
+        "properties": {
+          "returned": {
+            "title": "Returned",
+            "type": "integer"
+          },
+          "schema_version": {
+            "default": "history-1.0",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "service_date": {
+            "title": "Service Date",
+            "type": "string"
+          },
+          "stations": {
+            "items": {
+              "$ref": "#/components/schemas/HistoryStationMetricOut"
+            },
+            "title": "Stations",
+            "type": "array"
+          }
+        },
+        "required": [
+          "service_date",
+          "returned",
+          "stations"
+        ],
+        "title": "HistoryStationsOut",
+        "type": "object"
+      },
       "LineGeometryOut": {
         "description": "Corredor OSM real: cada elemento de ``segments`` es continuo.\n\nLos tramos nunca deben concatenarse en el cliente, porque una separaci\u00f3n\nentre ellos representa un hueco real de la geometr\u00eda cargada.",
         "properties": {
@@ -2330,6 +3011,264 @@
           }
         },
         "summary": "Health"
+      }
+    },
+    "/api/v1/history/circulations": {
+      "get": {
+        "operationId": "history_circulations_api_v1_history_circulations_get",
+        "parameters": [
+          {
+            "description": "D\u00eda de servicio archivado (YYYY-MM-DD).",
+            "in": "query",
+            "name": "service_date",
+            "required": true,
+            "schema": {
+              "description": "D\u00eda de servicio archivado (YYYY-MM-DD).",
+              "title": "Service Date",
+              "type": "string"
+            }
+          },
+          {
+            "description": "L\u00ednea comercial (`route_short_name`).",
+            "in": "query",
+            "name": "line",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "L\u00ednea comercial (`route_short_name`).",
+              "title": "Line"
+            }
+          },
+          {
+            "description": "`unobserved` devuelve exactamente el hueco de cobertura: servicios programados de los que nunca se observ\u00f3 una posici\u00f3n.",
+            "in": "query",
+            "name": "only",
+            "required": false,
+            "schema": {
+              "default": "all",
+              "description": "`unobserved` devuelve exactamente el hueco de cobertura: servicios programados de los que nunca se observ\u00f3 una posici\u00f3n.",
+              "pattern": "^(all|observed|unobserved|unscheduled)$",
+              "title": "Only",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 200,
+              "maximum": 2000,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HistoryCirculationsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "History Circulations"
+      }
+    },
+    "/api/v1/history/circulations/{vehicle_id}/{trip_id}": {
+      "get": {
+        "description": "Detalle de una circulaci\u00f3n hist\u00f3rica por su identidad de Live.\n\nLa ruta usa exactamente la identidad de MP-017/019/020 -- veh\u00edculo + viaje\n+ d\u00eda de servicio -- la misma que lleva la URL del frontend\n(`?train=&trip=&sd=`), para que abrir el hist\u00f3rico desde Live y volver no\nrequiera traducir ninguna clave. Un viaje programado sin observar se\nconsulta con `vehicle_id` = `-` (no hay veh\u00edculo porque no se vio ninguno).",
+        "operationId": "history_circulation_detail_api_v1_history_circulations__vehicle_id___trip_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "vehicle_id",
+            "required": true,
+            "schema": {
+              "title": "Vehicle Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "trip_id",
+            "required": true,
+            "schema": {
+              "title": "Trip Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "D\u00eda de servicio archivado (YYYY-MM-DD).",
+            "in": "query",
+            "name": "service_date",
+            "required": true,
+            "schema": {
+              "description": "D\u00eda de servicio archivado (YYYY-MM-DD).",
+              "title": "Service Date",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HistoryCirculationDetailOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "History Circulation Detail"
+      }
+    },
+    "/api/v1/history/days": {
+      "get": {
+        "description": "D\u00edas realmente archivados, con los denominadores de cada uno.\n\nEs el \u00edndice que permite que la vista de hist\u00f3rico ofrezca solo fechas que\nexisten, en vez de un calendario libre que devolver\u00eda vac\u00edos sin explicar\npor qu\u00e9.",
+        "operationId": "history_days_api_v1_history_days_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HistoryDaysOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "History Days"
+      }
+    },
+    "/api/v1/history/lines": {
+      "get": {
+        "description": "`daily_line_metrics` del d\u00eda: puntualidad **siempre** con su cobertura.\n\nCada fila lleva `trips_scheduled` y `trips_with_delay_data` junto a los dos\nporcentajes, as\u00ed que no existe forma de leer la puntualidad sin el\ndenominador del que sale.",
+        "operationId": "history_lines_api_v1_history_lines_get",
+        "parameters": [
+          {
+            "description": "D\u00eda de servicio archivado (YYYY-MM-DD).",
+            "in": "query",
+            "name": "service_date",
+            "required": true,
+            "schema": {
+              "description": "D\u00eda de servicio archivado (YYYY-MM-DD).",
+              "title": "Service Date",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HistoryLinesOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "History Lines"
+      }
+    },
+    "/api/v1/history/stations": {
+      "get": {
+        "operationId": "history_stations_api_v1_history_stations_get",
+        "parameters": [
+          {
+            "description": "D\u00eda de servicio archivado (YYYY-MM-DD).",
+            "in": "query",
+            "name": "service_date",
+            "required": true,
+            "schema": {
+              "description": "D\u00eda de servicio archivado (YYYY-MM-DD).",
+              "title": "Service Date",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 200,
+              "maximum": 1000,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HistoryStationsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "History Stations"
       }
     },
     "/api/v1/lines": {

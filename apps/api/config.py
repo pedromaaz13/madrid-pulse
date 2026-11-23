@@ -21,6 +21,11 @@ class ApiConfig:
     mode: str
     operator_delay_max_age_s: float
     display_lag_s: float
+    archive_dir: Path
+    """Raíz del histórico frío en Parquet (MP-021), la misma que escribe
+    `services/snapshotter` con `SNAPSHOTTER_OUTPUT_DIR`. Se lee en solo
+    lectura y solo desde `apps/api/history.py`; nada del estado operativo
+    pasa por aquí."""
 
     @classmethod
     def from_env(cls) -> "ApiConfig":
@@ -54,4 +59,7 @@ class ApiConfig:
                 os.environ.get("MADRID_PULSE_OPERATOR_DELAY_MAX_AGE_S", "600")
             ),
             display_lag_s=float(os.environ.get("MADRID_PULSE_DISPLAY_LAG_S", "0")),
+            archive_dir=Path(
+                os.environ.get("SNAPSHOTTER_OUTPUT_DIR", str(REPO_ROOT / "data" / "parquet"))
+            ),
         )

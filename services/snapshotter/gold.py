@@ -12,27 +12,39 @@ diario **por núcleo** (`build_nucleo_daily_summary`, dimensión ya resuelta por
 Con MP-010→MP-014 ya `DONE`, esa resolución existe de verdad
 (`packages.gtfs.Topology`) — `build_line_daily_metrics` y
 `build_station_daily_metrics` (MP-015) la usan para completar el agregado
-gold real, documentado con sus propios límites (ver DEC-033 en
-`docs/DECISIONS.md`): `trips_scheduled` usa únicamente `calendar.txt`
-(día de la semana + rango `start_date`/`end_date`), sin `calendar_dates.txt`
-(no parseado por `packages.gtfs`) — un servicio con excepción de calendario
-puntual no se refleja todavía. `station_daily_metrics` solo calcula
+gold real. `station_daily_metrics` sigue calculando solo
 `observations_count` (vía `current_stop_id`, campo real confirmado en MP-003
 idéntico al `stop_id` de GTFS estático); `data_quality_events_count` queda
 deliberadamente fuera porque `data_quality_event.entity_ref` solo referencia
 `source_vehicle_id`/`source_trip_id`, nunca una parada — atribuirlo a una
 estación exigiría inventar un cruce por proximidad temporal no verificado.
+
+**Qué cambió en MP-021.** Dos límites reales de DEC-033 se cierran aquí:
+
+1. *Calendario.* `trips_scheduled` ya no reimplementa `calendar.txt` a mano:
+   usa `packages.gtfs.scheduled_service_ids_for_date` (MP-017), que aplica
+   también las excepciones ADD/REMOVE de `calendar_dates.txt`. Era el
+   denominador de toda métrica de puntualidad — ver
+   `scheduled_trip_ids_by_route`.
+2. *Reproducibilidad.* Los tres agregados llevan `ORDER BY` explícito. Sin
+   él el conjunto de filas era el mismo al recalcular, pero su **orden** no:
+   medido en MP-021 sobre el catálogo completo de Madrid del `2026-11-20`
+   (35 filas de línea, 69 de estación), dos corridas consecutivas con los
+   mismos Parquet de entrada daban ficheros con SHA-256 distintos. El
+   agregado de `GROUP BY` paralelo de DuckDB no garantiza orden, y un mart
+   que no es byte-estable no se puede verificar por hash ni diferenciar
+   entre dos reprocesos.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import date
 from pathlib import Path
 
 import duckdb
 
-from packages.gtfs import Topology
+from packages.gtfs import Topology, scheduled_service_ids_for_date
 
 
 @dataclass(frozen=True)
@@ -104,6 +116,7 @@ def build_nucleo_daily_summary(
         FROM vehicle_positions v
         FULL OUTER JOIN trip_updates t USING (nucleo_prefix)
         WHERE coalesce(v.nucleo_prefix, t.nucleo_prefix) IS NOT NULL
+        ORDER BY nucleo_prefix
         """
         con.execute(
             f"COPY ({query}) TO '{output_file}' (FORMAT PARQUET, COMPRESSION ZSTD)",
@@ -113,11 +126,6 @@ def build_nucleo_daily_summary(
         return GoldSummaryResult(row_count=row_count, output_path=output_path)
     finally:
         con.close()
-
-
-_WEEKDAY_ATTRS = (
-    "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday",
-)
 
 
 @dataclass(frozen=True)
@@ -131,23 +139,20 @@ class GoldThresholds:
     on_time_threshold_seconds: float = 300.0
 
 
-def _scheduled_trip_ids_by_route(topology: Topology, service_date: date) -> dict[str, set[str]]:
+def scheduled_trip_ids_by_route(topology: Topology, service_date: date) -> dict[str, set[str]]:
     """Resuelve qué `trip_id` están programados para `service_date` por `route_id`.
 
-    Usa únicamente `calendar.txt` (día de la semana dentro de `[start_date,
-    end_date]`); `calendar_dates.txt` no está parseado por `packages.gtfs`
-    (ver docstring del módulo) -- una excepción puntual de calendario no se
-    refleja todavía aquí.
+    El calendario lo resuelve `packages.gtfs.scheduled_service_ids_for_date`
+    (MP-017), que aplica `calendar.txt` **y** las excepciones ADD/REMOVE de
+    `calendar_dates.txt`. Hasta MP-021 esta función reimplementaba el
+    calendario a mano y solo leía `calendar.txt`, que era el límite (a) de
+    DEC-033: un servicio añadido o suprimido un día concreto no se reflejaba en
+    `trips_scheduled`, es decir, en el **denominador** de toda métrica de
+    puntualidad de ese día. Con una sola implementación del calendario, el
+    denominador del mart y el tablero de `/api/v1/stations/{id}/board` no
+    pueden discrepar.
     """
-    weekday_attr = _WEEKDAY_ATTRS[service_date.weekday()]
-    active_service_ids = {
-        service.service_id
-        for service in topology.calendar
-        if getattr(service, weekday_attr)
-        and datetime.strptime(service.start_date, "%Y%m%d").date()
-        <= service_date
-        <= datetime.strptime(service.end_date, "%Y%m%d").date()
-    }
+    active_service_ids = scheduled_service_ids_for_date(topology, service_date)
     by_route: dict[str, set[str]] = {}
     for trip in topology.trips:
         if trip.service_id in active_service_ids:
@@ -189,7 +194,7 @@ def build_line_daily_metrics(
             "NULL::VARCHAR AS delay_coverage, NULL::TIMESTAMPTZ AS observed_at",
         )
 
-        scheduled_by_route = _scheduled_trip_ids_by_route(topology, service_date)
+        scheduled_by_route = scheduled_trip_ids_by_route(topology, service_date)
         con.execute("CREATE TEMP TABLE scheduled_trips (route_id VARCHAR, trip_id VARCHAR)")
         rows = [
             (route_id, trip_id)
@@ -239,6 +244,7 @@ def build_line_daily_metrics(
         FROM scheduled_trips s
         LEFT JOIN trip_reports r ON r.source_trip_id = s.trip_id
         GROUP BY s.route_id
+        ORDER BY s.route_id
         """
         con.execute(
             f"COPY ({query}) TO '{output_file}' (FORMAT PARQUET, COMPRESSION ZSTD)",
@@ -285,6 +291,7 @@ def build_station_daily_metrics(
         JOIN valid_stations st ON st.station_id = v.current_stop_id
         WHERE v.current_stop_id IS NOT NULL
         GROUP BY v.current_stop_id
+        ORDER BY v.current_stop_id
         """
         con.execute(
             f"COPY ({query}) TO '{output_file}' (FORMAT PARQUET, COMPRESSION ZSTD)",

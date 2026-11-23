@@ -49,6 +49,7 @@ jobs:
         run: |
           python -m unittest \
             apps.api.tests.test_api_contract \
+            apps.api.tests.test_history_contract \
             apps.api.tests.test_snapshot_contract \
             packages.contracts.tests.test_canonical_normalization \
             packages.contracts.tests.test_nucleo \
@@ -65,9 +66,12 @@ jobs:
             packages.quality.tests.test_persistence \
             services.collector.tests.test_collector_cycle \
             services.collector.tests.test_http_client \
+            services.collector.tests.test_supervised_loop \
             services.snapshotter.tests.test_export \
             services.snapshotter.tests.test_export_replay \
             services.snapshotter.tests.test_gold \
+            services.snapshotter.tests.test_history \
+            services.snapshotter.tests.test_idempotency \
             tests.fixtures.test_parse_fixtures \
             tests.e2e.test_replay \
             -v

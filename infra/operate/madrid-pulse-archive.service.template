@@ -1,0 +1,16 @@
+# Servicio one-shot que dispara el temporizador de archivo diario — MP-021.
+
+[Unit]
+Description=Madrid Pulse — archivo del día de servicio anterior
+Documentation=file://<<REPO_ROOT>>/infra/operate/README.md
+
+[Service]
+Type=oneshot
+User=<<USER>>
+WorkingDirectory=<<REPO_ROOT>>
+Environment=PYTHONPATH=<<REPO_ROOT>>
+Environment=MADRID_PULSE_DATABASE_URL=<<DATABASE_URL>>
+Environment=MADRID_PULSE_GTFS_SOURCE=<<GTFS_SOURCE>>
+Environment=MADRID_PULSE_SHORT_NAME=
+Environment=SNAPSHOTTER_OUTPUT_DIR=<<REPO_ROOT>>/data/parquet
+ExecStart=<<REPO_ROOT>>/infra/operate/daily-archive.sh

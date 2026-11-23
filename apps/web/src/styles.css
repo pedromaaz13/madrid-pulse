@@ -868,6 +868,12 @@ button.pill {
     display: none;
   }
 
+  /* El rótulo largo del indicador de archivo no cabe junto a las tres vistas
+     en 390 px; la etiqueta ARCHIVO sola ya dice que el día está cerrado. */
+  .status--archive span {
+    display: none;
+  }
+
   /* Panel inferior sobre el mapa, con botones además del gesto. */
   .workspace {
     display: flex;
@@ -888,6 +894,18 @@ button.pill {
 
   .app--expanded .side-panel {
     flex-basis: 66%;
+  }
+
+  /* En vista de archivo no hay mapa debajo: el panel ocupa toda la altura.
+     Sin esto, `flex: 0 0 46%` dejaba más de la mitad de la pantalla en blanco
+     sobre el contenido (defecto real visto en el navegador a 390 px). */
+  .app--archive .workspace {
+    flex-direction: column;
+  }
+
+  .app--archive .side-panel {
+    flex: 1 1 auto;
+    border-top: 0;
   }
 
   /* Tamaño táctil cómodo en los controles pequeños, incluidos los del mapa. */
@@ -963,4 +981,79 @@ button.pill {
     animation-duration: 0.001ms !important;
     transition-duration: 0.001ms !important;
   }
+}
+
+/* --------------------------------------------------------------------------
+ * Histórico y Explore (MP-021).
+ *
+ * El archivo frío no tiene mapa: el día está cerrado y la vista es tabular,
+ * así que el panel ocupa todo el espacio en vez de dejar media pantalla a un
+ * mapa que no se actualiza.
+ * -------------------------------------------------------------------------- */
+
+.app--archive .workspace {
+  grid-template-columns: 1fr;
+}
+
+.app--archive .side-panel {
+  border-right: 0;
+  max-width: 1080px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* Indicador de la barra superior en vista de archivo: deliberadamente sin
+   reloj, para no sugerir que un día cerrado sigue actualizándose. */
+.status--archive i {
+  background: var(--muted);
+}
+
+.status--archive b {
+  color: var(--ink);
+}
+
+.pill--active {
+  background: var(--ink);
+  color: #fff;
+}
+
+/* Fila de solo lectura: misma tipografía y rejilla que `.row`, sin afordancia
+   de pulsación, porque una observación archivada no abre nada. */
+.row--static {
+  cursor: default;
+}
+
+/* Las tablas anchas se desplazan dentro de su propio contenedor: el cuerpo de
+   la página nunca se desplaza en horizontal (requisito de móvil de MP-020). */
+.table-scroll {
+  overflow-x: auto;
+  margin-top: 8px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.metrics {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.metrics th,
+.metrics td {
+  text-align: left;
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+}
+
+.metrics thead th {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.metrics tbody th {
+  font-weight: 500;
 }

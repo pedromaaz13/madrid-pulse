@@ -168,3 +168,72 @@ export function destinationLabel(
   if (entry.headsign.trim() !== "") return entry.headsign.trim();
   return stationName(entry.destination_stop_id) ?? entry.destination_stop_id;
 }
+
+// --- Histórico (MP-021) ---------------------------------------------------
+
+/**
+ * Porcentaje **siempre** con su fracción real al lado. Nunca convierte un
+ * `null` en `0 %`: sin muestra se dice "sin muestra", porque un 0 % sugiere
+ * que se midió y salió cero (docs/DATA_QUALITY.md, DEC-009).
+ */
+export function formatPctWithDenominator(
+  pct: number | null,
+  numerator: number | null,
+  denominator: number | null,
+): string {
+  if (denominator === null || denominator === 0) return "sin muestra";
+  if (pct === null) return `sin muestra (0/${denominator})`;
+  return `${pct.toFixed(1)} % (${numerator ?? 0}/${denominator})`;
+}
+
+/** Recuento que puede ser dato ausente. `null` no se muestra como 0. */
+export function formatCount(value: number | null): string {
+  return value === null ? "sin dato" : String(value);
+}
+
+/** Hora GTFS tal cual la publica el feed, incluidas las horas `24:xx`. */
+export function formatGtfsTime(value: string | null): string {
+  if (value === null || value.trim() === "") return "—";
+  const parts = value.split(":");
+  return parts.length >= 2 ? `${parts[0]}:${parts[1]}` : value;
+}
+
+/** Veredicto de puntualidad de una circulación archivada, con su procedencia. */
+export function formatHistoryOnTime(
+  onTime: boolean | null,
+  delaySeconds: number | null,
+  reportedCount: number | null,
+): string {
+  if (onTime === null || reportedCount === null || reportedCount === 0) {
+    return "Sin dato de retraso";
+  }
+  const minutes = Math.round(Math.abs(delaySeconds ?? 0) / 60);
+  const magnitude =
+    delaySeconds === null
+      ? ""
+      : delaySeconds === 0
+        ? " (0 min)"
+        : delaySeconds > 0
+          ? ` (+${minutes} min)`
+          : ` (−${minutes} min)`;
+  return `${onTime ? "En hora" : "Fuera de umbral"}${magnitude} · ${reportedCount} reporte(s)`;
+}
+
+/**
+ * Qué es una fila del histórico. El cruce de `scheduled`/`observed` es la
+ * información de cobertura del mart: las cuatro combinaciones tienen nombre
+ * propio y ninguna se presenta como "sin datos".
+ */
+export function circulationCoverageLabel(scheduled: boolean, observed: boolean): string {
+  if (scheduled && observed) return "Programada y observada";
+  if (scheduled && !observed) return "Programada sin observar";
+  if (!scheduled && observed) return "Observada fuera de programación";
+  return "Sin clasificar";
+}
+
+export const HISTORY_FILTER_LABELS: Record<string, string> = {
+  all: "Todas",
+  observed: "Observadas",
+  unobserved: "Huecos de cobertura",
+  unscheduled: "Fuera de programación",
+};

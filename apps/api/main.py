@@ -8,18 +8,23 @@ inventa un dato ausente como cero -- ver `apps/api/service.py`.
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 
 import psycopg
 import logging
 from fastapi import Depends, FastAPI, HTTPException, Query, Request, Response
 
-from . import service, snapshot
+from . import history, service, snapshot
 from .config import ApiConfig
 from .gtfs_source import LoadedNetwork, load_network
 from .schemas import (
     CatalogOut,
     HealthOut,
+    HistoryCirculationDetailOut,
+    HistoryCirculationsOut,
+    HistoryDaysOut,
+    HistoryLinesOut,
+    HistoryStationsOut,
     LineOut,
     SnapshotOut,
     StationBoardOut,
@@ -70,6 +75,12 @@ def get_network() -> LoadedNetwork:
 def get_connection(config: ApiConfig = Depends(get_config)) -> psycopg.Connection:
     with psycopg.connect(config.database_dsn) as conn:
         yield conn
+
+
+def get_archive(config: ApiConfig = Depends(get_config)) -> history.Archive:
+    """Archivo frío en Parquet. No abre conexión a PostgreSQL: el histórico es
+    un recurso distinto del estado operativo (ver `apps/api/history.py`)."""
+    return history.Archive(root=config.archive_dir)
 
 
 def now_utc() -> datetime:
@@ -238,3 +249,155 @@ def station_board(
     if result is None:
         raise HTTPException(status_code=404, detail="station_id no encontrado")
     return result
+
+
+# --------------------------------------------------------------------------
+# MP-021: histórico frío (`/api/v1/history/*`). Recursos NUEVOS: el contrato
+# de MP-019 no se modifica. Se sirven desde el Parquet que escribe
+# `services/snapshotter`, nunca desde PostgreSQL.
+# --------------------------------------------------------------------------
+
+
+def _parse_service_date(value: str) -> date:
+    try:
+        return date.fromisoformat(value)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=400, detail="service_date debe ser una fecha ISO (YYYY-MM-DD)"
+        ) from exc
+
+
+def _require_archived_day(archive: history.Archive, service_date: date) -> None:
+    """404 explícito si ese día no está archivado.
+
+    Deliberadamente **no** se devuelve un día vacío con métricas a cero: un día
+    sin archivo es un día del que no se sabe nada, no un día sin servicio
+    (docs/DATA_QUALITY.md).
+    """
+    if not archive.has_service_date(service_date):
+        raise HTTPException(
+            status_code=404,
+            detail=(
+                f"{service_date.isoformat()} no está en el histórico archivado "
+                f"({archive.root}); ejecútese `python -m services.snapshotter "
+                f"{service_date.isoformat()}` para archivarlo"
+            ),
+        )
+
+
+@app.get("/api/v1/history/days", response_model=HistoryDaysOut)
+def history_days(
+    response: Response,
+    archive: history.Archive = Depends(get_archive),
+) -> HistoryDaysOut:
+    """Días realmente archivados, con los denominadores de cada uno.
+
+    Es el índice que permite que la vista de histórico ofrezca solo fechas que
+    existen, en vez de un calendario libre que devolvería vacíos sin explicar
+    por qué.
+    """
+    response.headers["Cache-Control"] = "no-cache"
+    return HistoryDaysOut(
+        archive_root=str(archive.root),
+        days=history.day_index(archive),  # type: ignore[arg-type]
+    )
+
+
+@app.get("/api/v1/history/lines", response_model=HistoryLinesOut)
+def history_lines(
+    service_date: str = Query(description="Día de servicio archivado (YYYY-MM-DD)."),
+    network: LoadedNetwork = Depends(get_network),
+    archive: history.Archive = Depends(get_archive),
+) -> HistoryLinesOut:
+    """`daily_line_metrics` del día: puntualidad **siempre** con su cobertura.
+
+    Cada fila lleva `trips_scheduled` y `trips_with_delay_data` junto a los dos
+    porcentajes, así que no existe forma de leer la puntualidad sin el
+    denominador del que sale.
+    """
+    parsed = _parse_service_date(service_date)
+    _require_archived_day(archive, parsed)
+    route_lines = {route.route_id: route.short_name for route in network.topology.routes}
+    return HistoryLinesOut(
+        service_date=parsed.isoformat(),
+        lines=history.line_metrics(archive, parsed, route_lines),  # type: ignore[arg-type]
+    )
+
+
+@app.get("/api/v1/history/stations", response_model=HistoryStationsOut)
+def history_stations(
+    service_date: str = Query(description="Día de servicio archivado (YYYY-MM-DD)."),
+    limit: int = Query(default=200, ge=1, le=1000),
+    archive: history.Archive = Depends(get_archive),
+) -> HistoryStationsOut:
+    parsed = _parse_service_date(service_date)
+    _require_archived_day(archive, parsed)
+    stations = history.station_metrics(archive, parsed, limit=limit)
+    return HistoryStationsOut(
+        service_date=parsed.isoformat(),
+        returned=len(stations),
+        stations=stations,  # type: ignore[arg-type]
+    )
+
+
+@app.get("/api/v1/history/circulations", response_model=HistoryCirculationsOut)
+def history_circulations(
+    service_date: str = Query(description="Día de servicio archivado (YYYY-MM-DD)."),
+    line: str | None = Query(default=None, description="Línea comercial (`route_short_name`)."),
+    only: str = Query(
+        default="all",
+        pattern="^(all|observed|unobserved|unscheduled)$",
+        description=(
+            "`unobserved` devuelve exactamente el hueco de cobertura: servicios "
+            "programados de los que nunca se observó una posición."
+        ),
+    ),
+    limit: int = Query(default=200, ge=1, le=2000),
+    archive: history.Archive = Depends(get_archive),
+) -> HistoryCirculationsOut:
+    parsed = _parse_service_date(service_date)
+    _require_archived_day(archive, parsed)
+    rows = history.circulations(archive, parsed, line=line, only=only, limit=limit)
+    return HistoryCirculationsOut(
+        service_date=parsed.isoformat(),
+        line=line,
+        only=only,  # type: ignore[arg-type]
+        returned=len(rows),
+        limit=limit,
+        truncated=len(rows) == limit,
+        circulations=rows,  # type: ignore[arg-type]
+    )
+
+
+@app.get(
+    "/api/v1/history/circulations/{vehicle_id}/{trip_id}",
+    response_model=HistoryCirculationDetailOut,
+)
+def history_circulation_detail(
+    vehicle_id: str,
+    trip_id: str,
+    service_date: str = Query(description="Día de servicio archivado (YYYY-MM-DD)."),
+    archive: history.Archive = Depends(get_archive),
+) -> HistoryCirculationDetailOut:
+    """Detalle de una circulación histórica por su identidad de Live.
+
+    La ruta usa exactamente la identidad de MP-017/019/020 -- vehículo + viaje
+    + día de servicio -- la misma que lleva la URL del frontend
+    (`?train=&trip=&sd=`), para que abrir el histórico desde Live y volver no
+    requiera traducir ninguna clave. Un viaje programado sin observar se
+    consulta con `vehicle_id` = `-` (no hay vehículo porque no se vio ninguno).
+    """
+    parsed = _parse_service_date(service_date)
+    _require_archived_day(archive, parsed)
+    detail = history.circulation_detail(
+        archive, parsed, "" if vehicle_id == "-" else vehicle_id, trip_id
+    )
+    if detail is None:
+        raise HTTPException(
+            status_code=404,
+            detail=(
+                f"la circulación {vehicle_id}/{trip_id} no está archivada en "
+                f"{parsed.isoformat()}"
+            ),
+        )
+    return HistoryCirculationDetailOut(**detail)

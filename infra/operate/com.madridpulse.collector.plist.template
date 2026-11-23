@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Plantilla launchd (macOS) del colector continuo supervisado — MP-021.
+
+  Sustituir los marcadores <<...>> y copiar a ~/Library/LaunchAgents/
+  (agente de usuario, sin privilegios de administrador):
+
+      sed -e 's|<<REPO_ROOT>>|'"$PWD"'|g' \
+          -e 's|<<DATABASE_URL>>|postgresql://...|g' \
+          -e 's|<<GTFS_SOURCE>>|'"$PWD"'/data/gtfs_static/fomento_transit.zip|g' \
+          infra/operate/com.madridpulse.collector.plist.template \
+          > ~/Library/LaunchAgents/com.madridpulse.collector.plist
+      launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.madridpulse.collector.plist
+      launchctl print gui/$(id -u)/com.madridpulse.collector   # estado real
+
+  Parar y desinstalar:
+
+      launchctl bootout gui/$(id -u)/com.madridpulse.collector
+      rm ~/Library/LaunchAgents/com.madridpulse.collector.plist
+
+  `KeepAlive` hace aquí el papel del supervisor: launchd reinicia el proceso
+  si muere y lo vuelve a arrancar al iniciar sesión. `ThrottleInterval` evita
+  el bucle de reinicios inmediatos si el fallo es permanente.
+
+  Esto es operación LOCAL en el equipo del propietario. No es un despliegue
+  24/7: un portátil que se suspende o se apaga interrumpe la captura, y eso
+  aparece en el histórico como lo que es, un hueco de cobertura.
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.madridpulse.collector</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string><<REPO_ROOT>>/.venv/bin/python</string>
+    <string>-m</string>
+    <string>services.collector</string>
+  </array>
+
+  <key>WorkingDirectory</key>
+  <string><<REPO_ROOT>></string>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PYTHONPATH</key>
+    <string><<REPO_ROOT>></string>
+    <key>MADRID_PULSE_DATABASE_URL</key>
+    <string><<DATABASE_URL>></string>
+    <key>MADRID_PULSE_GTFS_SOURCE</key>
+    <string><<GTFS_SOURCE>></string>
+    <key>COLLECTOR_POLL_INTERVAL_SECONDS</key>
+    <string>30</string>
+  </dict>
+
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+  <key>ThrottleInterval</key>
+  <integer>30</integer>
+
+  <key>StandardOutPath</key>
+  <string><<REPO_ROOT>>/data/operate/logs/collector.log</string>
+  <key>StandardErrorPath</key>
+  <string><<REPO_ROOT>>/data/operate/logs/collector.log</string>
+</dict>
+</plist>

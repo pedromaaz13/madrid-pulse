@@ -1,18 +1,34 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { BoardEntry, RenderingMethod, Snapshot, SnapshotVehicle } from "./domain/contract";
+import type {
+  BoardEntry,
+  HistoryCirculation,
+  HistoryFilter,
+  RenderingMethod,
+  Snapshot,
+  SnapshotVehicle,
+} from "./domain/contract";
 import { circulationKey, circulationOf, selectionKey, vehicleKey, type CirculationId, type Selection } from "./domain/identity";
 import { buildLineColors } from "./domain/palette";
 import { deriveNews, mergeNews, type NewsEvent } from "./domain/news";
 import { useCatalog } from "./hooks/useCatalog";
 import { useClock, parseReplayBase } from "./hooks/useClock";
 import { useHealth } from "./hooks/useHealth";
+import {
+  useHistoryCirculation,
+  useHistoryCirculations,
+  useHistoryDays,
+  useHistoryLines,
+  useHistoryStations,
+} from "./hooks/useHistory";
 import { useMediaQuery } from "./hooks/useMediaQuery";
 import { usePageVisible } from "./hooks/usePageVisible";
 import { useReducedMotion } from "./hooks/useReducedMotion";
 import { useSnapshot } from "./hooks/useSnapshot";
 import { useStationBoard } from "./hooks/useStationBoard";
-import { useUrlState } from "./hooks/useUrlState";
+import { useUrlState, type UrlState, type View } from "./hooks/useUrlState";
 import { hasWebGL } from "./map/webgl";
+import { ExploreView } from "./ui/ExploreView";
+import { HistoryView } from "./ui/HistoryView";
 import { Legend } from "./ui/Legend";
 import { LineFilter } from "./ui/LineFilter";
 import { NetworkPanel } from "./ui/NetworkPanel";
@@ -45,6 +61,40 @@ export default function App() {
   const activeLines = useMemo(() => new Set(url.activeLines), [url.activeLines]);
   const selectedStationId = selection.kind === "station" ? selection.stationId : null;
   const board = useStationBoard(selectedStationId, clock, visible);
+
+  // --- Histórico ---------------------------------------------------------
+  // Los recursos del archivo solo se piden cuando su vista está activa: en
+  // Live no se gasta ni una petición en el histórico, y el snapshot sigue
+  // sondeándose en History porque es lo que permite decir si una circulación
+  // archivada está además en circulación ahora mismo («Ver en Live»).
+  const isHistory = url.view === "history";
+  const isExplore = url.view === "explore";
+  const isArchiveView = isHistory || isExplore;
+
+  const historyDays = useHistoryDays(isArchiveView && visible);
+  // Sin fecha en la URL se usa el día más reciente archivado, no "hoy": un
+  // calendario libre ofrecería días sin archivo que solo pueden dar 404.
+  const historyDate = url.historyDate ?? historyDays.data?.days[0]?.service_date ?? null;
+  const historyCirculations = useHistoryCirculations(
+    historyDate,
+    url.historyLine,
+    url.historyFilter,
+    isHistory && visible,
+  );
+  const historyLines = useHistoryLines(historyDate, isExplore && visible);
+  const historyStations = useHistoryStations(historyDate, isExplore && visible);
+
+  // La circulación seleccionada en History es la misma identidad que en Live:
+  // vehículo + viaje + día de servicio, leída de los mismos parámetros de URL.
+  const historySelection = isHistory && selection.kind === "train" ? selection.circulation : null;
+  const historyDetail = useHistoryCirculation(
+    historySelection?.serviceDate ?? null,
+    historySelection === null || historySelection.vehicleId === ""
+      ? null
+      : historySelection.vehicleId,
+    historySelection?.tripId ?? null,
+    isHistory && visible,
+  );
 
   // Intención explícita de seguir una circulación, separada de si la cámara
   // está ahora mismo enganchada: un gesto del usuario la desengancha sin
@@ -133,9 +183,9 @@ export default function App() {
 
   const navigate = useCallback(
     (next: Selection, push = true) => {
-      setUrl({ selection: next, activeLines: url.activeLines, replayAt: url.replayAt }, push);
+      setUrl({ ...url, selection: next }, push);
     },
-    [setUrl, url.activeLines, url.replayAt],
+    [setUrl, url],
   );
 
   const selectStation = useCallback(
@@ -166,20 +216,99 @@ export default function App() {
       const next = new Set(url.activeLines);
       if (next.has(lineId)) next.delete(lineId);
       else next.add(lineId);
-      setUrl({ selection, activeLines: [...next], replayAt: url.replayAt }, false);
+      setUrl({ ...url, selection, activeLines: [...next] }, false);
     },
-    [setUrl, selection, url.activeLines, url.replayAt],
+    [setUrl, selection, url],
   );
 
   const clearLines = useCallback(() => {
-    setUrl({ selection, activeLines: [], replayAt: url.replayAt }, false);
-  }, [setUrl, selection, url.replayAt]);
+    setUrl({ ...url, selection, activeLines: [] }, false);
+  }, [setUrl, selection, url]);
 
   const openLine = useCallback(
     (lineId: string) => {
-      setUrl({ selection, activeLines: [lineId], replayAt: url.replayAt }, false);
+      setUrl({ ...url, selection, activeLines: [lineId] }, false);
     },
-    [setUrl, selection, url.replayAt],
+    [setUrl, selection, url],
+  );
+
+  // --- Navegación entre vistas ------------------------------------------
+
+  const changeView = useCallback(
+    (view: View) => {
+      // Cambiar de vista **conserva** la circulación seleccionada: es la misma
+      // identidad en ambas, así que Live → History → Live devuelve al mismo
+      // objeto sin traducir ninguna clave. Al entrar en History con una
+      // circulación seleccionada, su día de servicio fija la fecha consultada.
+      const next: UrlState = { ...url, view };
+      if (view === "history" && selection.kind === "train") {
+        next.historyDate = selection.circulation.serviceDate;
+      }
+      setUrl(next, true);
+    },
+    [setUrl, url, selection],
+  );
+
+  const pickHistoryDate = useCallback(
+    (serviceDate: string) => {
+      // Al cambiar de día se suelta la circulación seleccionada: la misma
+      // identidad no existe en otro día de servicio, y arrastrarla daría un
+      // 404 o, peor, parecería la misma circulación en una fecha ajena.
+      setUrl({ ...url, historyDate: serviceDate, selection: { kind: "none" } }, true);
+    },
+    [setUrl, url],
+  );
+
+  const pickHistoryLine = useCallback(
+    (line: string | null) => {
+      setUrl({ ...url, historyLine: line, selection: { kind: "none" } }, false);
+    },
+    [setUrl, url],
+  );
+
+  const pickHistoryFilter = useCallback(
+    (filter: HistoryFilter) => {
+      setUrl({ ...url, historyFilter: filter, selection: { kind: "none" } }, false);
+    },
+    [setUrl, url],
+  );
+
+  const openHistoryCirculation = useCallback(
+    (circulation: HistoryCirculation) => {
+      setUrl(
+        {
+          ...url,
+          historyDate: circulation.service_date,
+          selection: {
+            kind: "train",
+            circulation: {
+              // Una circulación programada sin observar no tiene vehículo: se
+              // representa con cadena vacía y la URL omite `train`, en vez de
+              // fabricar un identificador.
+              vehicleId: circulation.vehicle_id ?? "",
+              tripId: circulation.trip_id,
+              serviceDate: circulation.service_date,
+            },
+          },
+        },
+        true,
+      );
+    },
+    [setUrl, url],
+  );
+
+  const backToHistoryList = useCallback(() => {
+    setUrl({ ...url, selection: { kind: "none" } }, true);
+  }, [setUrl, url]);
+
+  const openHistoryLineInList = useCallback(
+    (line: string) => {
+      setUrl(
+        { ...url, view: "history", historyLine: line, selection: { kind: "none" } },
+        true,
+      );
+    },
+    [setUrl, url],
   );
 
   // --- Seguimiento y cámara ---------------------------------------------
@@ -268,7 +397,65 @@ export default function App() {
   const degradedCount = snapshot.data?.degraded.length ?? 0;
   const mode = snapshot.data?.mode ?? catalog.data?.mode ?? health.data?.mode ?? null;
 
+  // Una circulación archivada solo se puede «ver en Live» si está de verdad en
+  // el snapshot vigente: ofrecer el salto sin comprobarlo llevaría a una ficha
+  // vacía. La comprobación es por identidad completa, no por `vehicle_id`.
+  const selectedIsLiveNow =
+    historySelection !== null &&
+    historySelection.vehicleId !== "" &&
+    vehiclesByKey.has(circulationKey(historySelection));
+
+  const openSelectedInLive = useCallback(() => {
+    setUrl({ ...url, view: "live" }, true);
+  }, [setUrl, url]);
+
   const panel = (() => {
+    if (isHistory) {
+      return (
+        <HistoryView
+          index={catalog.index}
+          colors={colors}
+          days={historyDays.data}
+          daysError={historyDays.error}
+          daysLoading={historyDays.loading}
+          serviceDate={historyDate}
+          line={url.historyLine}
+          filter={url.historyFilter}
+          circulations={historyCirculations.data}
+          circulationsError={historyCirculations.error}
+          circulationsLoading={historyCirculations.loading}
+          selected={historySelection}
+          detail={historyDetail.data}
+          detailError={historyDetail.error}
+          detailLoading={historyDetail.loading}
+          selectedIsLiveNow={selectedIsLiveNow}
+          onPickDate={pickHistoryDate}
+          onPickLine={pickHistoryLine}
+          onPickFilter={pickHistoryFilter}
+          onOpenCirculation={openHistoryCirculation}
+          onBackToList={backToHistoryList}
+          onOpenInLive={openSelectedInLive}
+        />
+      );
+    }
+    if (isExplore) {
+      return (
+        <ExploreView
+          index={catalog.index}
+          colors={colors}
+          days={historyDays.data}
+          daysError={historyDays.error}
+          serviceDate={historyDate}
+          lines={historyLines.data}
+          linesError={historyLines.error}
+          linesLoading={historyLines.loading}
+          stations={historyStations.data}
+          stationsError={historyStations.error}
+          onPickDate={pickHistoryDate}
+          onOpenLineInHistory={openHistoryLineInList}
+        />
+      );
+    }
     if (catalog.index === null) {
       return (
         <div className="panel-body">
@@ -335,18 +522,28 @@ export default function App() {
   })();
 
   return (
-    <div className={panelExpanded ? "app app--expanded" : "app"}>
+    <div
+      className={[
+        "app",
+        panelExpanded ? "app--expanded" : "",
+        isArchiveView ? "app--archive" : "",
+      ]
+        .filter((token) => token !== "")
+        .join(" ")}
+    >
       <TopBar
         mode={mode}
         nowMs={panelNowMs}
         snapshot={snapshot.data}
         degradedCount={degradedCount}
         snapshotError={snapshot.error}
+        view={url.view}
+        onChangeView={changeView}
       />
 
       <main className="workspace">
         <aside ref={panelRef} className="side-panel" aria-label="Panel de navegación y detalle">
-          {isMobile && (
+          {isMobile && !isArchiveView && (
             <button
               type="button"
               className="sheet-toggle"
@@ -356,25 +553,36 @@ export default function App() {
               {panelExpanded ? "Recoger panel" : "Ampliar panel"}
             </button>
           )}
-          <SearchBox index={catalog.index} onPickStation={selectStation} onPickLine={openLine} />
-          <LineFilter
-            index={catalog.index}
-            colors={colors}
-            activeLines={activeLines}
-            counts={lineCounts}
-            onToggle={toggleLine}
-            onClear={clearLines}
-          />
-          {(snapshot.error !== null || degradedCount > 0) && (
-            <p className="notice notice--warn" role="status">
-              {snapshot.error !== null
-                ? `El snapshot no se pudo actualizar (${snapshot.error}). Se conserva el último válido y su edad sigue avanzando.`
-                : `${degradedCount} recurso(s) degradado(s): se conserva el último dato válido con su hora.`}
-            </p>
+          {/* Búsqueda, filtro de líneas y avisos del snapshot son de Live: en
+              el archivo filtrarían un dato que no se está sondeando. */}
+          {!isArchiveView && (
+            <>
+              <SearchBox
+                index={catalog.index}
+                onPickStation={selectStation}
+                onPickLine={openLine}
+              />
+              <LineFilter
+                index={catalog.index}
+                colors={colors}
+                activeLines={activeLines}
+                counts={lineCounts}
+                onToggle={toggleLine}
+                onClear={clearLines}
+              />
+              {(snapshot.error !== null || degradedCount > 0) && (
+                <p className="notice notice--warn" role="status">
+                  {snapshot.error !== null
+                    ? `El snapshot no se pudo actualizar (${snapshot.error}). Se conserva el último válido y su edad sigue avanzando.`
+                    : `${degradedCount} recurso(s) degradado(s): se conserva el último dato válido con su hora.`}
+                </p>
+              )}
+            </>
           )}
           {panel}
         </aside>
 
+        {!isArchiveView && (
         <section className="map-column" aria-label="Mapa de la red">
           {mapAvailable ? (
             <Suspense fallback={<div className="map-message">Preparando el mapa…</div>}>
@@ -435,20 +643,25 @@ export default function App() {
           </div>
           {mapAvailable && <Legend present={presentMethods} />}
         </section>
+        )}
       </main>
 
-      <NewsTicker
-        items={newsItems}
-        paused={newsPaused}
-        onTogglePause={() => setNewsPaused((value) => !value)}
-        reducedMotion={reducedMotion}
-      />
+      {!isArchiveView && (
+        <NewsTicker
+          items={newsItems}
+          paused={newsPaused}
+          onTogglePause={() => setNewsPaused((value) => !value)}
+          reducedMotion={reducedMotion}
+        />
+      )}
       <p className="visually-hidden" aria-live="polite">
-        {selection.kind === "none"
-          ? "Vista de red"
-          : selection.kind === "station"
-            ? `Estación seleccionada: ${catalog.index?.stationsById.get(selection.stationId)?.name ?? selection.stationId}`
-            : `Circulación seleccionada: ${selection.circulation.vehicleId}`}
+        {isArchiveView
+          ? `Vista de archivo: ${url.view === "history" ? "histórico" : "Explore"}${historyDate === null ? "" : `, día ${historyDate}`}`
+          : selection.kind === "none"
+            ? "Vista de red"
+            : selection.kind === "station"
+              ? `Estación seleccionada: ${catalog.index?.stationsById.get(selection.stationId)?.name ?? selection.stationId}`
+              : `Circulación seleccionada: ${selection.circulation.vehicleId}`}
       </p>
       <span className="visually-hidden">{selectionId}</span>
     </div>
