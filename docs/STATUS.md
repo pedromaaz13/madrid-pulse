@@ -288,7 +288,31 @@ Con Hito 1 ya fusionado a `main`, el caso concreto de MP-012 **deja de requerir 
 
 ## Tarea actual
 
-**MP-021 — Histórico y continuidad analítica (cerrada)**
+**MP-022 — Validación integral de cierre (Madrid completo)**
+
+Ejecutor: OpenAI Codex · Revisor: Claude (Sonnet) · Estado: **IN_PROGRESS**
+
+Worktree/rama: `mp-022-validacion-integrada`, ramificada desde `mp-021-historico` (MP-021 `DONE`, `1ecbc8f`). Datos del kit repuestos con `instalar.py --solo-datos` (10 ficheros). Es la última tarea de la cadena `MP-016`→`MP-022`.
+
+### Alcance de MP-022
+
+Auditoría final cruzada: recorrido completo Live → History con la misma identidad de circulación, matriz de cobertura real por línea/variante/patrón (física, de resolución del feed, de ETAs — nunca "cobertura total de GPS" sobre una muestra congelada), pruebas E2E que distinguen explícitamente captura congelada de producción, métricas de rendimiento por línea en equipo/navegador/dataset documentados, capturas reales desktop/móvil, y un dossier final para que el propietario decida la integración a `main`. No es diseño nuevo — ningún módulo de producto se reescribe salvo que la propia auditoría encuentre un defecto real.
+
+### Qué deja pendiente de decisión del propietario (a reflejar en el dossier, no a resolver aquí)
+
+- ADR-0014 (contrato de snapshot/temporal, MP-019) y ADR-0015 (archivo frío/histórico, MP-021) siguen `Propuesto` — su promoción es decisión exclusiva del propietario.
+- DEC-033 (b)/(c) (umbral de puntualidad sin calibrar, `data_quality_event` sin atribución a parada), DEC-038 (pool de conexiones PostgreSQL), DEC-004 (retención definitiva del histórico, ya con medición real de MP-021) siguen abiertas.
+- Operación 24/7 real, AV/LD/MD y despliegue público: explícitamente **no iniciados**, roadmap futuro según `docs/hitos/hito-03/SIGUIENTES-HITOS.md` — ninguna autorización implícita de este hito se extiende a ellos.
+
+### Entorno heredado (disponible, comprobar antes de asumir que sigue vivo)
+
+MP-021 dejó API en `127.0.0.1:8011` y Vite en `127.0.0.1:5182` sobre su propio worktree, con el archivo frío de `data/parquet/` (días `2026-11-19`/`2026-11-20` ya archivados). MP-020 mantuvo API `8010`/Vite `5181`/`mp020-replay-db` (`5434`) hasta el cierre de MP-021; se le indicó que podía parar el entorno una vez MP-021 quedó `DONE`. MP-022 debe levantar su propio entorno en este worktree (mismo patrón: contenedor PostgreSQL desechable propio, nunca reutilizar las bases de desarrollo/réplica de otras tareas para escribir en ellas).
+
+## Tareas cerradas de la cadena
+
+## MP-021 — Histórico y continuidad analítica (cerrada)
+
+**MP-021 — Histórico y continuidad analítica**
 
 Ejecutor: Claude (escalado a Opus) · Revisor: OpenAI Codex · Estado: **DONE** (aprobada el `2026-11-23`)
 
@@ -366,7 +390,6 @@ Rehacer el archivo desde cero, si se prefiere: `infra/operate/daily-archive.sh 2
 
 Contenedor desechable propio `mp021-collector-db` (`5435`) creado para la medición de coste y conservado por si el revisor quiere repetirla; el de simulación de CI (`mp021-ci-db`, `5436`) se creó y se borró en la misma sesión. No se ha borrado ningún contenedor, worktree ni fixture de otra tarea: la base de desarrollo (`5433`) sigue en `668/484/3/120/0` y la de replay de MP-020 (`5434`) en `240/199/4/7/2`. El entorno de MP-020 (`8010`/`5181`) se dejó intacto.
 
-## Tareas cerradas de la cadena
 
 ## MP-020 — Mapa y tablero (React/MapLibre) (cerrada)
 

@@ -4,6 +4,10 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 
 ## [Unreleased]
 
+### MP-022 — Validación integral de cierre (en curso)
+
+Tarea abierta tras la aprobación de MP-021 el 2026-11-23. Worktree `mp-022-validacion-integrada`, ramificado desde `mp-021-historico` (`1ecbc8f`) — última tarea de la cadena `MP-016`→`MP-022`. Sin cambios de código todavía; entregables previstos: recorrido completo Live→History verificado en navegador, matriz de cobertura real por línea/variante/patrón, pruebas E2E que distinguen captura congelada de producción, métricas de rendimiento por línea, y un dossier final para la integración del propietario.
+
 ### MP-021 — Histórico y continuidad analítica
 
 Worktree `mp-021-historico`, ramificado desde `mp-020-mapa-y-tablero` (`b616ae6`). `DONE`: aprobado por OpenAI Codex el `2026-11-23` tras dos rondas de revisión independiente; pendiente únicamente de la decisión del propietario sobre integración y promoción de ADR-0015.

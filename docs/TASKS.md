@@ -545,6 +545,33 @@ Autorizado por el propietario el `2026-11-22` (mensaje "ORCA — MADRID PULSE / 
 
 ---
 
+## MP-022 — Validación integral de cierre (Madrid completo)
+
+- **Fase:** Hito 3 — Cierre ferroviario Madrid (última tarea de la cadena)
+- **Objetivo:** auditoría final cruzada de todo el Hito 3 — recorrido completo Live → History con la misma identidad de circulación, matriz de cobertura real por línea/variante/patrón (física, de resolución del feed y de ETAs, nunca "cobertura total de GPS" proclamada sobre una muestra congelada), pruebas sin señal y con recuperación, métricas de rendimiento por línea en equipo/navegador/dataset documentados, capturas reales desktop/móvil, y un dossier final para que el propietario decida la integración a `main`. No es una tarea de diseño nuevo: es la última verificación antes de declarar el hito cerrado.
+- **Prioridad:** P0
+- **Depende de:** MP-021 (`DONE`)
+- **Ejecutor:** OpenAI Codex (asignación fija del kit en `PLAN-Y-ACEPTACION.md`)
+- **Revisor:** Claude (Sonnet — tarea de auditoría/validación, no de arquitectura nueva; no se escala a Opus salvo que surja un hallazgo que lo justifique)
+- **Archivos/componentes afectados:** ningún módulo de producto se reescribe; se añaden/extienden fixtures de prueba, documentación de evidencia (`docs/evidence/`), y posiblemente ajustes menores donde la auditoría encuentre defectos reales (nunca features nuevas).
+- **Entradas:** todo lo entregado en MP-016→MP-021 (catálogo Madrid completo, corredores OSM, contrato de snapshot/ADR-0014, frontend map-first, histórico/Explore/ADR-0015); los dos cortes congelados `1532`/`1533` del kit; `docs/hitos/hito-03/MATRIZ-CIERRE-MADRID.md`, `AMPLIACION-ACEPTACION-MADRID-Y-HORARIOS.md`, `ANEXO-CRITICO-POSICION-Y-RELOJ.md`, `REVISION-FINAL-V4.md`.
+- **Entregables:**
+  1. **Recorrido completo Live → History** demostrado de verdad en navegador: selección desde mapa/lista, seguir→arrastrar→volver, dos sondeos sin pérdida de contexto, respuesta antigua descartada por `revision`, fallo parcial y recuperación, parada/ramal compartido, fuente obsoleta, móvil 390px, teclado completo y `prefers-reduced-motion` — y la trazabilidad real hasta el mart histórico de una circulación (reprocesar el mismo día dos veces, mismo resultado).
+  2. **Matriz de cobertura por línea/variante/patrón** del catálogo vigente (12 líneas/42 rutas/103 patrones): cobertura física (geometría OSM map-matcheada vs. no), de resolución del feed (GPS real vs. solo horario), y de ETAs (con procedencia). Los conteos del replay (`1532`/`1533`) son una muestra congelada — explícito en el dossier, nunca "cobertura total de GPS".
+  3. **Pruebas E2E que distinguen una captura congelada de datos de producción** (instrucción explícita del kit en `PROMPTS.md`): los dos cortes del kit no prueban por sí solos todos los casos ni precisión física — añadir secuencias derivadas/sintéticas etiquetadas o capturas reales adicionales con manifiesto y reloj controlado, sin atribuir a Renfe un escenario fabricado.
+  4. **Métricas de rendimiento por línea** medidas en equipo/navegador/dataset documentados (nunca presupuestos universales) — p50/p95, no solo del contrato de API (ya medido en MP-019) sino del recorrido de usuario real.
+  5. **Dossier final** para la integración del propietario: qué está `DONE`, qué ADRs siguen `Propuesto` (ADR-0014, ADR-0015) a la espera de su decisión, qué límites/gates siguen abiertos (DEC-033 (b)/(c), DEC-038, operación 24/7), y el roadmap explícitamente no iniciado de `SIGUIENTES-HITOS.md` (AV/LD/MD, despliegue 24/7 real).
+- **Criterios de aceptación:**
+  - El recorrido completo se demuestra con vídeo real (≥60s) o capturas reales del frontend integrado — nunca se acredita con el prototipo `diseno/live.html`.
+  - La matriz de cobertura declara explícitamente sus límites y denominadores — ninguna afirmación de cobertura total sin la muestra que la sostiene.
+  - Las pruebas E2E nuevas distinguen explícitamente "captura congelada" de "producción en vivo" — ningún test se presenta como verificación contra datos reales si usa una fixture sintética.
+  - El dossier final es honesto sobre qué queda pendiente de decisión del propietario (ADRs `Propuesto`, DECs abiertas, gates de coste/licencia) — no declara el hito "cerrado" en aspectos que siguen bloqueados por decisión ajena.
+- **Pruebas necesarias:** suite real completa del proyecto (backend+frontend) sin romper nada de MP-016→MP-021; nuevas pruebas E2E/sintéticas etiquetadas; inspección visual real en navegador del recorrido completo (Chrome DevTools MCP), mismo estándar que MP-020/MP-021.
+- **Evidencia de verificación:** pendiente.
+- **Estado:** `IN_PROGRESS`
+
+---
+
 ## Grafo de dependencias
 
 Esta tabla refleja **exactamente** el campo "Depende de" de cada ficha anterior — sin añadir dependencias transitivas redundantes. Para dependencias transitivas (p. ej. qué depende indirectamente de MP-004), recórrase la tabla hacia arriba.
