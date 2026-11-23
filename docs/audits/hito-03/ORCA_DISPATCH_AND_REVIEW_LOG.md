@@ -24,7 +24,8 @@ Mantenido en vivo por el coordinador (Claude Sonnet) a medida que cada `AUD-ID` 
 | AUD-01 | Corrección (ronda 3) | Claude `opus` · high (follow-up) | `ctx_349842fc8de0` | `task_5d4d3be6d4fe` | `574a620` | **aplicada**, enviada a veredicto final |
 | AUD-01 | Revisor (3ª ronda, final) | Codex `gpt-5.6-sol` · high (follow-up) | `ctx_526284cf5474` | `task_4cba05ac92dd` | — | **APPROVED (definitivo)** — AUD-01 cerrado tras 3 rondas |
 | AUD-03 | Corrección (ronda 2) | Codex `gpt-5.6-sol` · high (follow-up) | `ctx_352eb5227c6d` | `task_a86ea689f4b5` | `08ce3b8` | **aplicada**, enviada a veredicto final |
-| AUD-03 | Revisor (2ª ronda, final) | Claude `opus` · high (follow-up) | `ctx_045f259f59a2` | `task_789f8d5e7a80` | — | *(en curso)* |
+| AUD-03 | Revisor (2ª ronda, final) | Claude `opus` · high (follow-up) | `ctx_045f259f59a2` | `task_789f8d5e7a80` | `68e1e16` | **APPROVED (definitivo)** — AUD-03 cerrado tras 2 rondas, 2 mejoras no pedidas |
+| AUD-06 | Revisor | Claude `sonnet` · high | `ctx_6afc827ab5e6` | `task_cb72e0e1c0c5` | `1a1dcbb`* | **APPROVED** — AUD-06 cerrado (*commiteado por el coordinador, el worker no lo hizo) |
 
 ## Incidente de alcance real — AUD-06 escribió en la base de desarrollo compartida
 
@@ -85,4 +86,7 @@ El colector es solo-inserción por diseño (sin ruta de `UPDATE`/`DELETE`), así
 
 - **AUD-01 — CERRADO (APPROVED definitivo tras 3 rondas).** Resumen final: 2 P0 reales confirmados independientemente con cifras exactas (ver tabla de dispatch arriba), 8 hipótesis refutables con umbral numérico explícito, 4 hipótesis descartadas acotadas con razón sustantiva. El revisor de la ronda final dejó constancia de que el commit `574a620` también sincronizó la cifra 68→67+1 de P0-002 con la corrección de AUD-03 (fuera de su encargo explícito, no reevaluado por él) — es consistente con lo que AUD-03 estableció de forma independiente, no una afirmación nueva sin verificar.
 
-*(Esta tabla se actualizará según reporten AUD-04 y el resto.)*
+- **AUD-03 — CERRADO (APPROVED definitivo tras 2 rondas).** El recuento final es 72 patrones sin prueba geométrica, 67 accionables por descarga, 1 irreparable (feed truncado), 4 con alternativa de coste cero ya en el repo. Nota advisory para quien corrija esto en producto (no bloquea el cierre de la auditoría): la celda "0: dato ausente" del CSV debería ser un guion, no un `0`, por el propio principio "dato ausente ≠ cero" de `AGENTS.md` — un pequeño recordatorio de que hasta los documentos de auditoría deben honrar las convenciones del proyecto que auditan.
+- **AUD-06 — CERRADO (APPROVED).**
+
+*(Esta tabla se actualizará según reporte AUD-04.)*
