@@ -89,4 +89,4 @@ El colector es solo-inserción por diseño (sin ruta de `UPDATE`/`DELETE`), así
 - **AUD-03 — CERRADO (APPROVED definitivo tras 2 rondas).** El recuento final es 72 patrones sin prueba geométrica, 67 accionables por descarga, 1 irreparable (feed truncado), 4 con alternativa de coste cero ya en el repo. Nota advisory para quien corrija esto en producto (no bloquea el cierre de la auditoría): la celda "0: dato ausente" del CSV debería ser un guion, no un `0`, por el propio principio "dato ausente ≠ cero" de `AGENTS.md` — un pequeño recordatorio de que hasta los documentos de auditoría deben honrar las convenciones del proyecto que auditan.
 - **AUD-06 — CERRADO (APPROVED).**
 
-*(Esta tabla se actualizará según reporte AUD-04.)*
+*(Esta tabla se actualizará según reporte AUD-04 — último audit primario pendiente, dispatch `ctx_079d97438512`, Claude Opus·High. Con AUD-01/02/03/05/06/07 ya todos APPROVED, solo quedan AUD-04, y después AUD-08 (reproducción/reconciliación) y AUD-09 (síntesis final GO/CONDITIONAL/NO-GO).)*
