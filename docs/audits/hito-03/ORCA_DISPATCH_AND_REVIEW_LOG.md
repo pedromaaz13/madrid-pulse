@@ -38,7 +38,8 @@ Mantenido en vivo por el coordinador (Claude Sonnet) a medida que cada `AUD-ID` 
 | `data_quality_event` | 0 | 8 | +8 |
 
 El colector es solo-inserción por diseño (sin ruta de `UPDATE`/`DELETE`), así que esto es aditivo — nada previo debería haberse alterado o perdido, aunque no se ha hecho un diff fila a fila para confirmarlo al 100%. **No se ha tocado la base de desarrollo desde entonces. La decisión de conservar o limpiar estos registros queda exclusivamente para el propietario** — pendiente de respuesta.
-| AUD-06 | Ejecutor | Codex `gpt-5.6-terra` · high | `ctx_cf7d40a866d7` | `task_7982bf79c176` | *(en curso)* | *(en curso)* |
+| AUD-06 | Ejecutor | Codex `gpt-5.6-terra` · high | `ctx_cf7d40a866d7` | `task_7982bf79c176` | `75f97af` | **completado** — 103 tests reproducidos, 1 P1 real |
+| AUD-06 | Revisor | Claude `sonnet` · high | `ctx_6afc827ab5e6` | `task_cb72e0e1c0c5` | — | *(en curso, advertido explícitamente sobre el incidente de 5433)* |
 | AUD-07 | Ejecutor | Claude `sonnet` · medium | `ctx_7f0fde0b7e4f` | `task_a9deb9865cbc` | `44c98cb`, `ea49e6a` | **completado** — revisión independiente real de Codex (`ctx_db3c9aa62ac8`, settled/succeeded) incorporada: 2 P1→P2, 2 P1 confirmados, 1 hallazgo descartado |
 | AUD-01 | — | Claude `opus` · high (pendiente de despachar) | — | `task_8bf54c0799dd` | — | en cola |
 | AUD-04 | — | Claude `opus` · high (pendiente de despachar) | — | `task_e6d1bf8a933e` | — | en cola |
@@ -77,4 +78,6 @@ El colector es solo-inserción por diseño (sin ruta de `UPDATE`/`DELETE`), así
   - **Dato operativo importante para AUD-09:** el CSV canónico de cobertura asigna el **mismo** `reason` a los 72 pending — la distinción entre "límite externo real" y "sin intentar" **no es recuperable desde el artefacto canónico**, solo desde la prosa de `STATUS.md`.
   - 19/19 tests focales en ambas rondas.
 
-*(Esta tabla se actualizará según reporten AUD-04, AUD-06 y el resto.)*
+- **AUD-06** (backend/operación): 103 tests reales reproducidos contra PostGIS aislado. **P1 principal:** `build_snapshot` puede publicar una `revision` nueva sin incluir el vehículo que la motivó — falta una vista transaccional consistente. **P2:** pérdida de `affected_stop_ids` en algún camino, FKs `trip_id` no pobladas, y confirma lo que AUD-04/AUD-08 deben vigilar: los 823s de operación medidos en MP-021 **no prueban 24/7**.
+
+*(Esta tabla se actualizará según reporten AUD-04 y el resto.)*
