@@ -331,7 +331,23 @@ Con conexión PostgreSQL por petición, ~66 ms de los ~69 ms de p50 de `/api/v1/
 
 ### Entorno levantado por MP-021 (se puede parar cuando el revisor termine)
 
-API `127.0.0.1:8011` y Vite `127.0.0.1:5182` sirviendo **este** worktree, sobre la base de replay `mp020-replay-db` (`5434`, solo lectura) y un archivo frío en el scratchpad de la sesión. Contenedor desechable propio `mp021-collector-db` (`5435`) creado para la medición de coste; no se ha borrado ningún contenedor, worktree ni fixture de otra tarea. El entorno de MP-020 (`8010`/`5181`) se dejó intacto.
+API `127.0.0.1:8011` y Vite `127.0.0.1:5182` sirviendo **este** worktree. El archivo frío vive en `data/parquet/` de este mismo worktree (ignorado por Git, 168 KB), con los días `2026-11-19` y `2026-11-20` ya archivados, para que el revisor no tenga que reconstruirlo.
+
+```bash
+# Backend (lee el archivo de data/parquet y la base de replay en solo lectura)
+MADRID_PULSE_MODE=replay MADRID_PULSE_SHORT_NAME= \
+MADRID_PULSE_DATABASE_DSN=postgresql://madrid_pulse:madrid_pulse_local@127.0.0.1:5434/madrid_pulse \
+MADRID_PULSE_GTFS_SOURCE="$PWD/data/hito-03/replay/fomento_transit.zip" \
+SNAPSHOTTER_OUTPUT_DIR="$PWD/data/parquet" \
+  .venv/bin/uvicorn apps.api.main:app --host 127.0.0.1 --port 8011
+
+# Frontend
+cd apps/web && MADRID_PULSE_API_TARGET=http://127.0.0.1:8011 npx vite --host 127.0.0.1 --port 5182
+```
+
+Rehacer el archivo desde cero, si se prefiere: `infra/operate/daily-archive.sh 2026-11-20` con `MADRID_PULSE_DATABASE_URL` apuntando a `5434`, y lo mismo para `2026-11-19` contra `5433`.
+
+Contenedor desechable propio `mp021-collector-db` (`5435`) creado para la medición de coste y conservado por si el revisor quiere repetirla; el de simulación de CI (`mp021-ci-db`, `5436`) se creó y se borró en la misma sesión. No se ha borrado ningún contenedor, worktree ni fixture de otra tarea: la base de desarrollo (`5433`) sigue en `668/484/3/120/0` y la de replay de MP-020 (`5434`) en `240/199/4/7/2`. El entorno de MP-020 (`8010`/`5181`) se dejó intacto.
 
 ## Tareas cerradas de la cadena
 
