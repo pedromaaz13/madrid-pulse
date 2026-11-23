@@ -44,7 +44,7 @@ No se avanza fuera de MP-010→MP-015 sin nueva autorización explícita (p. ej.
 - **Discrepancia señalada al propietario:** el encargo nombra "Claude Sonnet 5.5" / "Claude Opus 5.5 High" como modelos. El contexto de entorno de esta sesión solo confirma la existencia de **Sonnet 5** y **Opus 5** (además de Haiku 4.5) como los modelos Claude más recientes disponibles — no se ha podido verificar ningún identificador "5.5". Siguiendo la instrucción explícita de no inventar identificadores, los workers de Hito 2 se lanzan con `--model sonnet --effort high` (por defecto) y `--model opus --effort high` (escalado), que son los identificadores reales confirmados, no una invención de "5.5".
 - Codex: se usa el modelo/nivel de razonamiento disponible más adecuado, priorizando razonamiento alto para geometría, movimiento, contratos e integración, conforme a los roles ya fijados en `docs/TASKS.md`.
 
-**Hito 3 autorizado por el propietario el `2026-11-22`: `MP-016` → `MP-022` ("Hito 3 — toda Cercanías Madrid, mapa map-first").**
+**Hito 3 autorizado por el propietario el `2026-11-22`: `MP-016` → `MP-022` ("Hito 3 — toda Cercanías Madrid, mapa map-first"). Completado el `2026-11-23`: las siete tareas están `DONE`, cada una con revisión cruzada independiente aprobada. No fusionado a `main` — esa decisión es exclusiva del propietario (ver "Tarea actual" para el dossier de integración).**
 
 ```text
 Cobertura: fiabilidad realtime (MP-016) + catálogo Madrid (MP-017) + geometría ferroviaria (MP-018) +
@@ -288,9 +288,28 @@ Con Hito 1 ya fusionado a `main`, el caso concreto de MP-012 **deja de requerir 
 
 ## Tarea actual
 
+**Hito 3 completo: cadena `MP-016`→`MP-022` cerrada, pendiente de integración del propietario**
+
+Las siete tareas del Hito 3 ("Cierre ferroviario Madrid") están `DONE`, cada una aprobada por revisión cruzada independiente (Claude revisa a Codex o viceversa, según la tabla fija del kit) en su propio worktree: `MP-016` (fiabilidad realtime), `MP-017` (catálogo Madrid completo), `MP-018` (corredores OSM), `MP-019` (contrato de snapshot/API, ADR-0014), `MP-020` (frontend map-first), `MP-021` (histórico/Explore/operación continua, ADR-0015), `MP-022` (auditoría final integral, aprobada el 2026-11-23).
+
+### Qué queda exclusivamente para el propietario
+
+- **Integración a `main`:** ningún agente ha hecho `push`/PR/merge en ningún momento del hito. Las siete ramas (`mp-016-fiabilidad-live` → `mp-022-validacion-integrada`) están encadenadas y listas; el propietario decide cuándo y cómo fusionarlas.
+- **ADR-0014** (contrato de snapshot/temporal) y **ADR-0015** (archivo frío/histórico): ambos siguen `Propuesto`, nunca autopromovidos por los agentes.
+- **DECs abiertas:** DEC-033 (b)/(c) (umbral de puntualidad sin calibrar, atribución de `data_quality_event` a parada), DEC-038 (pool de conexiones PostgreSQL), DEC-004 (retención definitiva del histórico, ya medida por MP-021: ≈19 MB/día, ≈7 GB/año).
+- **Roadmap explícitamente no iniciado** (`docs/hitos/hito-03/SIGUIENTES-HITOS.md`): AV/Larga Distancia/Media Distancia, nuevos operadores, operación y monitorización 24/7 reales, despliegue público — nada de esto se presenta como trabajo parcial de este hito.
+
+### Dossier de integración
+
+`docs/evidence/mp-022-dossier-integracion.md` (worktree `mp-022-validacion-integrada`) resume el estado completo de la cadena, la matriz de cobertura real (`mp-022-coverage.csv`/`.md`) y el checklist del propietario.
+
+## Tareas cerradas de la cadena
+
+## MP-022 — Validación integral de cierre (Madrid completo) (cerrada)
+
 **MP-022 — Validación integral de cierre (Madrid completo)**
 
-Ejecutor: OpenAI Codex · Revisor: Claude (Sonnet) · Estado: **REVIEW**
+Ejecutor: OpenAI Codex · Revisor: Claude (Sonnet) · Estado: **DONE** (aprobada el 2026-11-23)
 
 Worktree/rama: `mp-022-validacion-integrada`, ramificada desde `mp-021-historico` (MP-021 `DONE`, `1ecbc8f`). Datos del kit repuestos con `instalar.py --solo-datos` (10 ficheros). Es la última tarea de la cadena `MP-016`→`MP-022`.
 
@@ -323,7 +342,19 @@ MP-021 dejó API en `127.0.0.1:8011` y Vite en `127.0.0.1:5182` sobre su propio 
 
 **Veredicto del ejecutor:** `REVIEW`, nunca `DONE`. Las nueve puertas están cubiertas y el hallazgo real está corregido; queda la auditoría final del revisor antes de cerrar Hito 3.
 
-## Tareas cerradas de la cadena
+### Auditoría final de Claude (2026-11-23) y cierre del Hito 3
+
+Reproduje en navegador real lo que la sesión del ejecutor no pudo (sin superficie de navegador disponible, mismo límite de MP-020): gate 7 (`matchMedia` forzado a `reduce` antes de montar React, deriva 0 en seis muestras de centro/zoom mientras el reloj seguía avanzando), gate 8 (recorrido real Live → filtro C4a+C4b → tren 20277 → Seguir → arrastre sintético del lienzo MapLibre → Volver al tren → History → Atrás restaurando la URL exacta; móvil 390×844 real vía `emulate`, no resize; teclado con Tab+Enter activando un filtro; sin WebGL vía `initScript` anulando `getContext`) y gate 9 (`requestAnimationFrame` real: 182 frames, 60,3 fps, p50 16,70 ms, p95 18,30 ms; `performance.memory` 96,2 MiB).
+
+Encontré y devolví dos hallazgos reales, ambos corregidos por el ejecutor y reverificados por mí de forma independiente:
+
+1. **Sustitución silenciosa de día en `HistoryView.tsx`** (`days.days.find(...) ?? days.days[0]`): un `hd` de URL no archivado mostraba el encabezado/breadcrumb del primer día disponible como si fuera el pedido. Corregido con un estado explícito «Día no archivado» que conserva la fecha solicitada, con regresión (`HistoryView.test.tsx`) que confirmé en vivo tras el hot-reload del fix.
+2. **Dos módulos de test nuevos fuera de CI**: `apps.api.tests.test_closure_matrix` y `tests.e2e.test_mp022_synthetic_derived` (7 tests que blindan las puertas 2/3/7 y el contrato de la matriz, añadidos por esta misma tarea) no estaban en la lista explícita de `.github/workflows/ci.yml` — nunca se habrían ejecutado en una CI real. Corregido añadiéndolos al workflow.
+
+Reejecuté yo mismo, dos veces, contra contenedores PostgreSQL 17-3.5 desechables propios (puertos `5439` y `5440`, migraciones `0001`+`0002` aplicadas desde cero, destruidos al terminar, sin tocar `mp022-validation-db`/`mp022-ci-db` del ejecutor ni las bases de otras tareas): **283/283 tests Python en verde** con la lista actualizada de CI, 1 `skip` real (`test_real_soak_postgres`, ausencia esperada del soak de MP-007 en una base fresca) — diferencia informativa frente al `5 skip` que registra el ejecutor en su propio entorno persistente, no bloqueante. Frontend **89/89** con Node 22.13.1 real, lint y typecheck limpios, build con worker MapLibre de **550754 bytes** verificado byte a byte. `git diff --check` limpio y autoría exclusiva de Pedro Matute sin `Co-authored-by` en los tres commits (`c745374`, `4d25658`, `23ec6c0`).
+
+**Veredicto: APROBADA, sin hallazgos abiertos.** MP-022 pasa a `DONE`, cerrando la cadena completa `MP-016`→`MP-022` del Hito 3. ADR-0014 y ADR-0015 permanecen `Propuesto`; DEC-033 (b)/(c), DEC-038 y DEC-004 siguen abiertas; el roadmap de AV/LD/MD y operación 24/7 real está explícitamente no iniciado — todo pendiente de decisión exclusiva del propietario. Ningún agente ha hecho `push`/PR/merge; esas acciones corresponden solo a `pedromaaz13`.
+
 
 ## MP-021 — Histórico y continuidad analítica (cerrada)
 

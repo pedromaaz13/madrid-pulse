@@ -4,9 +4,9 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 
 ## [Unreleased]
 
-### MP-022 — Validación integral de cierre (`REVIEW`)
+### MP-022 — Validación integral de cierre (`DONE`)
 
-Auditoría final sobre un entorno desechable propio. No añade features ni cambia arquitectura.
+Worktree `mp-022-validacion-integrada`, ramificado desde `mp-021-historico` (`1ecbc8f`). `DONE`: aprobada por Claude el `2026-11-23` tras dos rondas de revisión independiente. **Cierra la cadena completa `MP-016`→`MP-022` del Hito 3** — pendiente únicamente de la decisión del propietario sobre integración a `main` y promoción de ADR-0014/ADR-0015. Auditoría final sobre un entorno desechable propio. No añade features ni cambia arquitectura.
 
 #### Added
 - Generador reproducible `apps/api/tools/build_closure_matrix.py` y matriz CSV/Markdown con el esquema vinculante exacto: 12 líneas, 42 rutas, 103 patrones, 1 299 instancias con horario y denominadores explícitos. C4 conserva horario/catálogo con GPS 0 y cobertura `null`; 28/103 patrones map-matcheables, fallback raw/tablero declarado.
@@ -24,8 +24,13 @@ Auditoría final sobre un entorno desechable propio. No añade features ni cambi
 - `HistoryView` ya no sustituye silenciosamente un día URL no archivado por el primero disponible en encabezado y breadcrumb: muestra un estado explícito, conserva la fecha solicitada y ofrece los días reales como opciones. Frontend 89/89, typecheck y lint limpios.
 - `.github/workflows/ci.yml` ejecuta ahora `apps.api.tests.test_closure_matrix` y `tests.e2e.test_mp022_synthetic_derived`; los siete tests de aceptación MP-022 dejan de quedar fuera del pipeline.
 
-#### Not done
-- La tarea no se marca `DONE` hasta la auditoría final de Claude; ADR-0014/0015 siguen `Propuesto`, DECs 033(b)/(c), 038 y 004 abiertas, y no se afirma 24/7 ni trabajo de AV/LD/MD.
+#### Verified (auditoría final de Claude, 2026-11-23)
+- Inspección real en navegador que la sesión del ejecutor no pudo hacer (sin superficie de navegador, mismo límite de MP-020): gate 7 con `matchMedia` forzado a `reduce` antes de montar React (deriva 0 en seis muestras de centro/zoom mientras el reloj seguía avanzando); gate 8 con un recorrido real nuevo (Live → filtro C4a+C4b → tren 20277 → Seguir → arrastre sintético real del lienzo MapLibre → Volver al tren → History → Atrás, restaurando la URL exacta), móvil 390×844 real vía `emulate` (no resize), teclado (Tab+Enter) y sin WebGL vía `initScript`; gate 9 con `requestAnimationFrame` real (182 frames, 60,3 fps, p50 16,70 ms, p95 18,30 ms) y `performance.memory` (96,2 MiB).
+- Dos hallazgos reales encontrados y devueltos al ejecutor, ambos corregidos y reverificados de forma independiente: la sustitución silenciosa de día en `HistoryView.tsx` (ver `Fixed`) y dos módulos de test nuevos (`apps.api.tests.test_closure_matrix`, `tests.e2e.test_mp022_synthetic_derived`) ausentes de `.github/workflows/ci.yml` pese a blindar las puertas 2/3/7 y el contrato de matriz de esta misma tarea.
+- Reejecución propia, dos veces, contra contenedores PostgreSQL 17-3.5 desechables (puertos `5439`/`5440`, migraciones desde cero, destruidos al terminar): **283/283** tests Python con la lista de CI ya corregida, 1 `skip` real (`test_real_soak_postgres`). Frontend **89/89** con Node 22.13.1 real, lint/typecheck limpios, build con worker MapLibre de **550754 bytes** verificado. `git diff --check` limpio; autoría exclusiva de Pedro Matute sin `Co-authored-by` en los tres commits (`c745374`, `4d25658`, `23ec6c0`).
+
+#### Not done (declarado explícitamente, decisión exclusiva del propietario)
+- ADR-0014/0015 siguen `Propuesto`; DECs 033(b)/(c), 038 y 004 abiertas; no se afirma 24/7 ni trabajo de AV/LD/MD; ningún agente ha hecho `push`/PR/merge.
 
 ### MP-021 — Histórico y continuidad analítica
 

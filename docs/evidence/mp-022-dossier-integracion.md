@@ -10,12 +10,15 @@
 | MP-019 | Snapshot/API | catálogo cacheable, revisión monotónica, raw/matched/rendered, tablero y ETA | DONE |
 | MP-020 | Mapa/tablero | map-first, búsqueda, selección, seguimiento, móvil, teclado, sin WebGL | DONE |
 | MP-021 | History/Explore | archivo idempotente, histórico por circulación, cobertura y huecos | DONE |
-| MP-022 | Auditoría integral | matriz, replay, fixtures sintéticas, benchmark API/frames/memoria y recorrido navegador completo | REVIEW |
+| MP-022 | Auditoría integral | matriz, replay, fixtures sintéticas, benchmark API/frames/memoria y recorrido navegador completo | DONE |
 
-Las nueve puertas tienen evidencia y el hallazgo de History tiene corrección y
-regresión. El propietario **no debe integrar todavía como Hito 3 cerrado**:
-falta que el revisor audite el diff corregido y promueva explícitamente la
-tarea a `DONE`. No hay push, PR ni merge efectuados por agentes.
+Las nueve puertas tienen evidencia, los dos hallazgos reales (sustitución
+silenciosa de día en History; dos tests nuevos fuera de CI) están corregidos
+con regresión, y Claude auditó el diff completo de forma independiente sin
+hallazgos abiertos. **El Hito 3 está completo** — la cadena `MP-016`→`MP-022`
+queda `DONE` en su totalidad. No hay push, PR ni merge efectuados por
+agentes: la integración a `main` sigue siendo decisión exclusiva del
+propietario.
 
 ## Cobertura de Madrid
 
@@ -76,12 +79,17 @@ Ninguno se presenta como trabajo parcial de Hito 3 ni como cobertura actual.
 
 ## Checklist del propietario
 
-- [ ] Revisor Claude inspecciona el diff completo y repite suites críticas.
+- [x] Revisor Claude inspeccionó el diff completo (dos rondas) y repitió las
+  suites críticas dos veces contra PostgreSQL desechable propio (283/283
+  Python, 89/89 frontend).
 - [x] Revisor ejecutó recorrido integrado desktop y móvil 390 px con
   navegador real, teclado, reduced motion y fallback sin WebGL.
 - [x] Revisor registró frames y memoria, separados de la animación continua;
   el endpoint legado de 1,6/2,1 s queda registrado fuera del camino frontend.
-- [ ] Revisor audita la corrección del día no archivado y, si no hay nuevos
-  hallazgos, cambia MP-022 a `DONE` en TASKS/STATUS/CHANGELOG.
+- [x] Revisor auditó la corrección del día no archivado y del hallazgo de CI
+  (dos módulos de test fuera del workflow), sin hallazgos abiertos; MP-022
+  cambiado a `DONE` en TASKS/STATUS/CHANGELOG el 2026-11-23. **Cierra la
+  cadena completa del Hito 3.**
 - [ ] Propietario decide ADR-0014/0015 y DECs abiertas.
-- [ ] Solo el propietario realiza push, PR y merge.
+- [ ] Solo el propietario realiza push, PR y merge (las siete ramas del hito
+  están listas y encadenadas, ninguna fusionada).
