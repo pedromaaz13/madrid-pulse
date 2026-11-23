@@ -553,7 +553,7 @@ suite completa: esta tarea no modifica producto.
 
 **Ejecuta AUD-03:** OpenAI Codex (auditoría adversarial)
 
-**Revisa AUD-03:** Claude Opus · High (pendiente)
+**Revisa AUD-03:** Claude Opus · High — **CHANGES_REQUESTED** (ver «Revisión independiente de AUD-03» al final de este documento)
 
 **Fecha:** 2026-11-23
 
@@ -996,3 +996,276 @@ done
 Resultado focal: **19/19 OK**. `compileall` del script y `git diff --check`
 terminaron sin errores. No se modificó código de producto ni se declara la
 suite completa.
+
+---
+
+## Revisión independiente de AUD-03
+
+**Revisa:** Claude Opus · High · contexto nuevo (`task_5f1319cdd3c0`, `ctx_4db56fd6dd34`)
+
+**Fecha:** 2026-11-23 · **Base:** rama `audit/hito-03-adversarial`, commit `1c28163`
+
+**Veredicto: `CHANGES_REQUESTED`.** Los cuatro recuentos del veredicto reproducen
+exactos, la matriz de 75 filas es consistente byte a byte con el CSV canónico y los
+dos hallazgos P1 y el P2-001 quedan **confirmados con evidencia propia más fuerte que
+la aportada**. Ninguna conclusión central se cae. Lo que exige corrección es el
+diagnóstico de **AUD03-P2-002**: el patrón de una parada no es una secuencia
+legítimamente degenerada que haya que clasificar, es un **truncamiento del feed de
+origen**, y la solución recomendada (estado `non_traversable`) consagraría un defecto
+de dato como estado de producto. Se añaden dos precisiones advisory.
+
+### Método de la revisión (sin descargas externas)
+
+No se descargó nada de Overpass ni de la API de OSM: la verificación de la relación
+`9174512` se hizo por vía indirecta offline (abajo). Los recuentos **no** se tomaron de
+`scratch/aud03_geometry.py` —el instrumento del ejecutor— sino recomputados contra el
+catálogo de producto (`build_madrid_corridor_catalog`) y contra el ZIP GTFS crudo. El
+script del ejecutor se ejecutó además una vez para comprobar que reproduce lo que el
+informe cita.
+
+### 1. Recuento de 67 / 103 — **CONFIRMADO**
+
+Recomputado desde el catálogo de producto, sin pasar por la taxonomía de causas del
+ejecutor:
+
+| Medida | Recomputado | Informe |
+|---|---:|---:|
+| patrones totales | 103 | 103 |
+| `validated` / `partial` / `pending` | 28 / 3 / 72 | 28 / 3 / 72 |
+| bucket «sin fuente» (pending, ≥2 paradas, `route_id != 10T0016C4b`) | 67 patrones · 20.273 viajes · 269.988 llamadas | idénticos |
+| C4b `10T0016C4b` | 4 · 1.740 · 25.434 | idénticos |
+| caveats | 3 · 31 · 294 | idénticos |
+| degenerado | 1 · 54 · 54 | idénticos |
+| **suma** | **75 · 22.098 · 295.770** | idénticos |
+
+La matriz de 75 filas del informe se cruzó fila a fila contra
+`docs/evidence/mp-018-corridor-coverage.csv` en `line_id`, `route_id`,
+`direction_key`, `status` y `trip_count`: **0 discrepancias**, y el conjunto de 75
+`pattern_id` es exactamente el de los no-`validated` del CSV. Suma de viajes de la
+matriz: 22.098. Verificadas también las derivadas: 20.273/35.976 = 56,351 %;
+1.740/35.976 = 4,837 %; la proyección «tras congelar + retirar caveats» 35/103,
+15.649/35.976 = 43,498 %, 267.857/537.899 = 49,797 %; y 819.614/3.175.569 = 25,810 %
+sobre los 90 patrones con shape fiable. Los 19/19 tests focales dan **OK** aquí.
+
+**Precisión que el informe debe incorporar (advisory).** El mecanismo de código no
+afecta a 67 patrones sino a **72**: los 72 `pending` comparten un único `reason`
+(`sin geometría OSM descargada para este patrón/sentido`) y **ninguno de los 72** tiene
+un `route_id` presente en algún `GeometrySourceSpec` —los nueve `route_id` con fuente
+son `10T0011C4`, `10T0012C4`, `10T0013C4a`, `10T0014C4a`, `10T0015C4b`, `10T0017C5`,
+`10T0018C5`, `10T0047C5`, `10T0048C5`—. Es decir: a 72 de 103 patrones **no se les
+aplicó nunca una prueba geométrica**. La partición en 67 + 4 + 1 es una refinación
+*probatoria* legítima, no una distinción que el código haga. Si la pregunta es «cuántos
+patrones nunca se contrastaron contra geometría», la respuesta es 72.
+
+### 2. Los 4 patrones C4b y la relación `9174512` — **CONFIRMADO en sustancia; una cifra no re-verificada**
+
+El test decisivo se puede hacer **sin descargar nada**, y el informe no lo hizo:
+proyectar las paradas de los 4 patrones `10T0016C4b` sobre la relación **ya congelada**
+`9174511` (C4b Colmenar→Parla, sentido opuesto, SHA-256 verificado, 0 huecos).
+
+| Patrón | sentido | paradas | viajes | sobre `9174511` |
+|---|---|---:|---:|---|
+| `3ca1c650c302d356a36c` | `37012>17005` | 15 | 1.632 | máx **48,3 m**, todas ≤150 m, arcos **monótonos decrecientes** |
+| `eb14c27202bd7a1fe15b` | `18000>17005` | 9 | 60 | máx 48,3 m, monótono decreciente |
+| `3d0e2a689cefd948df88` | `37002>17005` | 13 | 18 | máx 48,3 m, monótono decreciente |
+| `0e30aa9375f3971ffd8d` | `17000>17005` | 6 | 30 | máx 48,3 m, monótono decreciente |
+
+Sobre las otras dos relaciones C4 congeladas (`11332`, `9174510`) las mismas paradas
+caen a 1.383 m (El Goloso), 5.337 m (Tres Cantos) y 12.220 m (Colmenar Viejo): el ramal
+de Colmenar no está en ellas, como es esperable. Es decir: **la vía física de las 15
+paradas de esos 4 patrones ya está en el repositorio**, congelada y verificada; 3 de los
+4 patrones son el **inverso exacto** de patrones `10T0015C4b` que el código ya valida, y
+el cuarto es una subsecuencia. El bloqueo real en código es que
+`build_corridor_catalog` exige arcos **crecientes** (`arcs != sorted(arcs)` → descarte).
+Queda descartado sin margen que la causa sea geometría OSM ausente o un problema de
+direccionalidad del dato: **AUD03-P1-002 confirmado**. Confirmado también que ningún
+`PatternCaveat` aplica a `10T0016C4b`, así que una fuente con ese `route_id` que pase
+los criterios los deja en `validated`, no en `partial`.
+
+**Existencia de `9174512`:** corroborada por dos artefactos del repositorio escritos en
+MP-018, anteriores e independientes de esta auditoría —
+`tests/fixtures/osm_c4_real/MANIFEST.md` («las cuatro relaciones se publican con
+`ref=C-4`»; nombra `9174512`, C4b Parla→Colmenar) y `docs/STATUS.md:850-852`. El
+descubrimiento vía `find_route_relations` sí completó; lo que falló con `502` fue la
+descarga de geometría.
+
+**No re-verificado (y el informe debe marcarlo así):** las cifras vivas de P1-002 —
+versión 42, timestamp, 59,440 km, 1.223 nodos, 111 ways, `sha256:03d87e1c…` y los
+máximos de 33,2–36,6 m— descansan en **una sola llamada en vivo del ejecutor**, no
+reproducible en esta revisión (descargas no autorizadas) y no congelada en el repo. La
+conclusión no depende de ellas, pero su procedencia es de un solo punto y así debe
+leerse hasta que la relación se congele con checksum.
+
+**Alternativa omitida en P1-002 (advisory).** Las tres alternativas listadas (congelar
+ahora / reintentar con backoff / seguir en raw) omiten la de **coste cero en descargas**:
+aceptar arcos decrecientes, o construir el corredor inverso, sobre la `9174511` ya
+congelada —que, como se ve arriba, encaja las 15 paradas a 48,3 m—. Hay un argumento
+físico real para **no** hacerlo, y es del propio repositorio: `MANIFEST.md` documenta que
+las relaciones del sentido opuesto «usan la otra vía de la plataforma doble y no
+necesariamente comparten IDs de `way`». Reutilizar `9174511` invertida situaría los
+trenes en la vía contigua equivocada. La recomendación (A) es por tanto la correcta,
+pero la razón de descartar la opción barata merece quedar escrita, no omitida.
+
+### 3. Los tres caveats manuales — **CONFIRMADO, con evidencia adicional**
+
+Texto exacto de `packages/geo/madrid.py::_known_caveats` y su aplicación verificados:
+dos condicionales que disparan por `route_id` + `len(stop_ids)`, y un emparejamiento
+exacto por `(route_id, stop_ids)` en `build_corridor_catalog`. Los tres patrones tienen
+candidato geométrico válido —`max_stop_distance_m` 48,3 / 37,3 / 28,4 m, continuidad y
+orden correctos— y el caveat es la **única** diferencia respecto a `validated`.
+
+Más allá de lo que aporta el informe, se contrastó la geometría declarada por el propio
+operador (`shapes.txt`) contra el corredor OSM, recortada al tramo que usa cada patrón:
+
+- **C4b 14 paradas (`cec92b20eec83ba3577a`)**: usa el **mismo `shape_id` `10_C4b`** que
+  el patrón de 15 paradas que el código **sí valida** (1.651 viajes); los 584 puntos del
+  shape van a ≤**97,3 m** del corredor `9174511`, **0 puntos** por encima de 150 m. Y
+  sobre el tramo del patrón hay exactamente **una** estación del feed no servida:
+  Nuevos Ministerios (`18002`), a 44,5 m del eje. El operador declara la misma
+  geometría para la variante degradada que para la validada, y el caveat admite en su
+  propio texto «vía real continua». Es un skip-stop sobre la misma vía: **falso negativo
+  demostrado**.
+- **C5 7 paradas (`bffbd086a5199ea38342`, `2bc1cf546f0e8b6a52f6`)**: el shape de línea
+  (`10_C5` / `10_C5_INV`) se separa hasta 345/350 m del corredor congelado en el tramo
+  Atocha–Villaverde Alto, **pero exactamente igual en los patrones que el código sí
+  valida** (los de 12, 22 y 23 paradas de `10T0017C5`/`10T0018C5` dan los mismos 345,4 /
+  350,4 m y el mismo número de puntos >150 m). El shape, por tanto, **no discrimina**: no
+  aporta evidencia de bifurcación para la variante corta que no aporte igual contra
+  patrones validados. Las 4 paradas omitidas (Méndez Álvaro P.V., Doce de Octubre,
+  Orcasitas, Puente Alcocer) proyectan a **1,0–23,0 m** sobre el mismo corredor y dentro
+  del tramo del propio patrón. No hay en el repositorio ninguna segunda geometría que
+  ofrezca un trazado alternativo para ellas.
+
+Conclusión: **AUD03-P2-001 confirmado en los tres**. Matiz de redacción: el caveat C5 no
+afirma literalmente «otra vía» —dice «sin relación OSM propia; omite paradas
+intermedias»—, y «sin relación OSM propia» es cierto pero no discrimina, porque **ningún**
+patrón validado tiene relación propia: todos reutilizan la relación de línea. La crítica
+del informe al criterio es justa; la atribución de la frase conviene precisarla.
+
+Fragilidad adicional del generador (advisory): el disparador es
+`len(pattern.stop_ids) == 7` sobre `10T0047C5`/`10T0048C5`. Hoy acierta porque existe
+exactamente un patrón de 7 paradas en cada uno, pero cualquier variante futura de 7
+paradas en esos `route_id` quedaría degradada en silencio. El emparejamiento posterior sí
+es exacto por secuencia; la fragilidad está en el generador, no en el matcher.
+
+### 4. El patrón degenerado de una parada — **DIAGNÓSTICO INCORRECTO; es un defecto del feed**
+
+El patrón es `gtfs-pattern:574a2681305065df5673`, `route_id=10T0098C8b`, una sola parada
+`12006` (Cercedilla), 54 viajes. Hasta aquí el informe acierta. Lo que no reporta, leído
+del ZIP crudo (`fomento_transit.zip`, campos con relleno de espacios, por lo que hay que
+`strip()` antes de cruzar `trip_id`):
+
+- Los 54 `stop_times` de esos 54 viajes tienen **`stop_sequence` = `032` (43 viajes) y
+  `025` (11 viajes)** — **no `1`**. Cercedilla es la parada nº 32 o nº 25 de secuencias
+  más largas cuyas demás filas **faltan en el feed**. Un ramal corto legítimo tendría
+  `stop_sequence` 1. Esto es concluyente.
+- `arrival 12:19 / departure 12:32`: 13 minutos de parada en la posición 32, propio de un
+  final de recorrido cuyas paradas anteriores se han perdido.
+- `routes.txt` declara `route_long_name` = `"Cercedilla                              -"`
+  — con el destino **en blanco**. La ruta espejo `10T0097C8b` declara `"-Cercedilla"`, con
+  el origen en blanco, y tiene **114 viajes con CERO `stop_times`**.
+- `trip_headsign` vacío en los 54; `shape_id` = `10_C8b_INV` **sí existe**: el operador
+  publica geometría para ese sentido; lo que falta son los `stop_times`.
+
+Es decir, el par C8b de Cercedilla está **roto en los dos sentidos** en el feed de
+origen: un sentido pierde todos sus `stop_times` (y por eso desaparece por completo del
+catálogo) y el otro conserva uno (y por eso aparece como patrón de una parada). No es
+«secuencia insuficiente para definir desplazamiento» como propiedad del dato: es
+**truncamiento del dato de origen**.
+
+Consecuencias para el hallazgo, que debe reescribirse:
+
+- La **causa raíz** declarada («el catálogo preserva fielmente cualquier secuencia no
+  vacía») describe el síntoma en el consumidor, no el defecto en el origen.
+- La **recomendación (A) «conservarlo con estado `non_traversable`»** convertiría un
+  defecto de feed en un estado permanente de producto. Lo que corresponde es emitir un
+  **evento de calidad de dato** por `trip` con `stop_sequence` inicial distinta de la
+  primera de su secuencia o con `stop_times` incompletos, y que el estado de cobertura lo
+  refleje como dato defectuoso, no como trazado imposible. La distinción importa porque
+  `non_traversable` sugiere «este servicio no se puede animar» cuando lo correcto es
+  «este horario llegó incompleto».
+- Escala del mismo defecto, no cuantificada en el informe: en los `route_id` de la red 10
+  el feed tiene **36.097 viajes**, de los que **35.976 entran al catálogo** y **121
+  desaparecen**: 114 de `10T0097C8b` (cero `stop_times`) y 7 de `10T0035C5` (el huérfano
+  ya documentado en DEC-025(c)). Esos 121 viajes **no están en ningún denominador** del
+  informe ni del CSV. La crítica de P2-002 a los denominadores es acertada, pero apunta
+  al lado pequeño: además del patrón degenerado que infla 103, hay 121 circulaciones
+  reales que el denominador 35.976 **omite en silencio**. En todo el feed nacional:
+  331 viajes con un solo `stop_time` y 430 sin ninguno.
+
+Confirmado sí el dato auxiliar que cita el informe:
+`packages/movement/schedule.py:155-156` exige ≥2 `stop_times`
+(`no tiene al menos dos stop_times`), y `PatternIdentity.from_pattern` admite una sola
+parada.
+
+### 5. Relación con `AUD01-P0-002` — **lo refuerza y lo refina; no lo contradice**
+
+La aritmética encaja sin residuo. P0-002 parte los 72 `pending` en **68 sin intento
+documentado + 4 C4b con intento real fallido**. AUD-03 parte los 75 no-`validated` en
+**67 + 4 + 3 + 1**. La identidad es exacta: **68 = 67 + 1**, donde el 1 es el patrón
+degenerado de C8b, y los 4 de C4b son literalmente los mismos cuatro `pattern_id`. AUD-03
+no desmiente a P0-002: le saca un patrón del cubo accionable.
+
+Qué refuerza:
+
+- El `reason` único compartido por los 72 queda confirmado tal como P0-002 lo denuncia
+  («la distinción entre el límite externo de C4b y los 68 sin intento no es recuperable
+  desde el artefacto canónico»): los 72 llevan la misma cadena, verificado en el CSV.
+- La afirmación de P0-002 de que los 4 de C4b «necesitan un reintento contra Overpass, no
+  una decisión de alcance» queda **elevada de grado**: esta revisión demuestra offline que
+  la vía de esos 4 patrones ya está congelada en el repositorio a 48,3 m, invertida. No es
+  solo que el reintento sea lo que falta: es que el dato necesario para descartar
+  «geometría ausente» ya estaba dentro y no se usó.
+
+Qué refina (y debe corregirse en `PRODUCT_AUDIT.md` cuando su ronda de corrección lo
+permita — no se ha tocado ese fichero, está modificado por otra sesión):
+
+- De los **68** «sin intento documentado», **67** son accionables descargando geometría.
+  El 68º (`10T0098C8b`, 54 viajes) **no se arregla con ninguna descarga**: su horario
+  llegó truncado del origen. Contarlo entre los que «nunca se intentaron descargar» hace
+  que el trabajo pendiente parezca una unidad mayor de lo que es y atribuye a omisión del
+  proyecto lo que es un defecto del proveedor.
+- Precisión epistémica sobre «nunca se intentaron descargar»: lo verificable en el repo es
+  que **no existe fuente congelada** para esos `route_id` y que **no hay intento
+  registrado** en `STATUS`/`TASKS`/`MANIFEST`. Ausencia de registro es más débil que
+  prueba de no-intento. Con el alcance deliberadamente mínimo de MP-018 («C5 + un ramal de
+  C4») la conclusión se sostiene, pero la frase precisa es «sin fuente ni intento
+  registrado», que es como P0-002 ya la redacta en su evidencia; conviene que el resumen
+  no la abrevie a «nunca se intentaron».
+
+### Correcciones solicitadas
+
+1. **AUD03-P2-002 — reescribir diagnóstico, causa raíz y recomendación.** El patrón de
+   una parada es un truncamiento del feed (`stop_sequence` 032/025, `route_long_name` con
+   extremo en blanco, ruta espejo `10T0097C8b` con 114 viajes y cero `stop_times`), no una
+   secuencia degenerada que haya que clasificar como `non_traversable`. Añadir los 121
+   viajes de red 10 que el denominador 35.976 omite.
+2. **AUD03-P1-002 — marcar como procedencia de un solo punto** las cifras vivas de
+   `9174512` (versión 42, 59,440 km, 33,2–36,6 m, `sha256:03d87e1c…`), no reproducibles
+   mientras la relación no esté congelada; e incorporar el test offline sobre `9174511`
+   (48,3 m, monotonía inversa, 3/4 inversos exactos), que sostiene la conclusión sin red.
+3. **AUD03-P1-002 — registrar la alternativa omitida** (reutilizar `9174511` invertida,
+   cero descargas) junto con la razón física documentada para descartarla (vía contigua
+   distinta, `MANIFEST.md`).
+4. **Veredicto y AUD03-P1-001 — añadir la precisión 72 vs 67**: el mecanismo de código
+   deja **72** patrones sin prueba geométrica alguna; 67 es la partición probatoria.
+5. **AUD03-P2-001 — precisar la atribución** de la frase en el caveat C5 («sin relación
+   OSM propia; omite paradas intermedias», no «otra vía») y añadir la evidencia de shape
+   (mismo `shape_id` validado en C4b; no-discriminación del shape en C5).
+
+Nada de esto altera el veredicto de fondo del informe —75 ≠ 75 ausencias de vía en OSM,
+sin P0, y el fallback `raw` honesto— ni los recuentos, que reproducen exactos.
+
+### Comandos reproducibles de esta revisión
+
+```sh
+.venv/bin/python scratch/aud03_geometry.py summary      # reproduce lo que el informe cita
+.venv/bin/python -m unittest packages.geo.tests.test_catalog \
+  packages.geo.tests.test_real_feed                     # 19/19 OK
+```
+
+Los cuatro análisis propios (recuento desde el catálogo de producto; proyección de los
+patrones `10T0016C4b` sobre `9174511`; contraste `shapes.txt` vs corredor OSM recortado
+al tramo de cada patrón; lectura del ZIP crudo con `strip()` de campos) son scripts de
+revisión de un solo uso, no versionados: su salida está transcrita íntegra arriba y
+cada uno es reconstruible a partir de `packages.geo` y `packages.gtfs` sin red.
