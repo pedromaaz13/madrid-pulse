@@ -79,6 +79,8 @@ def main() -> None:
             continue
         schedule = build_trip_schedule(topo, coverage.corridor, trip_id)
         anchor_at = CUTS["1532"]
+        # Horizonte EFECTIVO desde el ancla: 10 s de desfase del snapshot (reloj de la
+        # evidencia MP-019) + los 180 s configurados en `stale_after_s` = 190 s.
         horizon_end = anchor_at + timedelta(seconds=10 + thresholds.stale_after_s)
         env = _envelope(
             schedule=schedule,
@@ -97,12 +99,23 @@ def main() -> None:
                      predicted, mb.progress_m, snap))
 
     rows.sort(key=lambda r: -abs(r[6]))
+    horizon_effective_s = 10 + thresholds.stale_after_s
     print(f"circulaciones map-matcheables presentes en ambos cortes: {len(rows)}  "
-          f"(separación real {gap_s:.0f} s)\n")
+          f"(separación real {gap_s:.0f} s)")
+    print(f"horizonte efectivo de la envolvente desde el ancla: {horizon_effective_s:.0f} s "
+          f"(stale_after_s={thresholds.stale_after_s:.0f} configurados + 10 s de desfase)\n")
     print("vehículo  ruta         v_envolvente  v_real    progreso previsto   progreso real     SALTO")
     for vid, rid, vs, vr, pred, real, snap in rows:
         print(f"{vid:<9} {rid:<12} {vs:>8.2f} m/s {vr:>8.2f} {pred:>16.1f} m {real:>14.1f} m "
               f"{snap:>+9.1f} m")
+    # "No se movió" = el progreso map-matcheado es idéntico en los dos cortes, es decir
+    # v_real == 0 exactamente: ni la coordenada bruta ni su proyección cambian.
+    still = [r for r in rows if r[3] == 0.0]
+    moving = [r for r in rows if r[3] != 0.0]
+    print(f"\nsin cambio de coordenada ni de progreso entre los dos cortes: "
+          f"{len(still)} de {len(rows)}")
+    print(f"con movimiento real: {len(moving)} de {len(rows)} "
+          f"(uno de ellos, {[r[0] for r in moving if r[3] < 0]}, hacia atrás)")
     snaps = [abs(r[6]) for r in rows]
     print(f"\n|salto| p50 = {statistics.median(snaps):.0f} m · "
           f"media = {statistics.mean(snaps):.0f} m · máx = {max(snaps):.0f} m")

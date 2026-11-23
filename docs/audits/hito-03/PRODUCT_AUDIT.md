@@ -1,14 +1,38 @@
 # AUD-01 — Tesis de producto, arquitectura y diseño de pruebas refutables
 
 **Ejecuta:** Claude Opus (worker despachado, contexto aislado)
-**Revisa:** OpenAI Codex · Sol · High (pendiente)
-**Fecha:** 2026-11-23
+**Revisa:** OpenAI Codex · Sol · High — **ronda 1: CHANGES_REQUESTED**, correcciones aplicadas en esta revisión (pendiente de re-evaluación)
+**Fecha:** 2026-11-23 (revisión 2)
 **Rama de auditoría:** `audit/hito-03-adversarial`, creada desde `mp-022-validacion-integrada` @ `beb9434`
 **Worktree:** `/Users/matu/orca/workspaces/madrid-pulse/audit-hito-03`
 
 No se ha modificado ni una línea de código de producto, migración, contrato o dato
-persistente. Lo único que añade esta tarea al repositorio es este documento y los tres
-guiones de medición de `scratch/` que lo sustentan.
+persistente. Lo único que añade esta tarea al repositorio es este documento y los siete
+guiones de medición de `scratch/aud01_*.py` que lo sustentan.
+
+---
+
+## Revisión 2 — qué cambió respecto a la ronda 1, y por qué
+
+Codex Sol · High reprodujo de forma independiente ambos P0 ejecutando mis propios guiones
+sin red ni PostgreSQL. **Ambos P0 quedan CONFIRMADOS como hallazgo de producto**, y varias
+cifras y formulaciones de mi redacción no coincidían con lo reproducido. Esto es lo que he
+corregido, todo contra medida nueva, no contra opinión:
+
+| # | Qué decía la revisión 1 | Qué dice ahora | Por qué |
+|---|---|---|---|
+| 1 | «**26** de 44 no se movieron» (§5.2, P0-001) | «**31** no cambiaron ni coordenada ni progreso; solo **13** se movieron» | Mi 26 era un recuento **a ojo** de la tabla impresa y estaba mal. El recuento programático da 31/13. Definición ahora explícita: `v_real == 0,00 m/s` exacto, es decir progreso map-matcheado idéntico en los dos cortes. `aud01_snap.py` imprime ya ese par de recuentos para que no dependa de una lectura visual. |
+| 2 | Horizonte rotulado «180 s» en guiones y texto | **180 s configurados** (`stale_after_s`) frente a **190 s efectivos** desde el ancla, distinguidos en cada sitio | `horizon_end = calculated_at + stale_after_s` y `calculated_at` va 10 s por detrás del ancla, así que la ventana real son 190 s. Afecta a §3.4, P1-005, P0-001, H4 y a los rótulos de columna de dos guiones. El desajuste con el intervalo mediano entre paradas resulta algo **mayor**, no menor. |
+| 3 | «el criterio **pre-autorizó** 28/103» (§1, P0-002) | «el criterio **admitía de antemano** una mayoría pendiente sin cuantificar, y 28/103 cumple ese mínimo bajo **sin haber sido el número bendecido**» | `docs/TASKS.md:443` autoriza «mayoría `pending` honesto» y `docs/STATUS.md:832` un mínimo de C5 + un ramal de C4 + un tramo compartido. Ninguno de los dos aprueba el número 28/103: mi formulación atribuía al criterio una precisión que no tiene. |
+| 4 | «ocho líneas **nunca se intentaron**»; los 72 pendientes como una sola categoría | **68 sin intento documentado** (C1, C2, C3, C7, C8a, C8b, C9, C10) frente a **4 con intento real fallido** (C4b `10T0016C4b`, dos `HTTP 502` de la relación `9174512`), separados en tabla y en texto | «Nunca se intentó» es una prueba negativa que no tengo; lo que la evidencia sostiene es la ausencia de fuente en `madrid_source_specs` y de registro de intento. Y los 4 de C4b son un **límite externo real**, categóricamente distinto: tratarlos igual era injusto con la tarea. Añadido de paso: el CSV da a los 72 el mismo `reason`, así que esa distinción no es recuperable desde el artefacto canónico. |
+| 5 | 8 hipótesis (H1–H8) | **10** (H1, H2, H3, **H3b**, H4, H5, H6, **H7a**, **H7b**, H8), cada una declarando qué parte del baseline es medida y qué parte no | H3 era una conjunción cuyo criterio de refutación no atacaba su primera mitad; H7 mezclaba capacidad con ganancia de CDN y dejaba sin cubrir la banda 5×–10×. Además: H1 define ahora pares ancla-a-ancla y no generaliza la fixture a Live; H2 separa refutación empírica de recomendación de corrección y abandona «cualquier instante»; H3 declara que omite líneas con denominador cero; H4 admite baseline solo indirecto; H5/H6/H8 se marcan **no concluyentes con n=5**; H8 añade métrica operacional y orden contrabalanceado. |
+| 6 | 4 descartados con formulación ancha | Los mismos 4, **con alcance acotado** y lo que sigue sin cubrir | DESC-001 da ahora una razón sustantiva (cada frontera aísla un fallo observado) en vez de enumerar tecnologías ausentes; DESC-002 se limita a la **autoridad de avance** y reconoce que el cliente sí calcula coordenadas; DESC-003 no se presenta como prueba de equivalencia semántica con Valfiguer; DESC-004 separa CORS de **autenticación** y **limitación de tasa**, que siguen siendo riesgos abiertos. |
+
+**Lo que el revisor confirmó y no se ha tocado:** 17/121 circulaciones pre-salida
+(17/44 = 38,6 % de las map-matcheables), velocidades 15,52–30,00 m/s (55,9–108 km/h), el
+peor caso `1023V20478C4b` a 2 319 s = 38,65 min de su salida con 5 700,6 m de avance falso;
+el salto p50 **1 237,0938 m** / máximo **3 274,2258 m**; la matriz 28 `validated` / 3
+`partial` / 72 `pending`; y 44/121 móviles frente a 77/121 = 63,636 % en punto estático.
 
 ---
 
@@ -29,7 +53,9 @@ red. Cada cifra de este documento viene con el comando que la produce (§8) o co
   proyecto (`docs/research/deep-research-report.md`, `docs/legal/DATA_SOURCES.md`,
   DEC-016, fechada `2026-11-18`) y queda marcada como **NO VERIFICADO en vivo**.
 - No he llamado a Overpass para comprobar si existen relaciones OSM utilizables para las
-  ocho líneas sin geometría. Lo que sí está verificado es que **no se intentó** (§3.5).
+  ocho líneas sin geometría. Lo que sí está verificado es que para esas ocho **no hay
+  intento documentado** —distinto de los 4 patrones de C4b, donde sí hubo intento y
+  falló con dos `HTTP 502`— (§3.5).
 - No he montado la aplicación en navegador: eso es AUD-05, cuyo informe
   (`FRONTEND_UX_AUDIT.md`) cito en vez de repetir.
 - Evito duplicar AUD-02 (`RAILWAY_GEOMETRY_AUDIT.md`) y AUD-07 (`EGM_REVIEW.md`); cuando
@@ -47,8 +73,9 @@ encuentra defectos no es verificable.
 El Hito 3 está **correctamente ejecutado contra sus criterios y mal especificado en su
 criterio central**. Las siete tareas cumplen lo que se les pidió, con evidencia real y
 revisión cruzada que encontró y corrigió defectos verdaderos. El problema no está en la
-ejecución: está en que **el criterio de aceptación de la geometría pre-autorizó que la
-mayoría de la red no tuviera trazado** (`docs/TASKS.md:443`: «mayoría `pending` honesto»)
+ejecución: está en que **el criterio de aceptación de la geometría admitía de antemano que
+la mayoría de la red no tuviera trazado** (`docs/TASKS.md:443`: «mayoría `pending`
+honesto»; `docs/STATUS.md:832`: un mínimo de C5 + un ramal de C4 + un tramo compartido)
 mientras la misión de producto exigía «un mapa de toda Cercanías Madrid, inmersivo,
 map-first» (`PROMPT-UNICO-ORCA.md:11`) y una puerta de aceptación exigía que «el tren no
 salte cada 20 s» (`MATRIZ-CIERRE-MADRID.md:21`). Nadie reconcilió las tres cosas, y el
@@ -60,9 +87,9 @@ El resultado medible, con el código del repositorio y los cortes del propio kit
 | Magnitud | Valor medido | Comando |
 |---|---|---|
 | Patrones con geometría validada | **28 de 103** (8 de 12 líneas con **0**) | `docs/evidence/mp-018-corridor-coverage.csv` |
-| Trenes del corte que pueden moverse entre sondeos | **44 de 121 (36 %)**; los otros 77 son puntos estáticos | `mp-019-tres-snapshots-replay.md:50` |
+| Trenes del corte que pueden moverse entre sondeos | **44 de 121 (36,36 %)**; los otros 77 (63,64 %) son puntos estáticos | `mp-019-tres-snapshots-replay.md:50` |
 | Circulaciones a las que el contrato da movimiento **sin haber salido** | **17 de 121**, hasta **38,6 min** antes, a **56–108 km/h** | `aud01_envelope_predeparture.py` |
-| Salto real al llegar el ancla siguiente | p50 **1 237 m**, máx **3 274 m** (44 circulaciones) | `aud01_snap.py` |
+| Salto real al llegar el ancla siguiente | p50 **1 237 m**, máx **3 274 m** (44 circulaciones; 31 de ellas inmóviles) | `aud01_snap.py` |
 | Cobertura real de posicionamiento (lo que el kit pedía medir) | **65/73 = 89,0 %**, con C1 al 50 % y C10 al 60 % | `aud01_coverage.py` |
 | Cobertura publicada en la matriz vinculante | **121/121 = 100,0 %** (tautológica) | `mp-022-coverage.md:5` |
 
@@ -203,27 +230,57 @@ La consecuencia es que la mitigación escrita en el propio código es falsa:
 > El horizonte por defecto (`stale_after_s`, 180 s) acota ese efecto.»
 > — `packages/movement/rendering.py:82-85`
 
-180 s no acota el efecto: **lo abarca**. Un horizonte completo cruza típicamente un tramo
-entre estaciones entero, y como `dwell_end_seconds` solo devuelve algo si el horario
-declara espera (9,9 % de las paradas), el tren se dibuja atravesando la estación sin
-detenerse. Es el caso que `diseno/INTERACCIONES.md:20` pone como prueba de aceptación
-(«parada en estación») y que ninguna prueba del hito comprueba.
+180 s no acota el efecto: **lo abarca**. Y el horizonte que de verdad se aplica es aún
+mayor: `horizon_end = calculated_at + stale_after_s`, y `calculated_at` va 10 s por
+detrás del ancla en la propia evidencia de MP-019, así que la ventana **efectiva** desde el
+ancla es de **190 s**, por encima del intervalo mediano entre paradas. Un horizonte completo
+cruza por tanto un tramo entre estaciones entero, y como `dwell_end_seconds` solo devuelve
+algo si el horario declara espera (9,9 % de las paradas), el tren se dibuja atravesando la
+estación sin detenerse. Es el caso que `diseno/INTERACCIONES.md:20` pone como prueba de
+aceptación («parada en estación») y que ninguna prueba del hito comprueba.
 
-### 3.5 Geometría: no es un límite de la fuente, es un alcance
+> **Precisión de la revisión (Codex Sol · High).** Conviene no mezclar los dos números:
+> **180 s es el valor configurado** (`stale_after_s`, `packages/movement/model.py:40`) y
+> **190 s es el horizonte efectivo medido** desde el ancla en esta evidencia. La
+> comparación con el intervalo mediano de 180 s vale para el valor configurado; con el
+> efectivo, el desajuste es algo mayor, no menor. Los dos guiones
+> (`aud01_envelope_predeparture.py`, `aud01_snap.py`) imprimen ahora el horizonte efectivo
+> y rotulan sus columnas con él.
 
-`docs/STATUS.md:860-873` lo dice con sus palabras. El motivo registrado para 68 de los 72
-patrones `pending` es literalmente **«sin geometría descargada»**: C1, C2, C3, C7, C8a,
-C8b, C9 y C10 — ocho de doce líneas — nunca se intentaron. Solo 4 patrones son `pending`
-por una causa externa real (dos `HTTP 502` de Overpass para `9174512`). Y el alcance que
-lo decidió está escrito:
+### 3.5 Geometría: para 68 de los 72 pendientes no es un límite de la fuente, es un alcance
+
+Los 72 patrones `pending` **no son una sola categoría**, y conviene separarlos porque su
+causa y su remedio son distintos (`docs/evidence/mp-018-corridor-coverage.csv`, recuento
+reproducido por línea y estado):
+
+| Grupo | Patrones | Líneas | Qué consta | Naturaleza |
+|---|---:|---|---|---|
+| **Sin intento documentado** | **68** | C1, C2, C3, C7, C8a, C8b, C9, C10 | ninguna entrada en `madrid_source_specs` y ningún intento registrado en `STATUS`/`TASKS` | alcance no encargado |
+| **Intento real fallido** | **4** | C4b (`10T0016C4b`, sentido opuesto) | se pidió la relación OSM `9174512` y Overpass devolvió **`HTTP 502` dos veces** (`docs/STATUS.md:850-852`) | **límite externo real** |
+
+La formulación precisa para los 68 es «**sin intento documentado**», no «nunca se
+intentó»: lo que la evidencia sostiene es la ausencia de fuente en
+`packages/geo/madrid.py:19-60` y la ausencia de registro de intento, no una prueba
+negativa de que nadie lo probara. Para los 4 de C4b sí hay intento y sí hay causa externa
+verificada, y tratarlos como los otros 68 sería injusto con la tarea.
+
+Un detalle del artefacto canónico que esta separación deja a la vista: el CSV asigna a
+**los 72** el mismo `reason` —«sin geometría OSM descargada para este patrón/sentido»—, así
+que la distinción entre límite externo y alcance no encargado **no es recuperable desde la
+matriz**, solo desde la prosa de `STATUS`. Es una pérdida de información en el único
+artefacto que un consumidor leería.
+
+Y el alcance que decidió los 68 está escrito:
 
 > «Mínimo real a descargar/verificar: revalidar C5 sin huecos, un ramal de C4 […] y un
 > tramo compartido entre dos líneas» — `docs/STATUS.md:832`
 
 El herramental para hacerlo existe y es reproducible (`packages/geo/tools/fetch_fixture.py`,
 `find_route_relations(ref=..., network="Cercanías Madrid")`, documentado en
-`tests/fixtures/osm_c4_real/MANIFEST.md`). No es un problema técnico abierto: es trabajo
-no encargado.
+`tests/fixtures/osm_c4_real/MANIFEST.md`). Para los 68, no es un problema técnico abierto:
+es trabajo no encargado. Para los 4 de C4b, es un reintento contra un servicio externo que
+falló y quedó correctamente registrado como pendiente en vez de interpretarse como
+relación inexistente.
 
 ---
 
@@ -294,9 +351,18 @@ ancla de `1532` durante los 77 s reales de separación, contra el progreso del a
 a la cadencia real del feed (~30 s): ~482 m (p50), ~1 276 m (máx)
 ```
 
-De esas 44, **26 no se movieron en absoluto** (`v_real = 0,00 m/s`) mientras la envolvente
-las conducía a 10–30 m/s. La puerta no se cumple, y no podía detectarse con la prueba que
-se usó para cerrarla.
+De esas 44, **31 no cambiaron ni coordenada bruta ni progreso proyectado** entre los dos
+cortes (`v_real = 0,00 m/s` exacto) mientras la envolvente las conducía a 10–30 m/s; solo
+**13 se movieron de verdad**, y una de esas trece (`20846`) retrocedió 510 m. La puerta no
+se cumple, y no podía detectarse con la prueba que se usó para cerrarla.
+
+> **Corrección de la revisión (Codex Sol · High).** Una versión anterior de este documento
+> decía «26 no se movieron». Era un recuento mío a ojo de la tabla impresa, y estaba mal:
+> el recuento programático da **31 quietas / 13 en movimiento**. La definición que uso es
+> `v_real == 0,00 m/s` exacto, es decir progreso map-matcheado idéntico en los dos cortes
+> (ni la coordenada de origen ni su proyección cambian); `scratch/aud01_snap.py` imprime
+> ahora ese par de recuentos directamente para que no vuelva a depender de una lectura
+> visual.
 
 ### 5.3 El defecto de corrección que ese salto revela
 
@@ -322,7 +388,9 @@ Causa raíz, confirmada en el código: `_envelope` calcula
 `seconds_at_progress(0)` devuelve la hora de la primera parada
 (`schedule.py:107-108`), de modo que un tren presente 38 min antes se modela como un tren
 que va **38 min adelantado** sobre su horario, y la envolvente le concede la velocidad del
-horario para los siguientes 190 s. No hay espera que lo frene porque
+horario para los siguientes 190 s —el horizonte **efectivo** desde el ancla: los 180 s
+configurados en `stale_after_s` más los 10 s de desfase con que el snapshot se construye
+tras el corte, igual que en la evidencia de MP-019—. No hay espera que lo frene porque
 `dwell_end_seconds(0)` solo devuelve algo si el horario declara espera en la primera
 parada, y el GTFS la declara en el 9,9 % de las paradas. Y nada aguas arriba lo filtra:
 `circulation_status` es de granularidad **día** —«el `service_id` del viaje está programado
@@ -612,20 +680,29 @@ Las tres son, exactamente, los tres huecos mayores de este informe.
 ## 10. Hipótesis refutables para AUD-08 / AUD-09
 
 Formuladas para poder **fallar**: cada una trae el umbral que la refuta y el experimento.
-No son opiniones reempaquetadas; cinco de las ocho ya tienen evidencia parcial a favor en
-§3-§6 y necesitan confirmación con datos que yo no tengo (más días, feed en vivo,
-usuarios).
+Son **diez** tras la revisión de Codex Sol · High, no ocho: H3 era una conjunción cuyo
+criterio no refutaba su primera mitad (se ha partido en H3 y **H3b**) y H7 mezclaba
+capacidad con ganancia de CDN dejando sin cubrir la banda 5×–10× (se ha partido en **H7a**
+y **H7b**, esta última con un único umbral).
+
+Cada fila declara **qué parte del baseline es medida y qué parte no**. Cuatro (H1, H2a, H3,
+H4) tienen evidencia parcial a favor en §3-§6 sobre las capturas congeladas; H7a está
+derivada aritméticamente, no medida; H5, H6 y H8 no tienen ninguna evidencia todavía y,
+con los n=5 que propongo, **no serán concluyentes**: sirven para decidir si merece la pena
+medirlas bien.
 
 | ID | Hipótesis | Qué la refutaría | Experimento |
 |---|---|---|---|
-| **H1** | En Live con feed real, la corrección de posición al llegar cada ancla nueva supera los 200 m en más del 50 % de las circulaciones map-matcheadas. | p50 del salto < 200 m sobre ≥ 500 pares ancla-a-ancla consecutivos. | Colector en vivo ≥ 2 h; registrar por circulación la posición que la envolvente predecía y el progreso del ancla siguiente. Baseline congelado: p50 1 237 m / 77 s (`aud01_snap.py`). |
-| **H2** | El contrato pone en movimiento circulaciones que no han salido, y eso afecta a ≥ 10 % de las circulaciones con corredor validado en cualquier instante diurno. | < 10 % en seis instantes repartidos por el día, o una comprobación de ventana de viaje que lo impida. | Repetir `aud01_envelope_predeparture.py` sobre ≥ 6 capturas nuevas en distintas franjas. Baseline: 17/44 con corredor = 39 % en el corte `1533`. |
-| **H3** | La cobertura de posicionamiento real (observados en curso / programados en curso) es estable alrededor del 85-92 % en toda la red, pero **≤ 70 % en al menos dos líneas**, de forma persistente y no accidental. | Las doce líneas por encima del 80 % en ≥ 10 capturas repartidas en ≥ 3 días. | `aud01_coverage.py` sobre capturas nuevas. Baseline: 89,0 % global, C1 50 %, C10 60 %. |
-| **H4** | El horizonte de 180 s hace que ≥ 30 % de las circulaciones en movimiento se dibujen atravesando una estación sin detenerse. | < 10 %, o que `dwell_until` se pueble en la mayoría de las paradas reales. | Para cada circulación con envolvente, comprobar si `[progress_at_reference, max_progress_m]` contiene el progreso de alguna parada y si `dwell_until` la cubre. Baseline: p50 del intervalo entre paradas = 180 s; espera declarada en 9,9 % de las paradas. |
-| **H5** | Un usuario madrileño no identifica su línea en el mapa porque el color no es el oficial, y lo señala sin que se le pregunte. | ≥ 4 de 5 personas identifican correctamente C5 y C10 en una captura, sin leyenda. | Prueba con 5 usuarios reales sobre dos capturas (paleta hash actual vs `route_color` del GTFS). Dato duro: `route_color` real existe en `routes.txt`, se parsea (`Route.color`) y no se expone. |
-| **H6** | En la UI actual, un usuario no distingue un tren con GPS reciente de uno dibujado solo por horario ni de uno congelado, pese a que el contrato lo publica. | ≥ 4 de 5 usuarios clasifican correctamente tres trenes (`anchor`, `extrapolated_from_last_anchor`, `stale_frozen`) sin abrir el detalle técnico. | Tarea de clasificación sobre una captura con los tres estados presentes. Cruzar con el hallazgo P0-1 de AUD-05 (edades negativas en replay). |
-| **H7** | El coste por espectador impide servir 100 usuarios concurrentes desde un proceso, y un snapshot estático en CDN reduce la carga del backend en más de un orden de magnitud. | 100 concurrentes con p95 < 1 s sin cambios, o la mejora del CDN < 5×. | `wrk`/`locust` contra `uvicorn` real (no `TestClient`) con 1/10/50/100 clientes a 10 s de sondeo; repetir sirviendo un snapshot pre-generado. Baseline: p50 254,73 ms en proceso. |
-| **H8** | La diferenciación real del producto es analítica, no cartográfica: ante un usuario, History/Explore con denominadores explícitos genera más valor percibido que el mapa. | Los usuarios prefieren el mapa de forma consistente y no valoran la cobertura explícita. | Entrevista estructurada con 5 usuarios tras recorrer Live y luego History/Explore; preguntar por qué volverían. Es la hipótesis que decide el rumbo de los hitos siguientes. |
+| **H1** | Sobre **pares ancla-a-ancla consecutivos de la misma circulación** (misma identidad vehículo+viaje+día de servicio, dos observaciones sucesivas del feed en vivo), la corrección de posición al llegar la segunda supera los 200 m en más del 50 % de los pares. | p50 del salto < 200 m sobre ≥ 500 pares ancla-a-ancla consecutivos reales. | Colector en vivo ≥ 2 h; por cada par, registrar la posición que la envolvente del primer ancla predecía para el instante del segundo, y el progreso map-matcheado del segundo. **Límite del baseline, explícito:** mi p50 de 1 237 m sale de **un único par** de capturas congeladas separadas 77 s (`aud01_snap.py`), no de pares consecutivos en Live; el escalado a ~30 s es aritmético. No generalizo la fixture a Live: eso es precisamente lo que H1 pone a prueba. |
+| **H2** | El contrato pone en movimiento circulaciones que no han salido. Dos partes separadas: **(H2a, empírica)** la proporción afectada sobre las circulaciones con corredor validado se mantiene ≥ 10 % en los **seis instantes concretos** que se midan (no en «cualquier instante», que es ambiguo: la proporción depende de la franja —madrugada, punta, valle— y de cuántas unidades estén estacionadas esperando salida); **(H2b, de corrección)** acotar `temporal_offset_s` o añadir comprobación de ventana de viaje lo reduce a 0 sin suprimir movimiento legítimo. | H2a: < 10 % en los seis instantes medidos. H2b: la corrección también anula el avance de circulaciones que sí están en marcha. | H2a: repetir `aud01_envelope_predeparture.py` sobre ≥ 6 capturas nuevas en franjas declaradas (p. ej. 07:30, 09:00, 13:00, 18:30, 21:00, 23:30). H2b: aplicar la corrección y comparar el conjunto de circulaciones con `speed_mps > 0` antes y después. Baseline: **17/44 = 38,6 %** de las map-matcheables en el corte `1533` — un solo instante (15:33 local), no una media del día. |
+| **H3** | La cobertura de posicionamiento real (observados en curso / programados en curso) tiene **al menos dos líneas por debajo del 70 % de forma persistente**. | Ninguna línea por debajo del 70 % en ≥ 10 capturas repartidas en ≥ 3 días. | `aud01_coverage.py` sobre capturas nuevas. Baseline: C1 50 %, C10 60 % en el corte `1533`. **Dos limitaciones declaradas:** (1) la versión anterior de esta hipótesis era una **conjunción** («estable en 85-92 % global **y** ≤ 70 % en dos líneas») cuyo criterio de refutación solo atacaba la segunda mitad y por tanto no refutaba la estabilidad global — se ha partido: la estabilidad global queda como **H3b**, medida aparte, con su propio criterio (desviación del global > 10 puntos entre capturas). (2) El cálculo **omite las líneas con denominador cero** (C4 no tenía ninguna instancia en curso en el corte), así que «todas las líneas» significa «todas las que tienen denominador > 0 en esa captura»; una línea sin servicio programado en el instante no entra ni como aprobada ni como suspendida. |
+| **H3b** | El global de cobertura de posicionamiento es estable: no se desvía más de 10 puntos entre capturas de la misma franja horaria. | Una desviación > 10 puntos entre dos capturas de la misma franja. | Mismo conjunto de capturas que H3, agregando por franja. Baseline: **un solo punto**, 89,0 % a las 15:33 — insuficiente por sí mismo para afirmar ninguna estabilidad, que es la razón de separar esta hipótesis de H3. |
+| **H4** | El horizonte de extrapolación hace que ≥ 30 % de las circulaciones en movimiento se dibujen atravesando una estación sin detenerse. | < 10 %, o que `dwell_until` se pueble en la mayoría de las paradas reales. | Para cada circulación con envolvente, comprobar si `[progress_m_at_reference, max_progress_m]` contiene el progreso de alguna parada y si `dwell_until` la cubre. **Baseline solo indirecto, declarado como tal:** no he medido ninguna travesía de estación; lo que he medido son los dos ingredientes (intervalo mediano entre paradas de **180 s** y espera declarada en el **9,9 %** de las paradas, `aud01_stopgap.py`) frente al horizonte, que es de **180 s configurados** y **190 s efectivos** desde el ancla. La hipótesis existe precisamente porque la consecuencia no está medida. |
+| **H5** | El color no oficial degrada la identificación de línea en el mapa. | Que la tasa de identificación correcta sea equivalente con la paleta hash y con `route_color`. | Tarea de identificación **A/B** sobre dos capturas idénticas salvo la paleta, con el nombre de línea oculto. **No concluyente con n=5**, y así debe reportarse: con cinco personas no se aísla el efecto del color de la comprensión de la leyenda, de la familiaridad con la red ni de la terminología de la ficha. Sirve para decidir si merece la pena medirlo bien, no para concluir. Dato duro independiente de la prueba: `route_color` existe en `routes.txt`, se parsea (`Route.color`) y no se expone en `/api/v1/catalog`. |
+| **H6** | La UI no transmite la diferencia entre GPS reciente, avance extrapolado y posición congelada, pese a que el contrato la publica. | Que los participantes clasifiquen correctamente los tres estados sin abrir el detalle técnico. | Tarea de clasificación sobre una captura con los tres estados presentes (`anchor`, `extrapolated_from_last_anchor`, `stale_frozen`). **No concluyente con n=5** por el mismo motivo que H5: un fallo puede venir del color, del símbolo, del texto o del vocabulario («extrapolado», «ancla»), y con cinco personas no se separa la causa. Cruzar con el hallazgo P0-1 de AUD-05 (edades negativas en replay), que es un defecto de dato y no de presentación. |
+| **H7a** | **Capacidad:** un proceso no sostiene 100 espectadores concurrentes a 10 s de sondeo con p95 < 1 s. | 100 concurrentes con p95 < 1 s sin ningún cambio. | `wrk`/`locust` contra `uvicorn` real (no `TestClient`) con 1/10/50/100 clientes. Baseline: p50 254,73 ms en proceso, del que ~66 ms son abrir conexión (DEC-038). |
+| **H7b** | **Ganancia:** servir un snapshot pre-generado reduce la carga de backend por espectador **al menos 10×**. | Una mejora medida **< 10×**. (La versión anterior de esta hipótesis dejaba sin cubrir la banda 5×–10×: pedía «más de un orden de magnitud» y la refutaba con «< 5×», de modo que un resultado de 7× no la confirmaba ni la refutaba. Queda un único umbral: ≥ 10× la confirma, < 10× la refuta.) | Repetir la medida de H7a sirviendo un snapshot pre-generado desde disco/CDN y comparar coste de CPU por petición servida. |
+| **H8** | La diferenciación real del producto es analítica, no cartográfica: History/Explore con denominadores explícitos genera más valor percibido que el mapa. | Que los participantes, con orden contrabalanceado, elijan el mapa de forma consistente y no mencionen la cobertura explícita sin que se les pregunte. | Entrevista estructurada con **orden contrabalanceado** (la mitad recorre Live→History, la mitad History→Live; la versión anterior de esta hipótesis tenía **sesgo de orden**: siempre Live primero, lo que favorece a lo visto en último lugar). **Métrica operacional**, que antes faltaba: (1) qué vista eligen volver a abrir cuando se les pide una segunda consulta propia; (2) si mencionan numerador/denominador sin que se les pregunte; (3) qué vista nombran al describir el producto a un tercero. Con n=5 no es concluyente —mismo límite que H5/H6—, es orientación para decidir el rumbo de los hitos siguientes. |
 
 ---
 
@@ -651,11 +728,14 @@ riesgo real acotado o deuda de proceso.
   .venv/bin/python scratch/aud01_snap.py                    # salto p50 1 237 m, máx 3 274 m
   .venv/bin/python scratch/aud01_window.py                  # 49/121 observados antes de salir
   ```
-  Peor caso medido: `1023V20478C4b`, **38,6 min** antes de su salida programada,
-  `speed_mps = 30,00` (108 km/h), **5 700,6 m** de avance autorizado en los 190 s del
-  horizonte, `dwell_until = None`. Sobre las 44 circulaciones map-matcheables presentes en
-  ambos cortes, **26 no se movieron nada** en los 77 s reales mientras la envolvente las
-  conducía a 10–30 m/s.
+  Alcance exacto: **17 de 121** circulaciones del corte `1533`, es decir **17 de las 44
+  map-matcheables = 38,6 %**, con velocidades de envolvente entre **15,52 y 30,00 m/s**
+  (55,9–108 km/h). Peor caso medido: `1023V20478C4b`, a **2 319 s = 38,65 min** de su salida
+  programada, `speed_mps = 30,00` (108 km/h), **5 700,6 m** de avance autorizado en los
+  190 s del horizonte efectivo (190 s = 180 s configurados en `stale_after_s` + 10 s de
+  desfase del snapshot), `dwell_until = None` en los 17 casos. Sobre las 44 circulaciones map-matcheables presentes en
+  ambos cortes, **31 no cambiaron ni coordenada ni progreso** en los 77 s reales (solo 13
+  se movieron, una de ellas hacia atrás) mientras la envolvente las conducía a 10–30 m/s.
 - **Archivo/símbolo/dato afectado:** `packages/movement/rendering.py:166-203` (`_envelope`,
   en particular `temporal_offset_s` en la línea 171);
   `packages/movement/schedule.py:106-118` (`seconds_at_progress`) y `:120-133`
@@ -700,21 +780,28 @@ riesgo real acotado o deuda de proceso.
 
 ---
 
-### AUD01-P0-002 — La geometría de 28/103 patrones estaba pre-autorizada por el criterio de aceptación, y deja al 64 % de los trenes sin poder moverse
+### AUD01-P0-002 — El criterio de aceptación admitía de antemano una mayoría sin trazado, y el resultado (28/103) deja al 63,6 % de los trenes sin poder moverse
 
 - **Identificador:** `AUD01-P0-002`
 - **Componente:** criterios de aceptación de MP-018/MP-020/MP-022 y `packages/geo` (alcance
   de fixtures), no la implementación.
 - **Severidad:** **P0** — la misión de producto no negociable del hito no se alcanzó, y el
-  sistema de puertas lo autorizó por escrito.
-- **Evidencia reproducible:** `docs/evidence/mp-018-corridor-coverage.csv` y la tabla de
-  `docs/STATUS.md:860-873`: **28 `validated` / 3 `partial` / 72 `pending`**; motivo
-  registrado para ocho líneas (C1, C2, C3, C7, C8a, C8b, C9, C10), literalmente **«sin
-  geometría descargada»**; solo 4 patrones son `pending` por causa externa (dos `HTTP 502`
-  de Overpass para `9174512`). Consecuencia en el snapshot, en palabras del propio
-  proyecto: «**44 de 119** circulaciones tienen coordenada `map_matched` […] Las otras 75
-  publican su GPS bruto etiquetado […] **sin envolvente de progreso**»
-  (`mp-019-tres-snapshots-replay.md:50-56`). En el corte `1533`: 44 de 121 (36 %).
+  sistema de puertas admitía de antemano un mínimo muy por debajo de ella.
+- **Evidencia reproducible:** `docs/evidence/mp-018-corridor-coverage.csv`, recontado por
+  línea y estado: **28 `validated` / 3 `partial` / 72 `pending`** sobre 103 filas.
+  Los 72 `pending` se reparten en **dos categorías que no deben confundirse**:
+  - **68** en C1, C2, C3, C7, C8a, C8b, C9 y C10 — **sin intento documentado**: ninguna
+    entrada en `madrid_source_specs` y ningún intento registrado en `STATUS`/`TASKS`;
+  - **4** en C4b (`10T0016C4b`, sentido opuesto) — **intento real fallido**: se pidió la
+    relación OSM `9174512` y Overpass devolvió `HTTP 502` dos veces
+    (`docs/STATUS.md:850-852`). Es un límite externo verificado, y la tarea hizo lo
+    correcto registrándolo como `pending` en vez de como relación inexistente.
+
+  Consecuencia en el snapshot, en palabras del propio proyecto: «**44 de 119**
+  circulaciones tienen coordenada `map_matched` […] Las otras 75 publican su GPS bruto
+  etiquetado […] **sin envolvente de progreso**»
+  (`mp-019-tres-snapshots-replay.md:50-56`). En el corte `1533`: **44 de 121 se pueden
+  mover (36,36 %) y 77 de 121 quedan en punto estático (63,64 %)**.
 - **Archivo/símbolo/dato afectado:** `docs/TASKS.md:443` («mayoría `pending` honesto»);
   `docs/STATUS.md:832` («Mínimo real a descargar»); `packages/geo/madrid.py:19-60`
   (`madrid_source_specs`, 5 fuentes para 3 líneas); `apps/web/src/domain/movement.ts:91-96`
@@ -722,17 +809,25 @@ riesgo real acotado o deuda de proceso.
 - **Riesgo de producto:** en 9 de 12 líneas el usuario ve puntos que saltan cada sondeo
   sobre un mapa sin trazado — es decir, exactamente el producto que
   `PROMPT-UNICO-ORCA.md:11` declaraba no negociable evitar. Y como la cobertura geométrica
-  no está en ninguna métrica de portada, nada avisa de que el 64 % de los trenes está en
-  ese régimen.
-- **Causa raíz (confirmada):** no es técnica. El alcance de MP-018 se fijó deliberadamente
-  en «C5 + un ramal de C4 + un tramo compartido» y su criterio de aceptación pre-autorizó
-  «mayoría `pending`»; MP-020 y MP-022 heredaron ese estado y sus puertas de movimiento se
-  cerraron con una circulación del 36 % que sí tiene corredor. El herramental para
-  resolverlo ya existe y es reproducible
-  (`packages/geo/tools/fetch_fixture.py`, `find_route_relations`).
+  no está en ninguna métrica de portada, nada avisa de que el 63,6 % de los trenes está en
+  ese régimen. Añadido: el CSV da a los 72 `pending` el mismo `reason`, así que la
+  distinción entre el límite externo de C4b y los 68 sin intento no es recuperable desde
+  el artefacto canónico.
+- **Causa raíz (confirmada, con el alcance de la afirmación acotado):** no es técnica para
+  los 68. El alcance de MP-018 se fijó deliberadamente en «C5 + un ramal de C4 + un tramo
+  compartido» (`docs/STATUS.md:832`) y su criterio de aceptación admitía «mayoría
+  `pending` honesto» (`docs/TASKS.md:443`). **Ninguno de los dos bendijo el número
+  28/103**: lo que autorizaron fue un mínimo bajo y una mayoría pendiente sin cuantificar,
+  y 28/103 cumple ese mínimo sin haber sido el resultado específicamente aprobado de
+  antemano. MP-020 y MP-022 heredaron ese estado y sus puertas de movimiento se cerraron
+  con una circulación del 36,36 % que sí tiene corredor. El herramental para resolver los
+  68 ya existe y es reproducible (`packages/geo/tools/fetch_fixture.py`,
+  `find_route_relations`); los 4 de C4b necesitan un reintento contra Overpass, no una
+  decisión de alcance.
 - **Alternativas:**
-  (A) Descargar y versionar las relaciones OSM de las ocho líneas restantes con el
-  herramental existente, una tarea por línea, con su manifiesto ODbL.
+  (A) Descargar y versionar las relaciones OSM de las ocho líneas sin intento documentado
+  con el herramental existente, una tarea por línea, con su manifiesto ODbL; y reintentar
+  por separado `9174512` para los 4 patrones de C4b.
   (B) Sustituir las fixtures por una tubería diaria que las construya (modelo Via
   Península). Resuelve también el mantenimiento, pero es alcance de hito propio y añade
   dependencia operativa de Overpass.
@@ -748,8 +843,9 @@ riesgo real acotado o deuda de proceso.
   en la propia línea, no solo en `mp-022-coverage.md`.
 - **Prueba necesaria para cerrar:** matriz regenerada con `geometry_validated_patterns ==
   geometry_total_patterns` para ≥ 10 de las 12 líneas, o causa externa verificada y
-  documentada por patrón; y una prueba de producto que falle si una línea del catálogo con
-  GPS no tiene corredor **y** la UI no lo declara explícitamente.
+  documentada **por patrón** —con un `reason` distinto en el CSV para «límite externo» y
+  para «sin intento», que hoy comparten cadena—; y una prueba de producto que falle si una
+  línea del catálogo con GPS no tiene corredor **y** la UI no lo declara explícitamente.
 
 ---
 
@@ -832,7 +928,7 @@ riesgo real acotado o deuda de proceso.
 
 ---
 
-### AUD01-P1-005 — El horizonte de 180 s nació como umbral de frescura «calibrable» y hoy autoriza extrapolación, sin recalibrar y contra la medida real de la red
+### AUD01-P1-005 — El horizonte de extrapolación (180 s configurados, 190 s efectivos) nació como umbral de frescura «calibrable» y hoy autoriza avance, sin recalibrar y contra la medida real de la red
 
 - **Identificador:** `AUD01-P1-005`
 - **Componente:** DEC-010 / ADR-0004 / ADR-0014 §2 / `packages/movement/rendering.py`.
@@ -846,7 +942,11 @@ riesgo real acotado o deuda de proceso.
   parada (dwell) declarada: p50 0s · fracción de dwell>0: 9.9%
   ```
   Contra la afirmación de `packages/movement/rendering.py:84-85`: «El horizonte por defecto
-  (`stale_after_s`, 180 s) acota ese efecto».
+  (`stale_after_s`, 180 s) acota ese efecto». El valor **configurado** son 180 s
+  (`packages/movement/model.py:40`); el horizonte **efectivo** desde el ancla medido en esta
+  evidencia son **190 s** (`horizon_end = calculated_at + stale_after_s`, con `calculated_at`
+  10 s posterior al ancla), de modo que la ventana real supera el intervalo mediano entre
+  paradas en vez de quedarse justo en él.
 - **Archivo/símbolo/dato afectado:** `packages/movement/model.py:40`
   (`stale_after_s = 180.0`); `packages/movement/rendering.py:82-85` (afirmación) y
   `:188-194` (`dwell_end_seconds`); `docs/DECISIONS.md` DEC-010;
@@ -868,7 +968,8 @@ riesgo real acotado o deuda de proceso.
   congelar antes. Más simple, deja huecos de presentación.
   (C) Poblar `dwell_until` también cuando el horario declara espera cero pero hay una parada
   en el tramo (espera mínima asumida). Fabrica un dato que la fuente no da.
-  (D) Mantener 180 s y corregir la afirmación del docstring. Honesto y no resuelve nada.
+  (D) Mantener el valor actual y corregir la afirmación del docstring (incluida la
+  distinción configurado/efectivo). Honesto y no resuelve nada.
 - **Recomendación razonada:** **(A), con (D) como mínimo inmediato.** (A) es la única que
   elimina la causa en vez de acotarla, usa solo datos que el horario ya da, y encaja en el
   contrato sin romperlo: `horizon_s` por circulación en vez de constante. Y mientras no se
@@ -1029,7 +1130,7 @@ riesgo real acotado o deuda de proceso.
   Resultado: `mp-022-dossier-integracion.md:15-18`, «Las nueve puertas tienen evidencia
   […] **El Hito 3 está completo**», con 28/103 patrones de geometría.
 - **Archivo/símbolo/dato afectado:** los tres documentos citados; `docs/TASKS.md:443`
-  (criterio que pre-autoriza la mayoría `pending`).
+  (criterio que admite «mayoría `pending` honesto» sin cuantificarla).
 - **Riesgo de producto:** un sistema de aceptación que no puede rechazar no es un sistema de
   aceptación. Lo grave aquí no es que alguien hiciera trampa —no la hizo: cada evidencia es
   real y cada caveat está escrito— sino que **la honestidad documental se convirtió en el
@@ -1419,18 +1520,22 @@ riesgo real acotado o deuda de proceso.
 
 ## 12. DESCARTADO — hipótesis adversas que intenté sostener y no se sostienen
 
-| ID | Hipótesis | Por qué se descarta |
+Las cuatro siguen descartadas tras la revisión de Codex Sol · High, pero **con su alcance
+acotado**: tres de ellas se descartaban antes con una formulación más ancha de lo que la
+evidencia sostiene. Cada fila dice ahora qué queda descartado y qué sigue sin cubrir.
+
+| ID | Hipótesis | Por qué se descarta, y con qué alcance |
 |---|---|---|
-| `AUD01-DESC-001` | La arquitectura está sobre-ingenierizada para el problema. | No hay broker, microservicios por dominio, Kubernetes ni Spark; el volumen medido (≈19 MB/día, ≈1 300 circulaciones/día) es trivial para el stack elegido, y los procesos separados son los cuatro que aíslan algo real. `engine_for` (`gtfs_source.py:97-117`) devuelve `None` en vez de reutilizar el corredor por defecto, que era la simplificación peligrosa disponible. Coincide con AUD-07 §2 y §9. El desajuste real es el inverso: falta la pieza de escala que el propio documento de arquitectura ya había adoptado (`AUD01-P1-008`). |
-| `AUD01-DESC-002` | El frontend extrapola por su cuenta y puede fabricar posiciones. | `apps/web/src/domain/movement.ts:74-96`: solo avanza si hay `progress_envelope` **y** eje de patrón, se congela en `valid_until` (`source: "frozen_horizon"`) y en cualquier otro caso dibuja la coordenada publicada. Verificado por el propio proyecto con error cliente-backend < 1 m en test y 6,6 cm en Python sobre 44 circulaciones. El movimiento falso de `AUD01-P0-001` lo origina el **backend**, no el cliente: el cliente evalúa fielmente una envolvente equivocada. |
-| `AUD01-DESC-003` | La salud de feed copió a Valfiguer solo en lo fácil. | `apps/api/schemas.py:59-67` incluye los cinco campos, **incluidos los dos no obvios**: `unchanged_for_s` (el feed responde y el contenido no cambia) y `rejected`. Y la deduplicación no resetea la edad del dato (`mp-019-tres-snapshots-replay.md:29-31`), que es el matiz que la hace segura. Es una de las mejores lecturas de referencia del proyecto. |
-| `AUD01-DESC-004` | La ausencia de CORS es un agujero de seguridad. | Ya evaluado y rebajado en AUD-07 §6 tras verificación independiente: sin cabeceras `Access-Control-Allow-Origin` el navegador deniega por defecto, y `apps/web/vite.config.ts:42-52` documenta el modelo *same-origin* (proxy en desarrollo, reverse proxy en producción) sobre el que se apoya. No lo re-cuento como hallazgo propio. |
+| `AUD01-DESC-001` | La arquitectura está sobre-ingenierizada para el problema. | **Razón sustantiva, no un inventario de tecnologías ausentes** (objeción del revisor a la versión anterior, que se limitaba a enumerar lo que no hay): cada uno de los cuatro procesos existe porque **aísla un modo de fallo que de otro modo se propagaría**, y eso es comprobable. El colector puede morir y reiniciarse sin tocar a quien sirve peticiones —medido: `kill -9` con reanudación en 5 s, y `EX_TEMPFAIL` 75 ante pérdida de PostgreSQL (DEC-041)—; el snapshotter escribe el archivo frío mediante una sustitución con cuarentena cuya caída intermedia no destruye el día ya archivado (DEC-040, fijado con inyección de fallo en la costura exacta); la API no toca la red externa jamás y el frontend no toca Renfe jamás, frontera que impide que un cambio de contrato de la fuente alcance al navegador. Suprimir cualquiera de esas cuatro fronteras reintroduce un fallo concreto ya observado en el proyecto: la separación compra algo medible en vez de ser estructura por gusto. El desajuste real es el inverso — **falta** la pieza de escala que el propio documento de arquitectura ya había adoptado (`AUD01-P1-008`). Coincide con AUD-07 §2 y §9. |
+| `AUD01-DESC-002` | El frontend extrapola por su cuenta y puede fabricar posiciones. | **Descartado, y acotado a la autoridad de avance** (precisión del revisor): el cliente **sí calcula coordenadas** —convierte progreso en lat/lon sobre la polilínea del corredor, `coordinateAtProgress` en `movement.ts:47-49`—, así que no es cierto que no calcule nada. Lo que no hace es **decidir cuánto avanzar**: `frameFor` (`movement.ts:74-96`) solo progresa si el backend publicó `progress_envelope` **y** hay eje de patrón, aplica la expresión fijada por el contrato sin reinventarla, se congela en `valid_until` (`source: "frozen_horizon"`) y en cualquier otro caso dibuja la coordenada publicada tal cual. La comprobación de fidelidad (error < 1 m en test y 6,6 cm en Python sobre 44 circulaciones) verifica exactamente eso: que su cálculo de coordenada reproduce el del backend. Conclusión acotada: **la autoridad sobre el avance es del backend**, y el movimiento falso de `AUD01-P0-001` se origina ahí; el cliente evalúa con fidelidad una envolvente equivocada. |
+| `AUD01-DESC-003` | La salud de feed copió a Valfiguer solo en lo fácil. | Descartado **como afirmación de omisión deliberada de lo difícil**, no como prueba de equivalencia semántica: `apps/api/schemas.py:59-67` publica los cinco campos, incluidos los dos no obvios (`unchanged_for_s`, `rejected`), y la deduplicación no resetea la edad del dato (`mp-019-tres-snapshots-replay.md:29-31`), que es el matiz que la hace segura en vez de peligrosa. **Lo que esto NO prueba** (objeción del revisor): que la semántica de cada campo coincida con la de Valfiguer. No he comparado definiciones —qué cuenta como `rejected`, desde qué instante se mide `unchanged_for_s`, qué umbral separa `ok` de `stale`— porque exigiría consultar su servicio en vivo, que esta auditoría no hizo (`AUD01-NV-002`). La afirmación sostenible es: **los campos difíciles están presentes y bien usados dentro de su propio modelo**; la equivalencia con la referencia queda sin verificar. |
+| `AUD01-DESC-004` | La ausencia de CORS es un agujero de seguridad. | Descartado **solo para el caso que cubre**: lectura desde navegador, mismo origen y solo lectura. Sin cabeceras `Access-Control-Allow-Origin` el navegador deniega por defecto cualquier lectura cross-origin, y `apps/web/vite.config.ts:42-52` documenta el modelo *same-origin* (proxy en desarrollo, reverse proxy en producción) sobre el que se apoya esa ausencia; ya evaluado y rebajado en AUD-07 §6 tras verificación independiente. **Dos riesgos distintos quedan fuera de ese descarte y siguen sin cubrir** (separación que pide el revisor, y que la versión anterior de esta fila fundía en uno): (1) **autenticación** — ningún endpoint la tiene, de modo que la política del navegador no protege frente a un cliente que no sea un navegador (`curl`, un script, otro servidor); (2) **limitación de tasa** — no existe ninguna, así que el coste por espectador de `AUD01-P1-008` no tiene techo impuesto por el servicio. Ninguno de los dos está registrado como decisión deliberada en ningún ADR. Son riesgos de publicación reales que el descarte del CORS no desmiente. |
 
 ## 13. NO VERIFICADO — límites explícitos de esta auditoría
 
 | ID | Afirmación no verificada | Qué haría falta |
 |---|---|---|
-| `AUD01-NV-001` | Que Overpass publique relaciones utilizables para C1, C2, C3, C7, C8a, C8b, C9 y C10. | Ejecutar `find_route_relations(ref=..., network="Cercanías Madrid")` para las ocho líneas. No lo hice: requiere llamadas externas que esta auditoría no tiene autorizadas. **Lo que sí está verificado** es que no se intentó (`docs/STATUS.md:860-873`, «sin geometría descargada»). |
+| `AUD01-NV-001` | Que Overpass publique relaciones utilizables para C1, C2, C3, C7, C8a, C8b, C9 y C10. | Ejecutar `find_route_relations(ref=..., network="Cercanías Madrid")` para las ocho líneas. No lo hice: requiere llamadas externas que esta auditoría no tiene autorizadas. **Lo que sí está verificado** es que para esas ocho no hay intento documentado: ninguna entrada en `madrid_source_specs` (`packages/geo/madrid.py:19-60`) ni registro de intento en `STATUS`/`TASKS`. No afirmo que nadie lo probara —eso es una prueba negativa que no tengo—, ni extiendo la afirmación a los 4 patrones de C4b, donde el intento consta y falló con dos `HTTP 502` (`docs/STATUS.md:850-852`). |
 | `AUD01-NV-002` | El estado funcional actual de Via Península, Valfiguer y las apps oficiales. | Consulta en vivo de los cuatro productos. La comparación de §2 y §8 se apoya en la verificación documentada del proyecto, fechada `2026-11-18`, y puede estar desactualizada en cualquier fila. |
 | `AUD01-NV-003` | Latencia y escalado reales con red, ASGI y concurrencia. | Prueba de carga de H7. Todo el benchmark existente es `TestClient` en proceso, declarado como tal (`mp-022-benchmark.md:18`). Mi cálculo de ~30 espectadores/núcleo es una cota superior derivada, no una medida. |
 | `AUD01-NV-004` | Que los saltos medidos en `AUD01-P0-001` se reproduzcan con la cadencia real del feed. | Colector en vivo ≥ 2 h (H1). Mi medida usa los 77 s que separan los dos cortes congelados; el escalado a ~30 s es aritmético, no observado. |
@@ -1457,7 +1562,7 @@ repositorio.
 # Salto real al llegar el ancla siguiente, 44 circulaciones (p50 1 237 m, máx 3 274 m)
 .venv/bin/python scratch/aud01_snap.py
 
-# Intervalo entre paradas del núcleo Madrid vs horizonte de 180 s
+# Intervalo entre paradas del núcleo Madrid vs horizonte (180 s configurados / 190 s efectivos)
 .venv/bin/python scratch/aud01_stopgap.py
 
 # Velocidad de cuerda (quality) vs de arco (movimiento), y el caso ciego 20277
