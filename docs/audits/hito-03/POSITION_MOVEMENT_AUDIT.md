@@ -147,26 +147,41 @@ mientras las 44 que sí tienen trazado verificado se dibujan con el símbolo dis
 
 ## 2. Hallazgos
 
-### AUD04-P0-001 — La espera programada en parada es inexpresable para cualquier ancla real: la detección exige 1,0 m de precisión y, además, se autocancela, así que la posición dibujada atraviesa la parada sin detenerse
+### AUD04-P0-001 — La espera programada en parada solo se expresa en una ventana de ~1 m de progreso: fuera de ella la posición dibujada atraviesa la parada sin detenerse, y en este corte no se activó ni una vez
 
 - **Identificador:** `AUD04-P0-001`
 - **Componente:** `packages/movement/schedule.py` (`TripSchedule.dwell_end_seconds`) +
   `packages/movement/rendering.py` (`_envelope`). Consumido por `apps/api/snapshot.py` y
   evaluado por `apps/web/src/domain/movement.ts`.
-- **Severidad:** **P0** — la rama «espera programada en parada» del contrato es
-  **estructuralmente inalcanzable** (0 de 44 circulaciones del corte obtienen
-  `dwell_until`, incluida la única que está sobre una parada con espera declarada), de modo
-  que la posición publicada avanza a través de todas las paradas programadas de la red y
-  `rendering.py:185-187` —que afirma que la envolvente «la respeta de verdad (retiene el
-  progreso)»— es falso en producción. **Es independiente de `AUD01-P0-001` y ninguna de
-  las dos correcciones que AUD-01 recomienda lo resuelve** (ver «Relación con AUD-01»).
-  **Acotación honesta de la severidad, tras la revisión de Codex Sol:** lo que el dato
-  observado sostiene es que el horario declara la espera y el contrato no puede expresarla;
-  **no** que exista una observación del tren detenido (ver «Qué sostiene el dato observado
-  y qué no»). Si el propietario considera que el listón de P0 exige una observación
-  contradicha —como sí ocurre en `AUD01-P0-001`, con mediana real de 0,0 km/h—, este
-  hallazgo es un P1. No lo rebajo por mi cuenta: el mecanismo está confirmado por el
-  revisor y la decisión de listón es suya.
+- **Severidad:** **P0 abierto a P1** — la rama «espera programada en parada» del contrato
+  **existe y es alcanzable, pero solo en una ventana de ~1 m de progreso** alrededor del
+  tramo plano (medida exacta en «Ventana real de alcanzabilidad»); fuera de ella la posición
+  publicada atraviesa la parada sin retener el progreso, y `rendering.py:185-187` —que
+  afirma que la envolvente «la respeta de verdad (retiene el progreso)»— solo se cumple
+  dentro de ese ~1 m. En este corte **no se activó ni una vez**: `dwell_until` queda a
+  `None` en las 44 circulaciones, pero el denominador que importa es **0 de 1**, la única
+  cuyo ancla estaba cerca de una parada con espera declarada (a 5,38 m, cinco veces la
+  anchura de la ventana). **Es independiente de `AUD01-P0-001` y ninguna de las dos
+  correcciones que AUD-01 recomienda lo resuelve** (ver «Relación con AUD-01»).
+
+  **Dos correcciones de alcance aplicadas tras las revisiones de Codex Sol, que conviene
+  leer antes de fijar la severidad:**
+  1. La versión anterior decía «estructuralmente inalcanzable para cualquier ancla real».
+     **Era una sobreafirmación.** El propio contrafactual A de este hallazgo ya demostraba
+     lo contrario, y el revisor lo reprodujo con prueba propia: la rama se activa, en una
+     ventana estrecha. Lo correcto es «rama extremadamente estrecha, no activada en este
+     corte», no «inalcanzable».
+  2. Lo que el dato observado sostiene es que el horario declara la espera y que el
+     contrato no la expresó en esta ancla; **no** que exista una observación del tren
+     detenido (ver «Qué sostiene el dato observado y qué no»).
+
+  **La severidad queda deliberadamente abierta para AUD-09 / el propietario.** P0 es
+  defendible como riesgo contractual —afecta a la veracidad de lo que el mapa afirma sobre
+  el comportamiento ferroviario—, y es la lectura que yo mantengo; pero la evidencia
+  empírica disponible (envolvente 75,2 km/h frente a 75,0 km/h realmente observados, sin
+  ninguna observación de parada contradicha) sostiene con más firmeza **P1**, y el revisor
+  coincide en ese análisis. Con un solo corte y una sola ancla cercana no hay base para
+  cerrarlo en un sentido u otro: no lo decido yo.
 - **Evidencia reproducible:**
   ```sh
   .venv/bin/python scratch/aud04_dwell.py
@@ -229,6 +244,41 @@ mientras las 44 que sí tienen trazado verificado se dibujan con el símbolo dis
     candidate = 2026-11-20T14:33:20.756218+00:00 ; anchor_at = 2026-11-20T14:33:21+00:00
     anchor_at < candidate ? False  ->  dwell_until DESCARTADO igualmente
   ```
+- **Ventana real de alcanzabilidad (añadido tras la segunda revisión de Codex Sol):**
+  el revisor corrigió mi afirmación de que la rama era «estructuralmente inalcanzable para
+  cualquier ancla real» —el contrafactual A de arriba ya la refutaba— y la reproduje
+  barriendo el progreso del ancla alrededor del tramo plano real de Fuenlabrada:
+  ```sh
+  .venv/bin/python scratch/aud04_dwell_window.py
+  ```
+  ```
+  tramo plano en 41193.35 m; ancla real del corte en 41198.73 m (+5.38 m)
+
+   offset vs plano  dwell_end_seconds  dwell_until publicado  avance a 30 s
+          -1.010 m               None                     no        452.7 m
+          -1.000 m               None                     no        452.7 m
+          -0.999 m              55680                     SI          0.0 m
+          -0.500 m              55680                     SI          0.0 m
+          +0.000 m              55680                     SI          0.0 m
+          +0.010 m              55680                     no        627.2 m
+          +1.000 m              55680                     no        627.0 m
+          +1.010 m               None                     no        627.0 m
+          +5.380 m               None                     no        626.3 m
+
+  ventana en la que `dwell_until` SE PUEBLA: offset en [-0.999, +0.000] m  (anchura ~1 m)
+    condicion 1 (dwell_end_seconds, tolerancia +-1,0 m): offset en [-1,00, +1,00]
+    condicion 2 (guarda anchor_at < candidate de _envelope): recorta el lado positivo
+  ```
+  Las dos causas se leen aquí por separado y confirman el mecanismo ya aprobado: la
+  tolerancia abre una ventana de **2 m** (`[-1, +1]`) y la guarda de `_envelope` **recorta
+  todo el lado positivo**, dejando una ventana efectiva de **~1 m** (`[-0,999, 0,000]`)
+  sobre un recorrido de 45 165 m. Dentro de ella la espera se honra de verdad (0,0 m de
+  avance a los 30 s); fuera, el símbolo avanza 452–627 m en esos mismos 30 s.
+  **Qué cambia y qué no:** la rama **no** es inalcanzable —es extremadamente estrecha— y la
+  afirmación defendible es que **no se activó en este corte**, con denominador **0 de 1**
+  anclas cercanas, no «0 de 44». El mecanismo del fallo, los números del caso y la
+  separación frente a `AUD01-P0-001` quedan intactos: el ancla real cayó a +5,38 m,
+  cinco veces fuera de la ventana.
 - **Qué sostiene el dato observado y qué no (añadido tras la revisión de Codex Sol):**
   la versión anterior de este hallazgo afirmaba que el tren estaba «realmente parado
   durante 60 s». **El dato no lo sostiene y la frase estaba de más.** Lo que las dos
@@ -268,8 +318,12 @@ mientras las 44 que sí tienen trazado verificado se dibujan con el símbolo dis
   cuando llega la siguiente observación. Y lo hace rotulado «Proyectada — Avance estimado
   desde la última observación», que es cierto como procedencia pero no advierte de que el
   avance contradice una espera que el propio horario declara. El efecto no es particular de
-  este tren: al ser `dwell_until` inalcanzable para cualquier ancla real, **ninguna** de las
-  paradas programadas de la red detiene nunca el símbolo.
+  este tren: como la ventana de activación mide ~1 m de progreso, una parada programada solo
+  detiene el símbolo si el ancla cae justo en ese ~1 m, de modo que **lo esperable es que la
+  mayoría de las paradas programadas no lo detengan**. Lo que este corte demuestra es el
+  caso concreto (la única ancla cercana, a 5,38 m, no activó la espera); **cuantificar esa
+  proporción sobre la red exige una ventana en vivo** que esta auditoría no tuvo
+  (`AUD04-NO-VERIFICADO-002`).
 - **Causa raíz (confirmada en código):**
   1. **Tolerancia mal calibrada por un orden de magnitud.** `dwell_end_seconds` exige que
      el progreso del ancla caiga a ≤ 1,0 m del progreso del tramo plano. El error real de
@@ -282,10 +336,12 @@ mientras las 44 que sí tienen trazado verificado se dibujan con el símbolo dis
      `temporal_offset_s = anchor_s − seconds_at_progress(anchor_progress)`. Para cualquier
      ancla **posterior** al punto plano, `seconds_at_progress` devuelve el segundo de
      **salida** de la espera, de modo que el final de la espera desplazado cae en el
-     instante del ancla o antes, y `anchor_at < candidate` falla. Solo sobrevive el ancla
-     que cae en `[inicio_plano − 1 m, inicio_plano + 1 m]` y a la que
-     `seconds_at_progress` devuelve la hora de **llegada** (contrafactual A). El conjunto
-     de anclas que publican espera es, por construcción, de medida casi nula.
+     instante del ancla o antes, y `anchor_at < candidate` falla. Solo sobrevive el ancla a
+     la que `seconds_at_progress` devuelve la hora de **llegada** (contrafactual A), es
+     decir la que cae en `[inicio_plano − 1 m, inicio_plano]`: la guarda recorta todo el
+     lado positivo de la tolerancia y deja la ventana efectiva en **~1 m de los 45 165 m**
+     del recorrido, medida en «Ventana real de alcanzabilidad». Es una ventana muy
+     estrecha, no una imposibilidad.
 - **Por qué el test de regresión no puede fallar aquí:**
   `packages/movement/tests/test_rendering.py:145`
   (`test_scheduled_dwell_holds_the_train_at_the_anchor`) construye la observación con
@@ -1181,7 +1237,7 @@ ejecutado. `AUD-06` cubre el camino de base de datos del snapshot.
 
 | ID | Severidad | Una línea |
 |---|---|---|
-| `AUD04-P0-001` | **P0** | La espera programada en parada es inexpresable para cualquier ancla real (0 de 44 obtienen `dwell_until`): la detección exige 1,0 m frente a un error de map-matching de p95 20,8 m —el único tren sobre una parada con espera declarada queda a 5,38 m— y además se autocancela para cualquier ancla pasada la parada, así que el símbolo atraviesa la estación a 75,2 km/h (1 252,7 m en los 60 s programados) en vez de retener el progreso. Ninguna de las dos correcciones de AUD01-P0-001 lo cubre: cohortes disjuntas (`post_llegada` +141 s vs `pre_salida`) y offset plausible (+321 s) |
+| `AUD04-P0-001` | **P0 abierto a P1** | La espera programada en parada solo se expresa en una ventana de ~1 m de progreso (`[-0,999, 0,000]` m respecto al tramo plano): la tolerancia es de ±1,0 m frente a un error de map-matching de p95 20,8 m y la guarda de `_envelope` recorta además todo el lado positivo, así que fuera de ese ~1 m el símbolo atraviesa la estación a 75,2 km/h (1 252,7 m en los 60 s programados) en vez de retener el progreso. No activada ni una vez en este corte: 0 de 1 anclas cercanas (la única quedó a 5,38 m). Ninguna de las dos correcciones de AUD01-P0-001 lo cubre: cohortes disjuntas (`post_llegada` +141 s vs `pre_salida`) y offset plausible (+321 s). Severidad abierta para AUD-09/propietario |
 | `AUD04-P1-001` | **P1** | Al caer el feed el símbolo retrocede 2 357,9 m de mediana (25 de 25 circulaciones en ruta) y el aviso que explicaba la congelación desaparece en ese mismo instante |
 | `AUD04-P1-002` | **P1** | El mapa no distingue observación real de proyección sobre vía —una sola entrada de estilo para `anchor`— y su etiqueta afirma que la proyección es «la coordenada que publicó la fuente» |
 | `AUD04-P2-001` | P2 | `_envelope` mezcla reloj de pared con segundos reales: 8 444 m fabricados el 2026-03-29 y congelación de una hora el 2026-10-25. Latente: el último tren pasa 56 min antes del salto |
@@ -1204,8 +1260,8 @@ correcta (p50 2,6 m del trazado), el GPS bruto se conserva intacto, el progreso 
 sobre la longitud de arco del patrón y nunca se interpola lat/lon en recta. Pero **el
 cuándo no acompaña al dónde**: la velocidad con la que recorre ese trazado se deriva del
 horario sin contrastarla con el movimiento observado (mediana real 0,0 km/h entre los dos
-cortes), pierde las esperas en estación que el propio horario declara
-(`AUD04-P0-001`), retrocede kilómetros sin avisar cuando el feed cae
+cortes), solo expresa las esperas en estación que el propio horario declara si el ancla
+cae en una ventana de ~1 m (`AUD04-P0-001`), retrocede kilómetros sin avisar cuando el feed cae
 (`AUD04-P1-001`), y la interfaz no distingue las dos categorías de posición que el anexo
 crítico del hito convirtió en requisito (`AUD04-P1-002`). Los tres son defectos de la capa
 de traducción de MP-019, no del motor de MP-012 ni de la geometría de MP-018, y los tres se
