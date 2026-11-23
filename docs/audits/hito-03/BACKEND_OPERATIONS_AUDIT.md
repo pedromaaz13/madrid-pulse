@@ -22,11 +22,14 @@ recuperación probada es una recuperación puntual, no una prueba de operación
 
 ## Entorno y reproducciones
 
-Usé exclusivamente el contenedor desechable propio `aud06-postgis` en
-`127.0.0.1:5546`, imagen `postgis/postgis:17-3.5`, con
-`0001_init.up.sql` y `0002_api_batch_indexes.up.sql` aplicadas desde cero. Se
-confirmó PostGIS 3.5 y 17 tablas públicas. Los datos de producción y volúmenes
-de otros worktrees no se usaron para las pruebas de este informe.
+Las pruebas planificadas usaron el contenedor desechable propio `aud06-postgis`
+en `127.0.0.1:5546`, imagen `postgis/postgis:17-3.5`, con `0001_init.up.sql`
+y `0002_api_batch_indexes.up.sql` aplicadas desde cero; se confirmó PostGIS 3.5
+y 17 tablas públicas. **Excepción de alcance que debo divulgar:** durante un
+diagnóstico mal configurado, el colector escribió seis ciclos reales
+`source_ingestion_run` 3090–3095 y sus filas vinculadas en la base compartida
+`127.0.0.1:5433`, que pasó de `668/484/3/120/0` a `895/646/8/126/8`; se detuvo
+inmediatamente y no se borró ni alteró ningún dato de esa base.
 
 La batería reproducida contra esa base fue:
 
@@ -278,8 +281,10 @@ no convierte la proyección de **≈19 MB/día** (199.989 B de una ventana de
 `postgis/postgis:17-3.5`, publicado en `127.0.0.1:5799` (nunca `127.0.0.1:5433`,
 confirmado por `grep` del DSN antes de cada ejecución). `0001_init.up.sql` y
 `0002_api_batch_indexes.up.sql` aplicados desde cero. Contenedor eliminado al
-cerrar la revisión; la base compartida de desarrollo no se tocó en ningún
-momento.
+cerrar la revisión. **Alcance global:** el revisor no tocó la base compartida,
+pero la ejecución original de AUD-06 sí tuvo el incidente divulgado arriba:
+los runs 3090–3095 llevaron sus recuentos de `668/484/3/120/0` a
+`895/646/8/126/8` en `127.0.0.1:5433`, sin posterior borrado o alteración.
 
 **Veredicto: APPROVED.** Los cuatro puntos del encargo se reprodujeron de
 forma independiente y el informe de Codex resultó preciso en cada uno:
