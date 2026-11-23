@@ -51,7 +51,8 @@ El colector es solo-inserción por diseño (sin ruta de `UPDATE`/`DELETE`), así
 | AUD-04 | Corrección | Claude `opus` · high (follow-up) | `ctx_df3d184f2548` | `task_28d2a39bb8db` | `6aff045` | **aplicada**, enviada a veredicto final + pregunta de severidad |
 | AUD-04 | Revisor (ronda final) | Codex `gpt-5.6-sol` · high (follow-up) | `ctx_f6e4d425460c` | `task_e8ebd65626c3` | — | **CHANGES_REQUESTED** — mecanismo/cohorte/evidencia ya confirmados, 1 sobreafirmación a matizar |
 | AUD-04 | Corrección (ronda 3) | Claude `opus` · high (follow-up) | `ctx_b3f6965ae197` | `task_675457d6a82d` | `90b0a3e` | **aplicada** — ventana de alcanzabilidad medida con precisión ([-0,999,0,000]m), enviada a veredicto final |
-| AUD-04 | Revisor (ronda final, 2ª vez) | Codex `gpt-5.6-sol` · high (follow-up) | `ctx_e9d9a104948e` | `task_e36a368f56a5` | — | *(en curso)* |
+| AUD-04 | Revisor (ronda final, 2ª vez) | Codex `gpt-5.6-sol` · high (follow-up) | `ctx_e9d9a104948e` | `task_e36a368f56a5` | — | **CHANGES_REQUESTED** — ventana confirmada, 1 frase residual contradictoria a corregir |
+| AUD-04 | Corrección (ronda 4) | Claude `opus` · high (follow-up) | `ctx_43c147440bf7` | `task_76fda7df01a6` | *(en curso)* | *(en curso)* |
 | AUD-06 | — | Codex `gpt-5.6-terra` · high (pendiente de despachar) | — | `task_7982bf79c176` | — | en cola |
 | AUD-08 | — | Codex `gpt-5.6-terra` · high (pendiente, depende de AUD-02/03/04/05/06) | — | `task_e0212d2fd3fe` | — | pendiente de dependencias |
 | AUD-09 | — | Claude `opus` · high (pendiente, depende de todo) | — | `task_2e01f9d87b46` | — | pendiente de dependencias |
