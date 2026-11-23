@@ -4,9 +4,9 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 
 ## [Unreleased]
 
-### MP-021 — Histórico y continuidad analítica (en revisión)
+### MP-021 — Histórico y continuidad analítica
 
-Worktree `mp-021-historico`, ramificado desde `mp-020-mapa-y-tablero` (`b616ae6`). En `REVIEW`: pendiente de la auditoría independiente de OpenAI Codex y de la aceptación del propietario.
+Worktree `mp-021-historico`, ramificado desde `mp-020-mapa-y-tablero` (`b616ae6`). `DONE`: aprobado por OpenAI Codex el `2026-11-23` tras dos rondas de revisión independiente; pendiente únicamente de la decisión del propietario sobre integración y promoción de ADR-0015.
 
 #### Added
 - **`circulation_daily_history`** (`services/snapshotter/history.py`): cuarto agregado gold, con grano **vehículo + viaje + día de servicio** — la misma identidad que publica `/api/v1/snapshot` y que lleva la URL del frontend. Los huecos de cobertura son **filas**, no ausencias, y la columna `coverage` los clasifica en una sola categoría (`observed` · `canceled` · `operator_only` · `unobserved` · `unscheduled`): una anulación del operador no es un hueco de captura, y una circulación observada fuera del calendario aparece con `scheduled = false` en vez de descartarse. Cada métrica va con el denominador que la sostiene.
@@ -14,8 +14,8 @@ Worktree `mp-021-historico`, ramificado desde `mp-020-mapa-y-tablero` (`b616ae6`
 - **History y Explore navegables** (`apps/web/src/ui/HistoryView.tsx`, `ExploreView.tsx`, `hooks/useHistory.ts`, `domain/format.ts`): los botones de `TopBar.tsx` dejan de estar `disabled`. Ida y vuelta Live ↔ History conservando la identidad (`?train=&trip=&sd=` valen en ambas vistas), «Ver en Live» solo si esa circulación está de verdad en el snapshot vigente, y todo porcentaje con su fracción real (`5.6 % (4/72)`); sin muestra se escribe «sin muestra», nunca `0 %`. Sin SQL Lab, sin cuentas, sin dbt, sin infraestructura distribuida.
 - **`infra/operate/`**: supervisor portable del colector con retroceso acotado, plantillas `launchd` (macOS) y `systemd` (Linux) para colector y archivo diario, script de archivo diario idempotente, y `measure-cost.py`, que **mide** una ventana real y extrapola marcando la extrapolación como tal.
 - **`docs/evidence/mp-021-coste-colector-continuo.md`** y **`mp-021-medicion-coste.json`**: coste real medido sobre operación continua contra los feeds en vivo — 21 ciclos en 823 s sin errores de ingesta, RSS máximo 18,6 MB, 434 KB de bajada por ciclo, ≈631 B/fila en PostgreSQL y **≈48,9 B/fila en Parquet ZSTD** (≈19 MB/día proyectados, ≈7 GB/año). Es la medición que DEC-004 esperaba.
-- **`docs/evidence/mp-021-inspeccion-navegador.md`** y `docs/evidence/mp-021-capturas/` (8 capturas): inspección real en navegador de History y Explore, escritorio y móvil 390 px.
-- 34 pruebas nuevas en la suite Python (`test_idempotency.py`, `test_history.py`, `test_history_contract.py`, `test_supervised_loop.py` y ampliaciones de `test_gold.py`) y 33 en la del cliente, estas últimas sobre una **grabación real** de la nueva API (`src/__fixtures__/history-archive.json`).
+- **`docs/evidence/mp-021-inspeccion-navegador.md`** y `docs/evidence/mp-021-capturas/` (10 capturas): inspección real en navegador de History y Explore, escritorio y móvil 390 px, incluida la segunda ronda sobre anulaciones.
+- 43 pruebas nuevas en la suite Python (`test_idempotency.py`, `test_history.py`, `test_history_contract.py`, `test_supervised_loop.py` y ampliaciones de `test_gold.py`) y 39 en la del cliente, estas últimas sobre una **grabación real** de la nueva API (`src/__fixtures__/history-archive.json`).
 
 #### Fixed
 - **El archivo frío no era idempotente, pese a lo que decía su docstring.** `OVERWRITE_OR_IGNORE` deja intactas las particiones que una nueva ejecución ya no produce: medido con DuckDB 2.0, tras escribir `hour=10` (3 filas) + `hour=11` (2 filas) y reprocesar con una sola fila, el archivo seguía devolviendo **3 filas**. `OVERWRITE` tampoco servía: borra la raíz entera — reexportar `2026-11-20` se llevó por delante el `date=2026-11-19` ya archivado. Ahora cada tabla se escribe en `.staging/` y su subárbol `date=<fecha>` se reemplaza apartando antes la versión anterior, y **un origen vacío nunca borra un día ya archivado** (la tabla caliente se purga por diseño, DEC-011: 0 filas calientes no prueba que el día no tuviera observaciones).
@@ -36,6 +36,7 @@ Worktree `mp-021-historico`, ramificado desde `mp-020-mapa-y-tablero` (`b616ae6`
 - **Semántica de cobertura comprobada sobre los 1 179 huecos completos** del `2026-11-20`, no sobre una muestra: ninguno es una anulación y ninguno tiene métricas no nulas. El caso `operator_only` (parte del operador sin cancelar y sin posición) no existe en el archivo actual, así que se cubre con un test sintético explícito en vez de declararlo verificado sobre datos que no hay.
 - Recuperación del colector verificada **provocando los fallos**: `kill -9` (reinicio en 5 s) y reinicio de PostgreSQL (salida 75 y reanudación).
 - Suite Python exacta de CI: **276/276 OK** contra PostgreSQL real (233 → 276), con los recuentos de la base de desarrollo intactos en `668/484/3/120/0`. Frontend con Node **22.13.1**: lint, typecheck, **88/88** pruebas (49 → 88) y build en verde con el worker de MapLibre verificado (550754 bytes).
+- Revisión final independiente de OpenAI Codex sobre `d68b351`, sin hallazgos abiertos: 36 pruebas focales de idempotencia/caídas/cobertura/API; suite completa **276/276** contra desarrollo y 276 con 5 `skip` esperados sobre PostGIS fresco; Parquet real `1304 = 122 observadas + 1179 huecos + 3 anuladas`; navegación real de History/Explore y emulación exacta `390x844` sin desbordamiento de página (`scrollWidth == clientWidth == 390`). `git diff --check`, autoría exclusiva de Pedro Matute y ausencia de coautores verificados. Estado final: `DONE`, aprobado el 2026-11-23; ADR-0015 permanece `Propuesto`.
 
 #### Not done (declarado explícitamente)
 - **No hay operación «24/7 verificada»**, y no se afirma: la ventana medida son 13 min 43 s y todas las cifras de 24/72 h están marcadas como proyección.

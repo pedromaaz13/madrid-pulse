@@ -2,7 +2,7 @@
 
 - **Estado:** `Propuesto` — aplicado de forma provisional bajo [ADR-0007](0007-autonomy-model.md). No lo promueve el ejecutor ni el revisor: solo el propietario del repositorio (`AGENTS.md`, regla 8), normalmente en el cierre de Hito 3.
 - **Fecha:** 2026-11-23
-- **Decisores:** Claude Opus como ejecutor de MP-021 (escalado por la asignación fija del kit en `PLAN-Y-ACEPTACION.md`: continuidad analítica sobre identidad y temporalidad); revisión cruzada de OpenAI Codex pendiente; promoción pendiente del propietario (Pedro Matute).
+- **Decisores:** Claude Opus como ejecutor de MP-021 (escalado por la asignación fija del kit en `PLAN-Y-ACEPTACION.md`: continuidad analítica sobre identidad y temporalidad); revisión cruzada aprobada por OpenAI Codex el 2026-11-23; promoción pendiente del propietario (Pedro Matute).
 
 ## Contexto
 

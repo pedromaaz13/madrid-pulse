@@ -288,9 +288,9 @@ Con Hito 1 ya fusionado a `main`, el caso concreto de MP-012 **deja de requerir 
 
 ## Tarea actual
 
-**MP-021 — Histórico y continuidad analítica**
+**MP-021 — Histórico y continuidad analítica (cerrada)**
 
-Ejecutor: Claude (escalado a Opus) · Revisor: OpenAI Codex · Estado: **REVIEW**
+Ejecutor: Claude (escalado a Opus) · Revisor: OpenAI Codex · Estado: **DONE** (aprobada el `2026-11-23`)
 
 Worktree/rama: `mp-021-historico`, ramificada desde `mp-020-mapa-y-tablero` (MP-020 `DONE`, `b616ae6`). Datos del kit repuestos con `instalar.py --solo-datos` (10 ficheros).
 
@@ -314,12 +314,12 @@ Con conexión PostgreSQL por petición, ~66 ms de los ~69 ms de p50 de `/api/v1/
 
 `route_color` real de Renfe no se expone en `/api/v1/catalog`; el frontend usa una paleta propia determinista por `line_id`. Sigue abierto: MP-021 **no** lo ha cambiado, porque tocar `/api/v1/catalog` habría modificado el contrato de MP-019, que el encargo prohíbe. Queda para MP-022 o para el propietario. (El dato existe: `packages.gtfs.Route.color` lo parsea desde `routes.txt`.)
 
-### Entregado en MP-021 (pendiente de auditoría de Codex)
+### Entregado en MP-021
 
 1. **Idempotencia real del archivo frío, a prueba de caídas** — preparación en `.staging/`, cuarentena de la versión anterior y dos renombrados atómicos, con recuperación automática de una sustitución interrumpida; un origen vacío nunca borra un día archivado. Los cuatro agregados son byte-estables. DEC-040, [ADR-0015](adr/0015-cold-archive-and-history-contract.md).
 2. **Histórico consultable por circulación** — mart `circulation_daily_history` (vehículo + viaje + día de servicio) con los huecos como filas y una columna `coverage` que separa el hueco real de una anulación del operador; expuesto en `/api/v1/history/*` sin tocar el contrato de MP-019. DEC-042.
 3. **Mart sobre el catálogo Madrid completo** — 42 rutas / 12 líneas vía `SnapshotterConfig.line_filter`; límite (a) de DEC-033 cerrado con `packages.gtfs.scheduled_service_ids_for_date`.
-4. **History y Explore navegables** — botones de `TopBar.tsx` conectados, ida y vuelta Live ↔ History con la misma identidad, inspección visual real con 8 capturas.
+4. **History y Explore navegables** — botones de `TopBar.tsx` conectados, ida y vuelta Live ↔ History con la misma identidad, inspección visual real con 10 capturas.
 5. **Operación continua supervisada con coste medido** — `infra/operate/` y `docs/evidence/mp-021-coste-colector-continuo.md`.
 
 ### Revisión de Codex (1ª ronda, 2026-11-23): dos hallazgos bloqueantes, corregidos
@@ -330,6 +330,14 @@ Los dos eran ciertos y están corregidos en este mismo worktree:
 2. **Tres "huecos" del `2026-11-20` tenían métricas no nulas**: eran servicios que **Renfe había anulado** (`schedule_relationship='CANCELED'`, sin posición). Clasificarlos como hueco culpaba al colector de trenes que nunca salieron. Nueva columna `coverage` con cinco categorías disjuntas, Parquet regenerado y documentación alineada: el día cierra como `1304 = 122 + 1179 + 3`, y de los 1 179 huecos reales ninguno tiene métricas no nulas. DEC-042.
 
 Evidencia para re-verificar rápido: sección "Segunda ronda" de `docs/evidence/mp-021-inspeccion-navegador.md`, con las capturas `09`/`10`.
+
+### Revisión independiente de Codex (2ª ronda, 2026-11-23): aprobada
+
+Los dos hallazgos bloqueantes quedaron corregidos y reproducidos de forma independiente. La inyección de fallo confirma que una interrupción entre renombrados conserva y restaura byte a byte la versión anterior; un reintento instala después el día completo. El archivo real del `2026-11-20` clasifica `1304 = 122 observadas + 1179 huecos reales + 3 anuladas`, con cero métricas no nulas en los huecos, y el `2026-11-19` mantiene 24 observadas fuera de programación con denominador programado 0.
+
+History/Explore, el detalle histórico y la vuelta honesta a Live se inspeccionaron en navegador real. En emulación móvil exacta `390x844`, History y Explore cumplen `scrollWidth == clientWidth == 390`; la tabla de Explore, más ancha, queda contenida en `.table-scroll` sin desbordar la página. Suites reejecutadas: backend **276/276** contra desarrollo y 276 con 5 `skip` esperados sobre PostGIS fresco; frontend Node `22.13.1` **88/88**, lint, typecheck y build, con worker MapLibre de 550754 bytes. Recuentos intactos: desarrollo `668/484/3/120/0`, replay `240/199/4/7/2`. `git diff --check`, autoría exclusiva de Pedro Matute y ausencia de coautores: limpios.
+
+**Veredicto:** MP-021 `DONE`, sin hallazgos abiertos. ADR-0015 sigue `Propuesto`; solo el propietario puede promoverlo.
 
 ### Lo que MP-021 deja explícitamente sin hacer
 
