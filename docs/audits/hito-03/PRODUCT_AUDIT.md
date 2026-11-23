@@ -22,7 +22,7 @@ corregido, todo contra medida nueva, no contra opinión:
 | # | Qué decía la revisión 1 | Qué dice ahora | Por qué |
 |---|---|---|---|
 | 1 | «**26** de 44 no se movieron» (§5.2, P0-001) | «**31** no cambiaron ni coordenada ni progreso; solo **13** se movieron» | Mi 26 era un recuento **a ojo** de la tabla impresa y estaba mal. El recuento programático da 31/13. Definición ahora explícita: `v_real == 0,00 m/s` exacto, es decir progreso map-matcheado idéntico en los dos cortes. `aud01_snap.py` imprime ya ese par de recuentos para que no dependa de una lectura visual. |
-| 2 | Horizonte rotulado «180 s» en guiones y texto | **180 s configurados** (`stale_after_s`) frente a **190 s efectivos** desde el ancla, distinguidos en cada sitio | `horizon_end = calculated_at + stale_after_s` y `calculated_at` va 10 s por detrás del ancla, así que la ventana real son 190 s. Afecta a §3.4, P1-005, P0-001, H4 y a los rótulos de columna de dos guiones. El desajuste con el intervalo mediano entre paradas resulta algo **mayor**, no menor. |
+| 2 | Horizonte rotulado «180 s» en guiones y texto | **180 s configurados** (`stale_after_s`) frente a **190 s efectivos** desde el ancla, distinguidos en cada sitio | `horizon_end = calculated_at + stale_after_s` y `calculated_at = ancla + 10 s` (el snapshot se construye 10 s **después** del corte), así que la ventana real desde el ancla son 190 s. Afecta a §3.4, P1-005, P0-001, H4 y a los rótulos de columna de dos guiones. El desajuste con el intervalo mediano entre paradas resulta algo **mayor**, no menor. |
 | 3 | «el criterio **pre-autorizó** 28/103» (§1, P0-002) | «el criterio **admitía de antemano** una mayoría pendiente sin cuantificar, y 28/103 cumple ese mínimo bajo **sin haber sido el número bendecido**» | `docs/TASKS.md:443` autoriza «mayoría `pending` honesto» y `docs/STATUS.md:832` un mínimo de C5 + un ramal de C4 + un tramo compartido. Ninguno de los dos aprueba el número 28/103: mi formulación atribuía al criterio una precisión que no tiene. |
 | 4 | «ocho líneas **nunca se intentaron**»; los 72 pendientes como una sola categoría | **68 sin intento documentado** (C1, C2, C3, C7, C8a, C8b, C9, C10) frente a **4 con intento real fallido** (C4b `10T0016C4b`, dos `HTTP 502` de la relación `9174512`), separados en tabla y en texto | «Nunca se intentó» es una prueba negativa que no tengo; lo que la evidencia sostiene es la ausencia de fuente en `madrid_source_specs` y de registro de intento. Y los 4 de C4b son un **límite externo real**, categóricamente distinto: tratarlos igual era injusto con la tarea. Añadido de paso: el CSV da a los 72 el mismo `reason`, así que esa distinción no es recuperable desde el artefacto canónico. |
 | 5 | 8 hipótesis (H1–H8) | **10** (H1, H2, H3, **H3b**, H4, H5, H6, **H7a**, **H7b**, H8), cada una declarando qué parte del baseline es medida y qué parte no | H3 era una conjunción cuyo criterio de refutación no atacaba su primera mitad; H7 mezclaba capacidad con ganancia de CDN y dejaba sin cubrir la banda 5×–10×. Además: H1 define ahora pares ancla-a-ancla y no generaliza la fixture a Live; H2 separa refutación empírica de recomendación de corrección y abandona «cualquier instante»; H3 declara que omite líneas con denominador cero; H4 admite baseline solo indirecto; H5/H6/H8 se marcan **no concluyentes con n=5**; H8 añade métrica operacional y orden contrabalanceado. |
@@ -33,6 +33,21 @@ corregido, todo contra medida nueva, no contra opinión:
 peor caso `1023V20478C4b` a 2 319 s = 38,65 min de su salida con 5 700,6 m de avance falso;
 el salto p50 **1 237,0938 m** / máximo **3 274,2258 m**; la matriz 28 `validated` / 3
 `partial` / 72 `pending`; y 44/121 móviles frente a 77/121 = 63,636 % en punto estático.
+
+
+### Ronda 2 del revisor — los dos puntos que quedaban
+
+Codex Sol · High aprobó los puntos 1, 3, 4 y 6 tras reproducirlos de nuevo (17/121, 190 s
+efectivos, 15,52–30,00 m/s, 31/44 quietas, 13/44 móviles, salto p50 1 237 m / máx 3 274 m:
+todo coincide) y devolvió dos:
+
+| # | Qué estaba mal | Qué dice ahora | Por qué |
+|---|---|---|---|
+| 7 | «`calculated_at` va **10 s por detrás** del ancla» (fila 2 de la tabla de la revisión 2, y §3.4) | «`calculated_at = ancla + 10 s`»; el snapshot se construye 10 s **después** del corte, así que **el ancla** queda 10 s por detrás de `calculated_at` | Tenía la dirección temporal **invertida** en esos dos sitios. El propio guion la daba bien (`aud01_envelope_predeparture.py:8`, `calculated_at = cut + 10 s`), así que era un error de redacción, no de medida: los 190 s efectivos no cambian. Las otras tres menciones del desfase (§3.4, P0-001, P1-005) ya estaban correctas y no se han tocado. |
+| 8 | Varias hipótesis sin umbral de refutación cuantificado, o con el umbral contradiciendo la afirmación | **Ocho hipótesis** con umbral numérico explícito y estadístico alineado con su afirmación, más **dos preguntas exploratorias** (H6, H8) reclasificadas por no ser refutables hoy | Detalle por hipótesis en la introducción de §10: H1 pasa a afirmar medianas (afirmaba proporción y se refutaba con mediana); H2a declara que basta **1 de 6** instantes por debajo del 10 %; H3 define «persistente» como **≥ 8 de 10 sondeos** y se refuta con **≤ 1 línea**; H4 sube su umbral a **< 25 %** para cerrar la banda muerta del 10–30 %; H5 añade **margen de equivalencia** (< 20 puntos) y **n ≥ 30**; H6 y H8 pasan a exploratorias declarando qué haría falta para volverlas refutables. |
+
+Nada de lo ya aprobado se ha modificado en esta ronda: los cambios se limitan a la
+dirección temporal de dos frases y a la columna «Qué la refutaría» de §10.
 
 ---
 
@@ -231,9 +246,10 @@ La consecuencia es que la mitigación escrita en el propio código es falsa:
 > — `packages/movement/rendering.py:82-85`
 
 180 s no acota el efecto: **lo abarca**. Y el horizonte que de verdad se aplica es aún
-mayor: `horizon_end = calculated_at + stale_after_s`, y `calculated_at` va 10 s por
-detrás del ancla en la propia evidencia de MP-019, así que la ventana **efectiva** desde el
-ancla es de **190 s**, por encima del intervalo mediano entre paradas. Un horizonte completo
+mayor: `horizon_end = calculated_at + stale_after_s`, y `calculated_at = ancla + 10 s` en
+la propia evidencia de MP-019 —el snapshot se construye 10 s **después** del corte, así que
+el ancla queda 10 s por detrás de `calculated_at`, no al revés—, de modo que la ventana
+**efectiva** desde el ancla es de **190 s**, por encima del intervalo mediano entre paradas. Un horizonte completo
 cruza por tanto un tramo entre estaciones entero, y como `dwell_end_seconds` solo devuelve
 algo si el horario declara espera (9,9 % de las paradas), el tren se dibuja atravesando la
 estación sin detenerse. Es el caso que `diseno/INTERACCIONES.md:20` pone como prueba de
@@ -247,7 +263,7 @@ aceptación («parada en estación») y que ninguna prueba del hito comprueba.
 > (`aud01_envelope_predeparture.py`, `aud01_snap.py`) imprimen ahora el horizonte efectivo
 > y rotulan sus columnas con él.
 
-### 3.5 Geometría: para 68 de los 72 pendientes no es un límite de la fuente, es un alcance
+### 3.5 Geometría: 67 pendientes son alcance accionable, 1 es feed truncado y 4 tuvieron intento fallido
 
 Los 72 patrones `pending` **no son una sola categoría**, y conviene separarlos porque su
 causa y su remedio son distintos (`docs/evidence/mp-018-corridor-coverage.csv`, recuento
@@ -255,14 +271,16 @@ reproducido por línea y estado):
 
 | Grupo | Patrones | Líneas | Qué consta | Naturaleza |
 |---|---:|---|---|---|
-| **Sin intento documentado** | **68** | C1, C2, C3, C7, C8a, C8b, C9, C10 | ninguna entrada en `madrid_source_specs` y ningún intento registrado en `STATUS`/`TASKS` | alcance no encargado |
+| **Sin fuente congelada ni intento registrado; accionables por geometría** | **67** | C1, C2, C3, C7, C8a, C8b, C9, C10 | ninguna entrada en `madrid_source_specs` y ningún intento registrado en `STATUS`/`TASKS` | alcance no encargado |
+| **Feed de origen truncado** | **1** | C8b (`10T0098C8b`) | solo queda Cercedilla con `stop_sequence` 032/025; la ruta espejo `10T0097C8b` tiene 114 viajes sin `stop_times` | defecto upstream; no se resuelve descargando OSM |
 | **Intento real fallido** | **4** | C4b (`10T0016C4b`, sentido opuesto) | se pidió la relación OSM `9174512` y Overpass devolvió **`HTTP 502` dos veces** (`docs/STATUS.md:850-852`) | **límite externo real** |
 
-La formulación precisa para los 68 es «**sin intento documentado**», no «nunca se
-intentó»: lo que la evidencia sostiene es la ausencia de fuente en
-`packages/geo/madrid.py:19-60` y la ausencia de registro de intento, no una prueba
-negativa de que nadie lo probara. Para los 4 de C4b sí hay intento y sí hay causa externa
-verificada, y tratarlos como los otros 68 sería injusto con la tarea.
+La formulación precisa para los 67 es «**sin fuente congelada ni intento
+registrado**», no «nunca se intentó»: lo que la evidencia sostiene es la ausencia
+de fuente en `packages/geo/madrid.py:19-60` y de registro, no una prueba negativa.
+El patrón 68º de ese grupo original es un feed truncado y requiere calidad de
+dato/upstream, no adquisición geométrica. Para los 4 de C4b sí hay intento y causa
+externa registrada.
 
 Un detalle del artefacto canónico que esta separación deja a la vista: el CSV asigna a
 **los 72** el mismo `reason` —«sin geometría OSM descargada para este patrón/sentido»—, así
@@ -270,17 +288,17 @@ que la distinción entre límite externo y alcance no encargado **no es recupera
 matriz**, solo desde la prosa de `STATUS`. Es una pérdida de información en el único
 artefacto que un consumidor leería.
 
-Y el alcance que decidió los 68 está escrito:
+Y el alcance que decidió los 67 accionables está escrito:
 
 > «Mínimo real a descargar/verificar: revalidar C5 sin huecos, un ramal de C4 […] y un
 > tramo compartido entre dos líneas» — `docs/STATUS.md:832`
 
 El herramental para hacerlo existe y es reproducible (`packages/geo/tools/fetch_fixture.py`,
 `find_route_relations(ref=..., network="Cercanías Madrid")`, documentado en
-`tests/fixtures/osm_c4_real/MANIFEST.md`). Para los 68, no es un problema técnico abierto:
-es trabajo no encargado. Para los 4 de C4b, es un reintento contra un servicio externo que
-falló y quedó correctamente registrado como pendiente en vez de interpretarse como
-relación inexistente.
+`tests/fixtures/osm_c4_real/MANIFEST.md`). Para los 67, no es un problema técnico abierto:
+es trabajo no encargado. El patrón truncado no se arregla con ese herramental. Para los 4
+de C4b, consta un intento contra un servicio externo que falló y quedó correctamente
+registrado como pendiente en vez de interpretarse como relación inexistente.
 
 ---
 
@@ -677,32 +695,52 @@ Las tres son, exactamente, los tres huecos mayores de este informe.
 
 ---
 
-## 10. Hipótesis refutables para AUD-08 / AUD-09
+## 10. Hipótesis refutables para AUD-08 / AUD-09, y dos preguntas exploratorias
 
-Formuladas para poder **fallar**: cada una trae el umbral que la refuta y el experimento.
-Son **diez** tras la revisión de Codex Sol · High, no ocho: H3 era una conjunción cuyo
-criterio no refutaba su primera mitad (se ha partido en H3 y **H3b**) y H7 mezclaba
-capacidad con ganancia de CDN dejando sin cubrir la banda 5×–10× (se ha partido en **H7a**
-y **H7b**, esta última con un único umbral).
+**Ocho hipótesis refutables** (H1, H2 con sus dos mitades, H3, H3b, H4, H5, H7a, H7b) y
+**dos preguntas exploratorias** (H6, H8) que **no** se presentan como hipótesis porque hoy
+no tienen criterio de refutación posible.
 
-Cada fila declara **qué parte del baseline es medida y qué parte no**. Cuatro (H1, H2a, H3,
-H4) tienen evidencia parcial a favor en §3-§6 sobre las capturas congeladas; H7a está
-derivada aritméticamente, no medida; H5, H6 y H8 no tienen ninguna evidencia todavía y,
-con los n=5 que propongo, **no serán concluyentes**: sirven para decidir si merece la pena
-medirlas bien.
+Cada hipótesis trae un **umbral numérico explícito** que la refuta, y el estadístico del
+umbral coincide con el tipo de afirmación que hace (proporción contra proporción, mediana
+contra mediana). Cambios respecto a la ronda anterior, todos por objeciones del revisor:
+
+- **H1** afirmaba una proporción y se refutaba con una mediana: ahora es una afirmación
+  sobre medianas (`p50 ≤ 200 m` la refuta), con la variante por proporción separada como
+  **H1b**.
+- **H2a** es una afirmación **universal** sobre los seis instantes, así que su criterio es
+  explícitamente «**≥ 1 de 6 por debajo del 10 %**», no «los seis».
+- **H3** define ahora qué es «persistente» (**≥ 8 de 10 sondeos consecutivos** de la misma
+  franja) y cuándo queda refutada (**≤ 1 línea** cumpliéndolo), además de declarar que
+  omite las líneas con denominador cero.
+- **H4** subió su umbral de refutación de `< 10 %` a **`< 25 %`** para eliminar la banda
+  muerta del 10–30 % en la que no se confirmaba ni se refutaba.
+- **H5** fija un **margen de equivalencia** (una diferencia `< 20 puntos porcentuales` la
+  refuta) y un mínimo de potencia (**n ≥ 30**).
+- **H6** y **H8** se **reclasifican como exploratorias**: una tasa de acierto agregada no
+  puede refutar una afirmación sobre «la UI» en bloque sin desagregar por canal (H6), y
+  «valor percibido» no tiene todavía métrica primaria acordada (H8). Ambas declaran qué
+  haría falta para volverse refutables (desagregación por canal y métrica primaria
+  declarada de antemano, más **n ≥ 30**).
+- **H3b** y **H7a/H7b** vienen de partir H3 y H7 en la ronda anterior; H7b conserva su
+  único umbral (`< 10×`) que cierra la banda 5×–10×.
+
+Cada fila declara además **qué parte del baseline es medida y qué parte no**. Cuatro (H1,
+H2a, H3, H4) tienen evidencia parcial a favor en §3-§6 sobre las capturas congeladas; H7a
+está derivada aritméticamente, no medida; H5 no tiene ninguna evidencia todavía.
 
 | ID | Hipótesis | Qué la refutaría | Experimento |
 |---|---|---|---|
-| **H1** | Sobre **pares ancla-a-ancla consecutivos de la misma circulación** (misma identidad vehículo+viaje+día de servicio, dos observaciones sucesivas del feed en vivo), la corrección de posición al llegar la segunda supera los 200 m en más del 50 % de los pares. | p50 del salto < 200 m sobre ≥ 500 pares ancla-a-ancla consecutivos reales. | Colector en vivo ≥ 2 h; por cada par, registrar la posición que la envolvente del primer ancla predecía para el instante del segundo, y el progreso map-matcheado del segundo. **Límite del baseline, explícito:** mi p50 de 1 237 m sale de **un único par** de capturas congeladas separadas 77 s (`aud01_snap.py`), no de pares consecutivos en Live; el escalado a ~30 s es aritmético. No generalizo la fixture a Live: eso es precisamente lo que H1 pone a prueba. |
-| **H2** | El contrato pone en movimiento circulaciones que no han salido. Dos partes separadas: **(H2a, empírica)** la proporción afectada sobre las circulaciones con corredor validado se mantiene ≥ 10 % en los **seis instantes concretos** que se midan (no en «cualquier instante», que es ambiguo: la proporción depende de la franja —madrugada, punta, valle— y de cuántas unidades estén estacionadas esperando salida); **(H2b, de corrección)** acotar `temporal_offset_s` o añadir comprobación de ventana de viaje lo reduce a 0 sin suprimir movimiento legítimo. | H2a: < 10 % en los seis instantes medidos. H2b: la corrección también anula el avance de circulaciones que sí están en marcha. | H2a: repetir `aud01_envelope_predeparture.py` sobre ≥ 6 capturas nuevas en franjas declaradas (p. ej. 07:30, 09:00, 13:00, 18:30, 21:00, 23:30). H2b: aplicar la corrección y comparar el conjunto de circulaciones con `speed_mps > 0` antes y después. Baseline: **17/44 = 38,6 %** de las map-matcheables en el corte `1533` — un solo instante (15:33 local), no una media del día. |
-| **H3** | La cobertura de posicionamiento real (observados en curso / programados en curso) tiene **al menos dos líneas por debajo del 70 % de forma persistente**. | Ninguna línea por debajo del 70 % en ≥ 10 capturas repartidas en ≥ 3 días. | `aud01_coverage.py` sobre capturas nuevas. Baseline: C1 50 %, C10 60 % en el corte `1533`. **Dos limitaciones declaradas:** (1) la versión anterior de esta hipótesis era una **conjunción** («estable en 85-92 % global **y** ≤ 70 % en dos líneas») cuyo criterio de refutación solo atacaba la segunda mitad y por tanto no refutaba la estabilidad global — se ha partido: la estabilidad global queda como **H3b**, medida aparte, con su propio criterio (desviación del global > 10 puntos entre capturas). (2) El cálculo **omite las líneas con denominador cero** (C4 no tenía ninguna instancia en curso en el corte), así que «todas las líneas» significa «todas las que tienen denominador > 0 en esa captura»; una línea sin servicio programado en el instante no entra ni como aprobada ni como suspendida. |
-| **H3b** | El global de cobertura de posicionamiento es estable: no se desvía más de 10 puntos entre capturas de la misma franja horaria. | Una desviación > 10 puntos entre dos capturas de la misma franja. | Mismo conjunto de capturas que H3, agregando por franja. Baseline: **un solo punto**, 89,0 % a las 15:33 — insuficiente por sí mismo para afirmar ninguna estabilidad, que es la razón de separar esta hipótesis de H3. |
-| **H4** | El horizonte de extrapolación hace que ≥ 30 % de las circulaciones en movimiento se dibujen atravesando una estación sin detenerse. | < 10 %, o que `dwell_until` se pueble en la mayoría de las paradas reales. | Para cada circulación con envolvente, comprobar si `[progress_m_at_reference, max_progress_m]` contiene el progreso de alguna parada y si `dwell_until` la cubre. **Baseline solo indirecto, declarado como tal:** no he medido ninguna travesía de estación; lo que he medido son los dos ingredientes (intervalo mediano entre paradas de **180 s** y espera declarada en el **9,9 %** de las paradas, `aud01_stopgap.py`) frente al horizonte, que es de **180 s configurados** y **190 s efectivos** desde el ancla. La hipótesis existe precisamente porque la consecuencia no está medida. |
-| **H5** | El color no oficial degrada la identificación de línea en el mapa. | Que la tasa de identificación correcta sea equivalente con la paleta hash y con `route_color`. | Tarea de identificación **A/B** sobre dos capturas idénticas salvo la paleta, con el nombre de línea oculto. **No concluyente con n=5**, y así debe reportarse: con cinco personas no se aísla el efecto del color de la comprensión de la leyenda, de la familiaridad con la red ni de la terminología de la ficha. Sirve para decidir si merece la pena medirlo bien, no para concluir. Dato duro independiente de la prueba: `route_color` existe en `routes.txt`, se parsea (`Route.color`) y no se expone en `/api/v1/catalog`. |
-| **H6** | La UI no transmite la diferencia entre GPS reciente, avance extrapolado y posición congelada, pese a que el contrato la publica. | Que los participantes clasifiquen correctamente los tres estados sin abrir el detalle técnico. | Tarea de clasificación sobre una captura con los tres estados presentes (`anchor`, `extrapolated_from_last_anchor`, `stale_frozen`). **No concluyente con n=5** por el mismo motivo que H5: un fallo puede venir del color, del símbolo, del texto o del vocabulario («extrapolado», «ancla»), y con cinco personas no se separa la causa. Cruzar con el hallazgo P0-1 de AUD-05 (edades negativas en replay), que es un defecto de dato y no de presentación. |
-| **H7a** | **Capacidad:** un proceso no sostiene 100 espectadores concurrentes a 10 s de sondeo con p95 < 1 s. | 100 concurrentes con p95 < 1 s sin ningún cambio. | `wrk`/`locust` contra `uvicorn` real (no `TestClient`) con 1/10/50/100 clientes. Baseline: p50 254,73 ms en proceso, del que ~66 ms son abrir conexión (DEC-038). |
-| **H7b** | **Ganancia:** servir un snapshot pre-generado reduce la carga de backend por espectador **al menos 10×**. | Una mejora medida **< 10×**. (La versión anterior de esta hipótesis dejaba sin cubrir la banda 5×–10×: pedía «más de un orden de magnitud» y la refutaba con «< 5×», de modo que un resultado de 7× no la confirmaba ni la refutaba. Queda un único umbral: ≥ 10× la confirma, < 10× la refuta.) | Repetir la medida de H7a sirviendo un snapshot pre-generado desde disco/CDN y comparar coste de CPU por petición servida. |
-| **H8** | La diferenciación real del producto es analítica, no cartográfica: History/Explore con denominadores explícitos genera más valor percibido que el mapa. | Que los participantes, con orden contrabalanceado, elijan el mapa de forma consistente y no mencionen la cobertura explícita sin que se les pregunte. | Entrevista estructurada con **orden contrabalanceado** (la mitad recorre Live→History, la mitad History→Live; la versión anterior de esta hipótesis tenía **sesgo de orden**: siempre Live primero, lo que favorece a lo visto en último lugar). **Métrica operacional**, que antes faltaba: (1) qué vista eligen volver a abrir cuando se les pide una segunda consulta propia; (2) si mencionan numerador/denominador sin que se les pregunte; (3) qué vista nombran al describir el producto a un tercero. Con n=5 no es concluyente —mismo límite que H5/H6—, es orientación para decidir el rumbo de los hitos siguientes. |
+| **H1** | Sobre **pares ancla-a-ancla consecutivos de la misma circulación** (misma identidad vehículo+viaje+día de servicio, dos observaciones sucesivas del feed en vivo), la **mediana** de la corrección de posición al llegar la segunda supera los **200 m**. | **`p50 ≤ 200 m`** sobre ≥ 500 pares ancla-a-ancla consecutivos reales. *(Estadístico alineado con la afirmación: la versión anterior afirmaba una proporción —«en más del 50 % de los pares»— y la negaba con una mediana, dos cosas distintas. Queda como afirmación sobre medianas. La variante por proporción, si se quiere medir también, es **H1b**: «la corrección supera 200 m en > 50 % de los pares», refutada por **`≤ 50 %`**.)* | Colector en vivo ≥ 2 h; por cada par, registrar la posición que la envolvente del primer ancla predecía para el instante del segundo, y el progreso map-matcheado del segundo. **Límite del baseline, explícito:** mi p50 de 1 237 m sale de **un único par** de capturas congeladas separadas 77 s (`aud01_snap.py`), no de pares consecutivos en Live; el escalado a ~30 s es aritmético. No generalizo la fixture a Live: eso es precisamente lo que H1 pone a prueba. |
+| **H2** | El contrato pone en movimiento circulaciones que no han salido. Dos partes separadas: **(H2a, empírica)** en **cada uno** de los seis instantes medidos, la proporción afectada sobre las circulaciones con corredor validado es **≥ 10 %**; **(H2b, de corrección)** acotar `temporal_offset_s` o añadir comprobación de ventana de viaje la lleva a **0 %** sin suprimir movimiento legítimo. | H2a: **≥ 1 de los 6 instantes con < 10 %** basta para refutarla —es una afirmación universal sobre los seis, no un promedio, así que un solo contraejemplo la tumba—. H2b: que la corrección deje **alguna** circulación pre-salida con `speed_mps > 0`, o que anule el avance de **≥ 1** circulación que sí estaba en marcha. | H2a: repetir `aud01_envelope_predeparture.py` sobre 6 capturas nuevas en franjas declaradas (07:30, 09:00, 13:00, 18:30, 21:00, 23:30 locales). H2b: aplicar la corrección y comparar el conjunto de circulaciones con `speed_mps > 0` antes y después. Baseline: **17/44 = 38,6 %** en el corte `1533` — un solo instante (15:33 local), no una media del día. El abandono de «cualquier instante diurno» es deliberado: la proporción depende de la franja y de cuántas unidades estén estacionadas esperando salida. |
+| **H3** | **Al menos dos líneas** tienen cobertura de posicionamiento (observados en curso / programados en curso) **< 70 % de forma persistente**, donde **persistente = en ≥ 8 de 10 sondeos consecutivos** de la misma franja horaria con denominador > 0. | **≤ 1 línea** cumpliendo el criterio de persistencia (es decir: si solo una línea queda por debajo del 70 % en ≥ 8 de 10 sondeos, H3 queda refutada tal como está escrita, y la observación se reporta como hallazgo de una sola línea, no como patrón de red). | `aud01_coverage.py` sobre ≥ 10 capturas de la misma franja repartidas en ≥ 3 días. Baseline: C1 50 %, C10 60 % en **un** sondeo del corte `1533` — un solo punto no establece persistencia, que es la razón de fijar 8 de 10. **Limitación declarada:** el cálculo **omite las líneas con denominador cero** (C4 no tenía ninguna instancia en curso en ese corte), así que «línea» significa «línea con denominador > 0 en ese sondeo»; una línea sin servicio programado en el instante no cuenta ni a favor ni en contra. |
+| **H3b** | El global de cobertura de posicionamiento es estable: no se desvía más de 10 puntos entre capturas de la misma franja horaria. | Una desviación **> 10 puntos** entre dos capturas cualesquiera de la misma franja. | Mismo conjunto de capturas que H3, agregando por franja. Baseline: **un solo punto**, 89,0 % a las 15:33 — insuficiente por sí mismo para afirmar ninguna estabilidad, que es la razón de separar esta hipótesis de H3. |
+| **H4** | El horizonte de extrapolación hace que **≥ 30 %** de las circulaciones con envolvente activa se dibujen atravesando una estación sin detenerse. | **< 25 %** de travesías sin `dwell_until` que las cubra. *(Umbral de refutación subido para que sea coherente con la afirmación: el «< 10 %» anterior dejaba una banda muerta del 10–30 % en la que la hipótesis no se confirmaba ni se refutaba. Con 25 % la banda muerta queda en 5 puntos, y el criterio por proxy de `dwell_until` deja de ser una vía alternativa de refutación: es la propia medida.)* | Para cada circulación con envolvente, comprobar si `[progress_m_at_reference, max_progress_m]` contiene el progreso de alguna parada y si `dwell_until` la cubre; contar la proporción sobre el total de circulaciones con envolvente. **Baseline solo indirecto, declarado como tal:** no he medido ninguna travesía de estación; lo que he medido son los dos ingredientes (intervalo mediano entre paradas de **180 s** y espera declarada en el **9,9 %** de las paradas, `aud01_stopgap.py`) frente al horizonte, que es de **180 s configurados** y **190 s efectivos** desde el ancla. La hipótesis existe precisamente porque la consecuencia no está medida. |
+| **H5** | El color no oficial degrada la identificación de línea en el mapa: la tasa de identificación correcta con la paleta hash es **≥ 20 puntos porcentuales inferior** a la obtenida con `route_color`. | Una diferencia **< 20 puntos porcentuales** entre ambas condiciones (margen de equivalencia explícito: por debajo de 20 puntos se considera que el color no es el factor dominante y H5 queda refutada). **Potencia mínima para que el resultado cuente: n ≥ 30 participantes.** Con n < 30 no se declara ni confirmada ni refutada: se reporta como exploratoria. | Tarea de identificación **A/B** sobre dos capturas idénticas salvo la paleta, con el nombre de línea oculto. Dato duro independiente de la prueba: `route_color` existe en `routes.txt`, se parsea (`Route.color`) y no se expone en `/api/v1/catalog`. |
+| **H6** | *(Pregunta exploratoria, **no hipótesis refutable** en su estado actual.)* ¿Transmite la UI la diferencia entre GPS reciente, avance extrapolado y posición congelada? | **No procede: sin criterio de refutación.** Un fallo de clasificación no distingue entre causa de color, de símbolo, de texto o de vocabulario («extrapolado», «ancla»), así que ningún umbral sobre la tasa de acierto refutaría una afirmación sobre *la UI* en bloque. Para convertirla en refutable hace falta antes **desagregarla por canal** (una hipótesis por símbolo, texto y color) y fijar **n ≥ 30** por condición. Hasta entonces se reporta como exploratoria y **no** como hipótesis. | Tarea de clasificación sobre una captura con los tres estados presentes (`anchor`, `extrapolated_from_last_anchor`, `stale_frozen`), con n = 5 como sondeo previo para decidir si merece la pena el diseño desagregado. Cruzar con el hallazgo P0-1 de AUD-05 (edades negativas en replay), que es un defecto de dato y no de presentación. |
+| **H7a** | **Capacidad:** un proceso no sostiene 100 espectadores concurrentes a 10 s de sondeo con p95 < 1 s. | 100 concurrentes con **p95 < 1 s** sin ningún cambio. | `wrk`/`locust` contra `uvicorn` real (no `TestClient`) con 1/10/50/100 clientes. Baseline: p50 254,73 ms en proceso, del que ~66 ms son abrir conexión (DEC-038). |
+| **H7b** | **Ganancia:** servir un snapshot pre-generado reduce la carga de backend por espectador **al menos 10×**. | Una mejora medida **< 10×**. (La versión anterior dejaba sin cubrir la banda 5×–10×: pedía «más de un orden de magnitud» y la refutaba con «< 5×», de modo que un resultado de 7× no la confirmaba ni la refutaba. Queda un único umbral: ≥ 10× la confirma, < 10× la refuta.) | Repetir la medida de H7a sirviendo un snapshot pre-generado desde disco/CDN y comparar coste de CPU por petición servida. |
+| **H8** | *(Pregunta exploratoria, **no hipótesis refutable** en su estado actual.)* ¿Está la diferenciación real del producto en la capa analítica (History/Explore con denominadores explícitos) más que en el mapa? | **No procede: sin criterio de refutación.** «Valor percibido» no tiene todavía una métrica acordada, y las tres señales operacionales que propongo abajo pueden apuntar en direcciones distintas sin que nada diga cuál manda. Para convertirla en refutable hacen falta dos cosas que hoy no existen: **una métrica primaria declarada de antemano** (propongo la señal 1, «qué vista reabren para una consulta propia») y **n ≥ 30** con orden contrabalanceado. Hasta entonces se reporta como exploratoria y **no** como hipótesis. | Entrevista estructurada con **orden contrabalanceado** (la mitad recorre Live→History, la mitad History→Live; la versión anterior tenía **sesgo de orden**: siempre Live primero, lo que favorece a lo visto en último lugar). Señales operacionales a registrar: (1) **primaria** — qué vista eligen reabrir cuando se les pide una segunda consulta propia; (2) si mencionan numerador/denominador sin que se les pregunte; (3) qué vista nombran al describir el producto a un tercero. Con n = 5 es orientación para decidir el rumbo de los hitos siguientes, nunca conclusión. |
 
 ---
 
@@ -790,8 +828,10 @@ riesgo real acotado o deuda de proceso.
 - **Evidencia reproducible:** `docs/evidence/mp-018-corridor-coverage.csv`, recontado por
   línea y estado: **28 `validated` / 3 `partial` / 72 `pending`** sobre 103 filas.
   Los 72 `pending` se reparten en **dos categorías que no deben confundirse**:
-  - **68** en C1, C2, C3, C7, C8a, C8b, C9 y C10 — **sin intento documentado**: ninguna
-    entrada en `madrid_source_specs` y ningún intento registrado en `STATUS`/`TASKS`;
+  - **67** en C1, C2, C3, C7, C8a, C8b, C9 y C10 — **sin fuente congelada ni
+    intento registrado**, accionables adquiriendo geometría;
+  - **1** en C8b (`10T0098C8b`) — feed truncado: una única parada residual con
+    `stop_sequence` 032/025; no se arregla descargando OSM;
   - **4** en C4b (`10T0016C4b`, sentido opuesto) — **intento real fallido**: se pidió la
     relación OSM `9174512` y Overpass devolvió `HTTP 502` dos veces
     (`docs/STATUS.md:850-852`). Es un límite externo verificado, y la tarea hizo lo
@@ -811,23 +851,25 @@ riesgo real acotado o deuda de proceso.
   `PROMPT-UNICO-ORCA.md:11` declaraba no negociable evitar. Y como la cobertura geométrica
   no está en ninguna métrica de portada, nada avisa de que el 63,6 % de los trenes está en
   ese régimen. Añadido: el CSV da a los 72 `pending` el mismo `reason`, así que la
-  distinción entre el límite externo de C4b y los 68 sin intento no es recuperable desde
-  el artefacto canónico.
+  distinción entre el límite externo de C4b, los 67 sin fuente/intento registrado
+  y el feed truncado no es recuperable desde el artefacto canónico.
 - **Causa raíz (confirmada, con el alcance de la afirmación acotado):** no es técnica para
-  los 68. El alcance de MP-018 se fijó deliberadamente en «C5 + un ramal de C4 + un tramo
+  los 67 accionables. El alcance de MP-018 se fijó deliberadamente en «C5 + un ramal de C4 + un tramo
   compartido» (`docs/STATUS.md:832`) y su criterio de aceptación admitía «mayoría
   `pending` honesto» (`docs/TASKS.md:443`). **Ninguno de los dos bendijo el número
   28/103**: lo que autorizaron fue un mínimo bajo y una mayoría pendiente sin cuantificar,
   y 28/103 cumple ese mínimo sin haber sido el resultado específicamente aprobado de
   antemano. MP-020 y MP-022 heredaron ese estado y sus puertas de movimiento se cerraron
   con una circulación del 36,36 % que sí tiene corredor. El herramental para resolver los
-  68 ya existe y es reproducible (`packages/geo/tools/fetch_fixture.py`,
-  `find_route_relations`); los 4 de C4b necesitan un reintento contra Overpass, no una
-  decisión de alcance.
+  67 ya existe y es reproducible (`packages/geo/tools/fetch_fixture.py`,
+  `find_route_relations`); el patrón truncado requiere calidad/upstream; los 4 de C4b
+  tienen la vía ya congelada en `9174511` en sentido inverso, aunque usarla podría
+  situar el tren en la vía contigua equivocada.
 - **Alternativas:**
-  (A) Descargar y versionar las relaciones OSM de las ocho líneas sin intento documentado
-  con el herramental existente, una tarea por línea, con su manifiesto ODbL; y reintentar
-  por separado `9174512` para los 4 patrones de C4b.
+  (A) Descargar y versionar las relaciones OSM de las ocho líneas sin fuente ni intento
+  registrado, una tarea por línea y manifiesto ODbL; tratar por separado el feed truncado;
+  y congelar `9174512` para los 4 patrones C4b (o documentar la incertidumbre lateral de
+  reutilizar `9174511` invertida).
   (B) Sustituir las fixtures por una tubería diaria que las construya (modelo Via
   Península). Resuelve también el mantenimiento, pero es alcance de hito propio y añade
   dependencia operativa de Overpass.
