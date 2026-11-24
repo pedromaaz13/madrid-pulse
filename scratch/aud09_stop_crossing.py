@@ -1,16 +1,22 @@
-"""AUD-09: cuántas circulaciones atraviesan una parada dentro del horizonte sin retenerse.
+"""AUD-09 (v2, 2026-11-24): estado de parada frente a la envolvente PUBLICADA por producción.
 
-Pregunta de severidad (AUD04-P0-001 vs P1): no basta con el único caso de
-Fuenlabrada. Sobre las 44 circulaciones con cadena raw -> matched -> rendered del
-corte 1533, mide, con el código de producción y el mismo reloj que la evidencia
-MP-019 (ancla + 10 s, horizonte stale_after_s = 180 s):
+Corrección respecto a la v1 (commit 3014347), pedida por la revisión de Codex
+`gpt-5.6-sol` · high: la v1 evaluaba las travesías hasta `ancla + 190 s`
+(`calculated_at + stale_after_s`), pero `render_from_movement` limita la envolvente
+de un ancla observada a `valid_until = ancla + stale_after_s` (180 s;
+`packages/movement/rendering.py:279,341-346`). El horizonte de la travesía es ahora
+exactamente `rendered.valid_until`, y una parada solo cuenta como atravesada si el
+progreso publicado la supera ESTRICTAMENTE antes de ese límite (`p0 + 1 < prog < p1`).
+Para transparencia se imprime también el recuento con la desigualdad no estricta
+(`prog <= p1`), que reproduce el sesgo de la v1.
 
-- cuántas envolventes cruzan el progreso de al menos una parada (cualquier
-  parada del horario) entre el ancla y el final del horizonte;
-- cuántas cruzan una parada con espera DECLARADA en el horario (tramo plano);
-- cuántas publican dwell_until;
-- cota superior del error de posición si el tren honra la espera declarada:
-  speed_mps * min(espera, tiempo restante del horizonte al llegar a la parada).
+Mide sobre las 44 circulaciones del corte 1533 con cadena raw -> matched -> rendered
+(reloj de la evidencia MP-019: `calculated_at = ancla + 10 s`):
+
+1. estado declarado por el operador (`current_status`) frente a `speed_mps` publicado;
+2. cuántas envolventes atraviesan al menos una parada antes de `valid_until`;
+3. cuántas atraviesan una parada con espera DECLARADA en el horario;
+4. cuántas publican `dwell_until`.
 
 Separado por cohortes (en_ventana / pre_salida / post_llegada) como AUD-04.
 No escribe en ninguna base de datos ni usa red.
@@ -76,6 +82,7 @@ def main() -> None:
     prev_by_vehicle = load_cut("1532")
     latest_by_vehicle = load_cut("1533")
     rows = []
+    horizons = set()
     for vid, latest in sorted(latest_by_vehicle.items()):
         trip_id = latest.source_trip_id
         route_id = trip_route.get(trip_id)
@@ -104,37 +111,38 @@ def main() -> None:
         env = rd.progress_envelope
         cohort = ("pre_salida" if anchor_s < first_s
                   else "post_llegada" if anchor_s > last_s else "en_ventana")
-        if env is None:
-            rows.append(dict(vid=vid, cohort=cohort, env=False))
-            continue
-        horizon_end = now + timedelta(seconds=TH.stale_after_s)
-        p0 = env.progress_m_at_reference
-        p1 = env.progress_at(horizon_end)
-        crossed_any = []
-        crossed_dwell = []
-        err_bound = 0.0
-        for prog, dwell in stops_from_schedule(schedule):
-            if p0 + 1.0 < prog <= p1:
-                crossed_any.append(prog)
-                if dwell > 0:
-                    crossed_dwell.append((prog, dwell))
-                    if env.speed_mps > 0:
-                        t_reach = (prog - p0) / env.speed_mps
-                        remaining = (horizon_end - anchor_at).total_seconds() - t_reach
-                        err_bound = max(err_bound, env.speed_mps * max(0.0, min(dwell, remaining)))
-        if crossed_dwell:
-            print(f"   [detalle] {trip_id} {cohort} speed={env.speed_mps:.2f} p0={p0:.0f} paradas_espera={[(round(p), d) for p, d in crossed_dwell]} cota={err_bound:.0f} m")
-        status = getattr(latest.current_status, "value", latest.current_status)
+        status = str(getattr(latest.current_status, "value", latest.current_status))
         same_gps = (previous is not None and previous.latitude == latest.latitude
                     and previous.longitude == latest.longitude)
-        rows.append(dict(vid=vid, trip=trip_id, cohort=cohort, env=True, speed=env.speed_mps,
-                         advance=p1 - p0, n_any=len(crossed_any), n_dwell=len(crossed_dwell),
-                         dwell_until=env.dwell_until is not None, err_bound=err_bound,
-                         dwells=[d for _, d in crossed_dwell], status=str(status),
-                         same_gps=same_gps, first_stop=stop_ids[0],
-                         stop_id=latest.current_stop_id))
+        base = dict(vid=vid, trip=trip_id, cohort=cohort, status=status, same_gps=same_gps,
+                    first_stop=stop_ids[0], stop_id=latest.current_stop_id)
+        if env is None or rd.valid_until is None:
+            rows.append(dict(base, env=False))
+            continue
+        # Horizonte REAL de producción: el que publica el propio snapshot.
+        horizon_end = rd.valid_until
+        horizons.add((horizon_end - anchor_at).total_seconds())
+        p0 = env.progress_m_at_reference
+        p1 = env.progress_at(horizon_end)
+        strict_any, strict_dwell, loose_any, loose_dwell = [], [], [], []
+        for prog, dwell in stops_from_schedule(schedule):
+            if p0 + 1.0 < prog <= p1:
+                loose_any.append(prog)
+                if dwell > 0:
+                    loose_dwell.append((prog, dwell))
+            if p0 + 1.0 < prog < p1:
+                strict_any.append(prog)
+                if dwell > 0:
+                    strict_dwell.append((prog, dwell))
+        rows.append(dict(base, env=True, speed=env.speed_mps, advance=p1 - p0,
+                         n_any=len(strict_any), n_dwell=len(strict_dwell),
+                         n_any_loose=len(loose_any), n_dwell_loose=len(loose_dwell),
+                         dwell_until=env.dwell_until is not None,
+                         dwells=[d for _, d in strict_dwell],
+                         edge=[(round(p, 1), round(p1, 1)) for p, _ in loose_dwell
+                               if (p, _) not in strict_dwell]))
 
-    # Clase que el operador declara detenida y la envolvente pone en marcha.
+    print(f"horizontes de producción observados desde el ancla (s): {sorted(horizons)}")
     stopped = [r for r in rows if r["env"] and "STOPPED_AT" in r["status"]]
     stopped_moving = [r for r in stopped if r["speed"] > 0]
     at_origin = [r for r in stopped_moving if r["stop_id"] == r["first_stop"]]
@@ -151,31 +159,36 @@ def main() -> None:
     for r in at_origin:
         by_cohort[r["cohort"]] = by_cohort.get(r["cohort"], 0) + 1
     print(f"   en origen con avance, por cohorte AUD-04: {by_cohort}")
-    print(f"circulaciones con cadena completa: {len(rows)}  (horizonte {TH.stale_after_s:.0f} s "
-          f"configurados desde calculated_at = ancla + {CALC_DELAY_S:.0f} s)")
+    sp = [r["speed"] for r in stopped_moving]
+    adv = [r["advance"] for r in stopped_moving]
+    print(f"   speed_mps publicado: {min(sp):.2f}-{max(sp):.2f} m/s "
+          f"({min(sp)*3.6:.1f}-{max(sp)*3.6:.1f} km/h); avance publicado en el horizonte: "
+          f"{min(adv):.0f}-{max(adv):.0f} m")
+
+    print(f"\ncirculaciones con cadena completa: {len(rows)}  (horizonte = rendered.valid_until; "
+          f"calculated_at = ancla + {CALC_DELAY_S:.0f} s)")
     for cohort in ("en_ventana", "pre_salida", "post_llegada", None):
         sub = [r for r in rows if r["env"] and (cohort is None or r["cohort"] == cohort)]
         label = cohort or "TOTAL"
         if not sub:
             print(f"== {label}: 0")
             continue
-        any_ = [r for r in sub if r["n_any"] > 0]
-        dw = [r for r in sub if r["n_dwell"] > 0]
-        held = [r for r in sub if r["dwell_until"]]
         adv = [r["advance"] for r in sub]
         print(f"== {label}: n={len(sub)}")
         print(f"   avance publicado en el horizonte: p50={statistics.median(adv):.0f} m "
               f"max={max(adv):.0f} m")
-        print(f"   cruzan >=1 parada sin retenerse: {len(any_)}/{len(sub)}  "
-              f"(paradas cruzadas: total={sum(r['n_any'] for r in sub)})")
-        print(f"   cruzan >=1 parada con espera DECLARADA: {len(dw)}/{len(sub)}  "
-              f"esperas cruzadas (s): {sorted(d for r in dw for d in r['dwells'])}")
-        print(f"   dwell_until publicado: {len(held)}/{len(sub)}")
-        if dw:
-            eb = [r["err_bound"] for r in dw]
-            print(f"   cota de error si el tren honra la espera declarada: "
-                  f"p50={statistics.median(eb):.0f} m max={max(eb):.0f} m  "
-                  f"(trips: {', '.join(r['trip'] for r in dw)})")
+        print(f"   atraviesan >=1 parada (estricto, antes de valid_until): "
+              f"{sum(1 for r in sub if r['n_any'] > 0)}/{len(sub)}  "
+              f"(paradas: {sum(r['n_any'] for r in sub)})")
+        print(f"   atraviesan >=1 parada con espera DECLARADA (estricto): "
+              f"{sum(1 for r in sub if r['n_dwell'] > 0)}/{len(sub)}")
+        print(f"   [no estricto, sesgo de la v1] >=1 parada: "
+              f"{sum(1 for r in sub if r['n_any_loose'] > 0)}/{len(sub)}; "
+              f"con espera declarada: {sum(1 for r in sub if r['n_dwell_loose'] > 0)}/{len(sub)}")
+        print(f"   dwell_until publicado: {sum(1 for r in sub if r['dwell_until'])}/{len(sub)}")
+    edge = [(r["trip"], r["edge"]) for r in rows if r["env"] and r["edge"]]
+    print(f"\nparadas con espera declarada alcanzadas EXACTAMENTE en el límite del horizonte "
+          f"(prog == p1): {edge}")
 
 
 if __name__ == "__main__":

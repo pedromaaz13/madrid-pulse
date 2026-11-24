@@ -180,6 +180,8 @@ git log --format='%h %ad %s' --date=iso-strict beb9434..HEAD                    
 | 08 | Revisor r2 | `ctx_82199cab02ca` | heredado `sonnet` · high | — | 22:22:29→22:22:51 | — | **APPROVED** (`msg_c82b2aa19e5a`; 2 observaciones no bloqueantes absorbidas en `FINDINGS_REGISTER.md` §9) |
 | 09 | Ejecutor | `ctx_d10350eb24d0` (`task_2e01f9d87b46`) | `opus` · high | Opus · high ✔ | 22:22:59→(en curso) | este commit | — |
 | 09 | Revisor | *pendiente de despacho* | Codex `gpt-5.6-sol` · high (solicitado) | Sol · high | — | — | — |
+| 09 | Revisor r1 (añadido en ronda 2, 2026-11-24) | `ctx_e51f26382ff4` (`task_a89f38cd833f`) | `gpt-5.6-sol` · high (recibo: solicitado = efectivo) | Sol · high ✔ | 22:43:50→22:49:01 | — | CHANGES_REQUESTED (`msg_ad9b81385016`): severidad P1 de `AUD04-P0-001` defendible y P1 de `AUD01-P0-002` coherente; FR-01 28/44 confirmado; NO-GO/CONDITIONAL GO respaldado; pide corregir cifras de horizonte (190 s → 180 s de producción), 30/44 → 29/44, 5/44 → 0/44, cota 221 m, separar servicio/repositorio, FR-29/FR-32, H4-11 y referencia de H4-09 |
+| 09 | Corrección r1 | `ctx_607dbde2745f` (`task_537da6a757a0`, fu `ctx_d10350eb24d0`) | heredado `opus` · high | — | 22:49:10→ (pausa por límite de sesión Claude a las 22:49:18Z) | este commit | aplicada; reenvío al mismo revisor pendiente |
 
 ### HEAD auditado, comandos y resultados principales
 
@@ -207,3 +209,9 @@ git log --format='%h %ad %s' --date=iso-strict beb9434..HEAD                    
 7. **Autoría:** `git log beb9434..HEAD` → 53 commits, todos `Pedro Matute <pedromaaz13@gmail.com>`, 0 `Co-authored-by` (comprobado antes de este commit). Ningún push, PR ni merge.
 8. **Modelos para el H4:** `gpt-6.2-sol` está en `~/.codex/models_cache.json` (`visibility: list`) y es el default de `config.toml`, pero **no tiene recibo de Orca en esta ejecución**; la excepción del propietario lo limita a la tarea H4-11 y debe verificarse `effective.model` al despacharla.
 - **AUD-05:** revisión formal (Codex `gpt-5.6-terra` · high, `ctx_53f6eb860b17` + follow-up `ctx_7a5b7c7a3912`): CHANGES_REQUESTED documental -> v2 `39b3e06`/`28f696e` (artefacto por afirmación, P2-3 rectificado, P0-1 con cita corregida) -> **APPROVED documentalmente**. Limitación: el revisor no tuvo navegador; coordenadas/zooms de 18/19 y DevTools no repetidos independientemente. P0-1 verificado de forma independiente por API (x2 revisores) y por captura 20 (coordinador).
+
+### Ronda 2 de AUD-09 (2026-11-24)
+
+- La revisión de AUD-09 (`ctx_e51f26382ff4`) detectó que los arneses aprobados de AUD-01 (`aud01_envelope_predeparture.py`, `aud01_snap.py`) y de AUD-04 (`aud04_dwell.py`, `aud04_dwell_window.py`), y la v1 de `aud09_stop_crossing.py`, usan un horizonte de 190 s desde el ancla, mientras que producción usa `valid_until = ancla + 180 s` para anclas observadas (`packages/movement/rendering.py:279,341-346`). **Ninguna de las cuatro rondas de revisión de AUD-04 ni las tres de AUD-01 lo detectó**: aprobaron la cifra «190 s efectivos» como correcta. Es una lección de proceso para el H4: los arneses de medición deben pasar por la función pública de producción (`render_from_movement`), no por funciones internas con parámetros reconstruidos a mano.
+- Corrección: `scratch/aud09_production_recheck.py` (nuevo; equivalencia 44/44 con la envolvente publicada) y `scratch/aud09_stop_crossing.py` v2. Los arneses de AUD-01/AUD-04 **no se modifican** (evidencia aprobada); sus valores de producción constan en `FINDINGS_REGISTER.md` §0bis.
+- La tabla de la «Consolidación verificada» de más arriba mantiene sus cifras de la ronda 1 para AUD-01 (salto p50 1 237,09 m, medido con 190 s) y AUD-09 (30/44): **valores de producción: p50 1 229,15 m y 29/44**, con 0/44 travesías de esperas declaradas.

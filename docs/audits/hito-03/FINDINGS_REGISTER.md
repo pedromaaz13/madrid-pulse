@@ -2,7 +2,8 @@
 
 **Elabora:** AUD-09, Claude Opus · High (dispatch `ctx_d10350eb24d0`), contexto de síntesis.
 **Revisa:** Codex `gpt-5.6-sol` · High, en contexto nuevo (pendiente). **La severidad de `AUD04-P0-001` y la reclasificación de `AUD01-P0-002` son propuestas de este documento y requieren validación expresa del revisor.**
-**Fecha:** 2026-11-23 · **Rama:** `audit/hito-03-adversarial` · **Código auditado:** `mp-022-validacion-integrada@beb9434` (comprobado: `git diff --stat beb9434..HEAD -- . ':!docs/audits' ':!scratch'` vacío; la rama de auditoría no toca producto).
+**Ronda 2 (2026-11-24):** correcciones tras el veredicto CHANGES_REQUESTED de Codex `gpt-5.6-sol` · high (dispatch de revisión de AUD-09); el detalle de qué cambió y por qué está en §0bis. La ronda 1 queda íntegra en el commit `3014347`.
+**Fecha:** 2026-11-23 (ronda 1) · 2026-11-24 (ronda 2) · **Rama:** `audit/hito-03-adversarial` · **Código auditado:** `mp-022-validacion-integrada@beb9434` (comprobado: `git diff --stat beb9434..HEAD -- . ':!docs/audits' ':!scratch'` vacío; la rama de auditoría no toca producto).
 
 Este registro **no sustituye** a los informes de origen: cada fila remite al hallazgo completo (evidencia, alternativas, prueba de cierre) en su documento. Lo que añade es (1) deduplicación entre auditorías, (2) una severidad consolidada contra **una sola** escala, (3) la separación entre severidad y bloqueo de despliegue público, (4) dos mediciones propias de AUD-09 y (5) los hallazgos de proceso y las discrepancias documentales abiertas.
 
@@ -25,6 +26,29 @@ Este registro **no sustituye** a los informes de origen: cada fila remite al hal
 
 ---
 
+## 0bis. Correcciones de la ronda 2 (2026-11-24)
+
+**Causa común de las correcciones numéricas, verificada en código:** para un ancla **observada**, `render_from_movement` construye la envolvente con `horizon_end = valid_until = ancla + stale_after_s` = **180 s desde el ancla** (`packages/movement/rendering.py:279`, `:341-346`); solo la rama `schedule_only` usa `calculated_at + stale_after_s` (`:241-246`). Los arneses aprobados `scratch/aud01_envelope_predeparture.py`, `aud01_snap.py`, `aud04_dwell.py` y `aud04_dwell_window.py` llaman a `_envelope` directamente con **190 s** (`calculated_at + 180` con `calculated_at = ancla + 10 s`), y la v1 de `scratch/aud09_stop_crossing.py` evaluaba las travesías hasta ese mismo instante. Los arneses de otras tareas **no se modifican** (son evidencia aprobada); el guion nuevo `scratch/aud09_production_recheck.py` repite sus medidas con 180 s y comprueba que esa envolvente es **idéntica en 44/44** a la que publica `render_from_movement`. La v2 de `aud09_stop_crossing.py` toma el horizonte de `rendered.valid_until` y cuenta una parada como atravesada solo si el progreso publicado la supera **estrictamente** antes del límite.
+
+| Cifra | Ronda 1 (arnés con 190 s) | Ronda 2 (producción, 180 s) | Comando |
+|---|---|---|---|
+| `19656`: velocidad publicada | 75,2 km/h (20,88 m/s) | **79,3 km/h (22,04 m/s)** | `aud09_production_recheck.py` §1 |
+| `19656`: avance en 30 s / 60 s | 626,3 m / 1 252,7 m | **661,1 m / 1 322,2 m** | ídem |
+| Ventana de activación de la espera | `[-0,999, 0,000]` m | **sin cambio** (la guarda no depende del horizonte); fuera de ella, 441–662 m en 30 s (antes 452–627 m) | `sed 's/seconds=190)/seconds=180)/' scratch/aud04_dwell_window.py \| PYTHONPATH=. .venv/bin/python -` |
+| Pre-salida (`AUD01-P0-001`): velocidades | 15,52–30,00 m/s (55,9–108 km/h) | **15,65–30,00 m/s (56,3–108 km/h)**; 17/17 con avance | `aud09_production_recheck.py` §2 |
+| Pre-salida: avance máximo publicado | 5 700,6 m | **5 400,6 m** (las tres C4b pre-salida, al tope de 30 m/s; la antelación máxima de 38,65 min de `1023V20478C4b` no cambia) | ídem |
+| Salto al llegar el ancla siguiente (44 pares, 77 s) | p50 1 237,09 m / máx 3 274,23 m | **p50 1 229,15 m / máx 3 274,23 m** | `aud09_production_recheck.py` §3 |
+| Envolventes que atraviesan ≥ 1 estación | 30/44 (52 paradas); 16/25 en ventana | **29/44 (43 paradas); 16/25 en ventana** | `aud09_stop_crossing.py` (v2) |
+| Atraviesan una parada con espera **declarada** | 5/44, cota 221 m | **0/44**: las 5 de la v1 (`19677, 19681, 19685, 19687, 19689`, en el origen `35012`) alcanzan la parada de 4 079,6 m **exactamente** en el límite de 180 s, no la atraviesan; la cota de 221 m se retira | ídem |
+| FR-01: `STOPPED_AT` con avance | 28/44 (17 + 4 en origen, 7 intermedias; 25 con GPS idéntico; 31,3–108 km/h; 1 563–5 401 m) | **sin cambio** (la v1 ya usaba `render_from_movement`) | ídem |
+| Horizonte de la envolvente observada | «180 s configurados / 190 s efectivos» (heredado de AUD-01) | **180 s desde el ancla** para anclas observadas; 190 s solo describe los arneses, no producción | `rendering.py:279,341-346` |
+
+**Correcciones no numéricas:** (a) separación entre bloqueantes del **servicio** y bloqueantes de **publicar el repositorio**, con FR-29 y FR-32 explícitos (§1bis); (b) H4-11 sin ejecutor verificado (`NEXT_STEPS_PROPOSAL.md`); (c) referencias cruzadas corregidas en `AUDIT_EXECUTIVE_DECISION.md`.
+
+**Consecuencia para AUD-01 (aprobado):** la cifra «190 s efectivos» de `PRODUCT_AUDIT.md` (§Revisión 2 punto 2, §3.4, P0-001, P1-005, H4) describe el arnés, no el código. No cambia ninguna conclusión de AUD-01 —con 180 s el horizonte **coincide** con el intervalo mediano entre paradas (180 s) en vez de superarlo—, y sus cifras de producción son las de la tabla anterior. No se reescribe el informe aprobado; queda registrado aquí y en §9.
+
+---
+
 ## 1. Escala única y reglas de consolidación
 
 **Escala (encargo §8, textual):**
@@ -35,9 +59,41 @@ Este registro **no sustituye** a los informes de origen: cada fila remite al hal
 
 **Problema de origen que este registro corrige:** AUD-01 usó su propia escala («P0 bloquea publicar o falsea un dato mostrado; P1 rompe un criterio declarado o impide publicar sin trabajo real», `PRODUCT_AUDIT.md:749-751`), distinta de la del encargo. Por eso el mismo hecho —28/103 patrones con corredor— es P0 en AUD-01 y P1 en AUD-03, ambos aprobados. Aquí se reclasifica **todo** contra la escala del encargo.
 
-**Segundo eje, independiente de la severidad — «Bloquea despliegue público»:** `Sí` (no se puede publicar sin resolverlo), `Cond.` (bloquea solo si se publica esa superficie o esa afirmación), `No`. Una P2 puede bloquear el despliegue (p. ej. un catálogo que caduca en 26 días) y una P1 puede no hacerlo. Esto responde a la decisión del propietario de distinguir bloqueantes de publicación de mejoras opcionales.
+**Segundo eje, independiente de la severidad — «Bloquea despliegue público»:** `Sí` (no se puede publicar sin resolverlo), `Cond.` (bloquea solo si se publica esa superficie o esa afirmación), `No`. Una P2 puede bloquear el despliegue (p. ej. un catálogo que caduca en menos de cuatro semanas) y una P1 puede no hacerlo. **Ronda 2:** la columna se refiere al **servicio** (la aplicación desplegada para terceros); los bloqueantes de **publicar el repositorio** se listan aparte en §1bis. Esto responde a la decisión del propietario de distinguir bloqueantes de publicación de mejoras opcionales.
 
 **Deduplicación:** un mismo defecto citado por varias auditorías tiene una sola fila `FR-xx` con todas sus fuentes. Los defectos con causa raíz común se agrupan en un **sistema** (`S1`), sin fundir sus severidades.
+
+### 1bis. Dos tipos de publicación, dos listas de bloqueantes (ronda 2)
+
+**A. Bloqueantes de publicar el SERVICIO** (desplegar la aplicación para usuarios externos):
+
+| Tipo | FR | Qué exige |
+|---|---|---|
+| Sí, sin alternativa | FR-01, FR-03, FR-04, FR-05 (sistema S1, una sola corrección) | modelo de estado de parada (H4-00 + H4-04) |
+| Sí, sin alternativa | FR-06 | símbolo y texto propios para proyección frente a GPS |
+| Sí, sin alternativa | FR-07 | snapshot consistente con su `revision` |
+| Sí, sin alternativa | FR-12 | cumplir la política del servicio de teselas OSMF o cambiar de proveedor |
+| Sí, sin alternativa | FR-13, FR-38 | capacidad medida con red real; autenticación o limitación de tasa |
+| Sí, sin alternativa | FR-15 | ≥ 24 h de operación medida |
+| Sí, sin alternativa | FR-17 | sin defaults de base de datos compartida en el entorno desplegado |
+| Sí, sin alternativa | FR-19 | vigencia del GTFS comprobada en ejecución y refresco |
+| Sí, o cambiar la afirmación | FR-08 | no afirmar «toda Cercanías Madrid»; mostrar cobertura por línea |
+| Cond. — **corregir o deshabilitar la superficie** | FR-02 | corregir replay `?at=` o no exponer `?at=` |
+| Cond. — corregir o deshabilitar | **FR-29** | corregir los rótulos «GPS observado» / «última lectura confirmada» de ficha y leyenda, o **retirar esos rótulos** del servicio |
+| Cond. — corregir o deshabilitar | **FR-32** | leer `CANCELED` en la interfaz, o **no dibujar** como en marcha ninguna circulación cuyo `schedule_relationship` sea `CANCELED` (hoy latente en Madrid: no hay que esperar a que aparezca) |
+| Cond. — corregir o deshabilitar | FR-09, FR-10, FR-36 | no publicar cifras de cobertura/edad de la matriz ni la puntualidad sin umbral visible |
+| Cond. — operativo | FR-22, FR-26 | no archivar el día en curso; corregir DST antes del 2027-03-28 |
+
+**B. Bloqueantes de publicar el REPOSITORIO** (hacer público el código en GitHub):
+
+| FR | Qué exige |
+|---|---|
+| FR-18 | decisión del propietario sobre licencia (DEC-002) y visibilidad (DEC-003) |
+| FR-11 | README/ARCHITECTURE/DATA_MODEL que no desmientan el producto |
+| FR-12 (parte documental) | registro del servicio de teselas en `docs/legal/` |
+| NV-14 (nuevo, ronda 2) | **no verificado:** escaneo de secretos del historial completo y revisión de datos personales en documentos (los documentos de auditoría y scratch contienen rutas locales del propietario y su correo de autoría). Recomendación: revisarlo antes de cambiar la visibilidad |
+
+Los bloqueantes del servicio **no** bloquean publicar el repositorio (un repositorio público puede documentar un producto con defectos abiertos), y viceversa.
 
 ---
 
@@ -50,43 +106,51 @@ El propietario pide decidir P0 o P1 «con evidencia reproducible», evaluando si
 ### 2.2 Evidencia reproducida por AUD-09 (sin red, sin PostgreSQL, código de producción)
 
 ```sh
-.venv/bin/python scratch/aud04_dwell.py            # reproduce: 5,38 m, tol 1,0 m, 75,2 km/h, 1 252,7 m/60 s, dwell_until=None
+.venv/bin/python scratch/aud04_dwell.py            # reproduce: 5,38 m, tol 1,0 m, dwell_until=None; su 75,2 km/h y 1 252,7 m/60 s usan 190 s (ronda 2: producción da 79,3 km/h y 1 322,2 m/60 s)
+.venv/bin/python scratch/aud09_production_recheck.py  # NUEVO (ronda 2): cifras de AUD-01/AUD-04 con el horizonte real de producción (180 s); equivalencia 44/44
 .venv/bin/python scratch/aud04_dwell_window.py     # reproduce: ventana efectiva [-0,999, 0,000] m
 .venv/bin/python scratch/aud04_cohorte_19656.py    # reproduce: post_llegada +141 s; IN_TRANSIT_TO → INCOMING_AT; 75,0 km/h observados
-.venv/bin/python scratch/aud09_stop_crossing.py    # NUEVO (AUD-09): barrido de las 44 circulaciones del corte 1533
+.venv/bin/python scratch/aud09_stop_crossing.py    # NUEVO (AUD-09; v2 en ronda 2): barrido de las 44 circulaciones del corte 1533
 ```
 
-Salida relevante del guion nuevo `scratch/aud09_stop_crossing.py` (reloj de la evidencia MP-019: `calculated_at = ancla + 10 s`, horizonte `stale_after_s = 180 s`):
+Salida relevante de `scratch/aud09_stop_crossing.py` **v2** (reloj de la evidencia MP-019: `calculated_at = ancla + 10 s`; horizonte = `rendered.valid_until` = ancla + 180 s):
 
 ```text
+horizontes de producción observados desde el ancla (s): [180.0]
 == operador STOPPED_AT en el corte 1533 ==
    con envolvente: 28; con speed_mps > 0: 28; de ellas en la parada de ORIGEN: 21; con GPS identico en 1532 y 1533: 25
    en origen con avance, por cohorte AUD-04: {'pre_salida': 17, 'en_ventana': 4}
    [stopped] 1023V20280C4a cohorte=en_ventana stop=37011 origen=False gps_identico=True speed=18.76 m/s avance_publicado=3378 m
-   [stopped] 1023V19677C5  cohorte=en_ventana stop=35012 origen=True  gps_identico=True speed=22.12 m/s avance_publicado=3981 m
-   ... (28 filas; velocidades 8,68–30,00 m/s; avance publicado 1 563–5 401 m)
+   [stopped] 1023V19677C5 cohorte=en_ventana stop=35012 origen=True gps_identico=True speed=22.12 m/s avance_publicado=3981 m
+   ... (28 filas)
+   speed_mps publicado: 8.68-30.00 m/s (31.3-108.0 km/h); avance publicado en el horizonte: 1563-5401 m
+== en_ventana: n=25 → atraviesan >=1 parada (estricto, antes de valid_until): 16/25
 == TOTAL: n=44
-   cruzan >=1 parada sin retenerse: 30/44  (paradas cruzadas: total=52)
-   cruzan >=1 parada con espera DECLARADA: 5/44  (las 5 en el origen 35012, todas STOPPED_AT con GPS idéntico)
+   atraviesan >=1 parada (estricto, antes de valid_until): 29/44  (paradas: 43)
+   atraviesan >=1 parada con espera DECLARADA (estricto): 0/44
+   [no estricto, sesgo de la v1] >=1 parada: 30/44; con espera declarada: 5/44
    dwell_until publicado: 0/44
-== en_ventana: n=25 → cruzan >=1 parada sin retenerse: 16/25
+paradas con espera declarada alcanzadas EXACTAMENTE en el límite del horizonte (prog == p1):
+   19677, 19681, 19685, 19687, 19689 → 4079.6 m == 4079.6 m
 ```
 
 ### 2.3 Respuesta a cada pregunta del propietario
 
 | Pregunta | Respuesta medida | Fuente |
 |---|---|---|
-| ¿Ignorar la espera **declarada** representa un tren en posición incorrecta? | En el único caso medido (`1023V19656C5`) **no hay observación que lo contradiga**: el operador lo declara `INCOMING_AT` (no `STOPPED_AT`) y la velocidad publicada (75,2 km/h) coincide con la observada entre cortes (75,0 km/h). Lo demostrado es que el contrato **no puede expresar** la espera que el horario declara, no que el tren estuviera parado. | `aud04_cohorte_19656.py` |
-| ¿Cuánto error de posición? | Cota: `speed × espera` = **1 252,7 m** si el tren hubiera honrado los 60 s (`19656`); a los 30 s, 626,4 m frente a 0 m con la espera honrada. Para las 5 circulaciones que cruzan una parada con espera declarada dentro del horizonte, cota **221 m**. | `aud04_dwell.py`, `aud09_stop_crossing.py` |
-| ¿Cuánto tiempo? | Hasta la siguiente ancla (cadencia real ~20–22 s según MP-003, **no verificada en vivo** en esta auditoría) y como máximo el horizonte de 190 s efectivos; a continuación, corrección hacia atrás. | `AUD04-NO-VERIFICADO-002` |
-| ¿Cuántas circulaciones? | Espera **declarada** ignorada: 1/44 anclado en la parada + 5/44 que la cruzan dentro del horizonte; esas 5 están **además** detenidas en el origen (las cubre la fila S1-a). La espera declarada existe solo en el 9,9 % de las paradas (`aud01_stopgap.py`). | `aud09_stop_crossing.py` |
+| ¿Ignorar la espera **declarada** representa un tren en posición incorrecta? | En el único caso medido (`1023V19656C5`) **no hay observación que lo contradiga**: el operador lo declara `INCOMING_AT` (no `STOPPED_AT`) y la velocidad que publica producción (**79,3 km/h**; ronda 1 citaba 75,2 km/h, cifra del arnés con 190 s) es próxima a la observada entre cortes (75,0 km/h, +5,7 %). Lo demostrado es que el contrato **no puede expresar** la espera que el horario declara, no que el tren estuviera parado; ignorarla sí puede producir una estimación errónea si el tren se detiene. | `aud04_cohorte_19656.py` |
+| ¿Cuánto error de posición? | Cota: `speed × espera` = **1 322,2 m** si el tren hubiera honrado los 60 s (`19656`); a los 30 s, **661,1 m** frente a 0 m con la espera honrada (cifras de producción; la ronda 1 daba 1 252,7 y 626,4 m del arnés con 190 s). **Ninguna** otra envolvente del corte atraviesa una parada con espera declarada antes de su límite (la cota de 221 m de la ronda 1 se retira, §0bis). | `aud09_production_recheck.py`, `aud09_stop_crossing.py` v2 |
+| ¿Cuánto tiempo? | Hasta la siguiente ancla (cadencia real ~20–22 s según MP-003, **no verificada en vivo** en esta auditoría) y como máximo el horizonte de 180 s desde el ancla (`valid_until`); a continuación, corrección hacia atrás. | `AUD04-NO-VERIFICADO-002` |
+| ¿Cuántas circulaciones? | Espera **declarada** ignorada: **1/44** (`19656`, anclado a 5,38 m del tramo plano); **0/44** la atraviesan dentro del horizonte (ronda 1 decía 5/44: esas 5 llegan a la parada exactamente en el límite). La espera declarada existe solo en el 9,9 % de las paradas (`aud01_stopgap.py`). | `aud09_stop_crossing.py` v2 |
 | ¿Qué ve el usuario y se señala? | Símbolo `dashed` («Proyectada — Avance estimado desde la última observación; no es una lectura GPS»): **se señala que es una estimación**, no se señala que contradice una espera programada; al llegar la siguiente ancla, salto atrás. | `POSITION_MOVEMENT_AUDIT.md` §1, `format.ts` |
 
 ### 2.4 Dictamen propuesto
 
-1. **`AUD04-P0-001` (tolerancia de 1,0 m + guarda `anchor_at < candidate`) → P1.** Cita del encargo: P0 «afecta a la veracidad de los datos, la integridad ferroviaria…»; P1 «limita significativamente la … fiabilidad». Ningún dato observado contradice lo publicado en el caso medido, el error está acotado (≤ 1,25 km durante ≤ 60 s en el peor caso medido), el símbolo se rotula como estimación y la espera declarada afecta a una minoría de paradas. Es un defecto real y estructural de fiabilidad, no una publicación demostrablemente falsa. **Condición para elevarlo a P0:** una captura en vivo ≥ 2 h en la que, sobre observaciones `STOPPED_AT` en paradas con espera declarada, el símbolo publicado haya avanzado > 200 m en ≥ 10 % de los eventos.
+*Ronda 2:* el revisor (Codex `gpt-5.6-sol` · high) considera **defendible** la reclasificación de `AUD04-P0-001` a P1 y **coherente** la de `AUD01-P0-002` a P1 (anotando que sí bloquea la afirmación pública de toda la red, ya recogido en FR-08 y §1bis); **confirma** S1-a (28/44, 21 = 17 + 4 en origen, 7 intermedias, 25 GPS idénticos) y que absorbe exactamente `AUD01-P0-001`. Las cifras siguientes son ya las de producción (§0bis).
+
+1. **`AUD04-P0-001` (tolerancia de 1,0 m + guarda `anchor_at < candidate`) → P1.** Cita del encargo: P0 «afecta a la veracidad de los datos, la integridad ferroviaria…»; P1 «limita significativamente la … fiabilidad». Ningún dato observado contradice lo publicado en el caso medido, el error está acotado (≤ 1,32 km durante ≤ 60 s en el peor caso medido; ronda 1: 1,25 km), el símbolo se rotula como estimación y la espera declarada afecta a una minoría de paradas. Es un defecto real y estructural de fiabilidad, no una publicación demostrablemente falsa. **Condición para elevarlo a P0:** una captura en vivo ≥ 2 h en la que, sobre observaciones `STOPPED_AT` en paradas con espera declarada, el símbolo publicado haya avanzado > 200 m en ≥ 10 % de los eventos.
 2. **El defecto que sí es P0 es más amplio que `AUD01-P0-001` y lo absorbe: `S1-a`.** La medida nueva muestra que el operador declara **`STOPPED_AT` 28 de las 44** circulaciones con cadena completa y **las 28** reciben `speed_mps > 0` (1,6–5,4 km de avance publicado en el horizonte); 25 de ellas tienen GPS idéntico en dos cortes separados 77 s. Se reparten en: **17** en origen antes de su salida (exactamente el conjunto de `AUD01-P0-001`), **4** en origen **después** de su hora de salida (salida retrasada; no las cubre la corrección (B) de AUD-01, que solo actúa antes de la primera salida) y **7** detenidas en paradas intermedias. Aquí sí hay observación que contradice lo publicado: el operador dice «detenido», la posición no cambia en 77 s y el mapa lo mueve a 31–108 km/h. **P0 por veracidad.** *Salvedad declarada:* un GPS idéntico en dos cortes podría ser también un fijo repetido por el proveedor (`AUD04-P2-004`: `observed_at` es sello de lote); el `STOPPED_AT` del operador lo corrobora, pero no es una prueba física independiente.
-3. **Es un único defecto sistémico del modelo de paradas (`S1`), con varias manifestaciones de distinta severidad.** Causa raíz común, confirmada en código: la envolvente (`packages/movement/rendering.py::_envelope`, consumiendo `TripSchedule`) **deduce el estado del tren respecto a las paradas solo a partir del progreso geométrico y la interpolación del horario**, e ignora (a) el estado por parada que el operador publica (`current_status`, `current_stop_id`, presentes en `VehiclePositionObservation` y hoy usados solo para `station_skip_anomaly`), (b) la ventana temporal del viaje (antes de salir / tras llegar) y (c) las esperas no declaradas en GTFS (90,1 % de las paradas con llegada = salida). Manifestaciones: S1-a (P0), `AUD04-P0-001` (P1), `AUD01-P1-005` horizonte/travesía de estaciones (P1; **30/44** envolventes cruzan al menos una estación sin retenerse, 16/25 en ventana), `AUD04-P1-001` retroceso al expirar (P1), `AUD04-P2-006` fórmula de ADR-0014 §2 (P2) y `AUD01-P2-010` `stop_time_update` descartado (P2). **Una sola corrección de diseño** (estado de parada anclado al operador + ventana de viaje) resuelve S1-a y `AUD04-P0-001` a la vez —es la alternativa (B) de AUD-04—; por eso el roadmap las trata en un único trabajo (H4-00 + H4-04 en `NEXT_STEPS_PROPOSAL.md`), aunque sus severidades se conserven separadas.
+3. **Es un único defecto sistémico del modelo de paradas (`S1`), con varias manifestaciones de distinta severidad.** Causa raíz común, confirmada en código: la envolvente (`packages/movement/rendering.py::_envelope`, consumiendo `TripSchedule`) **deduce el estado del tren respecto a las paradas solo a partir del progreso geométrico y la interpolación del horario**, e ignora (a) el estado por parada que el operador publica (`current_status`, `current_stop_id`, presentes en `VehiclePositionObservation` y hoy usados solo para `station_skip_anomaly`), (b) la ventana temporal del viaje (antes de salir / tras llegar) y (c) las esperas no declaradas en GTFS (90,1 % de las paradas con llegada = salida). Manifestaciones: S1-a (P0), `AUD04-P0-001` (P1), `AUD01-P1-005` horizonte/travesía de estaciones (P1; **29/44** envolventes atraviesan al menos una estación sin retenerse antes de su límite, 16/25 en ventana; ronda 1: 30/44), `AUD04-P1-001` retroceso al expirar (P1), `AUD04-P2-006` fórmula de ADR-0014 §2 (P2) y `AUD01-P2-010` `stop_time_update` descartado (P2). **Una sola corrección de diseño** (estado de parada anclado al operador + ventana de viaje) resuelve S1-a y `AUD04-P0-001` a la vez —es la alternativa (B) de AUD-04—; por eso el roadmap las trata en un único trabajo (H4-00 + H4-04 en `NEXT_STEPS_PROPOSAL.md`), aunque sus severidades se conserven separadas.
 
 ---
 
@@ -94,7 +158,7 @@ Salida relevante del guion nuevo `scratch/aud09_stop_crossing.py` (reloj de la e
 
 | FR | Fuentes | Componente | Hallazgo consolidado | Evidencia reproducible | Despliegue público | Recomendación | Prueba de cierre |
 |---|---|---|---|---|---|---|---|
-| **FR-01 (S1-a)** | `AUD01-P0-001`; AUD-09 §2; cohortes `AUD-04` §0.2 | `packages/movement/rendering.py::_envelope`, `schedule.py`; contrato ADR-0014 §2 | La envolvente pone en movimiento circulaciones que el operador declara detenidas o que no han salido: **28/44** `STOPPED_AT` con `speed_mps > 0` (17 pre-salida, 4 salida retrasada en origen, 7 en paradas intermedias); peor caso `1023V20478C4b` a 38,65 min de su salida con 5 700,6 m de avance falso; al llegar el ancla siguiente, salto p50 **1 237,09 m** / máx **3 274,23 m** (31/44 inmóviles reales). | `aud01_envelope_predeparture.py`, `aud01_snap.py`, `aud09_stop_crossing.py` | **Sí** | Estado de parada anclado al operador (`current_status`/`current_stop_id`) + ventana de viaje (antes de salir, salida retrasada, tras llegar) en la traducción de MP-019; ADR-0014 enmendado (H4-00 → H4-04). | Regresión sobre el corte `1533` real: **0** circulaciones `STOPPED_AT` con GPS idéntico entre cortes reciben `speed_mps > 0`; 0 pre-salida con avance; sin anular el avance de ninguna circulación `IN_TRANSIT_TO` que avanzó entre cortes; H1/H2a de AUD-01 medidas en vivo ≥ 2 h. |
+| **FR-01 (S1-a)** | `AUD01-P0-001`; AUD-09 §2; cohortes `AUD-04` §0.2 | `packages/movement/rendering.py::_envelope`, `schedule.py`; contrato ADR-0014 §2 | La envolvente pone en movimiento circulaciones que el operador declara detenidas o que no han salido: **28/44** `STOPPED_AT` con `speed_mps > 0` (17 pre-salida, 4 salida retrasada en origen, 7 en paradas intermedias); hasta 38,65 min antes de su salida (`1023V20478C4b`) y hasta **5 400,6 m** de avance publicado (ronda 1: 5 700,6 m, arnés con 190 s); al llegar el ancla siguiente, salto p50 **1 229,15 m** / máx **3 274,23 m** con el horizonte de producción (ronda 1: 1 237,09 m; 31/44 inmóviles reales). | `aud01_envelope_predeparture.py`, `aud01_snap.py`, `aud09_stop_crossing.py` v2, `aud09_production_recheck.py` | **Sí** | Estado de parada anclado al operador (`current_status`/`current_stop_id`) + ventana de viaje (antes de salir, salida retrasada, tras llegar) en la traducción de MP-019; ADR-0014 enmendado (H4-00 → H4-04). | Regresión sobre el corte `1533` real: **0** circulaciones `STOPPED_AT` con GPS idéntico entre cortes reciben `speed_mps > 0`; 0 pre-salida con avance; sin anular el avance de ninguna circulación `IN_TRANSIT_TO` que avanzó entre cortes; H1/H2a de AUD-01 medidas en vivo ≥ 2 h. |
 | **FR-02** | `AUD05-P0-1` (reproducido por el coordinador, por el ejecutor en navegador, por `ctx_41022ed63263` y dos veces por `ctx_53f6eb860b17`) | `apps/api/db.py:178-223` (`recent_ingestion_runs` no acota por `now`) + `apps/api/service.py:381` | En replay, `/api/v1/snapshot?at=` anterior a una ingesta ya persistida marca un feed con datos reales (468 entidades, `source_timestamp` 14:33:21Z) como `status="unknown"` con `data_age_s = poll_age_s = -71,0`: el sistema **tiene** el dato y lo presenta como ausente, con edades negativas visibles en el banner. Acotado a snapshot/Live (el tablero no expone `degraded`). | 3 `curl` de `FRONTEND_UX_AUDIT.md` §2 contra PostgreSQL desechable + `replay_three_snapshots` | **Cond.** (sí si se publica replay o cualquier `?at=` histórico; no afecta al directo sin `?at=`) | Acotar las ejecuciones de ingesta por `started_at <= now` y separar «edad negativa» (error de reloj/consulta) de «nunca hubo ingesta». | Regresión con `?at=2026-11-20T14:32:10Z` tras ingerir ambos cortes: `status` ≠ `unknown`, edades ≥ 0 o `null` declarado; la suite de 283 debe ejercer esta combinación (hoy no la ejerce, `AUD08_REPRODUCTION.md` §Reconciliación). |
 
 ---
@@ -104,7 +168,7 @@ Salida relevante del guion nuevo `scratch/aud09_stop_crossing.py` (reloj de la e
 | FR | Fuentes | Hallazgo consolidado | Evidencia clave | Despliegue público | Recomendación (detalle en la fuente) |
 |---|---|---|---|---|---|
 | **FR-03 (S1)** | `AUD04-P0-001` (**reclasificado P0→P1**, §2.4) | La espera programada solo se expresa si el ancla cae en una ventana de ~1 m (`[-0,999, 0,000]` m) de 45 165 m: tolerancia 1,0 m frente a error de proyección p95 20,8 m, y la guarda de `_envelope` recorta todo el lado positivo. `rendering.py:185-187` afirma lo contrario. El test de regresión coloca su ancla en el borde de la ventana (offset −0,000011 m). | `aud04_dwell*.py`, `aud04_test_anchor.py` | Sí (junto con FR-01: misma corrección) | Alternativa (B)+(C) de AUD-04: espera por `stop_id` + guarda simétrica. |
-| **FR-04 (S1)** | `AUD01-P1-005`; AUD-09 §2.2; hipótesis H4 de AUD-01 | El horizonte (180 s configurados / **190 s efectivos**) se reutilizó de un umbral de frescura «calibrable» (DEC-010) sin recalibrar; intervalo mediano entre paradas = 180 s; espera declarada en el 9,9 % de las paradas. **Medido por AUD-09:** 30/44 envolventes cruzan ≥ 1 estación sin retenerse (16/25 en ventana; 52 estaciones cruzadas). Baseline de un solo corte para H4 (≥ 30 %), no refutación. | `aud01_stopgap.py`, `aud09_stop_crossing.py` | Sí (afirmación de «movimiento fluido y fiel») | Recalibrar con captura en vivo; horizonte por tramo hasta la próxima parada o espera mínima por parada; enmienda de ADR-0014 §2. |
+| **FR-04 (S1)** | `AUD01-P1-005`; AUD-09 §2.2; hipótesis H4 de AUD-01 | El horizonte (**180 s desde el ancla** para anclas observadas; la ronda 1 heredaba de AUD-01 «190 s efectivos», que describe el arnés y no el código, §0bis) se reutilizó de un umbral de frescura «calibrable» (DEC-010) sin recalibrar; intervalo mediano entre paradas = 180 s; espera declarada en el 9,9 % de las paradas. **Medido por AUD-09 (v2):** 29/44 envolventes atraviesan ≥ 1 estación sin retenerse antes de su límite (16/25 en ventana; 43 estaciones). Baseline de un solo corte para H4 (≥ 30 %), no refutación. | `aud01_stopgap.py`, `aud09_stop_crossing.py` | Sí (afirmación de «movimiento fluido y fiel») | Recalibrar con captura en vivo; horizonte por tramo hasta la próxima parada o espera mínima por parada; enmienda de ADR-0014 §2. |
 | **FR-05 (S1)** | `AUD04-P1-001` | Al cruzar `stale_after_s` el símbolo retrocede p50 **2 357,9 m** (25/25 en ventana; máx 3 959,2 m) y el aviso de congelación desaparece en ese instante porque depende de `valid_until`, que `stale_frozen` pone a `null`. | `aud04_sweep.py` | Sí | Congelar en la última posición **dibujada** o publicar la regresión explícitamente; aviso independiente de `valid_until`. |
 | **FR-06** | `AUD04-P1-002` (relacionado: `AUD04-P2-003`, `-P2-004`, `-P2-008`) | El mapa no distingue observación GPS (`raw`) de proyección sobre vía (`map_matched`): una sola entrada `anchor` en `METHOD_STYLES`, y la etiqueta afirma que la proyección es «la coordenada que publicó la fuente» (hasta 106,8 m del GPS). Los 75–78 `anchor` sin corredor validado reciben el símbolo más autoritativo. | arnés `scratch/aud04_web/` (vitest) | Sí (veracidad del rótulo) | Separar estilo y texto por `coordinate_space`; texto correcto para proyección. |
 | **FR-07** | `AUD06-P1-001`; misma familia que `AUD08-P2-001` | `build_snapshot()` no fija una vista transaccional: puede publicar `revision.sequence` de una ingesta nueva sin su vehículo. Contradice ADR-0014 §5 («revisión ordenable»). | Reproducido por ejecutor y revisor (PostgreSQL desechable 5546/5799) | Sí (con tráfico concurrente real) | Lectura `REPEATABLE READ` única o watermark `source_ingestion_run.id` común a todas las lecturas. |
@@ -136,10 +200,10 @@ Salida relevante del guion nuevo `scratch/aud09_stop_crossing.py` (reloj de la e
 | FR-26 | `AUD04-P2-001` | `_envelope` mezcla reloj de pared y segundos reales: 8 444 m fabricados el día de adelanto de hora o congelación de una hora el de atraso (latente; próximo: 2027-03-28). | No (Cond. si se opera en esas fechas) |
 | FR-27 | `AUD04-P2-002` | `position` y `rendered` publican dos coordenadas del mismo tren y mismo instante, hasta 429,5 m aparte. | No |
 | FR-28 | `AUD04-P2-003` | `interpolated_between_known_anchors` inalcanzable con `display_lag_s = 0`; su forma `ring` coincide con `stale_frozen`. | No |
-| FR-29 | `AUD04-P2-004`, `AUD04-P2-008` | `observed_at` es un sello de lote (no hora del fijo GPS) rotulado «GPS observado»; en `schedule_only` el ancla es la observación **rechazada** y se rotula «última lectura confirmada». | Cond. (rótulos) |
+| FR-29 | `AUD04-P2-004`, `AUD04-P2-008` | `observed_at` es un sello de lote (no hora del fijo GPS) rotulado «GPS observado»; en `schedule_only` el ancla es la observación **rechazada** y se rotula «última lectura confirmada». | **Cond. — servicio:** corregir los rótulos o retirarlos de ficha y leyenda antes de publicar (§1bis) |
 | FR-30 | `AUD04-P2-005`; `AUD01-P2-015` | Umbral `implausible_speed` del snapshot a 900 km/h (el evento de 200 km/h se guarda y no llega al directo); calidad mide sobre cuerda y movimiento sobre arco (caso ciego `20277`). Ilustrado en vivo por los 8 eventos del incidente 5433. | No |
 | FR-31 | `AUD04-P2-006` (S1) | ADR-0014 §2 publica la fórmula sin `dwell_until` y declara `speed_mps = 0` con espera, al contrario que código, API y cliente. | No (se resuelve en la enmienda de ADR-0014) |
-| FR-32 | `AUD04-P2-007` | Una circulación `CANCELED` se dibuja igual que una en marcha (latente en Madrid). | Cond. |
+| FR-32 | `AUD04-P2-007` | Una circulación `CANCELED` se dibuja igual que una en marcha (latente en Madrid). | **Cond. — servicio:** leer `CANCELED` o no dibujar esas circulaciones como en marcha antes de publicar (§1bis) |
 | FR-33 | `AUD01-P2-010` (S1) | El array `stop_time_update` por parada se descarta al normalizar; no se puede decir «esta parada se omite». | No |
 | FR-34 | `AUD01-P2-011` | `packages/geo/madrid.py` codifica literales `route_id` contra ADR-0011 §3. | No |
 | FR-35 | `AUD01-P2-012` | `route_color` oficial se parsea y no se expone; paleta hash (H5 sin medir). | No (visible al primer usuario) |
@@ -190,6 +254,7 @@ Salida relevante del guion nuevo `scratch/aud09_stop_crossing.py` (reloj de la e
 | NV-11 | ADD/REMOVE de `calendar_dates.txt` contra un dato real (Renfe no lo publica). | `AUD02-NV-002` | Fixture real atribuida de otro productor. |
 | NV-12 | Cifras vivas de la relación OSM `9174512` (versión, longitud, hash). | `AUD03` revisión §2 | Congelar la relación. |
 | NV-13 | Interfaz con tecnología de apoyo y en interacción continua: lector de pantalla real (solo se probó el árbol de accesibilidad), arrastre y seguimiento en vivo, «Ampliar panel» en móvil, maquetas 02–04/`live.html`. Las afirmaciones de la v1 de AUD-05 sin artefacto (5–8 marcadores en ~25 px, zoom 13, «Centrar Madrid» por defecto, anuncio por lector) se **retiraron** en la v2. | `FRONTEND_UX_AUDIT.md` v2 §7; revisión `ctx_53f6eb860b17` | Sesión con lector de pantalla; prueba de interacción grabada. |
+| NV-14 | (Ronda 2) Escaneo de secretos del historial Git y revisión de datos personales antes de hacer público el repositorio: los documentos de auditoría y `scratch/` contienen rutas locales del propietario y la identidad de autoría. No se ejecutó. | AUD-09 ronda 2 | `gitleaks`/`trufflehog` (instalación sujeta a autorización) sobre todo el historial y revisión manual de `docs/audits/`. |
 
 ---
 
@@ -211,7 +276,7 @@ Salida relevante del guion nuevo `scratch/aud09_stop_crossing.py` (reloj de la e
 |---|---|---|
 | «68» frente a 67 | AUD-01 ronda 1 frente a AUD-03 | **Resuelta:** 68 = 67 patrones accionables sin fuente/intento + 1 patrón C8b truncado. Universos: 75 no `validated` = 72 `pending` + 3 `partial`; 72 = 67 + 4 C4b + 1 truncado. No hay cifras rivales. |
 | «72 de 103 sin corredor validado» frente a 75 | `POSITION_MOVEMENT_AUDIT.md:141`, `:543` | **Resuelta (editorial):** sin corredor validado son **75** (72 `pending` + 3 `partial`); los 75–78 `anchor` son **circulaciones**, no patrones. No altera ninguna medida de AUD-04 (que solo usa los 28 `validated`). Se registra aquí y no se reescribe el informe aprobado. |
-| «hasta 180 s después del ancla» frente a 190 s | `POSITION_MOVEMENT_AUDIT.md:455` | **Resuelta (editorial):** 180 s configurados (`stale_after_s`) desde `calculated_at`; **190 s efectivos** desde el ancla (`calculated_at = ancla + 10 s`). Las cifras medidas no cambian. |
+| «hasta 180 s después del ancla» frente a 190 s | `POSITION_MOVEMENT_AUDIT.md:455` | ~~Ronda 1: «180 s configurados desde `calculated_at`; 190 s efectivos desde el ancla»~~. **Ronda 2 (corrección): la frase de AUD-04 era la correcta.** Para un ancla observada producción usa `valid_until = ancla + 180 s` (`rendering.py:279,341-346`); 190 s solo es el horizonte que usan los arneses `aud01_*`/`aud04_dwell*` (la rama `schedule_only` usa `calculated_at + 180 s`, con referencia en el propio `calculated_at`). Las cifras afectadas y sus valores de producción están en §0bis. |
 | «17 tablas» | `BACKEND_OPERATIONS_AUDIT.md:27` | **Resuelta:** 15 tablas base + 2 vistas PostGIS (`geometry_columns`, `geography_columns`). |
 | Fila de 5433 que dice que `BACKEND_OPERATIONS_AUDIT.md:25/:281` «requieren corrección» | `AUD08_REPRODUCTION.md` §Reconciliación | **Obsoleta:** `2d02227` ya las corrigió; el informe actual divulga el incidente (observación no bloqueante del revisor de AUD-08). |
 | «1 skip histórico» atribuido al mecanismo DSN/URL | `AUD08_REPRODUCTION.md` §Entorno | **Inferencia, no hecho medido en 5433:** el revisor lo reprodujo con una base desechable de 24 vehículos, no con 5433. Se mantiene como explicación plausible. |

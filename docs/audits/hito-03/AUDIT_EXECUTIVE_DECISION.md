@@ -1,12 +1,18 @@
 # AUDIT_EXECUTIVE_DECISION — Decisión de la auditoría adversarial del Hito 3
 
-**Elabora:** AUD-09, Claude Opus · High (`ctx_d10350eb24d0`) · **Revisa:** Codex `gpt-5.6-sol` · High, contexto nuevo (pendiente) · **Fecha:** 2026-11-23
+**Elabora:** AUD-09, Claude Opus · High (`ctx_d10350eb24d0`) · **Revisa:** Codex `gpt-5.6-sol` · High, contexto nuevo · **Fecha:** 2026-11-23 (ronda 1, `3014347`) · 2026-11-24 (ronda 2)
 **Código auditado:** `mp-022-validacion-integrada@beb9434` (cadena MP-016→MP-022, solo en local). **Fuentes:** los ocho documentos AUD-00…AUD-08, `INCIDENT_5433.md`, `INTEGRATION_PROPOSAL.md` y las medidas propias de AUD-09. Registro detallado: `FINDINGS_REGISTER.md` (`FR-xx`). Roadmap: `NEXT_STEPS_PROPOSAL.md`. Despachos: `ORCA_DISPATCH_AND_REVIEW_LOG.md`.
 
 > **Decisión provisional, pendiente de aceptación del propietario:**
 > **Despliegue público: NO-GO.**
 > **Uso local, demostración supervisada e integración en `main` como «hito local cerrado, no apto para publicación»: CONDITIONAL GO** (condiciones en §7.3).
 > Nada de este documento acepta ADR, autoriza el Hito 4, ni ejecuta push, PR o merge.
+
+**Ronda 2 (2026-11-24) — qué cambió tras el CHANGES_REQUESTED del revisor** (Codex `gpt-5.6-sol` · high respaldó el NO-GO público y el CONDITIONAL GO local, y consideró defendible la reclasificación de `AUD04-P0-001` y coherente la de `AUD01-P0-002`):
+1. Cifras del sistema S1 recalculadas con el **horizonte real de producción** (180 s desde el ancla; los arneses de AUD-01/AUD-04 y la v1 de AUD-09 usaban 190 s): `19656` publica **79,3 km/h** y **1 322,2 m en 60 s** (no 75,2 km/h / 1 252,7 m); **29/44** envolventes atraviesan una estación (no 30/44); **0/44** atraviesan una parada con espera declarada (no 5/44; se retira la cota de 221 m); salto al llegar el ancla p50 **1 229 m** (no 1 237 m); avance máximo pre-salida **5,4 km** (no 5,7 km). FR-01 (28/44) no cambia. Detalle y comandos: `FINDINGS_REGISTER.md` §0bis.
+2. Bloqueantes separados en **servicio** y **publicación del repositorio** (§7.1), con FR-29 y FR-32 explícitos.
+3. H4-11 sin ejecutor verificado (§6).
+4. Referencia de H4-09 corregida a §7.1 (no existía §8).
 
 ---
 
@@ -18,12 +24,12 @@ Severidad según la escala del encargo (§8): P0 = veracidad, integridad ferrovi
 
 | FR | Hallazgo | Evidencia decisiva | Pub. |
 |---|---|---|---|
-| **FR-01** | **El mapa pone en marcha trenes que el operador declara detenidos o que no han salido.** En el corte real `1533`, **28 de 44** circulaciones con corredor están `STOPPED_AT` y **las 28** reciben avance (31–108 km/h; 1,6–5,4 km en el horizonte), 25 con GPS idéntico en dos cortes separados 77 s: 17 antes de su salida (hasta 38,65 min y 5,7 km de avance falso), 4 en origen con la salida ya vencida, 7 en paradas intermedias. Al llegar el ancla siguiente el símbolo salta p50 1 237 m (máx. 3 274 m). | `aud01_envelope_predeparture.py`, `aud01_snap.py` (AUD-01, 3 rondas de Sol High); `aud09_stop_crossing.py` (AUD-09, **pendiente de validar por el revisor**) | **Sí** |
+| **FR-01** | **El mapa pone en marcha trenes que el operador declara detenidos o que no han salido.** En el corte real `1533`, **28 de 44** circulaciones con corredor están `STOPPED_AT` y **las 28** reciben avance (31–108 km/h; 1,6–5,4 km en el horizonte), 25 con GPS idéntico en dos cortes separados 77 s: 17 antes de su salida (hasta 38,65 min antes y 5,4 km de avance falso), 4 en origen con la salida ya vencida, 7 en paradas intermedias. Al llegar el ancla siguiente el símbolo salta p50 1 229 m (máx. 3 274 m). | `aud01_envelope_predeparture.py`, `aud01_snap.py` (AUD-01); `aud09_stop_crossing.py` v2 y `aud09_production_recheck.py` (AUD-09; 28/44 **confirmado** por el revisor en la ronda 1 de AUD-09) | **Sí** |
 | **FR-02** | **En replay, `/api/v1/snapshot?at=` oculta datos reales:** un feed con 468 entidades se publica `unknown` con edades **−71 s** cuando el instante pedido es anterior a una ingesta ya guardada. | 3 `curl` reproducidos 4 veces por 3 agentes (AUD-05) | Cond. (sí si se publica replay o `?at=`) |
 
 ### P1 (16) — los que más pesan
 
-- **Modelo de paradas (sistema S1, misma causa raíz que FR-01):** la espera programada solo se respeta en una ventana de ~1 m (**FR-03**, antes `AUD04-P0-001`, reclasificado P1 en §2 del registro); el horizonte de 190 s efectivos hace que **30/44** envolventes atraviesen al menos una estación sin detenerse (**FR-04**); al caducar, el símbolo retrocede p50 2 358 m y el aviso desaparece (**FR-05**).
+- **Modelo de paradas (sistema S1, misma causa raíz que FR-01):** la espera programada solo se respeta en una ventana de ~1 m (**FR-03**, antes `AUD04-P0-001`, reclasificado P1 en §2 del registro); el horizonte de 180 s desde el ancla hace que **29/44** envolventes atraviesen al menos una estación sin detenerse (**FR-04**); al caducar, el símbolo retrocede p50 2 358 m y el aviso desaparece (**FR-05**).
 - **Procedencia:** el mapa no distingue GPS de proyección y rotula la proyección como «coordenada publicada por la fuente» (**FR-06**); el snapshot puede publicar una `revision` sin el vehículo que la generó (**FR-07**).
 - **Cobertura:** **38,45 %** de las circulaciones con corredor; 8 de 12 líneas sin trazado (**FR-08**, antes `AUD01-P0-002`, reclasificado P1: el fallback GPS es honesto, el defecto es de cobertura); métricas de cierre tautológicas o inyectadas (**FR-09**, **FR-10**).
 - **Publicación:** README que niega el producto (**FR-11**); teselas OSMF sin registrar (**FR-12**); capacidad pública no medida (**FR-13**); puertas de aceptación no falsables (**FR-14**); 24/7 no demostrado (**FR-15**); dependencia de Renfe (**FR-16**, riesgo aceptado); **defaults de PostgreSQL a la base compartida** (**FR-17**); licencia y visibilidad sin decidir (**FR-18**).
@@ -113,7 +119,7 @@ Detalle, dependencias, pruebas de cierre, ADR/DEC y gates en `NEXT_STEPS_PROPOSA
 | H4-04 | A | **P0 · L** | Codex `gpt-5.6-sol` · high | Claude `opus` · high | FR-01, FR-03, FR-04, FR-05, FR-26, FR-27, FR-31 |
 | H4-01 | A | **P0 · M** | Codex `gpt-5.6-sol` · high | Claude `sonnet` · high | FR-02, FR-07, FR-19 |
 | H4-10 | A | P1 · S | Claude `sonnet` · medium | Codex `gpt-5.6-terra` · medium | FR-11, FR-12, FR-14, FR-37 — gates: teselas, DEC-002/003 |
-| H4-11 | A | P1 · S | Codex `gpt-6.2-sol` · medium (*excepción del propietario; sin recibo de Orca aún*) | Claude `sonnet` · high | FR-17 |
+| H4-11 | A | P1 · S | **Pendiente de verificación.** Propuesto bajo excepción del propietario: Codex `gpt-6.2-sol` · medium (en catálogo local, **sin recibo efectivo de Orca**; válido solo si el recibo del despacho lo confirma) | Claude `sonnet` · high | FR-17 |
 | H4-03 | B | P1 · L | Codex `gpt-5.6-sol` · high | Claude `opus` · high | FR-08, FR-23, FR-24, FR-25, FR-34 — gates: descargas OSM, C4b invertida |
 | H4-12 | B | P1 · M | Codex `gpt-5.6-terra` · high | Claude `sonnet` · high | NV-02; hipótesis H1–H4 de AUD-01; calibración de H4-04 |
 | H4-05 | C | P1 · M | Claude `sonnet` · high | Codex `gpt-5.6-terra` · high | FR-06, FR-28, FR-29, FR-32, FR-35, FR-39–42 |
@@ -134,11 +140,19 @@ Justificación con evidencia concreta, no con impresión general:
 
 1. **Veracidad en directo (P0):** FR-01 — el mapa mueve el 64 % (28/44) de los trenes con trazado mientras el operador los declara detenidos. La promesa del producto (ver dónde está el tren) se incumple justo en los trenes que se pueden animar.
 2. **Veracidad en replay (P0, condicional):** FR-02.
-3. **Bloqueantes no técnicos con coste casi nulo, sin resolver:** README que niega el producto (FR-11), teselas OSMF sin registrar (FR-12), licencia y visibilidad sin decidir (FR-18), catálogo que caduca el 2026-12-19 (FR-19).
+3. **Bloqueantes no técnicos con coste casi nulo, sin resolver:** README que niega el producto (FR-11), teselas OSMF sin registrar (FR-12), licencia y visibilidad sin decidir (FR-18), catálogo que caduca el 2026-12-19 (FR-19). *(Ronda 2: FR-11 y FR-18 bloquean sobre todo la publicación del repositorio; FR-12 y FR-19, la del servicio — listas A y B más abajo.)*
 4. **Capacidad y operación no demostradas:** sin prueba de carga con red (FR-13), sin autenticación ni tasa (FR-38), sin 24 h de operación (FR-15).
 5. **Cobertura inferior a la afirmación de misión** («mapa de toda Cercanías Madrid», `PROMPT-UNICO-ORCA.md:11`): 38,45 % de circulaciones con trazado, 8 de 12 líneas sin él (FR-08). Publicable **solo** si la afirmación cambia y la cobertura se muestra por línea.
 
-**Condición para reconsiderarlo (H4-09):** FR-01, FR-02, FR-11, FR-12, FR-17, FR-18, FR-19 y FR-38 cerrados con prueba que fallaba antes; FR-13 medido; FR-15 con ≥ 24 h; FR-06 resuelto; afirmación pública alineada con la cobertura real.
+~~**Condición para reconsiderarlo (H4-09)** (ronda 1): FR-01, FR-02, FR-11, FR-12, FR-17, FR-18, FR-19 y FR-38 cerrados…~~ — sustituida en la ronda 2 por las dos listas siguientes, porque mezclaba bloqueantes del servicio con bloqueantes del repositorio y omitía FR-03/04/05/07.
+
+**A. Bloqueantes para publicar el SERVICIO** (condición de H4-09; detalle en `FINDINGS_REGISTER.md` §1bis):
+- **Sin alternativa:** FR-01, FR-03, FR-04, FR-05 (una sola corrección del modelo de parada); FR-06 (proyección rotulada como GPS); FR-07 (snapshot coherente con su `revision`); FR-12 (política del servicio de teselas OSMF); FR-13 y FR-38 (capacidad medida; autenticación o límite de tasa); FR-15 (≥ 24 h medidas); FR-17 (sin defaults a una base compartida); FR-19 (vigencia del GTFS en ejecución).
+- **Corregir la afirmación:** FR-08 — no publicar «toda Cercanías Madrid»; mostrar cobertura por línea.
+- **Corregir o deshabilitar la superficie antes de publicar:** FR-02 (replay/`?at=`); **FR-29** (rótulos «GPS observado» y «última lectura confirmada» de ficha y leyenda: corregirlos o retirarlos); **FR-32** (circulaciones `CANCELED` dibujadas como en marcha: leer el estado o no dibujarlas como en marcha, aunque hoy sea latente en Madrid); FR-09/FR-10/FR-36 (no publicar cifras de cobertura/edad de la matriz ni puntualidad sin umbral visible).
+- **Operativos:** FR-22 (no archivar el día en curso); FR-26 (DST antes del 2027-03-28).
+
+**B. Bloqueantes para publicar el REPOSITORIO** (independientes de A): FR-18 (licencia DEC-002 y visibilidad DEC-003, del propietario); FR-11 (portada que niega el producto); registro documental de teselas en `docs/legal/` (FR-12); NV-14 (escaneo de secretos y de datos personales del historial, no ejecutado: los documentos de auditoría contienen rutas locales del propietario). Un repositorio público puede documentar defectos abiertos del servicio; un servicio público no puede publicarse con los defectos de A.
 
 ### 7.2 Qué está demostrado que funciona (para uso local y demo)
 
@@ -173,7 +187,7 @@ FR-01 (trenes detenidos en marcha), FR-02 (datos presentes rotulados como ausent
 - **Skips por entorno:** 5 / 1 / 18; la cifra de CI real es 18.
 - **Base 5433 alterada** (conservada por decisión del propietario): la verificación «sin skips contra desarrollo» ya no se reproduce.
 - **AUD-05 (APPROVED en v2):** la v1 contenía afirmaciones de ejecución en navegador sin artefacto (una de ellas, P2-3, incorrecta); la v2 (`39b3e06`, `28f696e`) las retira o las respalda. **Limitación de su revisión:** el revisor de Codex no tiene navegador; no repitió las sesiones de DevTools ni verificó de forma independiente coordenadas y zooms de las capturas 18/19 (revisó capturas, JSON y transcripciones). Lector de pantalla real, arrastre/seguimiento en vivo y «Ampliar panel» siguen sin verificar.
-- **Medida nueva de AUD-09** (`aud09_stop_crossing.py`): un solo corte; GPS idéntico puede ser un fijo repetido (corroborado por `STOPPED_AT`, no probado físicamente). Pendiente de validación del revisor.
+- **Medida nueva de AUD-09** (`aud09_stop_crossing.py`): un solo corte; GPS idéntico puede ser un fijo repetido (corroborado por `STOPPED_AT`, no probado físicamente). Ronda 1 de revisión: 28/44 confirmado; el recuento de travesías estaba sesgado por el horizonte de 190 s y se corrigió en la v2 (29/44, 0 esperas declaradas). **Las cifras de AUD-01/AUD-04 que dependen del horizonte se midieron con 190 s en sus arneses aprobados; sus valores de producción (180 s) están en `FINDINGS_REGISTER.md` §0bis.**
 
 ### 7.7 Qué propuestas anteriores conviene descartar
 

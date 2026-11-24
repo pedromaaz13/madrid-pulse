@@ -1,6 +1,8 @@
 # NEXT_STEPS_PROPOSAL — Hito 4 PROVISIONAL ajustado a la evidencia
 
-**Elabora:** AUD-09, Claude Opus · High · **Revisa:** Codex `gpt-5.6-sol` · High (pendiente) · **Fecha:** 2026-11-23
+**Elabora:** AUD-09, Claude Opus · High · **Revisa:** Codex `gpt-5.6-sol` · High · **Fecha:** 2026-11-23 (ronda 1, `3014347`) · 2026-11-24 (ronda 2)
+
+**Correcciones de la ronda 2 (2026-11-24), tras CHANGES_REQUESTED del revisor:** (1) H4-11 deja de presentar un ejecutor como asignado y verificado: queda **«ejecutor pendiente de verificación»**, con la excepción del propietario para `gpt-6.2-sol` · medium conservada como propuesta (el modelo figura en el catálogo local pero **no tiene recibo efectivo de Orca**); (2) cifras del sistema S1 recalculadas con el horizonte real de producción (180 s desde el ancla; `FINDINGS_REGISTER.md` §0bis): 29/44 envolventes atraviesan una estación (no 30/44); (3) H4-09 remite a la sección real de bloqueantes (`AUDIT_EXECUTIVE_DECISION.md` §7.1 y `FINDINGS_REGISTER.md` §1bis), no a una §8 inexistente; (4) H4-09 y H4-10 distinguen bloqueantes del servicio y del repositorio.
 
 > **Esto es planificación, no autorización.** Nada de este documento autoriza implementar, abrir worktrees de implementación, desplegar, contratar, aceptar ADR, hacer push, PR ni merge. Las numeraciones `H4-*` son temporales; solo el propietario autorizará una serie `MP-023+`. No se promete que ningún candidato se implemente.
 
@@ -38,7 +40,7 @@ Fuente de cada `FR-xx`: `FINDINGS_REGISTER.md`. Fuente del backlog de hipótesis
 | History/Explore muestran denominadores falsos. | **Refutada** en la UI; confirmada en la matriz de cierre (FR-09/10). | AUD-05, AUD-01 |
 | El movimiento es ferroviariamente fiel en el espacio. | **Confirmada** para los 28 corredores (p50 2,6 m del trazado; arco, no recta). | AUD-04 |
 | El movimiento es fiel en el tiempo. | **Refutada:** 28/44 detenidos puestos en marcha; mediana real 0,0 km/h frente a 6,8–30 m/s publicados. | AUD-01, AUD-04, AUD-09 |
-| ≥ 30 % de envolventes atraviesan una estación sin detenerse (H4 de AUD-01). | **Apoyada en un solo corte** (30/44 = 68 %), pendiente de vivo. | AUD-09 |
+| ≥ 30 % de envolventes atraviesan una estación sin detenerse (H4 de AUD-01). | **Apoyada en un solo corte** (29/44 = 66 % con el horizonte real de producción; la ronda 1 daba 30/44 por contar hasta 190 s), pendiente de vivo. | AUD-09 (`aud09_stop_crossing.py` v2) |
 | La batería verde (283 + 89) demuestra ausencia de defectos. | **Refutada:** pasa con los dos P0 presentes. | AUD-08 |
 | 823 s / 21 ciclos demuestran operación 24/7. | **Refutada.** | AUD-06, AUD-08 |
 
@@ -53,7 +55,7 @@ Solo se asignan modelos con evidencia real en este entorno:
 | Codex `gpt-5.6-sol` · high | recibos Orca (AUD-01 rev., AUD-02, AUD-03, AUD-04 rev.) | algoritmos de movimiento, geoespacial, P0 |
 | Codex `gpt-5.6-terra` · high / medium | recibos Orca (AUD-05 rev., AUD-06, AUD-08; AUD-00 rev., AUD-07 rev.) | DB, colector, API, operación, regresiones |
 | Codex `gpt-5.6-luna` | presente en `~/.codex/models_cache.json` (`visibility: list`, «Legacy»); **sin recibo de Orca en esta ejecución** | no se asigna ningún gate |
-| Codex `gpt-6.2-sol` · medium | presente en `~/.codex/models_cache.json` (`visibility: list`, «Fast, go-to model for coding and everyday work», niveles low…ultra) y default de `~/.codex/config.toml`; **sin recibo de Orca todavía**. Familia `gpt-6.*` excluida por el encargo original; **excepción explícita del propietario solo para H4-11** | solo H4-11; verificar `effective.model` en el recibo al despachar y, si no coincide, parar |
+| Codex `gpt-6.2-sol` · medium — **NO verificado** | presente en `~/.codex/models_cache.json` (`visibility: list`, «Fast, go-to model for coding and everyday work», niveles low…ultra) y default de `~/.codex/config.toml`; **sin recibo efectivo de Orca** en esta ejecución, así que **no cuenta como modelo verificado**. Familia `gpt-6.*` excluida por el encargo original; **excepción explícita del propietario solo para H4-11** | propuesto para H4-11 bajo la excepción del propietario; la asignación solo es válida si el recibo de Orca del despacho muestra `effective.model = gpt-6.2-sol` y `effective.effort = medium`; si no coincide, parar y escalar al propietario (alternativa verificada más cercana: Codex `gpt-5.6-terra` · high, decisión del propietario) |
 
 Los tres `gpt-5.6-*` están etiquetados «Legacy» por el proveedor (`BASELINE.md` §2); se usan porque son la selección expresa del propietario.
 
@@ -110,11 +112,12 @@ Leyenda de esfuerzo relativo: **S** ≈ una tarea MP corta (≤ 1 día de agente
 - **Prueba de cierre:** `grep` de portada sin «no hay código de producto»; fila legal presente; cada puerta del H4 con umbral y comando.
 - **ADR/DEC:** ADR-0011 (enmienda), DEC-002/DEC-003 (siguen del propietario).
 - **Gate humano:** **proveedor/política de teselas; licencia de código (DEC-002) y visibilidad (DEC-003).**
+- **Ronda 2 — qué bloquea qué:** FR-11, la parte documental de FR-12, FR-18 y NV-14 (escaneo de secretos y datos personales del historial, no ejecutado) son bloqueantes de **publicar el repositorio**; el cumplimiento de la política de teselas (FR-12) es además bloqueante del **servicio**. Ver `FINDINGS_REGISTER.md` §1bis.
 
 #### H4-11 · Eliminar defaults peligrosos de PostgreSQL — **P1 · S** (decisión del propietario, 2026-11-24)
 - **Problema real:** FR-17 y PR-01 (escritura real en 5433).
 - **Trabajo:** `services/collector/config.py` y `apps/api/config.py` sin valor por defecto que apunte a `127.0.0.1:5433`; configuración explícita por entorno (`dev`/`test`/`replay`/`live`); **fallo seguro** (salida con error claro) si falta la configuración; **una sola variable** de conexión compartida por API, colector y snapshotter (hoy `MADRID_PULSE_DATABASE_DSN` frente a `MADRID_PULSE_DATABASE_URL`, causa probable de los skips divergentes); aislamiento de tests (las suites rechazan conectarse a una base que no sea la desechable declarada); guarda contra escrituras accidentales en la base de desarrollo compartida (p. ej. marca de entorno en la propia base comprobada antes de escribir).
-- **Ejecutor:** Codex `gpt-6.2-sol` · medium (**excepción explícita del propietario a la exclusión de `gpt-6.*`, solo para esta tarea**; disponible en el catálogo local, **sin recibo de Orca todavía**: verificar `effective.model` al despachar) · **Revisor:** Claude `sonnet` · high (`claude-sonnet-5-5`).
+- **Ejecutor: PENDIENTE DE VERIFICACIÓN.** Propuesto por el propietario: Codex `gpt-6.2-sol` · medium (**excepción explícita a la exclusión de `gpt-6.*`, solo para esta tarea**, conservada). Hoy el modelo figura en el catálogo local pero **no tiene recibo efectivo de Orca**: no se presenta como asignado ni verificado. La asignación queda confirmada solo si el recibo del despacho (`orca orchestration worker-show --dispatch <id> --json --full` → `launch.effective`) muestra `gpt-6.2-sol` · `medium`; si no, se para y decide el propietario. · **Revisor:** Claude `sonnet` · high (`claude-sonnet-5-5`), verificado por recibos de Orca en esta auditoría.
 - **Dependencias:** ninguna; conviene antes de H4-07 y H4-12.
 - **Coste/riesgo:** bajo; riesgo de romper scripts de operación (`infra/operate/`) y la CI → la CI ya fija ambas variables (`AUD08_REPRODUCTION.md`).
 - **Pruebas de cierre (reproducibles, contra PostgreSQL desechable, nunca 5433):** (1) arrancar colector y API **sin** variables → salen con error y **0** filas nuevas en cualquier base; (2) con una sola variable, API y colector escriben/leen la misma base; (3) un test de la suite apuntado a una base sin marca de «desechable» se niega a ejecutar; (4) la suite de CI sigue dando 283 casos con los mismos skips por entorno (5 con `data/`, 18 en checkout limpio); (5) búsqueda en el repositorio: ningún literal `5433` fuera de documentación e `infra/` de desarrollo.
@@ -191,7 +194,7 @@ Leyenda de esfuerzo relativo: **S** ≈ una tarea MP corta (≤ 1 día de agente
 - **Trabajo:** E2E real de red, geometría, navegación, History/Explore, seguridad y coste operativo; reevaluar cada `FR` con su prueba de cierre en el **nuevo HEAD**; sesión con usuarios (H5 con n ≥ 30 si se quiere una conclusión; n = 5 solo como orientación).
 - **Ejecutor:** Codex `gpt-5.6-sol` · high · **Revisor:** Claude `opus` · high.
 - **Dependencias:** todos los anteriores cerrados o `BLOCKED` documentados.
-- **Pruebas de cierre:** GO/CONDITIONAL/NO-GO con cada bloqueante de `AUDIT_EXECUTIVE_DECISION.md` §8 resuelto o aceptado expresamente por el propietario.
+- **Pruebas de cierre:** GO/CONDITIONAL/NO-GO con cada bloqueante de la lista A (servicio) de `FINDINGS_REGISTER.md` §1bis —resumida en `AUDIT_EXECUTIVE_DECISION.md` §7.1— resuelto, con su superficie deshabilitada cuando la lista lo admite (FR-02, FR-29, FR-32, FR-09/10/36), o aceptado expresamente por el propietario; la lista B (repositorio) se evalúa aparte y solo si el propietario decide hacer público el repositorio.
 - **Gate humano:** decisión de publicar; push/PR/merge.
 
 ### Bloque E — Ampliaciones posteriores (fuera del H4)
