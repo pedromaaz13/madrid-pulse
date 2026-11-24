@@ -62,4 +62,4 @@ Este repositorio se desarrolla con asistencia de dos agentes de IA como **herram
 
 ## Licencia
 
-Pendiente de decisión — ver `docs/DECISIONS.md` (DEC-002). Los datos de terceros utilizados (Renfe, CRTM, OpenStreetMap) mantienen sus propias licencias; ver `docs/legal/LICENSE_MATRIX.md`.
+Código propio y documentación original: [MIT](LICENSE) (DEC-002, DEC-045). Los datos y materiales de terceros (Renfe, CRTM, OpenStreetMap, fixtures derivadas de OSM bajo ODbL, dependencias) **no** quedan cubiertos por esa licencia y mantienen la suya: ver [`NOTICE.md`](NOTICE.md) y [`docs/legal/LICENSE_MATRIX.md`](docs/legal/LICENSE_MATRIX.md).
