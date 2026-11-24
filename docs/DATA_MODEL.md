@@ -205,3 +205,61 @@ Estos números son puntos de partida de la investigación, **no compromisos fijo
 **Estado real de la capa gold tras MP-009 (DEC-021):** `daily_line_metrics`/`station_daily_metrics` (por `route_id`/`station_id`) no estaban implementadas — dependían de la resolución `trip_id`→`route_id`/`stop_id`→`station_id` del GTFS estático, asignada a MP-010 (ADR-0009), que no era dependencia de MP-009. El exportador (`services/snapshotter/gold.py`) calculaba en su lugar un resumen diario **por núcleo** (`nucleo_prefix`), como paso inicial real sin inventar un join no verificado. Volumen real medido en MP-009 (día `2026-11-19`, soak test de MP-007): 1272 filas crudas (668 posiciones + 484 actualizaciones de viaje + 120 ejecuciones de ingesta) comprimen a ~76 KB en Parquet ZSTD particionado.
 
 **Estado real de la capa gold tras MP-015 (DEC-033):** con MP-010→MP-014 ya `DONE`, esa resolución existe de verdad (`packages.gtfs.Topology`). `build_line_daily_metrics`/`build_station_daily_metrics` calculan `daily_line_metrics`/`station_daily_metrics` reales, con tres límites documentados: `trips_scheduled` usa solo `calendar.txt` (sin `calendar_dates.txt`, no parseado todavía); el umbral de puntualidad (`on_time_threshold_seconds=300`) es un punto de partida calibrable, no medido con histórico real; `station_daily_metrics` no incluye `data_quality_events_count` porque `data_quality_event.entity_ref` nunca referencia una parada. Corrida real contra el soak completo del `2026-11-19`: 3 filas en `daily_line_metrics` (una por variante de ruta C5 con trips programados ese día), 18 en `station_daily_metrics`.
+
+
+**Estado real de la capa gold tras MP-021 (DEC-040, ADR-0015):** se añade un
+cuarto agregado, `circulation_daily_history`, con grano **vehículo + viaje +
+día de servicio** -- la misma identidad que publica `/api/v1/snapshot` y que
+lleva la URL del frontend. No sustituye a ninguno de los tres anteriores:
+responde la pregunta que ninguno respondía, *qué hizo esta circulación
+concreta*.
+
+```text
+circulation_daily_history (gold/circulation_daily_history/date=<fecha>/part.parquet)
+  service_date
+  route_id, line_short_name
+  trip_id
+  vehicle_id                 -- NULL si no se observó: no hay vehículo porque no se vio ninguno
+  scheduled BOOLEAN          -- el GTFS lo programa ese día (calendar.txt + calendar_dates.txt)
+  observed  BOOLEAN          -- cobertura de POSICIÓN: al menos una vehicle_position_observation
+  canceled  BOOLEAN          -- el operador lo declaró CANCELED; NULL si no hubo parte de viaje
+  coverage                   -- clasificación única: observed | canceled | operator_only
+                             --                      | unobserved | unscheduled
+  headsign, scheduled_first_stop_id, scheduled_first_departure_time,
+  scheduled_last_stop_id, scheduled_last_arrival_time   -- NULL en un viaje sin stop_times
+  positions_count, first_observed_at, last_observed_at,
+  distinct_stops_observed, last_current_status          -- NULL (nunca 0) si observed = false
+  trip_updates_count, delay_reported_count              -- NULL si no hubo parte de viaje;
+                             -- delay_reported_count = 0 con parte es un CERO MEDIDO, no una ausencia
+  latest_reported_delay_seconds
+  on_time BOOLEAN            -- NULL (nunca false) si delay_reported_count = 0
+  PRIMARY KEY(service_date, trip_id, vehicle_id)
+```
+
+Los huecos de cobertura son **filas**, no ausencias. Pero **no todo lo que no se
+ve es un hueco**: `coverage` separa el hueco real (`unobserved`: ni posición ni
+parte del operador) de una **anulación** (`canceled`: el operador declaró
+`CANCELED` y el tren no circuló) y de un hueco solo de posición
+(`operator_only`). Hallazgo real de la revisión de MP-021: tres viajes anulados
+por Renfe el `2026-11-20` se estaban contando como fallo de captura propio. Una
+circulación observada cuyo `trip_id` no está en el calendario de ese día aparece
+con `scheduled = false` en vez de descartarse -- el GTFS de Renfe no es
+retroactivo y el histórico existe para dejar ver ese desajuste.
+
+La regla de nulos es **cada métrica con el denominador que la sostiene**, no
+"todo `NULL` si no se observó": las de posición son `NULL` exactamente cuando
+`observed = false`; las de parte del operador lo son cuando no hubo ninguno, y
+`delay_reported_count = 0` con parte presente es un **cero medido** (hubo parte
+y no traía retraso), que es justo lo que publica el feed en una cancelación.
+
+Un viaje sin `stop_times` (huérfano) también es fila, con el horario
+explícitamente ausente, para que su denominador coincida con el de
+`daily_line_metrics`: son 5 casos reales en el ZIP oficial del `2026-11-20`, y
+omitirlos hacía que la misma pantalla publicase 1 304 viajes programados en una
+tabla y 1 299 en otra.
+
+**Volumen real medido en MP-021** sobre operación continua contra los feeds en
+vivo (`docs/evidence/mp-021-coste-colector-continuo.md`): ≈631 B por fila en
+PostgreSQL caliente con sus índices y **≈48,9 B por fila en Parquet ZSTD**
+(compresión ≈13:1), es decir ≈19 MB de archivo frío por día completo
+proyectado. Es la cifra que DEC-004 esperaba para poder decidirse.

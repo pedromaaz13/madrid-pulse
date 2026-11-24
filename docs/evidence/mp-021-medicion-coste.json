@@ -1,0 +1,75 @@
+{
+  "medido": {
+    "ventana_inicio_utc": "2026-11-23T05:23:20+00:00",
+    "ventana_fin_utc": "2026-11-23T05:37:03.234951+00:00",
+    "ventana_segundos": 823.2,
+    "ciclos_completos": 21.0,
+    "ejecuciones_de_ingesta": 63,
+    "ejecuciones_con_error": 0,
+    "filas_por_tabla": {
+      "vehicle_position_observation": 2671,
+      "trip_update_observation": 1191,
+      "service_alert": 22,
+      "source_ingestion_run": 63,
+      "data_quality_event": 145
+    },
+    "postgresql_bytes": 22662291,
+    "postgresql_crecimiento_bytes": 2580480,
+    "transferencia": {
+      "samples": 6,
+      "reintentos_de_red": 0,
+      "per_feed": {
+        "https://gtfsrt.renfe.com/vehicle_positions.json": {
+          "wire_min": 174560,
+          "wire_max": 174560,
+          "plain": 174560
+        },
+        "https://gtfsrt.renfe.com/trip_updates.json": {
+          "wire_min": 190563,
+          "wire_max": 190563,
+          "plain": 190563
+        },
+        "https://gtfsrt.renfe.com/alerts.json": {
+          "wire_min": 68825,
+          "wire_max": 68825,
+          "plain": 68825
+        }
+      },
+      "bytes_per_cycle_wire_mean": 433948,
+      "bytes_per_cycle_wire_min": 433948,
+      "bytes_per_cycle_wire_max": 433948
+    },
+    "proceso": {
+      "samples": 26,
+      "process_instances": 5,
+      "rss_max_mb": 18.6,
+      "rss_mean_mb": 15.0,
+      "cpu_seconds_total": 21.42,
+      "cpu_seconds_by_instance": {
+        "18799": 7.74,
+        "19587": 0.01,
+        "19602": 6.56,
+        "19896": 0.01,
+        "19992": 7.1
+      },
+      "first_sample": "2026-11-23T05:24:21Z",
+      "last_sample": "2026-11-23T05:36:52Z"
+    },
+    "parquet": {
+      "files": 9,
+      "total_bytes": 199989,
+      "bytes_by_service_date": {
+        "2026-11-23": 199989
+      }
+    }
+  },
+  "extrapolado": {
+    "_aviso": "PROYECCIÓN a partir de la ventana medida arriba, NO una observación de 24/72 h. No autoriza declarar «24/7 verificado».",
+    "ciclos_por_hora": 91.8,
+    "transferencia_bajada_24h_mb": 912.1,
+    "transferencia_bajada_72h_mb": 2736.3,
+    "postgresql_crecimiento_24h_mb": 258.3,
+    "postgresql_crecimiento_72h_mb": 774.8,
+    "cpu_pct_de_un_nucleo": 2.6
+  }
+}

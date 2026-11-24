@@ -4,6 +4,240 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 
 ## [Unreleased]
 
+### MP-022 — Validación integral de cierre (`DONE`)
+
+Worktree `mp-022-validacion-integrada`, ramificado desde `mp-021-historico` (`1ecbc8f`). `DONE`: aprobada por Claude el `2026-11-23` tras dos rondas de revisión independiente. **Cierra la cadena completa `MP-016`→`MP-022` del Hito 3** — pendiente únicamente de la decisión del propietario sobre integración a `main` y promoción de ADR-0014/ADR-0015. Auditoría final sobre un entorno desechable propio. No añade features ni cambia arquitectura.
+
+#### Added
+- Generador reproducible `apps/api/tools/build_closure_matrix.py` y matriz CSV/Markdown con el esquema vinculante exacto: 12 líneas, 42 rutas, 103 patrones, 1 299 instancias con horario y denominadores explícitos. C4 conserva horario/catálogo con GPS 0 y cobertura `null`; 28/103 patrones map-matcheables, fallback raw/tablero declarado.
+- Fixture `tests/fixtures/mp022_synthetic/`, marcada inequívocamente como sintética derivada, no oficial y no producción, más E2E de recuperación tras estimación, tres relojes/horizonte y excepción de calendario junto a 24:xx.
+- Evidencia integral, benchmark y dossier de integración en `docs/evidence/mp-022-{validacion-integrada,benchmark,dossier-integracion}.md`.
+
+#### Verified
+- Replay congelado intacto: 1532 = 119/119/49; 1533 = 121/121/49. Cuatro snapshots normal/normal/parcial/congelado con revisión 3→6→7, conservación de 122 últimos conocidos y timestamps sin rejuvenecer.
+- Archivo del 2026-11-20 reprocesado dos veces con los mismos 9 ficheros y SHA-256; base replay propia `240/199/4/7/2` y base de suite limpia al terminar.
+- Workflow Python actualizado: 283/283 con 5 `skip` en `mp022-ci-db:5438`; la corrida independiente anterior del revisor sobre los 276 tests base dio 1 `skip` en su PostgreSQL fresco, diferencia de entorno/alcance conservada explícitamente. Frontend Node 22.13.1: 89/89, lint, typecheck y build; worker MapLibre 550754 bytes.
+- Benchmark reproducible de 30 iteraciones: snapshot 254,73/418,23 ms p50/p95; tablero Atocha 103,14/179,75 ms; salud 75,23/83,14 ms. Se registra el endpoint legado lento y DEC-038 permanece abierta.
+- Inspección nueva del frontend integrado: reduced-motion con deriva 0 en seis muestras; recorrido Live→History en desktop, móvil 390×844, teclado y fallback sin WebGL; interacción MapLibre con 182 frames/60,3 fps, p50/p95 16,70/18,30 ms y heap 96,2 MiB usado. El replay tenía 68,7 h y estaba congelado: la cifra mide zoom/pan, no animación continua de trenes.
+
+#### Fixed
+- `HistoryView` ya no sustituye silenciosamente un día URL no archivado por el primero disponible en encabezado y breadcrumb: muestra un estado explícito, conserva la fecha solicitada y ofrece los días reales como opciones. Frontend 89/89, typecheck y lint limpios.
+- `.github/workflows/ci.yml` ejecuta ahora `apps.api.tests.test_closure_matrix` y `tests.e2e.test_mp022_synthetic_derived`; los siete tests de aceptación MP-022 dejan de quedar fuera del pipeline.
+
+#### Verified (auditoría final de Claude, 2026-11-23)
+- Inspección real en navegador que la sesión del ejecutor no pudo hacer (sin superficie de navegador, mismo límite de MP-020): gate 7 con `matchMedia` forzado a `reduce` antes de montar React (deriva 0 en seis muestras de centro/zoom mientras el reloj seguía avanzando); gate 8 con un recorrido real nuevo (Live → filtro C4a+C4b → tren 20277 → Seguir → arrastre sintético real del lienzo MapLibre → Volver al tren → History → Atrás, restaurando la URL exacta), móvil 390×844 real vía `emulate` (no resize), teclado (Tab+Enter) y sin WebGL vía `initScript`; gate 9 con `requestAnimationFrame` real (182 frames, 60,3 fps, p50 16,70 ms, p95 18,30 ms) y `performance.memory` (96,2 MiB).
+- Dos hallazgos reales encontrados y devueltos al ejecutor, ambos corregidos y reverificados de forma independiente: la sustitución silenciosa de día en `HistoryView.tsx` (ver `Fixed`) y dos módulos de test nuevos (`apps.api.tests.test_closure_matrix`, `tests.e2e.test_mp022_synthetic_derived`) ausentes de `.github/workflows/ci.yml` pese a blindar las puertas 2/3/7 y el contrato de matriz de esta misma tarea.
+- Reejecución propia, dos veces, contra contenedores PostgreSQL 17-3.5 desechables (puertos `5439`/`5440`, migraciones desde cero, destruidos al terminar): **283/283** tests Python con la lista de CI ya corregida, 1 `skip` real (`test_real_soak_postgres`). Frontend **89/89** con Node 22.13.1 real, lint/typecheck limpios, build con worker MapLibre de **550754 bytes** verificado. `git diff --check` limpio; autoría exclusiva de Pedro Matute sin `Co-authored-by` en los tres commits (`c745374`, `4d25658`, `23ec6c0`).
+
+#### Not done (declarado explícitamente, decisión exclusiva del propietario)
+- ADR-0014/0015 siguen `Propuesto`; DECs 033(b)/(c), 038 y 004 abiertas; no se afirma 24/7 ni trabajo de AV/LD/MD; ningún agente ha hecho `push`/PR/merge.
+
+### MP-021 — Histórico y continuidad analítica
+
+Worktree `mp-021-historico`, ramificado desde `mp-020-mapa-y-tablero` (`b616ae6`). `DONE`: aprobado por OpenAI Codex el `2026-11-23` tras dos rondas de revisión independiente; pendiente únicamente de la decisión del propietario sobre integración y promoción de ADR-0015.
+
+#### Added
+- **`circulation_daily_history`** (`services/snapshotter/history.py`): cuarto agregado gold, con grano **vehículo + viaje + día de servicio** — la misma identidad que publica `/api/v1/snapshot` y que lleva la URL del frontend. Los huecos de cobertura son **filas**, no ausencias, y la columna `coverage` los clasifica en una sola categoría (`observed` · `canceled` · `operator_only` · `unobserved` · `unscheduled`): una anulación del operador no es un hueco de captura, y una circulación observada fuera del calendario aparece con `scheduled = false` en vez de descartarse. Cada métrica va con el denominador que la sostiene.
+- **`/api/v1/history/*`** (`apps/api/history.py`, 5 rutas nuevas): días archivados con sus denominadores, métricas por línea y por estación, circulaciones filtrables por línea y por cobertura (`only=unobserved` devuelve exactamente el hueco), y detalle de una circulación con sus observaciones crudas. Se sirven desde el Parquet con DuckDB en solo lectura; **el contrato de MP-019 no se toca**, y un test lo fija como regresión. Un día no archivado responde `404` con el comando que lo archivaría, nunca un día vacío con métricas a cero.
+- **History y Explore navegables** (`apps/web/src/ui/HistoryView.tsx`, `ExploreView.tsx`, `hooks/useHistory.ts`, `domain/format.ts`): los botones de `TopBar.tsx` dejan de estar `disabled`. Ida y vuelta Live ↔ History conservando la identidad (`?train=&trip=&sd=` valen en ambas vistas), «Ver en Live» solo si esa circulación está de verdad en el snapshot vigente, y todo porcentaje con su fracción real (`5.6 % (4/72)`); sin muestra se escribe «sin muestra», nunca `0 %`. Sin SQL Lab, sin cuentas, sin dbt, sin infraestructura distribuida.
+- **`infra/operate/`**: supervisor portable del colector con retroceso acotado, plantillas `launchd` (macOS) y `systemd` (Linux) para colector y archivo diario, script de archivo diario idempotente, y `measure-cost.py`, que **mide** una ventana real y extrapola marcando la extrapolación como tal.
+- **`docs/evidence/mp-021-coste-colector-continuo.md`** y **`mp-021-medicion-coste.json`**: coste real medido sobre operación continua contra los feeds en vivo — 21 ciclos en 823 s sin errores de ingesta, RSS máximo 18,6 MB, 434 KB de bajada por ciclo, ≈631 B/fila en PostgreSQL y **≈48,9 B/fila en Parquet ZSTD** (≈19 MB/día proyectados, ≈7 GB/año). Es la medición que DEC-004 esperaba.
+- **`docs/evidence/mp-021-inspeccion-navegador.md`** y `docs/evidence/mp-021-capturas/` (10 capturas): inspección real en navegador de History y Explore, escritorio y móvil 390 px, incluida la segunda ronda sobre anulaciones.
+- 43 pruebas nuevas en la suite Python (`test_idempotency.py`, `test_history.py`, `test_history_contract.py`, `test_supervised_loop.py` y ampliaciones de `test_gold.py`) y 39 en la del cliente, estas últimas sobre una **grabación real** de la nueva API (`src/__fixtures__/history-archive.json`).
+
+#### Fixed
+- **El archivo frío no era idempotente, pese a lo que decía su docstring.** `OVERWRITE_OR_IGNORE` deja intactas las particiones que una nueva ejecución ya no produce: medido con DuckDB 2.0, tras escribir `hour=10` (3 filas) + `hour=11` (2 filas) y reprocesar con una sola fila, el archivo seguía devolviendo **3 filas**. `OVERWRITE` tampoco servía: borra la raíz entera — reexportar `2026-11-20` se llevó por delante el `date=2026-11-19` ya archivado. Ahora cada tabla se escribe en `.staging/` y su subárbol `date=<fecha>` se reemplaza apartando antes la versión anterior, y **un origen vacío nunca borra un día ya archivado** (la tabla caliente se purga por diseño, DEC-011: 0 filas calientes no prueba que el día no tuviera observaciones).
+- **La sustitución del día no era atómica** (hallazgo bloqueante de la revisión de Codex). La primera versión hacía `rmtree(final)` y después `replace(staged, final)`: dos pasos con un agujero real en medio, porque una caída entre ambos dejaba el día **borrado sin reemplazo** — justo lo que ADR-0015/DEC-040 existen para impedir. Ahora la versión anterior se **aparta** a `.quarantine/` con un `rename` atómico, la preparada ocupa el nombre definitivo con otro, y solo entonces se borra la cuarentena; toda exportación empieza por `recover_interrupted_swaps`, que resuelve una interrupción anterior sin intervención. Se deja de afirmar atomicidad de un solo paso: `rename(2)` no la ofrece para directorios no vacíos y las alternativas que sí (enlace simbólico, `renameat2`/`renamex_np`) rompen el contrato de lectura de la capa gold o no son portables — ambas descartadas con su razón en el ADR. Lo que se garantiza es **a prueba de caídas con recuperación automática**, fijado con inyección de fallo en la costura exacta.
+- **Tres «huecos de cobertura» del `2026-11-20` no lo eran** (segundo hallazgo bloqueante de Codex). `1023V20865C5`, `1023V21340C10` y `1023V21748C2` salían como `scheduled=true/observed=false` con `trip_updates_count=1` y `delay_reported_count=0`, contradiciendo el criterio «huecos con métricas NULL, nunca 0» que esta misma entrega daba por cumplido. Rastreado al dato crudo: los tres tienen una `trip_update_observation` real con `schedule_relationship='CANCELED'` y cero posiciones — **Renfe había anulado esos servicios**. El tren no circuló y el operador lo dijo, así que contarlos como hueco culpaba al colector de algo que no hizo; además `apps/api/snapshot.py` ya trataba la cancelación como ciudadana de primera desde MP-019 (ETA `trip_canceled`) mientras este mart la ignoraba. Corregido con `coverage`/`canceled`, Parquet regenerado y documentación alineada con el comportamiento real: el día cierra como `1304 = 122 observadas + 1179 huecos reales + 3 anuladas` y de los 1 179 huecos ninguno tiene métricas no nulas.
+- **El filtro de cobertura de la URL caía en silencio a «Todas»** al pedir las categorías nuevas: la lista blanca en tiempo de ejecución de `hooks/useUrlState.ts` se quedó con las cuatro antiguas. Encontrado al re-verificar en navegador; `?hf=canceled` mostraba 120 filas en vez de 3.
+- **Los agregados no eran byte-estables.** Mismo conjunto de filas al recalcularlos, distinto **orden**: sobre el catálogo Madrid completo del `2026-11-20` (35 filas de línea, 69 de estación) dos corridas con la misma entrada daban SHA-256 distintos, porque el `GROUP BY` paralelo de DuckDB no garantiza orden. Los cuatro marts llevan ahora `ORDER BY` explícito.
+- **Límite (a) de DEC-033 cerrado:** `gold.py` reimplementaba el calendario GTFS a mano y solo leía `calendar.txt`, así que una excepción de `calendar_dates.txt` no cambiaba `trips_scheduled` — el **denominador** de toda métrica de puntualidad. Ahora lo resuelve `packages.gtfs.scheduled_service_ids_for_date` (MP-017), la misma función que usa el tablero de estación.
+- **El mart no podía cubrir Madrid entero:** `SnapshotterConfig` fijaba `short_name="C5"`. `line_filter` interpreta el valor vacío como núcleo completo, igual que ya hacía `apps/api/gtfs_source.py`: 42 rutas y 12 líneas reales en vez de una.
+- **El mismo día tenía dos denominadores distintos** (1304 en una tabla, 1299 en otra). Causa: 5 viajes huérfanos reales del ZIP oficial del `2026-11-20` (`1023V17120C8b`, `1023V17128C8b`, `1023V17130C8b`, `1023V17134C8b`, `1023V17707C5`) que `daily_line_metrics` contaba y el mart por circulación descartaba. Ahora se conservan como filas con el horario explícitamente ausente.
+- **El colector sobrevivía a perder la base sin volver a ingerir nunca** (DEC-041). Reproducido reiniciando PostgreSQL con el colector en marcha: 90 s después el proceso seguía vivo consumiendo los tres feeds cada 30 s y descartándolos, con `source_ingestion_run` congelado y `psycopg.OperationalError: the connection is lost` en cada ciclo; ningún supervisor puede rescatar un proceso que no cae. Ahora termina con `EX_TEMPFAIL` (75) y el supervisor lo levanta con una conexión nueva: verificado, la ingesta se reanuda (48 → 51 ejecuciones).
+- **Rótulo del tren seleccionado fijado en «Sin línea»** al abrir un enlace con circulación ya seleccionada (el caso normal al volver desde el histórico): `MapView` leía un índice que su efecto poblador deja vacío mientras el mapa no está listo, y sus dependencias no volvían a cambiar. Defecto encontrado mirando el navegador, no por un test.
+- **Media pantalla en blanco en móvil** en las vistas de archivo: la rejilla móvil reservaba el 54 % para un mapa que esas vistas no dibujan.
+
+#### Verified
+- Idempotencia probada **contra PostgreSQL real**, no por lectura de código: exportar + agregar dos veces produce un archivo byte-idéntico; una fila borrada del origen no sobrevive; reprocesar un día no toca otro ya archivado; un origen vacío conserva el archivo. Las mismas pruebas contra el `export.py` anterior fallan con el síntoma exacto.
+- **Inyección de fallo en la costura exacta de la sustitución**: con `Path.replace` instrumentado para caer justo antes del segundo renombrado, el día ya archivado sobrevive **byte a byte** (se compara ruta + SHA-256 de cada Parquet antes de la caída y tras la recuperación), un reintento posterior deja el día completo, y una caída después del segundo renombrado conserva el contenido nuevo en vez de retroceder. Verificado contra el mecanismo anterior: falla con `la versión anterior no está en cuarentena: se ha perdido`.
+- **Semántica de cobertura comprobada sobre los 1 179 huecos completos** del `2026-11-20`, no sobre una muestra: ninguno es una anulación y ninguno tiene métricas no nulas. El caso `operator_only` (parte del operador sin cancelar y sin posición) no existe en el archivo actual, así que se cubre con un test sintético explícito en vez de declararlo verificado sobre datos que no hay.
+- Recuperación del colector verificada **provocando los fallos**: `kill -9` (reinicio en 5 s) y reinicio de PostgreSQL (salida 75 y reanudación).
+- Suite Python exacta de CI: **276/276 OK** contra PostgreSQL real (233 → 276), con los recuentos de la base de desarrollo intactos en `668/484/3/120/0`. Frontend con Node **22.13.1**: lint, typecheck, **88/88** pruebas (49 → 88) y build en verde con el worker de MapLibre verificado (550754 bytes).
+- Revisión final independiente de OpenAI Codex sobre `d68b351`, sin hallazgos abiertos: 36 pruebas focales de idempotencia/caídas/cobertura/API; suite completa **276/276** contra desarrollo y 276 con 5 `skip` esperados sobre PostGIS fresco; Parquet real `1304 = 122 observadas + 1179 huecos + 3 anuladas`; navegación real de History/Explore y emulación exacta `390x844` sin desbordamiento de página (`scrollWidth == clientWidth == 390`). `git diff --check`, autoría exclusiva de Pedro Matute y ausencia de coautores verificados. Estado final: `DONE`, aprobado el 2026-11-23; ADR-0015 permanece `Propuesto`.
+
+#### Not done (declarado explícitamente)
+- **No hay operación «24/7 verificada»**, y no se afirma: la ventana medida son 13 min 43 s y todas las cifras de 24/72 h están marcadas como proyección.
+- **No se ha contratado ningún servicio de pago ni desplegado ningún host persistente** (ADR-0007 reserva esa decisión al propietario), ni se ha instalado el agente `launchd` en el equipo del propietario.
+- **Límites (b) y (c) de DEC-033 siguen abiertos:** el umbral de puntualidad de 300 s no tiene todavía histórico con el que calibrarse —dos días archivados y minutos de cobertura no son base, y fijarlo con esa muestra sería fabricar una calibración— y `data_quality_event.entity_ref` sigue sin referenciar nunca una parada.
+
+### MP-020 — Mapa y tablero (React/MapLibre)
+
+#### Added
+- `apps/web/` reconstruido como experiencia map-first de **toda Cercanías Madrid** sobre el contrato de MP-019 (`/api/v1/catalog` + `/api/v1/snapshot` + `/api/v1/stations/{id}/board`), sustituyendo en la UI los endpoints antiguos `/lines` + `/live/vehicles` de MP-014, que siguen existiendo por compatibilidad. `App.tsx` queda como composición; la lógica vive en `src/api/`, `src/domain/`, `src/hooks/`, `src/map/` y `src/ui/`.
+- Adquisición por recurso (`useCatalog`, `useSnapshot`, `useHealth`, `useStationBoard` sobre `useResource`): una lectura en vuelo por recurso, timeout y cancelación propios, descarte de respuestas antiguas por `revision`, catálogo revalidado con `ETag`/`304`, y pausa/revalidación según la visibilidad de la pestaña. Sin `Promise.all` como bloque indivisible de éxito; un fallo parcial conserva el último valor bueno y una respuesta con éxito no rejuvenece el dato.
+- Evaluación en el cliente de la `ProgressEnvelope` publicada por el backend, con conversión de progreso dirigido a longitud de arco física y proyección sobre la polilínea del patrón; nunca interpolación lat/lon en recta entre estaciones, y congelación al agotarse `rendered.valid_until`. El sentido se deriva del orden real de las paradas sobre el corredor, no de una convención de nombre.
+- Reloj de presentación en `requestAnimationFrame` que escribe directamente en las fuentes de MapLibre: ningún `setState` global por fotograma. Una sola instancia de mapa, con marcadores reconciliados por identidad de circulación (vehículo + viaje + día de servicio, nunca `vehicle_id` solo).
+- Anillo de la **última lectura confirmada** junto al símbolo cuando la posición mostrada es `extrapolated_from_last_anchor` o `stale_frozen`.
+- Seguimiento explícito separado de la selección: arrastrar suelta la cámara conservando la ficha y ofrece «Volver al tren». La cámara no hace `fitBounds` por sondeo y «Centrar Madrid» responde una sola vez por pulsación.
+- Búsqueda de estación y línea con y sin tilde y teclado completo (flechas, Intro, Escape), multiselección de líneas con contadores del mismo ámbito que el mapa, tablero de estación con cobertura y limitaciones declaradas, y cinta de novedades progresiva, pausable y con lista estática alternativa.
+- Estado restaurable en la URL (`?station=`, `?train=&trip=&sd=`, `?lines=`) con `pushState`, de modo que Atrás vuelve al contexto anterior; y modo replay `?at=<ISO>` que recorre un corte congelado de forma repetible con la etiqueta `REPLAY` y el instante siempre visibles.
+- Alternativa navegable de lista y tablero cuando el navegador no ofrece WebGL, y comportamiento sin animación espacial automática con `prefers-reduced-motion`.
+- 49 pruebas nuevas en `apps/web` apoyadas en una grabación real de esta API (`src/__fixtures__/snapshot-map-matched.json`, con su procedencia declarada dentro del fichero), incluida la que comprueba que la coordenada calculada por el cliente cae sobre `rendered.lat/lon` del backend con error inferior a 1 m.
+- `docs/evidence/mp-020-inspeccion-navegador.md` y `docs/evidence/mp-020-capturas/`: evidencia ejecutada de la inspección real en navegador, con la secuencia continua de 60 s de la app real.
+- `vite.config.ts` acepta `MADRID_PULSE_API_TARGET` para apuntar el proxy `/api` a otro puerto cuando el 8000 ya está ocupado por otra instancia local; el valor por defecto no cambia.
+
+#### Fixed
+- **Mapa invisible en el navegador, invisible también para los tests:** el chunk diferido de `maplibre-gl.css` carga después de la hoja propia y su `.maplibregl-map { position: relative }` ganaba por igual especificidad y orden al `position: absolute` del contenedor, que quedaba con altura 0. Se dimensiona ahora con `width`/`height`, correcto sea cual sea el `position` aplicado.
+- **`snapshot_id` no puede usarse como señal de «ha llegado dato nuevo»:** es identidad de contenido y se repite entre sondeos cuando los vehículos no han cambiado, aunque `display_at` avance; usarlo como disparador de repintado dejaba el mapa congelado con movimiento reducido. La señal es la `revision` del contrato.
+- «Volver al tren» no aparecía nunca tras soltar la cámara: el estado se escribía dentro del actualizador de `setFollowKey`, que debe ser puro.
+- Scroll horizontal en móvil de 390 px (449 px de ancho real) por la barra superior; cinta de novedades de 120 px de alto; leyenda pegada a la barra de atribución; y controles pequeños por debajo del tamaño táctil cómodo.
+- El tablero volcaba códigos crudos del contrato (`passed_or_skipped_per_operator_next_stop`) en la interfaz; los cuatro códigos de causa se traducen y se conserva el horario planificado cuando la ETA no está disponible.
+- Los nombres de las estaciones de un patrón se solapaban al estar alejado el zoom, y la ficha heredaba el desplazamiento del tablero anterior abriendo con su cabecera fuera de la vista.
+
+#### Notes
+- El GTFS oficial publica `route_color` real de Renfe, pero `/api/v1/catalog` no expone ese campo y MP-020 no reescribe el contrato de MP-019: la paleta de líneas del cliente es una elección de presentación propia, determinista por `line_id` y sin identificadores de línea incrustados en la lógica (ADR-0011), **no** el color corporativo del operador. Anotado para MP-021/MP-022.
+- Histórico y Explore no se implementan aquí (son MP-021): sus pestañas aparecen deshabilitadas y lo declaran, en vez de simular una función inexistente.
+
+#### Verified
+- Revisión final de OpenAI Codex sobre `74667c0..5f8b739`, sin hallazgos abiertos. Inspección visual real reproducida en Chrome DevTools desde la sesión coordinadora de Orca contra API `8010` + Vite `5181`: red completa, varias líneas, circulación C5 `19656`, URL restaurable, seguimiento, degradación honesta y móvil `390x844`; sin errores de aplicación en consola. El arrastre y `prefers-reduced-motion`, no disponibles en esa herramienta concreta, quedaron cubiertos por la evidencia ejecutada del implementador, tests de regresión y auditoría directa del código.
+- Frontend con Node **22.13.1**: `npm ci` sin vulnerabilidades, lint, typecheck, **49/49 tests** y build en verde con worker MapLibre verificado (550754 bytes). Backend exacto de CI: **233/233** sin `skip` contra desarrollo con `668/484/3/120/0` intactos; 233 ejecutados con 5 `skip` esperados sobre PostGIS fresco tras aplicar `0001`+`0002`.
+- `git diff --check` limpio; los cinco commits de MP-020 tienen autor y committer exclusivos de Pedro Matute, sin `Co-authored-by`. Estado final: `DONE`, aprobado por OpenAI Codex el 2026-11-22.
+
+### MP-019 — Contrato de snapshot/API coherente
+
+#### Added
+- [ADR-0014](adr/0014-snapshot-and-temporal-contract.md) (`Propuesto`): contrato temporal de presentación y snapshot coherente, con las tres alternativas del encargo comparadas y dos más evaluadas y descartadas. Escrito **antes** de implementar, como exige `docs/hitos/hito-03/MEJORAS-PRODUCTO-VALIDADAS.md`.
+- `packages/movement/rendering.py`: capa `rendered` con los seis `rendering_method` del anexo (`anchor`, `interpolated_between_known_anchors`, `extrapolated_from_last_anchor`, `schedule_only`, `stale_frozen`, `unlocated`), `ProgressEnvelope` compacta (una sola expresión monótona y acotada, sin array de puntos futuros) y los instantes separados `calculated_at`/`display_at`/`valid_until`/`last_confirmed_at`. Extiende `packages/movement` (MP-012); no lo duplica.
+- `MovementPosition.anchor_progress_m` (aditivo, por defecto `None`): progreso del ancla realmente usada, para construir la envolvente sin recalcular el map-matching.
+- `MovementEngine(schedule_cache=...)` opcional e inyectable, y `TripSchedule.dwell_end_seconds`. `build_trip_schedule` emite llegada **y** salida cuando difieren, de modo que las esperas reales del horario (11 paradas en la fixture C5, p. ej. 60 s en Madrid-Atocha) dejan de absorberse y el contrato puede declarar `dwell_until`.
+- `GET /api/v1/catalog`: catálogo cacheable versionado por `gtfs_version` + `geometry_catalog_version`, con `ETag`/`304`, geometría física publicada una sola vez y referenciada por patrón, y cobertura `validated`/`partial`/`pending` explícita.
+- `GET /api/v1/snapshot`: snapshot operativo ligero con `raw`/`map_matched`/`rendered` separados, `snapshot_id` de identidad de contenido declarado **no ordenable** y bloque `revision` (`scope`/`scope_source`/`sequence`/`generated_at`/`tiebreak`) monotónico solo dentro de su ámbito, degradación por recurso y `Cache-Control: no-store`.
+- `GET /api/v1/stations/{station_id}/board`: tablero calculado con `scheduled_trip_instances_for_date` (calendario + excepciones + `stop_times`, `24:xx` incluidas) cruzado con `trip_update` y observaciones; nunca por proximidad geográfica. ETA con procedencia (`schedule` / `operator_delay_on_schedule` / `unavailable` con causa) y aproximación declarada al propagar un retraso de nivel viaje.
+- `apps/api/db.py`: `latest_trip_updates` y `vehicles_for_trips` por lote, `revision_marker` con ámbito del clúster, y `feed_published_at` por observación (quinto timestamp del anexo).
+- `CorridorCatalog.coverage_for_stops` en `packages/geo`: resuelve el patrón de una circulación viva sin lanzar cuando el GTFS cargado no lo contiene.
+- Migración `0002_api_batch_indexes`: tres índices medidos con `EXPLAIN (ANALYZE, BUFFERS)`; solo estructuras de acceso, sin cambios de datos ni de semántica.
+- Herramientas reproducibles `apps.api.tools.bench_snapshot` y `apps.api.tools.replay_three_snapshots`; evidencia en `docs/evidence/mp-019-explain-y-bench.md` y `docs/evidence/mp-019-tres-snapshots-replay.md`.
+- `apps.api.tests.test_snapshot_contract` (36 tests) y `packages.movement.tests.test_rendering` (17 tests), ambos añadidos a `.github/workflows/ci.yml`.
+- `counts` del snapshot publica dos particiones independientes y exactas de `vehicles_total` (`by_rendering_method` y `by_coordinate_space`) en vez de contadores que mezclaban método y espacio de coordenada; cada diccionario suma el total y hay test de esa invariante.
+
+#### Fixed
+- **N+1 real eliminado:** `service.list_vehicles` hacía una consulta `latest_trip_update` por vehículo (24 con el soak de MP-007, una por circulación en operación). Ahora son dos consultas fijas, y un test cuenta los `execute` reales para impedir la regresión.
+- `latest_vehicle_histories` aplica el filtro `rank <= 2` en SQL en vez de traer toda la tabla a Python, y publica `feed_published_at` con un `JOIN` a `source_ingestion_run`.
+- `recent_ingestion_runs` usa `LATERAL ... LIMIT` por feed en vez de rankear el histórico completo.
+- `/api/v1/catalog` memoiza su payload serializado por `catalog_version`: medido **122,67 ms → 0,40 ms** de p50 (no consultaba PostgreSQL; el coste era reserializar el mismo payload inmutable en cada petición).
+- `MADRID_PULSE_SHORT_NAME` vacío carga el núcleo completo (42 `route_id` / 12 líneas / 103 patrones) en vez de una sola línea; el filtro por línea sigue siendo configuración, nunca un literal (ADR-0011).
+
+#### Findings
+- Existía un índice `vehicle_position_observation_trip_observed_at_idx` sobre la clave ajena `trip_id` (bigint) que **el colector no puebla**: no servía para consultar por `source_trip_id`, y la consulta del tablero resolvía con `Seq Scan` pese al nombre parecido.
+- El coste dominante de cada petición no era la consulta sino **abrir la conexión**: `~66 ms` de los `68,91 ms` de p50 de `/api/v1/health`. Queda abierto y documentado (un pool es dependencia nueva y decisión del propietario), con ambas columnas medidas en la evidencia.
+- Ninguno de los 24 `source_trip_id` del soak de MP-007 (`2026-11-19`) resuelve contra el ZIP GTFS del kit (`2026-11-20`): Renfe regenera los `trip_id` entre publicaciones. Por eso la evidencia de `map_matched`/`rendered` con datos reales se produjo con las capturas `1532`/`1533`, de la misma fecha que ese ZIP.
+- Con las capturas reales, **44 de 119** circulaciones de Madrid obtienen coordenada `map_matched`; las otras 75 publican GPS bruto etiquetado porque solo 28 de los 103 patrones tienen corredor validado tras MP-018. Ninguna se oculta ni se proyecta sobre un corredor ajeno.
+- El `stop_time_update` por parada no está persistido en el modelo canónico (solo `next_stop_id`), así que no existe evidencia directa de `SKIPPED` por parada. El tablero lo declara en `limitations` y expone `operator_next_stop_id` con la posición relativa, sin afirmar que una parada fue omitida.
+
+#### Fixed after independent review (first round)
+- **Hallazgo 1 de Codex — aritmética DST:** `service_instant` sumaba los segundos del día de servicio **después** de convertir la medianoche a UTC, es decir sobre un desplazamiento fijo, así que desplazaba una hora los horarios de los dos días de cambio de hora (`2026-03-29`: `03:30+02` se reconstruía como `04:30+02`; `2026-10-25`: como `02:30+01`). Causa raíz: `service_seconds` restaba dos `datetime` *aware* con el mismo `tzinfo`, caso que Python resuelve de forma naive, de modo que era aritmética de reloj de pared y acertaba *por accidente*; la inversa eligió sin saberlo otro modelo temporal. Corregido con una sola implementación explícita en ambas direcciones (`service_seconds` / `service_day_instant` en `packages/movement/schedule.py`), a la que `apps/api/snapshot.py` delega. Casos límite declarados, no omitidos: hora inexistente del adelanto resuelta con el desplazamiento previo (el feed real no publica ninguna hora en esa franja: 0 valores en `02:xx`/`26:xx` sobre 3,5 M de `stop_times`) y hora ambigua del atraso resuelta en su primera ocurrencia.
+- **Hallazgo 2 de Codex — viajes `24:xx` tras medianoche:** la fecha de servicio se elegía por reloj civil, así que a las `00:02` un viaje real del día anterior con paradas a las `24:00`/`24:05` se resolvía contra el día siguiente: `service_seconds` pasaba de 86 520 a 120 y el motor situaba el tren a **10,4 km** de su posición real, además de marcarlo `expired`. No es marginal: 742 circulaciones del núcleo Madrid tienen horas `24:xx` en el ZIP oficial. Corregido con `ServiceDateResolver`, que resuelve la fecha **por circulación** dentro de una ventana derivada del horizonte de horas extendidas del propio feed (3 180 s con el ZIP real, `0.0` sin horas extendidas), admitiendo un día candidato solo si el `service_id` está programado en él y el instante cae dentro del horario publicado del viaje. La fecha resuelta gobierna posición y `circulation_status`; el snapshot publica `service_date` por circulación y el tablero cruza los dos días candidatos con `service_date` por entrada y `service_dates_considered`.
+- Fixture real nueva `tests/fixtures/gtfs_24h_real/` (dos circulaciones del ZIP oficial con horas `24:xx`: una con corredor OSM `validated` y otra sin geometría) más la herramienta genérica `packages.gtfs.tools.extract_trips_fixture`. Se añade **aparte** en vez de ampliar `gtfs_c5_real`, cuyo SHA-256 sostiene la matriz de cobertura ya aprobada de MP-018 y varias aserciones de MP-010/MP-017. Registrada en `docs/legal/ATTRIBUTION.md` y `docs/legal/DATA_SOURCES.md`, con manifiesto propio.
+- Regresiones añadidas (16): barrido de ida y vuelta minuto a minuto de 00:00 a 28:00 en las dos fechas DST de 2026, sus vísperas y un día normal; y el escenario post-medianoche con los dos viajes `24:xx` reales (progreso correcto > 12 km frente a < 100 m con la fecha civil, > 10 km de separación; tablero con las llamadas `24:00`/`24:05` y su instante absoluto; cierre de la ventana a las 02:00; sin duplicación entre días candidatos; sin fabricar pertenencia cuando el servicio no está programado).
+
+#### Fixed after independent review (second round)
+- **Hallazgo 3 de Codex — la ventana del tablero no determinaba sus días de servicio:** `build_station_board` derivaba sus días candidatos de `resolver.candidates`, calculado con `now`, así que al rebasar el horizonte de horas extendidas dejaba de consultar el día anterior aunque `lookback_s` todavía lo cubriera. Con `tests/fixtures/gtfs_24h_real/`, estación `17000` y `lookback_s=600`, la llamada real de las `24:32` (las `00:32` en reloj de pared) aparecía a las `00:32` y **desaparecía a las `00:33`**, un minuto después de ocurrir; reproducido también contra el ZIP completo con `1023V21644C2` (llamada `24:53`, estación `70200`), presente a las `00:53` y ausente a las `00:54`. **El mismo error existía en el sentido contrario y no estaba en el informe:** a las `23:55` el tablero no consideraba el día de servicio siguiente, de modo que perdía `1024S27997C5` (salida `00:01` del día 21) aunque estuviera a seis minutos dentro de `lookahead_s`. Corregido con `service_dates_covering(start, end, extended_horizon_s)`, que devuelve los días cuyo tramo `[medianoche local, +24 h + horizonte]` intersecta la ventana; el tablero la llama con `window_start`/`window_end` y `ServiceDateResolver` con la ventana degenerada `[now, now]`, conservando exactamente su comportamiento para resolver la fecha de una circulación. Los límites se calculan con `service_day_instant`, así que la cobertura también es correcta en los días de cambio de hora. Ahora el límite es la **ventana pedida**: la llamada se ve de `00:31` a `00:42` y desaparece en `00:43`.
+- Regresiones añadidas (11): `BoardWindowCoversItsCandidateServiceDaysTests` (el minuto exacto del hallazgo, la supervivencia minuto a minuto hasta el borde real de la ventana, una ventana más corta que la descarta antes, el lado simétrico hacia delante con entradas reales y el orden por instante absoluto al mezclar días) y `ServiceDatesCoveringTests` sobre la función pura (equivalencia con el resolver en ventana degenerada, bordes de `lookback`/`lookahead`, feed sin horas extendidas, ventanas invertidas y las dos fechas DST). Comprobado que fallan con el cálculo anterior (13 fallos) y pasan con la corrección.
+
+#### Verified
+- Suite Python exacta de CI (con los dos módulos nuevos y las 27 regresiones de las dos rondas de corrección): **233/233 OK sin ningún `skip`** contra la base de desarrollo real; recuentos `668/484/3/120/0` idénticos antes y después, soak intacto (`rows=668`, `near_corridor=177`, `after=668`). Evolución: 206 en la primera entrega → 222 tras la primera ronda → 233 tras la segunda.
+- Misma suite contra un contenedor PostgreSQL **fresco y desechable** con `0001` + `0002` aplicadas desde cero: **233 ejecutados, OK con 5 `skip` explícitos** (los del soak irrepetible de MP-007, DEC-035).
+- Frontend con **Node `22.13.1`**, la versión que fija CI (la primera entrega se verificó con `20.20.0`; hallazgo de proceso de la auditoría): `npm ci` sin vulnerabilidades, lint, typecheck, **5/5 tests** y build en verde (worker MapLibre `550754` bytes, idéntico a MP-018).
+- Tres snapshots reales (normal/parcial/congelado) sobre las capturas `1532`/`1533` con reloj controlado: 119 y 121 vehículos de Madrid ingeridos, 13 circulaciones map-matcheadas con avance real entre capturas, revisión monotónica `3 → 6 → 7` dentro del mismo ámbito, fallo parcial que degrada solo `delays_and_eta` sin vaciar vehículos ni rejuvenecer el GPS, y congelado que conserva el último dato válido con `revision.sequence` detenida.
+- `EXPLAIN (ANALYZE, BUFFERS)` de las cuatro consultas de lectura y p50/p95 con equipo y dataset documentados, en dos datasets (fixture C5 y núcleo Madrid completo).
+- Revisión final independiente de OpenAI Codex sobre `60a6eb3`: reproducción propia con el ZIP completo de los bordes hacia atrás (`1023V21644C2`, visible hasta `01:03` y fuera a `01:04`) y hacia delante (`1024S27997C5`, incluido a las `23:55` con salida `00:01`), orden absoluto entre días, 11 tests focales, 233/233 sin `skip` en desarrollo, 233 con 5 `skip` en PostGIS fresco, frontend Node `22.13.1` y replay con siete invariantes. Diff y autoría limpios; sin hallazgos abiertos.
+- Estado final: `DONE`, aprobado por OpenAI Codex el 2026-11-22. ADR-0014 permanece `Propuesto` para decisión del propietario.
+
+### MP-018 — Corredores ferroviarios por patrón y sentido
+
+#### Added
+- `packages/geo/catalog.py` y `madrid.py`: catálogo de `Corridor` por patrón GTFS ordenado/sentido, con identidad estable, versión OSM por SHA-256 y matriz `validated`/`partial`/`pending`. La secuencia de paradas representa el sentido porque el GTFS real no publica `direction_id`; no se fabrica ese dato.
+- Contrato geométrico mínimo `PositionMatch`: raw conservado, `Projection`, `progress_m`, `geometry_version` y `distance_from_raw_m` para corredores validados; fallback explícito `raw` o `unlocated` sin unir huecos ni proyectar sobre geometría no fiable.
+- Fixture real C4 (`11332`, `9174510`, `9174511`) con manifiesto ODbL, atribución, checksums y comandos reproducibles. C4a queda verificada en ambos sentidos; C4b Colmenar→Parla, en el sentido descargado.
+- Matriz versionada `docs/evidence/mp-018-corridor-coverage.csv` (103 patrones/12 líneas): 28 `validated`, 3 `partial`, 72 `pending`; exportador reproducible `packages.geo.tools.export_madrid_catalog`.
+- `packages.geo.tests.test_catalog` añadido a CI: verifica checksums/continuidad incluso sin el ZIP GTFS no versionado y, cuando está presente, cobertura total, dirección, C4, vía compartida, casos problemáticos, CSV y raw→matched.
+
+#### Findings
+- C4a Alcobendas→Parla (`9174510`) y C4b Colmenar→Parla (`9174511`) comparten 77 IDs literales de `way` ferroviario OSM: tramo físico compartido confirmado, no inferido solo por estaciones.
+- Dos variantes C5 de 7 paradas permanecen `partial` por la ambigüedad DEC-025; una variante C4b de 14 paradas omite Nuevos Ministerios entre Chamartín y Sol y también queda `partial`.
+- Overpass respondió `502 Bad Gateway` dos veces al pedir C4b Parla→Colmenar (`9174512`); ese sentido queda `pending`, sin convertir indisponibilidad del endpoint en ausencia de dato.
+
+#### Verified
+- Suite Python exacta de CI: **153/153 OK** contra PostgreSQL real; recuentos antes/después `668/484/3/120/0`. Frontend con Node `22.13.1`: lint, typecheck, **5/5 tests** y build en verde. `compileall` y `git diff --check` limpios.
+- Estado entregado: `REVIEW`; pendiente aprobación independiente de Claude Code antes de `DONE`.
+
+#### Fixed after independent review (first round)
+- La fixture derivada ODbL `tests/fixtures/osm_c4_real/` ya estaba licenciada,
+  atribuida y reproducible en su propio manifiesto, pero los registros legales
+  centrales aún nombraban solo C5. `docs/legal/ATTRIBUTION.md`, la fila
+  `osm.rail_geometry` de `docs/legal/DATA_SOURCES.md` y DEC-024 ahora cubren
+  explícitamente las relaciones C4a/C4b `11332`/`9174510`/`9174511` bajo la
+  misma decisión ODbL; MP-018 permanece en `REVIEW` hasta re-verificación.
+
+#### Approved
+- Claude Code aprobó MP-018 como `DONE` el `2026-11-22` tras dos rondas de
+  revisión en el mismo worktree. Único hallazgo (registro legal de la base
+  derivada ODbL C4 ausente de `ATTRIBUTION.md`/`DATA_SOURCES.md`/DEC-024)
+  corregido en `1b19df8` sin cambio de código y re-verificado: delta
+  exclusivamente documental, los tres registros coherentes con la vara de la
+  entrada C5 original, `ref`/`network`/`official_ref` de las tres relaciones
+  comprobados contra las propias fixtures, suite **153/153 OK sin `skip`**
+  contra desarrollo con recuentos `668/484/3/120/0` intactos y
+  `git diff --check` limpio en todo `47f2732..1b19df8`. Sin hallazgos abiertos;
+  las dos notas no bloqueantes quedan como pendientes explícitas de MP-019.
+
+### MP-017 — Catálogo completo de Madrid
+
+#### Added
+- `packages/gtfs/catalog.py` (nuevo): `build_catalog` agrupa el GTFS completo del núcleo Madrid por línea/variante/patrón (verificado: 42 `route_id` → 12 líneas reales, conservando líneas sin patrones válidos u observaciones). `scheduled_service_ids_for_date`/`scheduled_trip_instances_for_date` enumeran explícitamente los servicios programados aplicando `calendar.txt` + `calendar_dates.txt` (soporte nuevo y opcional en `packages/gtfs/parser.py` — el ZIP oficial real no incluye este fichero hoy, verificado empíricamente, no asumido).
+- Avisos por estación (`stopId` sin `routeId`) resueltos contra el catálogo real de paradas de Madrid: `RawInformedEntity.stop_id`, `ServiceAlert.affected_stop_ids`, `services/collector/collector.py::_persist_alerts(madrid_stop_ids=...)`, cargado una vez al arrancar el colector desde `MADRID_PULSE_GTFS_SOURCE`.
+- `packages/gtfs/tests/test_catalog.py` (10 tests): 6 síncronos (topología sintética) + 4 gateados por la presencia del ZIP oficial completo (`skip` explícito si no está).
+
+#### Fixed
+- **Hallazgo real:** `apps/api/db.latest_trip_update` no acotaba por tiempo — un `trip_id` GTFS recurrente podía devolver el retraso de un día de servicio anterior como "el más reciente" hasta que llegara una observación de hoy. Añadida ventana de recencia (`observed_after`, 20h desde `apps/api/service.py`).
+- Avisos por estación (ej. `AVISO_527127`, `stopId=60104`, Valdemoro — hallazgo P1 de `docs/hitos/hito-03/referencia/01-auditoria-live.md`) se descartaban silenciosamente como "fuera de alcance" por no tener `routeId`.
+
+#### Verified
+- Suite completa (+`packages.gtfs.tests.test_catalog`) contra la base de desarrollo real: 138/138 OK, `668/484/3/120/0` intacto. Contra un segundo PostgreSQL fresco desechable con `data/` ausente (simulando CI real, sin el ZIP oficial): 138 tests, 9 `skip` (5 del soak de MP-007 + 4 de `test_catalog` gateados), ninguno inesperado.
+
+#### Fixed after Codex review (first round)
+- **Versión/procedencia e identidad red/operador ausentes** (hallazgo real contra `PLAN-Y-ACEPTACION.md`/`MATRIZ-CIERRE-MADRID.md`): `Catalog`/`LineVariant`/`ScheduledTripInstance` no llevaban esos campos. `Catalog.gtfs_version: str` ahora obligatorio (mismo identificador que `/api/v1/health`); `ScheduledTripInstance.network_id`/`operator` añadidos.
+- **Sin "estado activo separado de último histórico"**: `latest_vehicle_histories`/`list_vehicles` seguían devolviendo todo vehículo histórico sin cota; la ventana de 20h solo afectaba a `trip_update_observation`. Nuevo `VehicleOut.circulation_status` (`active`/`expired`/`unresolved`), comparando el `service_id` real del vehículo contra `scheduled_service_ids_for_date`.
+
+#### Verified (second round)
+- 3 tests nuevos (provenance/identidad real del catálogo; `circulation_status` activo/caducado/sin resolver). Suite completa: 141/141 contra desarrollo (`668/484/3/120/0` intacto), 141 tests/10 `skip` contra un segundo contenedor fresco con `data/` ausente. `git diff --check` limpio.
+
+#### Fixed after Codex review (second round)
+- **Contrato OpenAPI desincronizado:** añadir `VehicleOut.circulation_status` cambió la forma real de `app.openapi()` sin regenerar `apps/api/openapi.json`, dejando también `apps/web/src/types.ts` y el ejemplo de `docs/DATA_CONTRACTS.md` con el contrato anterior. Regenerado el JSON congelado (comando documentado en `apps/api/README.md`); sincronizados `types.ts` y `DATA_CONTRACTS.md`. Añadido `test_committed_openapi_json_matches_the_live_schema` (regresión permanente contra este tipo de drift).
+
+#### Verified (third round)
+- 142/142 contra desarrollo (`668/484/3/120/0` intacto); frontend lint/typecheck/5 tests/build en verde. `git diff --check` limpio.
+
+#### Approved
+- Codex aprobó MP-017 como `DONE` tras tres rondas (versión/procedencia e identidad red/operador; estado activo/caducado de circulación; sincronización OpenAPI/frontend), todas corregidas y re-verificadas. Sin hallazgos abiertos.
+
+### MP-016 — Fiabilidad realtime
+
+#### Added
+- Modos locales explícitos `MADRID_PULSE_MODE=live|replay`; Live rechaza fixtures y GTFS fuera de vigencia. `/api/v1/health` publica modo, SHA-256 y vigencia del catálogo.
+- `poll_age_s` separa edad del sondeo/colector de `data_age_s` (edad de la cabecera fuente), manteniendo salud independiente para posiciones, actualizaciones y avisos.
+- Regresiones para `SKIPPED` sin `arrival`, JSON roto, feed válido vacío, colector detenido, reloj PostgreSQL Europe/Madrid y cambio de viaje del mismo vehículo.
+
+#### Fixed
+- Trip updates reales con paradas `SKIPPED` sin `arrival` ya no invalidan el documento completo ni se usan como próxima parada comercial; errores de transporte/validación se registran con el hash recibido sin borrar el último éxito.
+- Lecturas `timestamptz` de API/calidad se normalizan a UTC antes de crear contratos canónicos.
+- La salud usa `source_timestamp` real y comprueba también la edad del sondeo; el frontend rotula la hora local como `Consulta`.
+- Una posición anterior del mismo vehículo pero de otro viaje ya no provoca que el motor descarte la primera posición válida del viaje nuevo.
+
+#### Verified
+- Replay congelado: `1532` = 119/119/49 y `1533` = 121/121/49 (vehículos Madrid/matches/SKIPPED sin arrival). Python: 123/123 contra desarrollo; 118 verdes + 5 skips de soak contra PostGIS fresco. Frontend: lint, typecheck, 5 tests y build verdes. Base de desarrollo intacta en `668/484/3/120/0`.
+
 ### MP-015 — E2E y readiness MVP
 
 #### Added

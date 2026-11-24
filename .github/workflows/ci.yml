@@ -49,22 +49,32 @@ jobs:
         run: |
           python -m unittest \
             apps.api.tests.test_api_contract \
+            apps.api.tests.test_closure_matrix \
+            apps.api.tests.test_history_contract \
+            apps.api.tests.test_snapshot_contract \
             packages.contracts.tests.test_canonical_normalization \
             packages.contracts.tests.test_nucleo \
             packages.contracts.tests.test_raw_parsing \
             packages.contracts.tests.test_synthetic_schema \
+            packages.geo.tests.test_catalog \
             packages.geo.tests.test_real_feed \
+            packages.gtfs.tests.test_catalog \
             packages.gtfs.tests.test_real_feed \
             packages.movement.tests.test_engine \
+            packages.movement.tests.test_rendering \
             packages.movement.tests.test_real_soak_postgres \
             packages.quality.tests.test_engine \
             packages.quality.tests.test_persistence \
             services.collector.tests.test_collector_cycle \
             services.collector.tests.test_http_client \
+            services.collector.tests.test_supervised_loop \
             services.snapshotter.tests.test_export \
             services.snapshotter.tests.test_export_replay \
             services.snapshotter.tests.test_gold \
+            services.snapshotter.tests.test_history \
+            services.snapshotter.tests.test_idempotency \
             tests.fixtures.test_parse_fixtures \
+            tests.e2e.test_mp022_synthetic_derived \
             tests.e2e.test_replay \
             -v
 

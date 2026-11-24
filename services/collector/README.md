@@ -29,8 +29,11 @@ Variables de entorno (todas opcionales, con los valores por defecto de
 - **`collector.py`** — `run_cycle(feed, conn, retry_policy)`: un ciclo completo
   (fetch → parse → filtro de alcance → dedupe → persist), con el ciclo entero
   comprometido como una sola transacción (`conn.transaction()`). Un fallo de
-  red tras agotar reintentos se registra como `source_ingestion_run.status =
-  'error'` y el ciclo termina sin relanzar la excepción.
+  red tras agotar reintentos o una respuesta que no valida se registra como
+  `source_ingestion_run.status = 'error'` (con el hash de los bytes recibidos)
+  y el ciclo termina sin relanzar la excepción. Un feed válido con cero
+  entidades sigue siendo `ok`; un fallo parcial nunca borra observaciones
+  previamente persistidas.
 - **`db.py`** — capa de acceso a PostgreSQL. Las funciones de inserción NO
   abren su propia transacción (ver nota en el módulo: hacerlo con una conexión
   de larga duración produce commits parciales o filas que nunca se

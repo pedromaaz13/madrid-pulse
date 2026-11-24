@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
+from typing import Sequence
 
 import psycopg
 from psycopg.rows import dict_row
@@ -13,11 +14,20 @@ from packages.contracts.canonical import TripUpdateObservation, VehiclePositionO
 
 @dataclass(frozen=True)
 class ObservedRow:
-    """Observación canónica más ``received_at``, que el modelo Pydantic no
-    conserva (solo ``observed_at``, el timestamp reportado por la fuente)."""
+    """Observación canónica más los dos timestamps que el modelo Pydantic no
+    conserva: ``received_at`` (cuándo lo recibió el colector) y
+    ``feed_published_at`` (cabecera publicada del feed que lo trajo).
+
+    El anexo de Hito 3 exige distinguirlos de ``gps_observed_at``
+    (``position.observed_at``): la hora de un sondeo exitoso no es la edad de
+    un dato de origen antiguo. ``feed_published_at`` es ``None`` cuando la
+    ejecución de ingesta no registró cabecera, nunca ``received_at`` en su
+    lugar.
+    """
 
     position: VehiclePositionObservation
     received_at: datetime
+    feed_published_at: datetime | None = None
 
 
 @dataclass(frozen=True)
@@ -31,7 +41,7 @@ def _row_to_observed(row: dict) -> ObservedRow:
     position = VehiclePositionObservation(
         source_vehicle_id=row["source_vehicle_id"],
         source_trip_id=row["source_trip_id"],
-        observed_at=row["observed_at"],
+        observed_at=row["observed_at"].astimezone(timezone.utc),
         latitude=row["latitude"],
         longitude=row["longitude"],
         current_status=row["current_status"],
@@ -41,7 +51,12 @@ def _row_to_observed(row: dict) -> ObservedRow:
         raw_vehicle_label=row["raw_vehicle_label"],
         payload_hash=row["payload_hash"],
     )
-    return ObservedRow(position=position, received_at=row["received_at"])
+    published = row.get("feed_published_at")
+    return ObservedRow(
+        position=position,
+        received_at=row["received_at"].astimezone(timezone.utc),
+        feed_published_at=published.astimezone(timezone.utc) if published is not None else None,
+    )
 
 
 def latest_vehicle_histories(conn: psycopg.Connection) -> list[VehicleHistory]:
@@ -54,13 +69,20 @@ def latest_vehicle_histories(conn: psycopg.Connection) -> list[VehicleHistory]:
     with conn.cursor(row_factory=dict_row) as cur:
         cur.execute(
             """
-            SELECT source_vehicle_id, source_trip_id, observed_at, received_at,
-                   latitude, longitude, current_status, current_stop_id,
-                   speed_kmh, bearing, raw_vehicle_label, payload_hash,
-                   row_number() OVER (
-                       PARTITION BY source_vehicle_id ORDER BY observed_at DESC, id DESC
-                   ) AS rank
-            FROM vehicle_position_observation
+            WITH ranked AS (
+                SELECT v.source_vehicle_id, v.source_trip_id, v.observed_at, v.received_at,
+                       v.latitude, v.longitude, v.current_status, v.current_stop_id,
+                       v.speed_kmh, v.bearing, v.raw_vehicle_label, v.payload_hash,
+                       r.source_timestamp AS feed_published_at,
+                       row_number() OVER (
+                           PARTITION BY v.source_vehicle_id
+                           ORDER BY v.observed_at DESC, v.id DESC
+                       ) AS rank
+                FROM vehicle_position_observation v
+                JOIN source_ingestion_run r ON r.id = v.ingestion_run_id
+            )
+            SELECT * FROM ranked WHERE rank <= 2
+            ORDER BY source_vehicle_id, rank
             """
         )
         by_vehicle: dict[str, list[dict]] = {}
@@ -82,12 +104,14 @@ def vehicle_history(conn: psycopg.Connection, source_vehicle_id: str) -> Vehicle
     with conn.cursor(row_factory=dict_row) as cur:
         cur.execute(
             """
-            SELECT source_vehicle_id, source_trip_id, observed_at, received_at,
-                   latitude, longitude, current_status, current_stop_id,
-                   speed_kmh, bearing, raw_vehicle_label, payload_hash
-            FROM vehicle_position_observation
-            WHERE source_vehicle_id = %s
-            ORDER BY observed_at DESC, id DESC
+            SELECT v.source_vehicle_id, v.source_trip_id, v.observed_at, v.received_at,
+                   v.latitude, v.longitude, v.current_status, v.current_stop_id,
+                   v.speed_kmh, v.bearing, v.raw_vehicle_label, v.payload_hash,
+                   r.source_timestamp AS feed_published_at
+            FROM vehicle_position_observation v
+            JOIN source_ingestion_run r ON r.id = v.ingestion_run_id
+            WHERE v.source_vehicle_id = %s
+            ORDER BY v.observed_at DESC, v.id DESC
             LIMIT 2
             """,
             (source_vehicle_id,),
@@ -101,26 +125,37 @@ def vehicle_history(conn: psycopg.Connection, source_vehicle_id: str) -> Vehicle
 
 
 def latest_trip_update(
-    conn: psycopg.Connection, source_trip_id: str
+    conn: psycopg.Connection, source_trip_id: str, *, observed_after: datetime
 ) -> TripUpdateObservation | None:
+    """Última actualización de viaje, acotada a ``observed_after``.
+
+    Hallazgo real de MP-017 (kit Hito 3): un `trip_id` GTFS recurre cada día
+    que su `service_id` está activo -- el mismo `source_trip_id` identifica la
+    circulación de hoy y la de ayer. Sin cota temporal, un retraso de ayer
+    seguía siendo "la última actualización" hasta que llegara una fila nueva
+    de hoy, completando el viaje de hoy con un dato de otra fecha de servicio.
+    `observed_after` exige que la fila realmente pertenezca a la ventana
+    reciente del llamante (ver `apps/api/service.py`, que la calcula a partir
+    de la fecha de servicio vigente), no a cualquier histórico del mismo id.
+    """
     with conn.cursor(row_factory=dict_row) as cur:
         cur.execute(
             """
             SELECT source_trip_id, observed_at, schedule_relationship, delay_seconds,
                    delay_coverage, next_stop_id, payload_hash
             FROM trip_update_observation
-            WHERE source_trip_id = %s
+            WHERE source_trip_id = %s AND observed_at >= %s
             ORDER BY observed_at DESC, id DESC
             LIMIT 1
             """,
-            (source_trip_id,),
+            (source_trip_id, observed_after),
         )
         row = cur.fetchone()
     if row is None:
         return None
     return TripUpdateObservation(
         source_trip_id=row["source_trip_id"],
-        observed_at=row["observed_at"],
+        observed_at=row["observed_at"].astimezone(timezone.utc),
         schedule_relationship=row["schedule_relationship"],
         delay_seconds=row["delay_seconds"],
         delay_coverage=row["delay_coverage"],
@@ -132,6 +167,7 @@ def latest_trip_update(
 @dataclass(frozen=True)
 class FeedRunSample:
     feed_name: str
+    source_timestamp: datetime | None
     started_at: datetime
     finished_at: datetime | None
     status: str
@@ -140,24 +176,195 @@ class FeedRunSample:
 
 
 def recent_ingestion_runs(conn: psycopg.Connection, *, per_feed_limit: int = 50) -> list[FeedRunSample]:
-    """Las ejecuciones más recientes por feed, para calcular frescura y estabilidad del hash."""
+    """Las ejecuciones más recientes por feed, para calcular frescura y estabilidad del hash.
+
+    Corrección de MP-019: la versión anterior rankeaba **toda** la tabla con una
+    ventana y descartaba el exceso en Python, así que el coste crecía con el
+    histórico completo de ingesta aunque solo se usaran 50 filas por feed. El
+    `LATERAL` acotado usa el índice
+    `source_ingestion_run_feed_started_at_idx` (migración 0002) y devuelve
+    exactamente las mismas filas.
+    """
     with conn.cursor(row_factory=dict_row) as cur:
         cur.execute(
             """
-            SELECT feed_name, started_at, finished_at, status, entity_count, payload_hash,
-                   row_number() OVER (PARTITION BY feed_name ORDER BY started_at DESC) AS rank
-            FROM source_ingestion_run
-            """
+            WITH feeds AS (SELECT DISTINCT feed_name FROM source_ingestion_run)
+            SELECT recent.*
+            FROM feeds
+            CROSS JOIN LATERAL (
+                SELECT run.feed_name, run.source_timestamp, run.started_at, run.finished_at,
+                       run.status, run.entity_count, run.payload_hash
+                FROM source_ingestion_run run
+                WHERE run.feed_name = feeds.feed_name
+                ORDER BY run.started_at DESC
+                LIMIT %s
+            ) AS recent
+            """,
+            (per_feed_limit,),
         )
-        rows = [row for row in cur.fetchall() if row["rank"] <= per_feed_limit]
+        rows = cur.fetchall()
     return [
         FeedRunSample(
             feed_name=row["feed_name"],
-            started_at=row["started_at"],
-            finished_at=row["finished_at"],
+            source_timestamp=(
+                row["source_timestamp"].astimezone(timezone.utc)
+                if row["source_timestamp"] is not None else None
+            ),
+            started_at=row["started_at"].astimezone(timezone.utc),
+            finished_at=(
+                row["finished_at"].astimezone(timezone.utc)
+                if row["finished_at"] is not None else None
+            ),
             status=row["status"],
             entity_count=row["entity_count"],
             payload_hash=row["payload_hash"],
         )
         for row in rows
     ]
+
+
+def latest_trip_updates(
+    conn: psycopg.Connection,
+    source_trip_ids: Sequence[str],
+    *,
+    observed_after: datetime,
+) -> dict[str, TripUpdateObservation]:
+    """Igual que ``latest_trip_update`` pero para muchos viajes en **una** consulta.
+
+    Elimina el N+1 real que tenía ``service.list_vehicles`` (una consulta por
+    vehículo). ``DISTINCT ON`` con el mismo orden que la versión unitaria
+    (``observed_at DESC, id DESC``) garantiza que cada viaje devuelva
+    exactamente la misma fila que devolvería la consulta individual, incluido
+    el desempate ``id DESC`` de ADR-0010.
+
+    Un viaje sin fila dentro de la ventana simplemente no aparece en el
+    diccionario: ausencia, no un retraso de cero.
+    """
+    if not source_trip_ids:
+        return {}
+    unique_ids = sorted(set(source_trip_ids))
+    with conn.cursor(row_factory=dict_row) as cur:
+        cur.execute(
+            """
+            SELECT DISTINCT ON (source_trip_id)
+                   source_trip_id, observed_at, schedule_relationship, delay_seconds,
+                   delay_coverage, next_stop_id, payload_hash
+            FROM trip_update_observation
+            WHERE source_trip_id = ANY(%s) AND observed_at >= %s
+            ORDER BY source_trip_id, observed_at DESC, id DESC
+            """,
+            (unique_ids, observed_after),
+        )
+        rows = cur.fetchall()
+    return {
+        row["source_trip_id"]: TripUpdateObservation(
+            source_trip_id=row["source_trip_id"],
+            observed_at=row["observed_at"].astimezone(timezone.utc),
+            schedule_relationship=row["schedule_relationship"],
+            delay_seconds=row["delay_seconds"],
+            delay_coverage=row["delay_coverage"],
+            next_stop_id=row["next_stop_id"],
+            payload_hash=row["payload_hash"],
+        )
+        for row in rows
+    }
+
+
+@dataclass(frozen=True)
+class RevisionMarker:
+    """Revisión monotónica **dentro de un ámbito explícito** (ADR-0014).
+
+    `sequence` es el mayor `source_ingestion_run.id` considerado: una secuencia
+    real de PostgreSQL, monotónica, que sobrevive a reinicios del proceso de
+    API y que **no** avanza cuando el colector se detiene (no rejuvenece nada).
+    `scope` acota dónde esa comparación es lícita: el `system_identifier` del
+    clúster. Tras una restauración en otro clúster el `scope` cambia y comparar
+    secuencias entre ámbitos distintos queda prohibido por contrato.
+
+    `sequence` es `None` cuando no hay ninguna ejecución de ingesta registrada:
+    ausencia de revisión, no revisión cero.
+    """
+
+    scope: str
+    scope_source: str
+    sequence: int | None
+
+
+def revision_marker(conn: psycopg.Connection) -> RevisionMarker:
+    scope, scope_source = _revision_scope(conn)
+    with conn.cursor() as cur:
+        cur.execute("SELECT max(id) FROM source_ingestion_run")
+        row = cur.fetchone()
+    sequence = row[0] if row is not None else None
+    return RevisionMarker(scope=scope, scope_source=scope_source, sequence=sequence)
+
+
+def _revision_scope(conn: psycopg.Connection) -> tuple[str, str]:
+    """`system_identifier` del clúster, con degradación declarada.
+
+    `pg_control_system()` exige privilegios que un rol de solo lectura puede no
+    tener. En ese caso se degrada a la identidad de la base de datos y se
+    **declara** en `scope_source`, para que un cliente sepa que el ámbito es
+    más débil (no distingue una restauración en un clúster distinto con el
+    mismo OID) en vez de confiar de más en una secuencia.
+    """
+    try:
+        with conn.cursor() as cur:
+            cur.execute("SELECT system_identifier FROM pg_control_system()")
+            row = cur.fetchone()
+        if row is not None and row[0] is not None:
+            return f"pg:{row[0]}", "database_system_identifier"
+    except psycopg.Error:
+        conn.rollback()
+    with conn.cursor() as cur:
+        cur.execute("SELECT current_database(), oid FROM pg_database WHERE datname = current_database()")
+        row = cur.fetchone()
+    if row is None:
+        return "unknown", "unavailable"
+    return f"pgdb:{row[0]}:{row[1]}", "database_oid"
+
+
+def vehicles_for_trips(
+    conn: psycopg.Connection, source_trip_ids: Sequence[str]
+) -> dict[str, VehiclePositionObservation]:
+    """Última observación de vehículo de cada viaje, en **una** consulta.
+
+    El tablero necesita saber si un servicio programado tiene además una
+    circulación observada (y si esa observación trae posición). Sin esto haría
+    una consulta por fila de tablero: el mismo N+1 que ya tenía
+    ``list_vehicles``. Un viaje sin observación no aparece en el diccionario:
+    `scheduled_only` se deduce de la ausencia, no de un valor fabricado.
+    """
+    if not source_trip_ids:
+        return {}
+    unique_ids = sorted(set(source_trip_ids))
+    with conn.cursor(row_factory=dict_row) as cur:
+        cur.execute(
+            """
+            SELECT DISTINCT ON (source_trip_id)
+                   source_vehicle_id, source_trip_id, observed_at, latitude, longitude,
+                   current_status, current_stop_id, speed_kmh, bearing,
+                   raw_vehicle_label, payload_hash
+            FROM vehicle_position_observation
+            WHERE source_trip_id = ANY(%s)
+            ORDER BY source_trip_id, observed_at DESC, id DESC
+            """,
+            (unique_ids,),
+        )
+        rows = cur.fetchall()
+    return {
+        row["source_trip_id"]: VehiclePositionObservation(
+            source_vehicle_id=row["source_vehicle_id"],
+            source_trip_id=row["source_trip_id"],
+            observed_at=row["observed_at"].astimezone(timezone.utc),
+            latitude=row["latitude"],
+            longitude=row["longitude"],
+            current_status=row["current_status"],
+            current_stop_id=row["current_stop_id"],
+            speed_kmh=row["speed_kmh"],
+            bearing=row["bearing"],
+            raw_vehicle_label=row["raw_vehicle_label"],
+            payload_hash=row["payload_hash"],
+        )
+        for row in rows
+    }

@@ -18,7 +18,7 @@ import json
 from datetime import datetime, timezone
 from typing import Literal, Optional
 
-from pydantic import BaseModel, computed_field, field_validator
+from pydantic import BaseModel, Field, computed_field, field_validator
 
 from packages.contracts.nucleo import nucleo_name, nucleo_prefix
 
@@ -119,6 +119,7 @@ class ServiceAlert(BaseModel):
                                                    # Renfe empieza a emitirlo; no asumir
                                                    # que está poblado.
     affected_route_ids: list[str]
+    affected_stop_ids: list[str] = Field(default_factory=list)
     description_text: str
     description_language: str
     payload_hash: str

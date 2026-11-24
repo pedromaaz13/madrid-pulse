@@ -89,7 +89,11 @@ class RawStopTimeArrival(RawModel):
 
 class RawStopTimeUpdate(RawModel):
     stop_id: str = Field(alias="stopId")
-    arrival: RawStopTimeArrival
+    # Renfe omite arrival en paradas SKIPPED (captura del 20-11-2026).
+    arrival: Optional[RawStopTimeArrival] = None
+    schedule_relationship: Optional[str] = Field(
+        default=None, alias="scheduleRelationship", exclude_if=lambda value: value is None
+    )
 
 
 class RawTripUpdateVehicle(RawModel):
@@ -137,9 +141,14 @@ class RawActivePeriod(RawModel):
 
 
 class RawInformedEntity(RawModel):
-    # Observado: solo `routeId`. Renfe no emite stop_id/trip_id/agency_id en
-    # informedEntity en los datos capturados hasta ahora.
+    # Observado: `routeId` o `stopId` (nunca ambos en los datos capturados
+    # hasta ahora). Renfe no emite trip_id/agency_id en informedEntity.
+    # Hallazgo real de MP-017 (kit Hito 3): un avisos por estación real, p. ej.
+    # AVISO_527127 para `stopId=60104` (Valdemoro), no trae `routeId` -- antes
+    # de este cambio, `stop_id` no se modelaba y esas filas se descartaban
+    # silenciosamente por no tener ruta reconocible (ver `nucleo.py`/collector).
     route_id: Optional[str] = Field(default=None, alias="routeId")
+    stop_id: Optional[str] = Field(default=None, alias="stopId")
 
 
 class RawTranslation(RawModel):

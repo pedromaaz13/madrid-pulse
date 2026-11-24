@@ -2,13 +2,20 @@
 
 from __future__ import annotations
 
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from zoneinfo import ZoneInfo
 
 import psycopg
 
 from packages.contracts.canonical import TripUpdateObservation
-from packages.movement import MovementPosition, PositionMode
+from packages.gtfs import Topology, scheduled_service_ids_for_date
+from packages.movement import (
+    MovementPosition,
+    PositionMode,
+    parse_gtfs_time,
+    service_day_instant,
+    service_seconds,
+)
 
 from . import db
 from .gtfs_source import LoadedNetwork
@@ -46,19 +53,167 @@ def _service_date(now: datetime) -> date:
     return now.astimezone(_MADRID).date()
 
 
+def extended_service_horizon_s(topology: Topology) -> float:
+    """Cuánto se prolonga el horario del feed más allá de `24:00:00`.
+
+    Se deriva del dato, no de una constante inventada: es el máximo
+    `arrival_time`/`departure_time` del GTFS cargado menos 86 400 s. En el ZIP
+    oficial verificado el máximo real es `25:09:00`, así que el horizonte son
+    4 140 s (1 h 09 min). Un feed sin horas extendidas devuelve `0.0` y entonces
+    no existe ninguna ventana de ambigüedad tras medianoche.
+    """
+    maximum = 0.0
+    for item in topology.stop_times:
+        for value in (item.arrival_time, item.departure_time):
+            if value:
+                maximum = max(maximum, parse_gtfs_time(value))
+    return max(0.0, maximum - 86_400.0)
+
+
+def service_dates_covering(
+    start: datetime, end: datetime, *, extended_horizon_s: float
+) -> tuple[date, ...]:
+    """Días de servicio GTFS cuyo horario puede alcanzar la ventana `[start, end]`.
+
+    Un día de servicio `D` abarca los instantes
+    `[medianoche local de D, medianoche local de D + 24 h + horizonte]`; con un
+    horizonte derivado del feed (`extended_service_horizon_s`) ese tramo se
+    solapa con el del día siguiente. Esta función devuelve, en orden
+    cronológico, todos los días cuyo tramo intersecta la ventana pedida.
+
+    Tercer hallazgo bloqueante de la revisión de MP-019: el tablero calculaba
+    sus días candidatos **solo con `now`**, no con la ventana realmente
+    solicitada. En cuanto `now` rebasaba el horizonte, dejaba de consultar el
+    día anterior aunque `lookback_s` todavía lo cubriera: con la fixture
+    `gtfs_24h_real`, la llamada real de las `24:32` (las `00:32` en reloj de
+    pared) aparecía en el tablero a las `00:32` y desaparecía a las `00:33`,
+    pese a haber ocurrido un minuto antes y a pedirse 600 s de retrospectiva.
+    El mismo error existía en el sentido contrario: a las `23:55` el tablero no
+    consideraba el día de servicio siguiente, así que perdía sus llamadas de
+    `00:0x` aunque estuvieran a seis minutos dentro de `lookahead_s`.
+
+    Los instantes se calculan con `service_day_instant`, no sumando segundos a
+    un offset fijo, de modo que la cobertura también es correcta en los dos días
+    de cambio de hora.
+    """
+    if end < start:
+        start, end = end, start
+    span_s = 86_400.0 + max(0.0, extended_horizon_s)
+    first = _service_date(start) - timedelta(days=1)
+    last = _service_date(end)
+    covering: list[date] = []
+    candidate = first
+    while candidate <= last:
+        day_start = service_day_instant(candidate, 0.0)
+        day_end = service_day_instant(candidate, span_s)
+        if day_start <= end and day_end >= start:
+            covering.append(candidate)
+        candidate += timedelta(days=1)
+    return tuple(covering)
+
+
+class ServiceDateResolver:
+    """Resuelve la fecha de servicio GTFS **por circulación**, no por reloj civil.
+
+    Hallazgo bloqueante de la revisión de MP-019: `_service_date` devolvía la
+    fecha civil de Europe/Madrid, de modo que a las `00:02` del 21 de noviembre
+    un tren del día de servicio del 20 con paradas a las `24:00`/`24:05` (hay
+    742 circulaciones de Madrid con horas `24:xx` en el ZIP real) se resolvía
+    contra el día equivocado: `service_seconds` daba 120 en vez de 86 520 y el
+    motor situaba el tren a 10,4 km de su posición real, además de marcar su
+    circulación como `expired`.
+
+    La fecha civil ya no se asume: tras medianoche, y solo dentro de la ventana
+    que el propio feed justifica (`extended_service_horizon_s`), se comprueba
+    **primero** si el horario del viaje concreto sigue perteneciendo al día de
+    servicio anterior. Solo se admite un día candidato si el `service_id` del
+    viaje está realmente programado en él (nunca se fabrica un día) y si el
+    instante actual cae dentro del horario publicado de ese viaje.
+    """
+
+    def __init__(self, topology: Topology, now: datetime, *, extended_horizon_s: float) -> None:
+        self.topology = topology
+        self.now = now
+        self.extended_horizon_s = extended_horizon_s
+        self.primary = _service_date(now)
+        # Para resolver la fecha de **una circulación** la ventana es el propio
+        # instante: los candidatos son los días de servicio cuyo horario puede
+        # alcanzar `now`. A las 02:00 locales, con un feed que termina a las
+        # 25:09, ya no hay ambigüedad posible y queda solo el día civil.
+        self.candidates: tuple[date, ...] = self.dates_covering(now, now)
+        self._scheduled: dict[date, frozenset[str]] = {}
+
+    def dates_covering(self, start: datetime, end: datetime) -> tuple[date, ...]:
+        """Días de servicio que pueden alcanzar la ventana `[start, end]`.
+
+        El tablero la usa con su ventana real (`window_start`/`window_end`), no
+        con `now`: ver `service_dates_covering`.
+        """
+        return service_dates_covering(
+            start, end, extended_horizon_s=self.extended_horizon_s
+        )
+
+    def scheduled_service_ids(self, service_date: date) -> frozenset[str]:
+        cached = self._scheduled.get(service_date)
+        if cached is None:
+            cached = scheduled_service_ids_for_date(self.topology, service_date)
+            self._scheduled[service_date] = cached
+        return cached
+
+    def for_trip(self, trip_id: str) -> date:
+        """Día de servicio al que pertenece `trip_id` en `now`.
+
+        Prioriza el día anterior cuando su horario publicado todavía contiene
+        `now` (es decir, cuando el viaje `24:xx` está realmente en curso); si
+        ningún candidato lo contiene, devuelve la fecha civil, igual que antes.
+        """
+        times = self.topology.stop_times_for_trip(trip_id)
+        if not times or len(self.candidates) == 1:
+            return self.primary
+        service_id = self.topology.trip_service_id(trip_id)
+        first = parse_gtfs_time(times[0].departure_time or times[0].arrival_time)
+        last = parse_gtfs_time(times[-1].arrival_time or times[-1].departure_time)
+        for candidate in self.candidates:
+            if service_id is not None and service_id not in self.scheduled_service_ids(candidate):
+                continue
+            if first <= service_seconds(self.now, candidate) <= last:
+                return candidate
+        return self.primary
+
+
+def _trip_update_cutoff(now: datetime) -> datetime:
+    """Ventana de recencia para `latest_trip_update` (hallazgo MP-017).
+
+    Cercanías Madrid opera aproximadamente de 05:00 a 01:00 hora local
+    (servicios `24:xx` incluidos) -- 20 horas cubre un día de servicio
+    completo con margen, sin exigir calcular el límite exacto de
+    `calendar.txt`/`24:xx`, que ya resuelve `packages.gtfs.catalog` para la
+    enumeración de servicios programados. Más allá de esta ventana, un
+    retraso solo puede pertenecer a un día de servicio anterior.
+    """
+    return now - timedelta(hours=20)
+
+
 def _movement_position(
     network: LoadedNetwork,
     history: db.VehicleHistory,
     route_id: str,
     now: datetime,
+    service_date: date,
 ) -> MovementPosition | None:
     try:
         return network.engine.position(
             trip_id=history.latest.position.source_trip_id,
-            service_date=_service_date(now),
+            service_date=service_date,
             calculated_at=now,
             latest=history.latest.position,
-            previous=history.previous.position if history.previous is not None else None,
+            previous=(
+                history.previous.position
+                if history.previous is not None
+                and history.previous.position.source_trip_id
+                == history.latest.position.source_trip_id
+                else None
+            ),
             explicit_route_id=route_id,
         )
     except ValueError:
@@ -67,11 +222,31 @@ def _movement_position(
         return None
 
 
+def _circulation_status(
+    network: LoadedNetwork, source_trip_id: str, route_id: str | None, active_service_ids: frozenset[str]
+) -> str:
+    """Separa "existe un histórico" de "está programado hoy" (hallazgo MP-017:
+    `latest_vehicle_histories` no acota por tiempo -- un vehículo con último
+    dato de hace semanas se devolvía igual, sin distinguir alta/caducidad de
+    su circulación). No usa `quality.stale` (edad del GPS): un vehículo puede
+    tener GPS reciente y aun así pertenecer a un `service_id` no programado
+    para la fecha de servicio actual (dato residual de un día anterior que
+    nunca se limpió), o viceversa, estar `stale` pero seguir `active` si su
+    servicio sigue programado hoy."""
+    if route_id is None:
+        return "unresolved"
+    service_id = network.topology.trip_service_id(source_trip_id)
+    if service_id is None:
+        return "unresolved"
+    return "active" if service_id in active_service_ids else "expired"
+
+
 def vehicle_to_out(
     network: LoadedNetwork,
     history: db.VehicleHistory,
     trip_update: TripUpdateObservation | None,
     now: datetime,
+    resolver: "ServiceDateResolver",
 ) -> VehicleOut:
     source_trip_id = history.latest.position.source_trip_id
     route_id = network.topology.resolve_trip_route_id(source_trip_id)
@@ -80,8 +255,18 @@ def vehicle_to_out(
         if route_id
         else None
     )
+    # La fecha de servicio se resuelve por circulación: un viaje `24:xx` del día
+    # anterior sigue siendo suyo tras la medianoche civil (ver
+    # `ServiceDateResolver`). El estado de circulación se evalúa contra el
+    # calendario de **ese** día, no del día civil.
+    service_date = resolver.for_trip(source_trip_id)
+    circulation_status = _circulation_status(
+        network, source_trip_id, route_id, resolver.scheduled_service_ids(service_date)
+    )
 
-    movement = _movement_position(network, history, route_id, now) if route_id else None
+    movement = (
+        _movement_position(network, history, route_id, now, service_date) if route_id else None
+    )
 
     # La edad de la OBSERVACIÓN cruda es siempre calculable a partir de su
     # propio timestamp, se resuelva o no una posición -- hallazgo de la
@@ -125,16 +310,36 @@ def vehicle_to_out(
             age_s=age_s,
         ),
         quality=QualityOut(stale=stale, flags=flags),
+        circulation_status=circulation_status,
     )
 
 
 def list_vehicles(conn: psycopg.Connection, network: LoadedNetwork, now: datetime) -> list[VehicleOut]:
+    """Listado completo en **dos** consultas, no en 1 + N.
+
+    Corrección de MP-019: esta función hacía una consulta `latest_trip_update`
+    por vehículo (N+1 real, 24 consultas con el soak de MP-007 y una por cada
+    circulación del núcleo completo en operación). `db.latest_trip_updates`
+    devuelve la misma fila por viaje -- mismo orden y mismo desempate
+    `id DESC` de ADR-0010 -- en una sola consulta por lote.
+    """
     histories = db.latest_vehicle_histories(conn)
-    result = []
-    for history in histories:
-        trip_update = db.latest_trip_update(conn, history.latest.position.source_trip_id)
-        result.append(vehicle_to_out(network, history, trip_update, now))
-    return result
+    trip_updates = db.latest_trip_updates(
+        conn,
+        [history.latest.position.source_trip_id for history in histories],
+        observed_after=_trip_update_cutoff(now),
+    )
+    resolver = network.service_date_resolver(now)
+    return [
+        vehicle_to_out(
+            network,
+            history,
+            trip_updates.get(history.latest.position.source_trip_id),
+            now,
+            resolver,
+        )
+        for history in histories
+    ]
 
 
 def get_vehicle(
@@ -143,8 +348,12 @@ def get_vehicle(
     history = db.vehicle_history(conn, vehicle_id)
     if history is None:
         return None
-    trip_update = db.latest_trip_update(conn, history.latest.position.source_trip_id)
-    return vehicle_to_out(network, history, trip_update, now)
+    trip_update = db.latest_trip_update(
+        conn, history.latest.position.source_trip_id, observed_after=_trip_update_cutoff(now)
+    )
+    return vehicle_to_out(
+        network, history, trip_update, now, network.service_date_resolver(now)
+    )
 
 
 def feed_health(conn: psycopg.Connection, now: datetime, *, stale_after_s: float) -> HealthOut:
@@ -157,7 +366,11 @@ def feed_health(conn: psycopg.Connection, now: datetime, *, stale_after_s: float
     for feed_name, samples in by_feed.items():
         samples.sort(key=lambda item: item.started_at, reverse=True)
         latest = samples[0]
-        data_age_s = (now - latest.started_at).total_seconds()
+        poll_age_s = (now - latest.started_at).total_seconds()
+        data_age_s = (
+            (now - latest.source_timestamp).total_seconds()
+            if latest.source_timestamp is not None else None
+        )
         unchanged_for_s = 0.0
         for sample in samples[1:]:
             if sample.payload_hash != latest.payload_hash:
@@ -165,7 +378,9 @@ def feed_health(conn: psycopg.Connection, now: datetime, *, stale_after_s: float
             unchanged_for_s = (now - sample.started_at).total_seconds()
         if latest.status == "error":
             status = "error"
-        elif data_age_s > stale_after_s:
+        elif data_age_s is None or data_age_s < 0 or poll_age_s < 0 or latest.status != "ok":
+            status = "unknown"
+        elif data_age_s > stale_after_s or poll_age_s > stale_after_s:
             status = "stale"
         else:
             status = "ok"
@@ -174,8 +389,9 @@ def feed_health(conn: psycopg.Connection, now: datetime, *, stale_after_s: float
             FeedHealthOut(
                 feed_name=feed_name,
                 status=status,
-                source_timestamp=latest.started_at,
+                source_timestamp=latest.source_timestamp,
                 data_age_s=data_age_s,
+                poll_age_s=poll_age_s,
                 unchanged_for_s=unchanged_for_s,
                 entities=latest.entity_count,
                 rejected=rejected,

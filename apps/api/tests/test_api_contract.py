@@ -9,11 +9,16 @@ la API responde con `None` honesto, nunca con un dato fabricado.
 
 from __future__ import annotations
 
+import hashlib
+import json
 import os
 import unittest
+from dataclasses import replace
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
+from unittest.mock import Mock, patch
 
+import psycopg
 from fastapi.testclient import TestClient
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -29,9 +34,63 @@ from apps.api import db, service  # noqa: E402
 from apps.api.config import ApiConfig  # noqa: E402
 from apps.api.gtfs_source import load_network  # noqa: E402
 from apps.api.main import app  # noqa: E402
-from packages.contracts.canonical import VehiclePositionObservation  # noqa: E402
+from packages.contracts.canonical import TripUpdateObservation, VehiclePositionObservation  # noqa: E402
+from services.collector import db as collector_db  # noqa: E402
+from services.collector.config import CollectorConfig  # noqa: E402
 
 VALID_MODES = {"observed", "estimated", "stale", "scheduled"}
+
+
+class FeedClockTests(unittest.TestCase):
+    def test_new_poll_of_old_payload_is_stale(self) -> None:
+        now = datetime(2026, 11, 20, 14, 32, tzinfo=timezone.utc)
+        published = now - timedelta(minutes=10)
+        run = db.FeedRunSample(
+            feed_name="vehicle_positions", source_timestamp=published,
+            started_at=now, finished_at=now, status="ok", entity_count=1, payload_hash="a" * 64,
+        )
+        with patch.object(db, "recent_ingestion_runs", return_value=[run]):
+            result = service.feed_health(None, now, stale_after_s=180).feeds[0]
+        self.assertEqual((result.source_timestamp, result.data_age_s, result.status),
+                         (published, 600, "stale"))
+        self.assertEqual(result.poll_age_s, 0)
+
+    def test_collector_stopped_is_visible_even_with_current_source_timestamp(self) -> None:
+        now = datetime(2026, 11, 20, 14, 32, tzinfo=timezone.utc)
+        run = db.FeedRunSample(
+            feed_name="vehicle_positions", source_timestamp=now,
+            started_at=now - timedelta(minutes=10), finished_at=now - timedelta(minutes=10),
+            status="ok", entity_count=119, payload_hash="a" * 64,
+        )
+        with patch.object(db, "recent_ingestion_runs", return_value=[run]):
+            result = service.feed_health(None, now, stale_after_s=180).feeds[0]
+        self.assertEqual((result.data_age_s, result.poll_age_s, result.status), (0, 600, "stale"))
+
+
+class RuntimeModeTests(unittest.TestCase):
+    def test_live_mode_rejects_replay_fixture(self) -> None:
+        config = replace(ApiConfig.from_env(), mode="live")
+        with self.assertRaisesRegex(ValueError, "live no admite fixtures"):
+            load_network(config)
+
+
+class FrozenOpenApiContractTests(unittest.TestCase):
+    """Hallazgo real de la segunda revisión de Codex en MP-017: añadir un
+    campo a un schema (`VehicleOut.circulation_status`) sin regenerar
+    `apps/api/openapi.json` deja el contrato congelado desincronizado del
+    contrato real servido -- nada lo detectaba hasta ahora. Esta prueba
+    convierte ese hallazgo puntual en una regresión permanente: cualquier
+    cambio futuro de schema que olvide `apps/api/README.md`'s comando de
+    regeneración falla aquí, no en una auditoría manual."""
+
+    def test_committed_openapi_json_matches_the_live_schema(self) -> None:
+        committed = json.loads((ROOT / "apps" / "api" / "openapi.json").read_text())
+        live = app.openapi()
+        self.assertEqual(
+            committed, live,
+            "apps/api/openapi.json desincronizado -- regenerar con el comando "
+            "documentado en apps/api/README.md",
+        )
 
 
 class ApiContractTests(unittest.TestCase):
@@ -106,6 +165,11 @@ class ApiContractTests(unittest.TestCase):
             self.assertIn(feed["status"], {"ok", "stale", "error", "unknown"})
             self.assertGreaterEqual(feed["data_age_s"], 0)
             self.assertGreaterEqual(feed["rejected"], 0)
+            self.assertGreaterEqual(feed["poll_age_s"], 0)
+        runtime = response.json()
+        self.assertEqual(runtime["mode"], "replay")
+        self.assertTrue(runtime["gtfs_version"].startswith("sha256:"))
+        self.assertLessEqual(runtime["gtfs_valid_from"], runtime["gtfs_valid_until"])
 
     def test_live_vehicles_always_report_raw_observation_age(self) -> None:
         """Hallazgo bloqueante de la revisión de Codex: antes `age_s` solo se
@@ -186,6 +250,93 @@ class ServiceDateTimezoneTests(unittest.TestCase):
         self.assertEqual(service._service_date(midday_utc), date(2026, 11, 19))
 
 
+class VehicleTripChangeTests(unittest.TestCase):
+    def test_previous_observation_from_another_trip_is_not_passed_to_engine(self) -> None:
+        now = datetime(2026, 11, 19, 8, 0, tzinfo=timezone.utc)
+        latest = VehiclePositionObservation(
+            source_vehicle_id="same-vehicle", source_trip_id="new-trip", observed_at=now,
+            latitude=40.4, longitude=-3.7, raw_vehicle_label="test", payload_hash="a" * 64,
+        )
+        previous = latest.model_copy(update={
+            "source_trip_id": "old-trip", "observed_at": now - timedelta(minutes=5),
+            "payload_hash": "b" * 64,
+        })
+        history = db.VehicleHistory(
+            source_vehicle_id="same-vehicle",
+            latest=db.ObservedRow(latest, now),
+            previous=db.ObservedRow(previous, now - timedelta(minutes=5)),
+        )
+        network = Mock()
+        network.engine.position.return_value = object()
+        result = service._movement_position(network, history, "route", now, now.date())
+        self.assertIsNotNone(result)
+        self.assertIsNone(network.engine.position.call_args.kwargs["previous"])
+
+
+class OldTripUpdateCannotCompleteTodayTests(unittest.TestCase):
+    """Hallazgo real de MP-017 (kit Hito 3): un `trip_id` GTFS recurre cada día
+    que su `service_id` está activo -- sin cota temporal, `latest_trip_update`
+    devolvía "la última fila jamás insertada para este trip_id", aunque fuera
+    de ayer o de hace una semana, completando el viaje de hoy con un retraso
+    de otro día de servicio."""
+
+    def setUp(self) -> None:
+        try:
+            self.conn = psycopg.connect(
+                CollectorConfig.from_env().database_url, autocommit=False, connect_timeout=3
+            )
+        except psycopg.OperationalError as exc:
+            raise unittest.SkipTest(f"PostgreSQL local no disponible: {exc}")
+        self.conn.execute("SELECT 1")
+        self.addCleanup(self.conn.close)
+        self.addCleanup(self.conn.rollback)
+
+    def _insert_trip_update(self, *, trip_id: str, observed_at: datetime, delay_seconds: int) -> None:
+        run_id = collector_db.insert_ingestion_run(
+            self.conn,
+            feed_name="trip_updates",
+            source_timestamp=observed_at,
+            started_at=observed_at,
+            finished_at=observed_at,
+            status="ok",
+            entity_count=1,
+            payload_hash=hashlib.sha256(f"{trip_id}-{observed_at}".encode()).hexdigest(),
+        )
+        collector_db.insert_trip_update_observation(
+            self.conn,
+            TripUpdateObservation(
+                source_trip_id=trip_id,
+                observed_at=observed_at,
+                schedule_relationship=None,
+                delay_seconds=delay_seconds,
+                delay_coverage="reported",
+                next_stop_id=None,
+                payload_hash=hashlib.sha256(f"{trip_id}-{delay_seconds}".encode()).hexdigest(),
+            ),
+            received_at=observed_at,
+            ingestion_run_id=run_id,
+        )
+
+    def test_a_delay_from_yesterdays_run_of_the_same_recurring_trip_id_is_not_returned_today(self) -> None:
+        trip_id = f"10test-recurring-trip-{id(self)}"
+        now = datetime(2026, 11, 20, 8, 0, tzinfo=timezone.utc)
+        yesterday = now - timedelta(hours=26)  # fuera de la ventana de 20h (MP-017)
+        self._insert_trip_update(trip_id=trip_id, observed_at=yesterday, delay_seconds=999)
+
+        result = db.latest_trip_update(self.conn, trip_id, observed_after=now - timedelta(hours=20))
+        self.assertIsNone(result, "un retraso de hace 26h no debe completar el viaje de hoy")
+
+    def test_a_delay_from_within_the_recency_window_is_returned(self) -> None:
+        trip_id = f"10test-recurring-trip-fresh-{id(self)}"
+        now = datetime(2026, 11, 20, 8, 0, tzinfo=timezone.utc)
+        recent = now - timedelta(hours=2)
+        self._insert_trip_update(trip_id=trip_id, observed_at=recent, delay_seconds=120)
+
+        result = db.latest_trip_update(self.conn, trip_id, observed_after=now - timedelta(hours=20))
+        self.assertIsNotNone(result)
+        self.assertEqual(result.delay_seconds, 120)
+
+
 class ResolvedTripEndToEndTests(unittest.TestCase):
     """Prueba de extremo a extremo con un trip que SÍ existe en la fixture
     reducida (``1022J19502C5``, ``10T0017C5``), sin depender del GTFS
@@ -220,12 +371,63 @@ class ResolvedTripEndToEndTests(unittest.TestCase):
             latest=db.ObservedRow(position=observation, received_at=now - timedelta(seconds=5)),
             previous=None,
         )
-        result = service.vehicle_to_out(self.network, history, None, now)
+        result = service.vehicle_to_out(
+            self.network, history, None, now, self.network.service_date_resolver(now)
+        )
         self.assertEqual(result.route_id, "10T0017C5")
         self.assertEqual(result.line, "C5")
         self.assertIsNotNone(result.position)
         self.assertEqual(result.position.mode, "observed")
         self.assertEqual(result.quality.stale, False)
+        self.assertEqual(
+            result.circulation_status, "active",
+            "el service_id 1022J está programado exactamente para 2026-11-19 (calendario de un solo día)",
+        )
+
+    def test_circulation_status_is_expired_for_a_service_not_scheduled_today(self) -> None:
+        """Hallazgo real de MP-017: sin esto, un vehículo con GPS reciente pero
+        cuyo `service_id` ya no está programado (día de servicio anterior que
+        nunca se limpió) se mostraba igual que uno realmente activo -- no
+        existía "alta/caducidad" separada del mero histórico."""
+        trip = next(t for t in self.network.topology.trips if t.trip_id == "1022J19502C5")
+        cal = next(c for c in self.network.topology.calendar if c.service_id == trip.service_id)
+        self.assertEqual(cal.start_date, cal.end_date, "calendario de un solo día, 2026-11-19")
+        now = datetime(2026, 11, 20, 8, 0, tzinfo=timezone.utc)  # un día después de su único service_date
+        observation = VehiclePositionObservation(
+            source_vehicle_id="test-vehicle-expired",
+            source_trip_id="1022J19502C5",
+            observed_at=now - timedelta(seconds=10),
+            latitude=40.4, longitude=-3.7,
+            raw_vehicle_label="contract test", payload_hash="d" * 64,
+        )
+        history = db.VehicleHistory(
+            source_vehicle_id="test-vehicle-expired",
+            latest=db.ObservedRow(position=observation, received_at=now - timedelta(seconds=5)),
+            previous=None,
+        )
+        result = service.vehicle_to_out(
+            self.network, history, None, now, self.network.service_date_resolver(now)
+        )
+        self.assertEqual(result.circulation_status, "expired")
+
+    def test_circulation_status_is_unresolved_when_route_does_not_resolve(self) -> None:
+        now = datetime(2026, 11, 19, 8, 0, tzinfo=timezone.utc)
+        observation = VehiclePositionObservation(
+            source_vehicle_id="test-vehicle-unresolved",
+            source_trip_id="SPECIAL_10_unknown",
+            observed_at=now,
+            latitude=40.4, longitude=-3.7,
+            raw_vehicle_label="contract test", payload_hash="e" * 64,
+        )
+        history = db.VehicleHistory(
+            source_vehicle_id="test-vehicle-unresolved",
+            latest=db.ObservedRow(position=observation, received_at=now),
+            previous=None,
+        )
+        result = service.vehicle_to_out(
+            self.network, history, None, now, self.network.service_date_resolver(now)
+        )
+        self.assertEqual(result.circulation_status, "unresolved")
 
 
 if __name__ == "__main__":

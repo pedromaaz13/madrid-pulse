@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Plantilla launchd del archivo diario — MP-021.
+
+  Lanza `infra/operate/daily-archive.sh` todos los días a las 03:15 locales y
+  archiva el día de servicio ANTERIOR (ver el script). La hora está elegida
+  después del horizonte de horas extendidas `24:xx` del feed, para no cerrar
+  un día cuyo servicio todavía está circulando.
+
+  `StartCalendarInterval` usa la hora local del equipo; el script convierte a
+  Europe/Madrid explícitamente, así que la fecha archivada es correcta aunque
+  el equipo esté en otro huso.
+
+  El archivo es idempotente por día (`services/snapshotter/export.py`): si una
+  ejecución se pierde porque el equipo estaba apagado, basta con lanzarla a
+  mano con la fecha correspondiente.
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.madridpulse.archive</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string><<REPO_ROOT>>/infra/operate/daily-archive.sh</string>
+  </array>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>MADRID_PULSE_DATABASE_URL</key>
+    <string><<DATABASE_URL>></string>
+    <key>MADRID_PULSE_GTFS_SOURCE</key>
+    <string><<GTFS_SOURCE>></string>
+    <key>MADRID_PULSE_SHORT_NAME</key>
+    <string></string>
+    <key>SNAPSHOTTER_OUTPUT_DIR</key>
+    <string><<REPO_ROOT>>/data/parquet</string>
+  </dict>
+
+  <key>StartCalendarInterval</key>
+  <dict>
+    <key>Hour</key><integer>3</integer>
+    <key>Minute</key><integer>15</integer>
+  </dict>
+
+  <key>StandardOutPath</key>
+  <string><<REPO_ROOT>>/data/operate/logs/archive.log</string>
+  <key>StandardErrorPath</key>
+  <string><<REPO_ROOT>>/data/operate/logs/archive.log</string>
+</dict>
+</plist>

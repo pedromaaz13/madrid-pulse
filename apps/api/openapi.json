@@ -1,6 +1,456 @@
 {
   "components": {
     "schemas": {
+      "BoardCoverageOut": {
+        "properties": {
+          "eta_from_operator": {
+            "title": "Eta From Operator",
+            "type": "integer"
+          },
+          "eta_from_schedule": {
+            "title": "Eta From Schedule",
+            "type": "integer"
+          },
+          "eta_unavailable": {
+            "title": "Eta Unavailable",
+            "type": "integer"
+          },
+          "observed_circulations": {
+            "title": "Observed Circulations",
+            "type": "integer"
+          },
+          "operator_delay_coverage_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Operator Delay Coverage Pct"
+          },
+          "returned": {
+            "title": "Returned",
+            "type": "integer"
+          },
+          "scheduled_calls": {
+            "title": "Scheduled Calls",
+            "type": "integer"
+          },
+          "with_operator_delay": {
+            "title": "With Operator Delay",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "scheduled_calls",
+          "returned",
+          "observed_circulations",
+          "with_operator_delay",
+          "eta_from_operator",
+          "eta_from_schedule",
+          "eta_unavailable",
+          "operator_delay_coverage_pct"
+        ],
+        "title": "BoardCoverageOut",
+        "type": "object"
+      },
+      "BoardEntryOut": {
+        "properties": {
+          "arrival": {
+            "$ref": "#/components/schemas/EtaOut"
+          },
+          "circulation_source": {
+            "enum": [
+              "scheduled_only",
+              "observed"
+            ],
+            "title": "Circulation Source",
+            "type": "string"
+          },
+          "departure": {
+            "$ref": "#/components/schemas/EtaOut"
+          },
+          "destination_stop_id": {
+            "title": "Destination Stop Id",
+            "type": "string"
+          },
+          "headsign": {
+            "title": "Headsign",
+            "type": "string"
+          },
+          "line": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Line"
+          },
+          "network_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Network Id"
+          },
+          "operator": {
+            "title": "Operator",
+            "type": "string"
+          },
+          "operator_next_stop_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Operator Next Stop Id"
+          },
+          "position_available": {
+            "title": "Position Available",
+            "type": "boolean"
+          },
+          "relative_to_operator_next": {
+            "anyOf": [
+              {
+                "enum": [
+                  "before",
+                  "at",
+                  "after",
+                  "unknown"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Relative To Operator Next"
+          },
+          "route_id": {
+            "title": "Route Id",
+            "type": "string"
+          },
+          "schedule_relationship": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Schedule Relationship"
+          },
+          "scheduled_arrival_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scheduled Arrival At"
+          },
+          "scheduled_arrival_time": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scheduled Arrival Time"
+          },
+          "scheduled_departure_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scheduled Departure At"
+          },
+          "scheduled_departure_time": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scheduled Departure Time"
+          },
+          "service_date": {
+            "title": "Service Date",
+            "type": "string"
+          },
+          "stop_sequence": {
+            "title": "Stop Sequence",
+            "type": "integer"
+          },
+          "trip_id": {
+            "title": "Trip Id",
+            "type": "string"
+          },
+          "vehicle_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vehicle Id"
+          }
+        },
+        "required": [
+          "trip_id",
+          "service_date",
+          "route_id",
+          "line",
+          "network_id",
+          "operator",
+          "headsign",
+          "destination_stop_id",
+          "stop_sequence",
+          "scheduled_arrival_time",
+          "scheduled_departure_time",
+          "scheduled_arrival_at",
+          "scheduled_departure_at",
+          "arrival",
+          "departure",
+          "circulation_source",
+          "vehicle_id",
+          "position_available",
+          "schedule_relationship",
+          "operator_next_stop_id",
+          "relative_to_operator_next"
+        ],
+        "title": "BoardEntryOut",
+        "type": "object"
+      },
+      "CatalogGeometryOut": {
+        "description": "Geometr\u00eda f\u00edsica publicada **una sola vez** y referenciada por patr\u00f3n.\n\nDos patrones (o dos l\u00edneas con tramo compartido) que usan la misma relaci\u00f3n\nOSM comparten esta entrada: la identidad del tramo est\u00e1 separada del color\ncomercial y de los offsets de visualizaci\u00f3n, como exige\n`docs/hitos/hito-03/AMPLIACION-ACEPTACION-MADRID-Y-HORARIOS.md`.",
+        "properties": {
+          "attribution": {
+            "title": "Attribution",
+            "type": "string"
+          },
+          "geometry_version": {
+            "title": "Geometry Version",
+            "type": "string"
+          },
+          "length_m": {
+            "title": "Length M",
+            "type": "number"
+          },
+          "relation_id": {
+            "title": "Relation Id",
+            "type": "integer"
+          },
+          "segments": {
+            "items": {
+              "items": {
+                "$ref": "#/components/schemas/CoordinateOut"
+              },
+              "type": "array"
+            },
+            "title": "Segments",
+            "type": "array"
+          },
+          "source_captured_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Captured At"
+          }
+        },
+        "required": [
+          "geometry_version",
+          "relation_id",
+          "attribution",
+          "source_captured_at",
+          "length_m",
+          "segments"
+        ],
+        "title": "CatalogGeometryOut",
+        "type": "object"
+      },
+      "CatalogLineOut": {
+        "properties": {
+          "line_id": {
+            "title": "Line Id",
+            "type": "string"
+          },
+          "network_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Network Id"
+          },
+          "operator": {
+            "title": "Operator",
+            "type": "string"
+          },
+          "patterns": {
+            "items": {
+              "$ref": "#/components/schemas/PatternOut"
+            },
+            "title": "Patterns",
+            "type": "array"
+          },
+          "route_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Route Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "line_id",
+          "network_id",
+          "operator",
+          "route_ids",
+          "patterns"
+        ],
+        "title": "CatalogLineOut",
+        "type": "object"
+      },
+      "CatalogOut": {
+        "description": "Cat\u00e1logo cacheable: cambia solo con el GTFS o la geometr\u00eda, nunca con un\nsondeo. Se sirve con `ETag`/`304` y no incluye ning\u00fan dato operativo.",
+        "properties": {
+          "catalog_version": {
+            "title": "Catalog Version",
+            "type": "string"
+          },
+          "coverage": {
+            "$ref": "#/components/schemas/CoverageSummaryOut"
+          },
+          "geometries": {
+            "items": {
+              "$ref": "#/components/schemas/CatalogGeometryOut"
+            },
+            "title": "Geometries",
+            "type": "array"
+          },
+          "geometry_catalog_version": {
+            "title": "Geometry Catalog Version",
+            "type": "string"
+          },
+          "gtfs_valid_from": {
+            "title": "Gtfs Valid From",
+            "type": "string"
+          },
+          "gtfs_valid_until": {
+            "title": "Gtfs Valid Until",
+            "type": "string"
+          },
+          "gtfs_version": {
+            "title": "Gtfs Version",
+            "type": "string"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/CatalogLineOut"
+            },
+            "title": "Lines",
+            "type": "array"
+          },
+          "mode": {
+            "enum": [
+              "live",
+              "replay"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "operator": {
+            "title": "Operator",
+            "type": "string"
+          },
+          "schema_version": {
+            "default": "1.0",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "stations": {
+            "items": {
+              "$ref": "#/components/schemas/StationOut"
+            },
+            "title": "Stations",
+            "type": "array"
+          }
+        },
+        "required": [
+          "catalog_version",
+          "gtfs_version",
+          "geometry_catalog_version",
+          "gtfs_valid_from",
+          "gtfs_valid_until",
+          "mode",
+          "operator",
+          "lines",
+          "stations",
+          "geometries",
+          "coverage"
+        ],
+        "title": "CatalogOut",
+        "type": "object"
+      },
+      "CatalogRefOut": {
+        "properties": {
+          "catalog_version": {
+            "title": "Catalog Version",
+            "type": "string"
+          },
+          "geometry_catalog_version": {
+            "title": "Geometry Catalog Version",
+            "type": "string"
+          },
+          "gtfs_version": {
+            "title": "Gtfs Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "catalog_version",
+          "gtfs_version",
+          "geometry_catalog_version"
+        ],
+        "title": "CatalogRefOut",
+        "type": "object"
+      },
       "CoordinateOut": {
         "properties": {
           "lat": {
@@ -17,6 +467,34 @@
           "lon"
         ],
         "title": "CoordinateOut",
+        "type": "object"
+      },
+      "CoverageSummaryOut": {
+        "properties": {
+          "partial": {
+            "title": "Partial",
+            "type": "integer"
+          },
+          "pending": {
+            "title": "Pending",
+            "type": "integer"
+          },
+          "total_patterns": {
+            "title": "Total Patterns",
+            "type": "integer"
+          },
+          "validated": {
+            "title": "Validated",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "total_patterns",
+          "validated",
+          "partial",
+          "pending"
+        ],
+        "title": "CoverageSummaryOut",
         "type": "object"
       },
       "DelayOut": {
@@ -48,6 +526,112 @@
         "title": "DelayOut",
         "type": "object"
       },
+      "EtaOut": {
+        "description": "ETA con procedencia expl\u00edcita. Nunca se fabrica un valor: cuando no hay\nbase, `method` es `unavailable`, `eta_at` es `null` y `reason` dice por qu\u00e9,\nconservando siempre el horario planificado si existe.",
+        "properties": {
+          "approximation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approximation"
+          },
+          "delay_age_s": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delay Age S"
+          },
+          "delay_observed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delay Observed At"
+          },
+          "delay_seconds": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delay Seconds"
+          },
+          "eta_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Eta At"
+          },
+          "method": {
+            "enum": [
+              "schedule",
+              "operator_delay_on_schedule",
+              "unavailable"
+            ],
+            "title": "Method",
+            "type": "string"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "scheduled_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scheduled At"
+          }
+        },
+        "required": [
+          "method",
+          "scheduled_at",
+          "eta_at",
+          "delay_seconds",
+          "delay_observed_at",
+          "delay_age_s",
+          "approximation",
+          "reason"
+        ],
+        "title": "EtaOut",
+        "type": "object"
+      },
       "FeedHealthOut": {
         "properties": {
           "data_age_s": {
@@ -75,6 +659,10 @@
           "feed_name": {
             "title": "Feed Name",
             "type": "string"
+          },
+          "poll_age_s": {
+            "title": "Poll Age S",
+            "type": "number"
           },
           "rejected": {
             "title": "Rejected",
@@ -119,6 +707,7 @@
           "status",
           "source_timestamp",
           "data_age_s",
+          "poll_age_s",
           "unchanged_for_s",
           "entities",
           "rejected"
@@ -147,12 +736,777 @@
             },
             "title": "Feeds",
             "type": "array"
+          },
+          "gtfs_valid_from": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gtfs Valid From"
+          },
+          "gtfs_valid_until": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gtfs Valid Until"
+          },
+          "gtfs_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gtfs Version"
+          },
+          "mode": {
+            "anyOf": [
+              {
+                "enum": [
+                  "live",
+                  "replay"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mode"
           }
         },
         "required": [
           "feeds"
         ],
         "title": "HealthOut",
+        "type": "object"
+      },
+      "HistoryCirculationDetailOut": {
+        "properties": {
+          "circulation": {
+            "$ref": "#/components/schemas/HistoryCirculationOut"
+          },
+          "delays": {
+            "items": {
+              "$ref": "#/components/schemas/HistoryDelayOut"
+            },
+            "title": "Delays",
+            "type": "array"
+          },
+          "positions": {
+            "items": {
+              "$ref": "#/components/schemas/HistoryPositionOut"
+            },
+            "title": "Positions",
+            "type": "array"
+          },
+          "schema_version": {
+            "default": "history-1.0",
+            "title": "Schema Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "circulation",
+          "positions",
+          "delays"
+        ],
+        "title": "HistoryCirculationDetailOut",
+        "type": "object"
+      },
+      "HistoryCirculationOut": {
+        "properties": {
+          "canceled": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Canceled"
+          },
+          "coverage": {
+            "enum": [
+              "observed",
+              "canceled",
+              "operator_only",
+              "unobserved",
+              "unscheduled"
+            ],
+            "title": "Coverage",
+            "type": "string"
+          },
+          "delay_reported_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delay Reported Count"
+          },
+          "distinct_stops_observed": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Distinct Stops Observed"
+          },
+          "first_observed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Observed At"
+          },
+          "headsign": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Headsign"
+          },
+          "last_current_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Current Status"
+          },
+          "last_observed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Observed At"
+          },
+          "latest_reported_delay_seconds": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latest Reported Delay Seconds"
+          },
+          "line_short_name": {
+            "title": "Line Short Name",
+            "type": "string"
+          },
+          "observed": {
+            "title": "Observed",
+            "type": "boolean"
+          },
+          "on_time": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "On Time"
+          },
+          "positions_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Positions Count"
+          },
+          "route_id": {
+            "title": "Route Id",
+            "type": "string"
+          },
+          "scheduled": {
+            "title": "Scheduled",
+            "type": "boolean"
+          },
+          "scheduled_first_departure_time": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scheduled First Departure Time"
+          },
+          "scheduled_first_stop_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scheduled First Stop Id"
+          },
+          "scheduled_last_arrival_time": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scheduled Last Arrival Time"
+          },
+          "scheduled_last_stop_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scheduled Last Stop Id"
+          },
+          "service_date": {
+            "title": "Service Date",
+            "type": "string"
+          },
+          "trip_id": {
+            "title": "Trip Id",
+            "type": "string"
+          },
+          "trip_updates_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Trip Updates Count"
+          },
+          "vehicle_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vehicle Id"
+          }
+        },
+        "required": [
+          "service_date",
+          "route_id",
+          "line_short_name",
+          "trip_id",
+          "vehicle_id",
+          "scheduled",
+          "observed",
+          "canceled",
+          "coverage",
+          "headsign",
+          "scheduled_first_stop_id",
+          "scheduled_first_departure_time",
+          "scheduled_last_stop_id",
+          "scheduled_last_arrival_time",
+          "positions_count",
+          "first_observed_at",
+          "last_observed_at",
+          "distinct_stops_observed",
+          "last_current_status",
+          "trip_updates_count",
+          "delay_reported_count",
+          "latest_reported_delay_seconds",
+          "on_time"
+        ],
+        "title": "HistoryCirculationOut",
+        "type": "object"
+      },
+      "HistoryCirculationsOut": {
+        "properties": {
+          "circulations": {
+            "items": {
+              "$ref": "#/components/schemas/HistoryCirculationOut"
+            },
+            "title": "Circulations",
+            "type": "array"
+          },
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "line": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Line"
+          },
+          "only": {
+            "enum": [
+              "all",
+              "observed",
+              "unobserved",
+              "canceled",
+              "operator_only",
+              "unscheduled"
+            ],
+            "title": "Only",
+            "type": "string"
+          },
+          "returned": {
+            "title": "Returned",
+            "type": "integer"
+          },
+          "schema_version": {
+            "default": "history-1.0",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "service_date": {
+            "title": "Service Date",
+            "type": "string"
+          },
+          "truncated": {
+            "title": "Truncated",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "service_date",
+          "line",
+          "only",
+          "returned",
+          "limit",
+          "truncated",
+          "circulations"
+        ],
+        "title": "HistoryCirculationsOut",
+        "type": "object"
+      },
+      "HistoryDayOut": {
+        "properties": {
+          "circulations_canceled": {
+            "title": "Circulations Canceled",
+            "type": "integer"
+          },
+          "circulations_observed": {
+            "title": "Circulations Observed",
+            "type": "integer"
+          },
+          "circulations_operator_only": {
+            "title": "Circulations Operator Only",
+            "type": "integer"
+          },
+          "circulations_scheduled": {
+            "title": "Circulations Scheduled",
+            "type": "integer"
+          },
+          "circulations_unobserved": {
+            "title": "Circulations Unobserved",
+            "type": "integer"
+          },
+          "circulations_unscheduled": {
+            "title": "Circulations Unscheduled",
+            "type": "integer"
+          },
+          "first_observed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Observed At"
+          },
+          "last_observed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Observed At"
+          },
+          "lines_present": {
+            "title": "Lines Present",
+            "type": "integer"
+          },
+          "rows_total": {
+            "title": "Rows Total",
+            "type": "integer"
+          },
+          "service_date": {
+            "title": "Service Date",
+            "type": "string"
+          }
+        },
+        "required": [
+          "service_date",
+          "circulations_scheduled",
+          "circulations_observed",
+          "circulations_unobserved",
+          "circulations_canceled",
+          "circulations_operator_only",
+          "circulations_unscheduled",
+          "lines_present",
+          "rows_total",
+          "first_observed_at",
+          "last_observed_at"
+        ],
+        "title": "HistoryDayOut",
+        "type": "object"
+      },
+      "HistoryDaysOut": {
+        "properties": {
+          "archive_root": {
+            "title": "Archive Root",
+            "type": "string"
+          },
+          "days": {
+            "items": {
+              "$ref": "#/components/schemas/HistoryDayOut"
+            },
+            "title": "Days",
+            "type": "array"
+          },
+          "schema_version": {
+            "default": "history-1.0",
+            "title": "Schema Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "archive_root",
+          "days"
+        ],
+        "title": "HistoryDaysOut",
+        "type": "object"
+      },
+      "HistoryDelayOut": {
+        "properties": {
+          "delay_coverage": {
+            "title": "Delay Coverage",
+            "type": "string"
+          },
+          "delay_seconds": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delay Seconds"
+          },
+          "observed_at": {
+            "format": "date-time",
+            "title": "Observed At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "observed_at",
+          "delay_seconds",
+          "delay_coverage"
+        ],
+        "title": "HistoryDelayOut",
+        "type": "object"
+      },
+      "HistoryLineMetricOut": {
+        "properties": {
+          "delay_coverage_pct": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delay Coverage Pct"
+          },
+          "line_short_name": {
+            "title": "Line Short Name",
+            "type": "string"
+          },
+          "on_time_pct_of_covered": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "On Time Pct Of Covered"
+          },
+          "route_id": {
+            "title": "Route Id",
+            "type": "string"
+          },
+          "trips_scheduled": {
+            "title": "Trips Scheduled",
+            "type": "integer"
+          },
+          "trips_with_delay_data": {
+            "title": "Trips With Delay Data",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "route_id",
+          "line_short_name",
+          "trips_scheduled",
+          "trips_with_delay_data",
+          "delay_coverage_pct",
+          "on_time_pct_of_covered"
+        ],
+        "title": "HistoryLineMetricOut",
+        "type": "object"
+      },
+      "HistoryLinesOut": {
+        "properties": {
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/HistoryLineMetricOut"
+            },
+            "title": "Lines",
+            "type": "array"
+          },
+          "schema_version": {
+            "default": "history-1.0",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "service_date": {
+            "title": "Service Date",
+            "type": "string"
+          }
+        },
+        "required": [
+          "service_date",
+          "lines"
+        ],
+        "title": "HistoryLinesOut",
+        "type": "object"
+      },
+      "HistoryPositionOut": {
+        "properties": {
+          "bearing": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bearing"
+          },
+          "current_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Status"
+          },
+          "current_stop_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Stop Id"
+          },
+          "latitude": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latitude"
+          },
+          "longitude": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Longitude"
+          },
+          "observed_at": {
+            "format": "date-time",
+            "title": "Observed At",
+            "type": "string"
+          },
+          "quality_flags": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Quality Flags"
+          },
+          "received_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Received At"
+          },
+          "speed_kmh": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Speed Kmh"
+          }
+        },
+        "required": [
+          "observed_at",
+          "received_at",
+          "latitude",
+          "longitude",
+          "current_status",
+          "current_stop_id",
+          "speed_kmh",
+          "bearing",
+          "quality_flags"
+        ],
+        "title": "HistoryPositionOut",
+        "type": "object"
+      },
+      "HistoryStationMetricOut": {
+        "properties": {
+          "observations_count": {
+            "title": "Observations Count",
+            "type": "integer"
+          },
+          "station_id": {
+            "title": "Station Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "station_id",
+          "observations_count"
+        ],
+        "title": "HistoryStationMetricOut",
+        "type": "object"
+      },
+      "HistoryStationsOut": {
+        "properties": {
+          "returned": {
+            "title": "Returned",
+            "type": "integer"
+          },
+          "schema_version": {
+            "default": "history-1.0",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "service_date": {
+            "title": "Service Date",
+            "type": "string"
+          },
+          "stations": {
+            "items": {
+              "$ref": "#/components/schemas/HistoryStationMetricOut"
+            },
+            "title": "Stations",
+            "type": "array"
+          }
+        },
+        "required": [
+          "service_date",
+          "returned",
+          "stations"
+        ],
+        "title": "HistoryStationsOut",
         "type": "object"
       },
       "LineGeometryOut": {
@@ -253,6 +1607,51 @@
         "title": "LineStationOut",
         "type": "object"
       },
+      "MapMatchedOut": {
+        "description": "Proyecci\u00f3n real sobre el patr\u00f3n verificado. Solo existe cuando\n``resolution == \"map_matched\"``; si no, el bloque entero es ``null``.",
+        "properties": {
+          "distance_from_raw_m": {
+            "title": "Distance From Raw M",
+            "type": "number"
+          },
+          "geometry_version": {
+            "title": "Geometry Version",
+            "type": "string"
+          },
+          "lat": {
+            "title": "Lat",
+            "type": "number"
+          },
+          "lon": {
+            "title": "Lon",
+            "type": "number"
+          },
+          "pattern_id": {
+            "title": "Pattern Id",
+            "type": "string"
+          },
+          "progress_m": {
+            "title": "Progress M",
+            "type": "number"
+          },
+          "resolution": {
+            "const": "map_matched",
+            "title": "Resolution",
+            "type": "string"
+          }
+        },
+        "required": [
+          "resolution",
+          "lat",
+          "lon",
+          "progress_m",
+          "distance_from_raw_m",
+          "pattern_id",
+          "geometry_version"
+        ],
+        "title": "MapMatchedOut",
+        "type": "object"
+      },
       "ObservationOut": {
         "properties": {
           "age_s": {
@@ -299,6 +1698,197 @@
         "title": "ObservationOut",
         "type": "object"
       },
+      "PatternGeometryOut": {
+        "properties": {
+          "attribution": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attribution"
+          },
+          "can_map_match": {
+            "title": "Can Map Match",
+            "type": "boolean"
+          },
+          "geometry_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Geometry Version"
+          },
+          "max_stop_distance_m": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Stop Distance M"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "relation_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Relation Id"
+          },
+          "source_captured_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Captured At"
+          },
+          "status": {
+            "enum": [
+              "validated",
+              "partial",
+              "pending"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "reason",
+          "geometry_version",
+          "relation_id",
+          "max_stop_distance_m",
+          "source_captured_at",
+          "attribution",
+          "can_map_match"
+        ],
+        "title": "PatternGeometryOut",
+        "type": "object"
+      },
+      "PatternOut": {
+        "properties": {
+          "destination_stop_id": {
+            "title": "Destination Stop Id",
+            "type": "string"
+          },
+          "direction_key": {
+            "title": "Direction Key",
+            "type": "string"
+          },
+          "geometry": {
+            "$ref": "#/components/schemas/PatternGeometryOut"
+          },
+          "origin_stop_id": {
+            "title": "Origin Stop Id",
+            "type": "string"
+          },
+          "pattern_id": {
+            "title": "Pattern Id",
+            "type": "string"
+          },
+          "route_id": {
+            "title": "Route Id",
+            "type": "string"
+          },
+          "stations": {
+            "items": {
+              "$ref": "#/components/schemas/PatternStationOut"
+            },
+            "title": "Stations",
+            "type": "array"
+          },
+          "stop_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Stop Ids",
+            "type": "array"
+          },
+          "trip_count": {
+            "title": "Trip Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "pattern_id",
+          "route_id",
+          "direction_key",
+          "origin_stop_id",
+          "destination_stop_id",
+          "stop_ids",
+          "trip_count",
+          "geometry",
+          "stations"
+        ],
+        "title": "PatternOut",
+        "type": "object"
+      },
+      "PatternStationOut": {
+        "properties": {
+          "distance_along_m": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Distance Along M"
+          },
+          "lat": {
+            "title": "Lat",
+            "type": "number"
+          },
+          "lon": {
+            "title": "Lon",
+            "type": "number"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "station_id": {
+            "title": "Station Id",
+            "type": "string"
+          },
+          "stop_sequence": {
+            "title": "Stop Sequence",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "station_id",
+          "name",
+          "lat",
+          "lon",
+          "stop_sequence",
+          "distance_along_m"
+        ],
+        "title": "PatternStationOut",
+        "type": "object"
+      },
       "PositionOut": {
         "properties": {
           "confidence": {
@@ -333,6 +1923,54 @@
         "title": "PositionOut",
         "type": "object"
       },
+      "ProgressEnvelopeOut": {
+        "description": "Plan de progreso compacto, v\u00e1lido para `reference_at <= t <= rendered.valid_until`:\n\n```text\nt0 = dwell_until or reference_at\nprogress(t) = min(progress_m_at_reference + speed_mps * max(0, t - t0),\n                  max_progress_m)\n```\n\n`dwell_until` es una espera programada real: hasta ese instante el progreso\nse mantiene en el del ancla. `speed_mps == 0` es avance nulo declarado (el\nhorario no autoriza avanzar en el horizonte), no dato ausente. El cliente\nconvierte el progreso en coordenada sobre la longitud de arco del patr\u00f3n\nque ya tiene del cat\u00e1logo; nunca interpola lat/lon en l\u00ednea recta entre\nestaciones.",
+        "properties": {
+          "dwell_until": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dwell Until"
+          },
+          "horizon_s": {
+            "title": "Horizon S",
+            "type": "number"
+          },
+          "max_progress_m": {
+            "title": "Max Progress M",
+            "type": "number"
+          },
+          "progress_m_at_reference": {
+            "title": "Progress M At Reference",
+            "type": "number"
+          },
+          "reference_at": {
+            "format": "date-time",
+            "title": "Reference At",
+            "type": "string"
+          },
+          "speed_mps": {
+            "title": "Speed Mps",
+            "type": "number"
+          }
+        },
+        "required": [
+          "reference_at",
+          "progress_m_at_reference",
+          "speed_mps",
+          "max_progress_m",
+          "horizon_s",
+          "dwell_until"
+        ],
+        "title": "ProgressEnvelopeOut",
+        "type": "object"
+      },
       "QualityOut": {
         "properties": {
           "flags": {
@@ -352,6 +1990,835 @@
           "flags"
         ],
         "title": "QualityOut",
+        "type": "object"
+      },
+      "RawPositionOut": {
+        "description": "Lo que public\u00f3 la fuente, sin retoque. ``lat``/``lon`` ``None`` cuando la\nentidad no tra\u00eda posici\u00f3n -- nunca ``(0, 0)``.",
+        "properties": {
+          "gps_observed_at": {
+            "format": "date-time",
+            "title": "Gps Observed At",
+            "type": "string"
+          },
+          "lat": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lat"
+          },
+          "lon": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lon"
+          },
+          "payload_hash": {
+            "title": "Payload Hash",
+            "type": "string"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          }
+        },
+        "required": [
+          "lat",
+          "lon",
+          "source",
+          "gps_observed_at",
+          "payload_hash"
+        ],
+        "title": "RawPositionOut",
+        "type": "object"
+      },
+      "RenderedOut": {
+        "properties": {
+          "anchor_age_s": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Anchor Age S"
+          },
+          "anchor_distance_from_raw_m": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Anchor Distance From Raw M"
+          },
+          "anchor_observed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Anchor Observed At"
+          },
+          "calculated_at": {
+            "format": "date-time",
+            "title": "Calculated At",
+            "type": "string"
+          },
+          "confidence_index": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidence Index"
+          },
+          "coordinate_space": {
+            "anyOf": [
+              {
+                "enum": [
+                  "map_matched",
+                  "raw",
+                  "schedule"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Coordinate Space"
+          },
+          "display_at": {
+            "format": "date-time",
+            "title": "Display At",
+            "type": "string"
+          },
+          "geometry_candidate_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Geometry Candidate Version"
+          },
+          "geometry_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Geometry Version"
+          },
+          "last_confirmed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Confirmed At"
+          },
+          "lat": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lat"
+          },
+          "lon": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lon"
+          },
+          "pattern_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pattern Id"
+          },
+          "progress_envelope": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProgressEnvelopeOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "progress_m": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Progress M"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "rendering_method": {
+            "enum": [
+              "anchor",
+              "interpolated_between_known_anchors",
+              "extrapolated_from_last_anchor",
+              "schedule_only",
+              "stale_frozen",
+              "unlocated"
+            ],
+            "title": "Rendering Method",
+            "type": "string"
+          },
+          "valid_until": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valid Until"
+          }
+        },
+        "required": [
+          "rendering_method",
+          "coordinate_space",
+          "lat",
+          "lon",
+          "progress_m",
+          "pattern_id",
+          "geometry_version",
+          "geometry_candidate_version",
+          "confidence_index",
+          "calculated_at",
+          "display_at",
+          "valid_until",
+          "last_confirmed_at",
+          "anchor_observed_at",
+          "anchor_age_s",
+          "anchor_distance_from_raw_m",
+          "progress_envelope",
+          "reason"
+        ],
+        "title": "RenderedOut",
+        "type": "object"
+      },
+      "SnapshotCountsOut": {
+        "description": "Dos particiones independientes y exactas de `vehicles_total`.\n\n`by_rendering_method` reparte cada circulaci\u00f3n por **c\u00f3mo** se obtuvo su\ncoordenada publicada, y `by_coordinate_space` por **a qu\u00e9 espacio**\npertenece. Son cortes distintos de lo mismo: una circulaci\u00f3n congelada\ncuya coordenada vive en el corredor cuenta en `stale_frozen` y en\n`map_matched` a la vez. Cada diccionario suma exactamente\n`vehicles_total`; no se mezclan los dos criterios en un solo contador,\npara que ninguna cifra sea ambigua.\n\nLas claves ausentes son ausencia de casos, no se publican como `0`\nartificiales de categor\u00edas que no existen en este snapshot.",
+        "properties": {
+          "by_coordinate_space": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "propertyNames": {
+              "enum": [
+                "map_matched",
+                "raw",
+                "schedule",
+                "none"
+              ]
+            },
+            "title": "By Coordinate Space",
+            "type": "object"
+          },
+          "by_rendering_method": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "propertyNames": {
+              "enum": [
+                "anchor",
+                "interpolated_between_known_anchors",
+                "extrapolated_from_last_anchor",
+                "schedule_only",
+                "stale_frozen",
+                "unlocated"
+              ]
+            },
+            "title": "By Rendering Method",
+            "type": "object"
+          },
+          "vehicles_total": {
+            "title": "Vehicles Total",
+            "type": "integer"
+          },
+          "with_operator_delay": {
+            "title": "With Operator Delay",
+            "type": "integer"
+          },
+          "without_operator_delay": {
+            "title": "Without Operator Delay",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "vehicles_total",
+          "by_rendering_method",
+          "by_coordinate_space",
+          "with_operator_delay",
+          "without_operator_delay"
+        ],
+        "title": "SnapshotCountsOut",
+        "type": "object"
+      },
+      "SnapshotDegradationOut": {
+        "properties": {
+          "data_age_s": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Data Age S"
+          },
+          "feed_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Feed Name"
+          },
+          "last_valid_source_timestamp": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Valid Source Timestamp"
+          },
+          "poll_age_s": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Poll Age S"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          },
+          "resource": {
+            "title": "Resource",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "stale",
+              "error",
+              "unknown"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "resource",
+          "feed_name",
+          "status",
+          "reason",
+          "last_valid_source_timestamp",
+          "data_age_s",
+          "poll_age_s"
+        ],
+        "title": "SnapshotDegradationOut",
+        "type": "object"
+      },
+      "SnapshotDelayOut": {
+        "properties": {
+          "age_s": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Age S"
+          },
+          "approximation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approximation"
+          },
+          "coverage": {
+            "enum": [
+              "reported",
+              "missing"
+            ],
+            "title": "Coverage",
+            "type": "string"
+          },
+          "expired": {
+            "title": "Expired",
+            "type": "boolean"
+          },
+          "observed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Observed At"
+          },
+          "seconds": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seconds"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "const": "operator_trip_update",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          }
+        },
+        "required": [
+          "seconds",
+          "coverage",
+          "observed_at",
+          "age_s",
+          "source",
+          "expired",
+          "approximation"
+        ],
+        "title": "SnapshotDelayOut",
+        "type": "object"
+      },
+      "SnapshotOut": {
+        "properties": {
+          "catalog_ref": {
+            "$ref": "#/components/schemas/CatalogRefOut"
+          },
+          "counts": {
+            "$ref": "#/components/schemas/SnapshotCountsOut"
+          },
+          "degraded": {
+            "items": {
+              "$ref": "#/components/schemas/SnapshotDegradationOut"
+            },
+            "title": "Degraded",
+            "type": "array"
+          },
+          "display_at": {
+            "format": "date-time",
+            "title": "Display At",
+            "type": "string"
+          },
+          "feeds": {
+            "items": {
+              "$ref": "#/components/schemas/FeedHealthOut"
+            },
+            "title": "Feeds",
+            "type": "array"
+          },
+          "generated_at": {
+            "format": "date-time",
+            "title": "Generated At",
+            "type": "string"
+          },
+          "mode": {
+            "enum": [
+              "live",
+              "replay"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "revision": {
+            "$ref": "#/components/schemas/SnapshotRevisionOut"
+          },
+          "schema_version": {
+            "default": "1.0",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "snapshot_id": {
+            "title": "Snapshot Id",
+            "type": "string"
+          },
+          "snapshot_id_is_sortable": {
+            "const": false,
+            "default": false,
+            "title": "Snapshot Id Is Sortable",
+            "type": "boolean"
+          },
+          "vehicles": {
+            "items": {
+              "$ref": "#/components/schemas/SnapshotVehicleOut"
+            },
+            "title": "Vehicles",
+            "type": "array"
+          }
+        },
+        "required": [
+          "snapshot_id",
+          "revision",
+          "mode",
+          "catalog_ref",
+          "generated_at",
+          "display_at",
+          "feeds",
+          "degraded",
+          "vehicles",
+          "counts"
+        ],
+        "title": "SnapshotOut",
+        "type": "object"
+      },
+      "SnapshotRevisionOut": {
+        "description": "Revisi\u00f3n ordenable **solo dentro de `scope`** (ADR-0014).\n\nRegla de contrato para el cliente: si `scope` coincide, ordenar por\n`sequence` y descartar una respuesta con `sequence` menor; con `sequence`\nigual, desempatar por `generated_at` y despu\u00e9s por `tiebreak`. Si `scope`\ndifiere, **no** comparar secuencias: tratarlo como discontinuidad.\n`snapshot_id` jam\u00e1s se ordena.",
+        "properties": {
+          "generated_at": {
+            "format": "date-time",
+            "title": "Generated At",
+            "type": "string"
+          },
+          "scope": {
+            "title": "Scope",
+            "type": "string"
+          },
+          "scope_source": {
+            "enum": [
+              "database_system_identifier",
+              "database_oid",
+              "unavailable"
+            ],
+            "title": "Scope Source",
+            "type": "string"
+          },
+          "sequence": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sequence"
+          },
+          "tiebreak": {
+            "title": "Tiebreak",
+            "type": "string"
+          }
+        },
+        "required": [
+          "scope",
+          "scope_source",
+          "sequence",
+          "generated_at",
+          "tiebreak"
+        ],
+        "title": "SnapshotRevisionOut",
+        "type": "object"
+      },
+      "SnapshotVehicleOut": {
+        "properties": {
+          "circulation_status": {
+            "enum": [
+              "active",
+              "expired",
+              "unresolved"
+            ],
+            "title": "Circulation Status",
+            "type": "string"
+          },
+          "delay": {
+            "$ref": "#/components/schemas/SnapshotDelayOut"
+          },
+          "line": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Line"
+          },
+          "map_matched": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MapMatchedOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "pattern_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pattern Id"
+          },
+          "position": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PositionOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "quality": {
+            "$ref": "#/components/schemas/QualityOut"
+          },
+          "raw": {
+            "$ref": "#/components/schemas/RawPositionOut"
+          },
+          "rendered": {
+            "$ref": "#/components/schemas/RenderedOut"
+          },
+          "route_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Route Id"
+          },
+          "schedule_relationship": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Schedule Relationship"
+          },
+          "service_date": {
+            "title": "Service Date",
+            "type": "string"
+          },
+          "timestamps": {
+            "$ref": "#/components/schemas/VehicleTimestampsOut"
+          },
+          "trip_id": {
+            "title": "Trip Id",
+            "type": "string"
+          },
+          "vehicle_id": {
+            "title": "Vehicle Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "vehicle_id",
+          "trip_id",
+          "service_date",
+          "route_id",
+          "line",
+          "pattern_id",
+          "circulation_status",
+          "schedule_relationship",
+          "timestamps",
+          "raw",
+          "map_matched",
+          "rendered",
+          "position",
+          "delay",
+          "quality"
+        ],
+        "title": "SnapshotVehicleOut",
+        "type": "object"
+      },
+      "StationBoardOut": {
+        "properties": {
+          "calculated_from": {
+            "default": "gtfs_calendar+calendar_dates+stop_times, cruzado con trip_update y observaciones de veh\u00edculo",
+            "title": "Calculated From",
+            "type": "string"
+          },
+          "catalog_ref": {
+            "$ref": "#/components/schemas/CatalogRefOut"
+          },
+          "coverage": {
+            "$ref": "#/components/schemas/BoardCoverageOut"
+          },
+          "display_at": {
+            "format": "date-time",
+            "title": "Display At",
+            "type": "string"
+          },
+          "entries": {
+            "items": {
+              "$ref": "#/components/schemas/BoardEntryOut"
+            },
+            "title": "Entries",
+            "type": "array"
+          },
+          "generated_at": {
+            "format": "date-time",
+            "title": "Generated At",
+            "type": "string"
+          },
+          "limitations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Limitations",
+            "type": "array"
+          },
+          "mode": {
+            "enum": [
+              "live",
+              "replay"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "revision": {
+            "$ref": "#/components/schemas/SnapshotRevisionOut"
+          },
+          "schema_version": {
+            "default": "1.0",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "service_date": {
+            "title": "Service Date",
+            "type": "string"
+          },
+          "service_dates_considered": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Service Dates Considered",
+            "type": "array"
+          },
+          "station_id": {
+            "title": "Station Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "station_id",
+          "name",
+          "service_date",
+          "service_dates_considered",
+          "mode",
+          "generated_at",
+          "display_at",
+          "revision",
+          "catalog_ref",
+          "entries",
+          "coverage",
+          "limitations"
+        ],
+        "title": "StationBoardOut",
         "type": "object"
       },
       "StationOut": {
@@ -417,6 +2884,15 @@
       },
       "VehicleOut": {
         "properties": {
+          "circulation_status": {
+            "enum": [
+              "active",
+              "expired",
+              "unresolved"
+            ],
+            "title": "Circulation Status",
+            "type": "string"
+          },
           "delay": {
             "$ref": "#/components/schemas/DelayOut"
           },
@@ -475,9 +2951,56 @@
           "position",
           "delay",
           "observation",
-          "quality"
+          "quality",
+          "circulation_status"
         ],
         "title": "VehicleOut",
+        "type": "object"
+      },
+      "VehicleTimestampsOut": {
+        "description": "Los cinco instantes que el anexo exige no confundir entre s\u00ed.",
+        "properties": {
+          "display_at": {
+            "format": "date-time",
+            "title": "Display At",
+            "type": "string"
+          },
+          "feed_published_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Feed Published At"
+          },
+          "gps_observed_at": {
+            "format": "date-time",
+            "title": "Gps Observed At",
+            "type": "string"
+          },
+          "received_at": {
+            "format": "date-time",
+            "title": "Received At",
+            "type": "string"
+          },
+          "snapshot_generated_at": {
+            "format": "date-time",
+            "title": "Snapshot Generated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "gps_observed_at",
+          "received_at",
+          "feed_published_at",
+          "snapshot_generated_at",
+          "display_at"
+        ],
+        "title": "VehicleTimestampsOut",
         "type": "object"
       }
     }
@@ -489,6 +3012,25 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/v1/catalog": {
+      "get": {
+        "description": "Cat\u00e1logo cacheable, versionado por GTFS + geometr\u00eda.\n\nResponde `304` cuando el cliente ya tiene la versi\u00f3n vigente: el cat\u00e1logo\nsolo cambia si cambia el GTFS o la geometr\u00eda, nunca con un sondeo. Es\ndeliberadamente el **\u00fanico** recurso cacheable: `/snapshot` se sirve con\n`no-store` para que ning\u00fan dato viejo se rotule como nuevo.",
+        "operationId": "catalog_api_v1_catalog_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CatalogOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Catalog"
+      }
+    },
     "/api/v1/health": {
       "get": {
         "operationId": "health_api_v1_health_get",
@@ -505,6 +3047,264 @@
           }
         },
         "summary": "Health"
+      }
+    },
+    "/api/v1/history/circulations": {
+      "get": {
+        "operationId": "history_circulations_api_v1_history_circulations_get",
+        "parameters": [
+          {
+            "description": "D\u00eda de servicio archivado (YYYY-MM-DD).",
+            "in": "query",
+            "name": "service_date",
+            "required": true,
+            "schema": {
+              "description": "D\u00eda de servicio archivado (YYYY-MM-DD).",
+              "title": "Service Date",
+              "type": "string"
+            }
+          },
+          {
+            "description": "L\u00ednea comercial (`route_short_name`).",
+            "in": "query",
+            "name": "line",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "L\u00ednea comercial (`route_short_name`).",
+              "title": "Line"
+            }
+          },
+          {
+            "description": "`unobserved` devuelve el hueco de cobertura real: servicios programados sin posici\u00f3n y sin ninguna actualizaci\u00f3n de viaje. `canceled` son los que el operador anul\u00f3 (el tren no circul\u00f3: no es un fallo de captura) y `operator_only` los que ten\u00edan actualizaci\u00f3n pero nunca se localizaron.",
+            "in": "query",
+            "name": "only",
+            "required": false,
+            "schema": {
+              "default": "all",
+              "description": "`unobserved` devuelve el hueco de cobertura real: servicios programados sin posici\u00f3n y sin ninguna actualizaci\u00f3n de viaje. `canceled` son los que el operador anul\u00f3 (el tren no circul\u00f3: no es un fallo de captura) y `operator_only` los que ten\u00edan actualizaci\u00f3n pero nunca se localizaron.",
+              "pattern": "^(all|observed|unobserved|canceled|operator_only|unscheduled)$",
+              "title": "Only",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 200,
+              "maximum": 2000,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HistoryCirculationsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "History Circulations"
+      }
+    },
+    "/api/v1/history/circulations/{vehicle_id}/{trip_id}": {
+      "get": {
+        "description": "Detalle de una circulaci\u00f3n hist\u00f3rica por su identidad de Live.\n\nLa ruta usa exactamente la identidad de MP-017/019/020 -- veh\u00edculo + viaje\n+ d\u00eda de servicio -- la misma que lleva la URL del frontend\n(`?train=&trip=&sd=`), para que abrir el hist\u00f3rico desde Live y volver no\nrequiera traducir ninguna clave. Un viaje programado sin observar se\nconsulta con `vehicle_id` = `-` (no hay veh\u00edculo porque no se vio ninguno).",
+        "operationId": "history_circulation_detail_api_v1_history_circulations__vehicle_id___trip_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "vehicle_id",
+            "required": true,
+            "schema": {
+              "title": "Vehicle Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "trip_id",
+            "required": true,
+            "schema": {
+              "title": "Trip Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "D\u00eda de servicio archivado (YYYY-MM-DD).",
+            "in": "query",
+            "name": "service_date",
+            "required": true,
+            "schema": {
+              "description": "D\u00eda de servicio archivado (YYYY-MM-DD).",
+              "title": "Service Date",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HistoryCirculationDetailOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "History Circulation Detail"
+      }
+    },
+    "/api/v1/history/days": {
+      "get": {
+        "description": "D\u00edas realmente archivados, con los denominadores de cada uno.\n\nEs el \u00edndice que permite que la vista de hist\u00f3rico ofrezca solo fechas que\nexisten, en vez de un calendario libre que devolver\u00eda vac\u00edos sin explicar\npor qu\u00e9.",
+        "operationId": "history_days_api_v1_history_days_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HistoryDaysOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "History Days"
+      }
+    },
+    "/api/v1/history/lines": {
+      "get": {
+        "description": "`daily_line_metrics` del d\u00eda: puntualidad **siempre** con su cobertura.\n\nCada fila lleva `trips_scheduled` y `trips_with_delay_data` junto a los dos\nporcentajes, as\u00ed que no existe forma de leer la puntualidad sin el\ndenominador del que sale.",
+        "operationId": "history_lines_api_v1_history_lines_get",
+        "parameters": [
+          {
+            "description": "D\u00eda de servicio archivado (YYYY-MM-DD).",
+            "in": "query",
+            "name": "service_date",
+            "required": true,
+            "schema": {
+              "description": "D\u00eda de servicio archivado (YYYY-MM-DD).",
+              "title": "Service Date",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HistoryLinesOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "History Lines"
+      }
+    },
+    "/api/v1/history/stations": {
+      "get": {
+        "operationId": "history_stations_api_v1_history_stations_get",
+        "parameters": [
+          {
+            "description": "D\u00eda de servicio archivado (YYYY-MM-DD).",
+            "in": "query",
+            "name": "service_date",
+            "required": true,
+            "schema": {
+              "description": "D\u00eda de servicio archivado (YYYY-MM-DD).",
+              "title": "Service Date",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 200,
+              "maximum": 1000,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HistoryStationsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "History Stations"
       }
     },
     "/api/v1/lines": {
@@ -629,6 +3429,74 @@
         "summary": "Live Vehicle"
       }
     },
+    "/api/v1/snapshot": {
+      "get": {
+        "operationId": "live_snapshot_api_v1_snapshot_get",
+        "parameters": [
+          {
+            "description": "Reloj expl\u00edcito, solo admitido en modo replay. En live se rechaza con 400: un instante arbitrario permitir\u00eda falsificar edades.",
+            "in": "query",
+            "name": "at",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Reloj expl\u00edcito, solo admitido en modo replay. En live se rechaza con 400: un instante arbitrario permitir\u00eda falsificar edades.",
+              "title": "At"
+            }
+          },
+          {
+            "description": "Retraso de presentaci\u00f3n declarado. Con un valor > 0 y dos anclas reales, `rendered.rendering_method` puede ser `interpolated_between_known_anchors`.",
+            "in": "query",
+            "name": "display_lag_s",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "minimum": 0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Retraso de presentaci\u00f3n declarado. Con un valor > 0 y dos anclas reales, `rendered.rendering_method` puede ser `interpolated_between_known_anchors`.",
+              "title": "Display Lag S"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SnapshotOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Live Snapshot"
+      }
+    },
     "/api/v1/stations": {
       "get": {
         "operationId": "stations_api_v1_stations_get",
@@ -688,6 +3556,101 @@
           }
         },
         "summary": "Station Detail"
+      }
+    },
+    "/api/v1/stations/{station_id}/board": {
+      "get": {
+        "description": "Tablero calculado con servicios + calendario + actualizaciones.\n\nNunca con \"trenes cercanos\": parte de la enumeraci\u00f3n real de servicios\nprogramados del d\u00eda de servicio (`scheduled_trip_instances_for_date`).",
+        "operationId": "station_board_api_v1_stations__station_id__board_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "station_id",
+            "required": true,
+            "schema": {
+              "title": "Station Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Reloj expl\u00edcito, solo en replay.",
+            "in": "query",
+            "name": "at",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Reloj expl\u00edcito, solo en replay.",
+              "title": "At"
+            }
+          },
+          {
+            "in": "query",
+            "name": "lookback_s",
+            "required": false,
+            "schema": {
+              "default": 600.0,
+              "maximum": 7200,
+              "minimum": 0,
+              "title": "Lookback S",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "lookahead_s",
+            "required": false,
+            "schema": {
+              "default": 7200.0,
+              "maximum": 86400,
+              "minimum": 0,
+              "title": "Lookahead S",
+              "type": "number"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StationBoardOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Station Board"
       }
     }
   }

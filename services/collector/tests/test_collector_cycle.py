@@ -8,6 +8,7 @@ idempotencia se prueba contra una base real, no simulada.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import unittest
 from pathlib import Path
@@ -55,6 +56,33 @@ class VehiclePositionIdempotencyTests(unittest.TestCase):
         self.addCleanup(self.conn.rollback)
         self.feed = FeedConfig("vehicle_positions", "https://example.invalid/vehicle_positions.json")
         self.body = _load_fixture_bytes("vehicle_positions.json")
+
+    def test_schema_failure_records_payload_hash_and_no_source_time(self) -> None:
+        body = b'{"header":{"unexpected":"schema"}}'
+        result = run_cycle(self.feed, self.conn, _POLICY, fetcher=lambda *_: body)
+        self.assertEqual(result.status, "error")
+        row = self.conn.execute(
+            "SELECT status, source_timestamp FROM source_ingestion_run "
+            "WHERE feed_name = %s AND payload_hash = %s ORDER BY id DESC LIMIT 1",
+            (self.feed.name, hashlib.sha256(body).hexdigest()),
+        ).fetchone()
+        self.assertEqual(row, ("error", None))
+
+    def test_broken_json_is_an_error_but_does_not_delete_existing_observations(self) -> None:
+        before = self.conn.execute("SELECT count(*) FROM vehicle_position_observation").fetchone()[0]
+        body = b'{"header":'
+        result = run_cycle(self.feed, self.conn, _POLICY, fetcher=lambda *_: body)
+        after = self.conn.execute("SELECT count(*) FROM vehicle_position_observation").fetchone()[0]
+        self.assertEqual(result.status, "error")
+        self.assertEqual(after, before)
+
+    def test_valid_empty_feed_is_success_not_network_failure(self) -> None:
+        body = (
+            b'{"header":{"gtfsRealtimeVersion":"2.0",'
+            b'"timestamp":"1795185124"},"entity":[]}'
+        )
+        result = run_cycle(self.feed, self.conn, _POLICY, fetcher=lambda *_: body)
+        self.assertEqual((result.status, result.entity_count, result.inserted_count), ("ok", 0, 0))
 
     def test_out_of_scope_nucleos_are_skipped_not_stored(self) -> None:
         """La fixture de MP-004 mezcla deliberadamente 7 entidades de Madrid
@@ -154,6 +182,79 @@ class VehiclePositionIdempotencyTests(unittest.TestCase):
             )
             (rows_for_vehicle,) = cur.fetchone()
         self.assertEqual(rows_for_vehicle, 2, "1 fila del estado inicial + 1 del cambio, nunca 3")
+
+
+class StationAlertPersistenceTests(unittest.TestCase):
+    """Hallazgo real de MP-017 (`docs/hitos/hito-03/referencia/01-auditoria-live.md`,
+    P1 "Avisos de estación"): Renfe publica avisos por `stopId` sin `routeId`
+    -- el cuerpo del payload de abajo es la fila real capturada
+    (`AVISO_527127`, `stopId=60104`, Valdemoro, captura del kit de Hito 3 del
+    2026-11-20), no un invento; se incluye aquí embebida para no depender de
+    `data/hito-03/` (fuera de Git) en los tests de CI."""
+
+    def setUp(self) -> None:
+        self.conn = _connect_or_skip()
+        self.conn.execute("SELECT 1")
+        self.addCleanup(self.conn.close)
+        self.addCleanup(self.conn.rollback)
+        self.feed = FeedConfig("alerts", "https://example.invalid/alerts.json")
+
+    def _alerts_body(self, informed_entity: list[dict]) -> bytes:
+        return json.dumps(
+            {
+                "header": {"gtfsRealtimeVersion": "2.0", "timestamp": "1795075500"},
+                "entity": [
+                    {
+                        "id": "AVISO_527127",
+                        "alert": {
+                            "activePeriod": [{"start": "1795075500"}],
+                            "informedEntity": informed_entity,
+                            "descriptionText": {
+                                "translation": [
+                                    {
+                                        "text": "Ascensor de la estación de Valdemoro fuera de servicio.",
+                                        "language": "es",
+                                    }
+                                ]
+                            },
+                        },
+                    }
+                ],
+            }
+        ).encode()
+
+    def test_station_alert_without_route_id_is_skipped_when_no_catalog_given(self) -> None:
+        """Comportamiento anterior conservado por defecto: sin `madrid_stop_ids`,
+        un aviso solo por `stopId` sigue descartándose como fuera de alcance --
+        documentado, no silenciosamente "arreglado" sin que el llamante aporte
+        el catálogo real."""
+        body = self._alerts_body([{"stopId": "60104"}])
+        result = run_cycle(self.feed, self.conn, _POLICY, fetcher=lambda *_: body)
+        self.assertEqual((result.status, result.inserted_count, result.skipped_count), ("ok", 0, 1))
+
+    def test_station_alert_without_route_id_is_persisted_with_madrid_stop_catalog(self) -> None:
+        body = self._alerts_body([{"stopId": "60104"}])
+        result = run_cycle(
+            self.feed,
+            self.conn,
+            _POLICY,
+            fetcher=lambda *_: body,
+            madrid_stop_ids=frozenset({"60104"}),
+        )
+        self.assertEqual((result.status, result.inserted_count, result.skipped_count), ("ok", 1, 0))
+
+    def test_station_alert_for_a_stop_outside_the_given_catalog_is_still_skipped(self) -> None:
+        """No se "adivina" Madrid por tener cualquier `stopId`: solo se acepta
+        si el `stop_id` está realmente en el catálogo cargado."""
+        body = self._alerts_body([{"stopId": "99999"}])
+        result = run_cycle(
+            self.feed,
+            self.conn,
+            _POLICY,
+            fetcher=lambda *_: body,
+            madrid_stop_ids=frozenset({"60104"}),
+        )
+        self.assertEqual((result.status, result.inserted_count, result.skipped_count), ("ok", 0, 1))
 
 
 class FetchFailureHandlingTests(unittest.TestCase):

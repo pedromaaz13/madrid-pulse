@@ -1,0 +1,14 @@
+stop_id,stop_name,stop_lat,stop_lon,wheelchair_boarding
+17000,Madrid-Chamartín-Clara Campoamor,40.4711789,-3.6829524,1
+18000,Madrid-Atocha Cercanías,40.4066191,-3.6894391,1
+18002,Madrid-Nuevos Ministerios,40.4466271,-3.6923468,1
+18101,Sol,40.4168665,-3.7028765,1
+37001,Madrid-Villaverde Alto,40.3415895,-3.7123508,1
+37002,Getafe-Centro,40.3100045,-3.7339878,1
+37010,Las Margaritas,40.3230989,-3.7272863,1
+37011,Getafe-Sector 3,40.2883893,-3.7374991,1
+37012,Parla,40.2410986,-3.7692699,1
+60100,Madrid-Villaverde Bajo,40.3526762,-3.6838977,1
+98003,Fuente de la Mora,40.4847200,-3.6630608,1
+98304,Valdebebas,40.4821016,-3.6162874,1
+98305,Madrid-Aeropuerto T4,40.4924023,-3.5932297,1

@@ -1,0 +1,46 @@
+# Unidad systemd del colector continuo supervisado — MP-021.
+#
+# Para un host Linux persistente, cuando exista y esté autorizado. Hoy NO hay
+# ninguno contratado: ver `infra/operate/README.md`, sección "Qué NO está
+# desplegado". Esta plantilla se entrega para que el despliegue sea una
+# decisión del propietario, no un trabajo pendiente.
+#
+# Instalación (sustituyendo <<...>>):
+#   sudo cp madrid-pulse-collector.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now madrid-pulse-collector
+#   systemctl status madrid-pulse-collector
+#
+# `Restart=always` cubre lo mismo que `supervise-collector.sh` y además
+# sobrevive a un reinicio del equipo. `RestartSec`/`StartLimit*` evitan el
+# bucle de reintentos cuando el fallo es permanente.
+
+[Unit]
+Description=Madrid Pulse — colector continuo de GTFS-RT de Renfe
+Documentation=file://<<REPO_ROOT>>/infra/operate/README.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=<<USER>>
+WorkingDirectory=<<REPO_ROOT>>
+Environment=PYTHONPATH=<<REPO_ROOT>>
+Environment=MADRID_PULSE_DATABASE_URL=<<DATABASE_URL>>
+Environment=MADRID_PULSE_GTFS_SOURCE=<<GTFS_SOURCE>>
+Environment=COLLECTOR_POLL_INTERVAL_SECONDS=30
+ExecStart=<<REPO_ROOT>>/.venv/bin/python -m services.collector
+Restart=always
+RestartSec=10
+StartLimitIntervalSec=300
+StartLimitBurst=10
+
+# Endurecimiento básico: el colector solo necesita red de salida y su base.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=<<REPO_ROOT>>/data
+
+[Install]
+WantedBy=multi-user.target

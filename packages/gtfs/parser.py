@@ -88,6 +88,26 @@ class CalendarService:
     end_date: str
 
 
+@dataclass(frozen=True)
+class CalendarException:
+    """Fila de ``calendar_dates.txt`` (excepción puntual sobre ``calendar.txt``).
+
+    ``exception_type`` usa los valores estándar GTFS: ``1`` añade el servicio
+    para esa fecha aunque ``calendar.txt`` no lo cubra; ``2`` lo elimina aunque
+    ``calendar.txt`` sí lo cubriera. **Hallazgo real de MP-017:** el ZIP oficial
+    de Renfe verificado (`fomento_transit.zip`, descarga del 2026-11-20) no
+    incluye `calendar_dates.txt` en absoluto -- no es un fichero ausente por
+    error, Renfe simplemente no publica excepciones de calendario en este feed.
+    Este tipo y su parseo quedan listos para cuando exista, sin asumir que hoy
+    aporta ninguna excepción real; `Topology.calendar_dates` es `()` en la
+    práctica contra este feed.
+    """
+
+    service_id: str
+    date: str
+    exception_type: int
+
+
 _REQUIRED_COLUMNS: Mapping[str, tuple[str, ...]] = {
     "routes.txt": (
         "route_id",
@@ -157,6 +177,12 @@ def _boolean(value: str, *, field: str, row_id: str) -> bool:
     return bool(parsed)
 
 
+_OPTIONAL_FILES: tuple[str, ...] = ("calendar_dates.txt",)
+_OPTIONAL_COLUMNS: Mapping[str, tuple[str, ...]] = {
+    "calendar_dates.txt": ("service_id", "date", "exception_type"),
+}
+
+
 @contextmanager
 def _feed_files(source: str | Path) -> Iterator[Mapping[str, TextIO]]:
     path = Path(source)
@@ -170,6 +196,10 @@ def _feed_files(source: str | Path) -> Iterator[Mapping[str, TextIO]]:
                     )
                 except FileNotFoundError as exc:
                     raise GtfsSchemaError(f"falta {name} en {path}") from exc
+            for name in _OPTIONAL_FILES:
+                candidate = path / name
+                if candidate.is_file():
+                    result[name] = stack.enter_context(candidate.open(encoding="utf-8-sig", newline=""))
         else:
             archive = stack.enter_context(ZipFile(path))
             names = set(archive.namelist())
@@ -180,13 +210,22 @@ def _feed_files(source: str | Path) -> Iterator[Mapping[str, TextIO]]:
                 import io
 
                 result[name] = stack.enter_context(io.TextIOWrapper(binary, encoding="utf-8-sig", newline=""))
+            for name in _OPTIONAL_FILES:
+                if name in names:
+                    binary = stack.enter_context(archive.open(name))
+                    import io
+
+                    result[name] = stack.enter_context(
+                        io.TextIOWrapper(binary, encoding="utf-8-sig", newline="")
+                    )
         yield result
 
 
 def _rows(handle: TextIO, name: str) -> Iterator[dict[str, str]]:
     reader = csv.DictReader(handle)
     actual = tuple((column or "").strip() for column in (reader.fieldnames or ()))
-    missing = set(_REQUIRED_COLUMNS[name]) - set(actual)
+    required = _REQUIRED_COLUMNS.get(name) or _OPTIONAL_COLUMNS[name]
+    missing = set(required) - set(actual)
     if missing:
         raise GtfsSchemaError(f"{name}: faltan columnas {sorted(missing)}; observadas {actual}")
     for raw in reader:
@@ -201,6 +240,7 @@ class Topology:
     stop_times: tuple[StopTime, ...]
     shape_points: tuple[ShapePoint, ...]
     calendar: tuple[CalendarService, ...]
+    calendar_dates: tuple[CalendarException, ...] = ()
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "_routes_by_id", _unique(self.routes, "route_id"))
@@ -256,6 +296,14 @@ class Topology:
         return tuple(
             item.stop_sequence for item in self.stop_times_for_trip(trip_id) if item.stop_id == stop_id
         )
+
+    def trip_service_id(self, trip_id: str) -> str | None:
+        """``service_id`` estático del ``trip_id``, o ``None`` si no resuelve
+        (p. ej. un refuerzo ``SPECIAL_`` sin trip programado) -- usado para
+        separar estado activo/caducado de una circulación del mero hecho de
+        tener una observación histórica (hallazgo MP-017)."""
+        trip = self._trips_by_id.get(trip_id)
+        return trip.service_id if trip else None
 
 
 def _unique(items: Iterable[object], attribute: str) -> dict[str, object]:
@@ -387,6 +435,20 @@ def load_feed(
             if row["service_id"] in service_ids
         )
 
+        calendar_dates: tuple[CalendarException, ...] = ()
+        if "calendar_dates.txt" in files:
+            calendar_dates = tuple(
+                CalendarException(
+                    service_id=row["service_id"],
+                    date=row["date"],
+                    exception_type=_integer(
+                        row["exception_type"], field="exception_type", row_id=row["service_id"]
+                    ),
+                )
+                for row in _rows(files["calendar_dates.txt"], "calendar_dates.txt")
+                if row["service_id"] in service_ids
+            )
+
     return Topology(
         routes=tuple(routes),
         trips=tuple(trips),
@@ -394,4 +456,5 @@ def load_feed(
         stop_times=tuple(stop_times),
         shape_points=shape_points,
         calendar=calendar,
+        calendar_dates=calendar_dates,
     )

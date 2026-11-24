@@ -1,0 +1,19 @@
+{
+  "fixture_id": "mp022-synthetic-recovery-v1",
+  "classification": "synthetic_derived_from_versioned_gtfs_and_osm",
+  "is_official_capture": false,
+  "is_live_production": false,
+  "purpose": "Controlled-clock acceptance for estimation recovery, physical bounds and identity reset; never evidence of Renfe GPS accuracy.",
+  "static_sources": {
+    "gtfs": "tests/fixtures/gtfs_c5_real",
+    "osm": "tests/fixtures/osm_c5_real/relation_3418150.json"
+  },
+  "service_date": "2026-11-19",
+  "trip_id": "1022J19502C5",
+  "vehicle_id": "mp022-synthetic-vehicle",
+  "old_anchor_schedule_point_index": 5,
+  "estimated_after_s": 90,
+  "recovered_after_s": 95,
+  "recovery_ahead_of_estimate_m": 40,
+  "controlled_clock_offsets_s": [0, 30, 900]
+}

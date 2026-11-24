@@ -1,6 +1,6 @@
 # ATTRIBUTION.md
 
-Textos de atribución verificados para producto, documentación y exportaciones. Fecha de verificación: `2026-11-18`.
+Textos de atribución verificados para producto, documentación y exportaciones. Fecha de verificación más reciente: `2026-11-22`.
 
 ## OpenStreetMap (`ODbL-1.0`)
 
@@ -14,6 +14,14 @@ En web, `OpenStreetMap` debe enlazar a `https://www.openstreetmap.org/copyright`
 
 **MP-011 — fixture de geometría ferroviaria (`tests/fixtures/osm_c5_real/`):** es una base de datos derivada de OSM en el sentido de la ODbL (extracto estructurado de nodos/`ways`/relación, no una imagen renderizada). Se distribuye bajo `ODbL-1.0` con la atribución de arriba, independientemente de la licencia de código del repositorio (`DEC-002`, todavía pendiente) — ver DEC-024 en `docs/DECISIONS.md` y `tests/fixtures/osm_c5_real/MANIFEST.md` para el detalle de fuente, fecha y checksums.
 
+**MP-018 — fixture de geometría ferroviaria (`tests/fixtures/osm_c4_real/`):**
+aplica la misma clasificación y obligación de DEC-024: las relaciones OSM
+reales `11332`, `9174510` y `9174511` (C4a/C4b Madrid), congeladas como nodos,
+`ways` y relaciones vía Overpass API, forman una base de datos derivada que se
+distribuye bajo `ODbL-1.0` con `© OpenStreetMap contributors`, separadamente de
+la licencia del código. Fuente, fecha de descarga, comandos reproducibles y
+SHA-256 constan en `tests/fixtures/osm_c4_real/MANIFEST.md`.
+
 ## Renfe Data (`CC BY 4.0` + condiciones del portal)
 
 Texto base para UI o pie persistente:
@@ -25,6 +33,17 @@ Datos [normalizados/modificados] por Madrid Pulse; Renfe no respalda ni patrocin
 ```
 
 En web, enlazar `Renfe Operadora` a `https://data.renfe.com/` y la licencia a `https://creativecommons.org/licenses/by/4.0/`. Deben preservarse los metadatos originales de actualización y condiciones de reutilización. Si no hubo cambios, sustituir `[normalizados/modificados]` por `reproducidos sin modificación`; nunca inventar una fecha ausente.
+
+Las fixtures GTFS estáticas versionadas en el repositorio son datos reales de
+esta fuente, reducidos, y quedan cubiertas por esta misma atribución
+(`CC BY 4.0`, no `ODbL`: no son bases derivadas de OSM). Cada una conserva
+fuente, URL, fecha, SHA-256 del ZIP original, licencia, atribución y comando
+reproducible en su propio manifiesto:
+
+| Fixture | Contenido | Manifiesto |
+|---|---|---|
+| `tests/fixtures/gtfs_c5_real/` | C5: un trip representativo por patrón (MP-010, DEC-023) | [`MANIFEST.md`](../../tests/fixtures/gtfs_c5_real/MANIFEST.md) |
+| `tests/fixtures/gtfs_24h_real/` | dos circulaciones reales con horas `24:xx` (MP-019) | [`MANIFEST.md`](../../tests/fixtures/gtfs_24h_real/MANIFEST.md) |
 
 ## CRTM (`CRTM-LDA`)
 

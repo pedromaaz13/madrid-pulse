@@ -90,9 +90,21 @@ class MovementPosition:
     calculated_at: datetime
     observed_at: datetime | None
     anomalies: tuple[MovementAnomaly, ...] = ()
+    anchor_progress_m: float | None = None
+    """Progreso dirigido del **ancla realmente usada**, no de la posición publicada.
+
+    Campo aditivo de MP-019 (ADR-0014). En `OBSERVED`/`STALE` coincide con
+    `progress_m`; en `ESTIMATED` difiere, porque `progress_m` ya es el estimado
+    en `calculated_at` mientras el ancla sigue siendo la observación de
+    `observed_at`. En `SCHEDULED` es `None`: no hay ancla observada, y `None`
+    significa ausencia, no progreso cero. La capa de presentación necesita el
+    ancla para construir una envolvente de progreso sin recalcular el
+    map-matching ni reimplementar el motor."""
 
     def __post_init__(self) -> None:
         if not 0.0 <= self.confidence <= 1.0:
             raise ValueError("confidence debe estar entre 0 y 1")
         if self.age_s is not None and self.age_s < 0:
             raise ValueError("age_s no puede ser negativo")
+        if self.anchor_progress_m is not None and self.observed_at is None:
+            raise ValueError("anchor_progress_m sin observed_at: ancla incoherente")

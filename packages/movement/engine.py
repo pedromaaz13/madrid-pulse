@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import replace
 from datetime import date, datetime
+from typing import MutableMapping
 
 from packages.contracts.canonical import VehiclePositionObservation, require_utc
 from packages.geo import Corridor, point_at_arc_length
@@ -27,12 +28,33 @@ class MovementEngine:
         corridor: Corridor,
         *,
         thresholds: MovementThresholds = MovementThresholds(),
+        schedule_cache: MutableMapping[str, TripSchedule] | None = None,
     ) -> None:
         if not corridor.is_continuous or len(corridor.segments) != 1:
             raise ValueError("el motor requiere un corredor continuo para un trip")
         self.topology = topology
         self.corridor = corridor
         self.thresholds = thresholds
+        self._schedule_cache = schedule_cache
+        """Caché opcional e inyectable de `TripSchedule` (MP-019, ADR-0014).
+
+        `build_trip_schedule` proyecta todas las paradas del viaje sobre el
+        corredor en cada llamada. Topología y corredor son inmutables por
+        proceso (ambos versionados: `gtfs_version`/`geometry_version`), así que
+        el resultado es estable; con un snapshot de red completa la misma
+        proyección se repetía una vez por vehículo y por petición. La caché es
+        un parámetro, no un singleton: el motor sigue siendo puro y sin estado
+        propio obligatorio, y sin caché se comporta exactamente como en MP-012.
+        """
+
+    def trip_schedule(self, trip_id: str) -> TripSchedule:
+        if self._schedule_cache is None:
+            return build_trip_schedule(self.topology, self.corridor, trip_id)
+        cached = self._schedule_cache.get(trip_id)
+        if cached is None:
+            cached = build_trip_schedule(self.topology, self.corridor, trip_id)
+            self._schedule_cache[trip_id] = cached
+        return cached
 
     def map_match(self, observation: VehiclePositionObservation) -> MapMatch | None:
         """Map-match público para diagnóstico e integración con observaciones reales."""
@@ -65,7 +87,7 @@ class MovementEngine:
         )
         if route_id is None:
             raise ValueError(f"trip_id no resoluble: {trip_id!r}")
-        schedule = build_trip_schedule(self.topology, self.corridor, trip_id)
+        schedule = self.trip_schedule(trip_id)
         now_s = service_seconds(calculated_at, service_date)
 
         if latest is None:
@@ -127,6 +149,7 @@ class MovementEngine:
                 calculated_at=calculated_at,
                 observed_at=latest.observed_at,
                 anomalies=anomalies,
+                anchor_progress_m=latest_progress,
             )
         if age_s > self.thresholds.stale_after_s:
             return MovementPosition(
@@ -142,6 +165,7 @@ class MovementEngine:
                 calculated_at=calculated_at,
                 observed_at=latest.observed_at,
                 anomalies=anomalies,
+                anchor_progress_m=latest_progress,
             )
 
         observed_s = service_seconds(latest.observed_at, service_date)
@@ -176,6 +200,7 @@ class MovementEngine:
             calculated_at=calculated_at,
             observed_at=latest.observed_at,
             anomalies=anomalies,
+            anchor_progress_m=latest_progress,
         )
 
     def _scheduled(
