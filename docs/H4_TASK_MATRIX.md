@@ -50,3 +50,6 @@ Presupuesto: las tareas con Opus/Astra son las caras (H4-00, H4-04, H4-03, H4-09
 6. Antes de despachar cada tarea: ejecutor, modelo exacto, esfuerzo, revisor contrario y pruebas que reproduzcan el defecto original (fallan en `beb9434`).
 7. Historial de la auditoría y estado de todas las ramas conservados.
 Estado: **Hito 3 y auditoría AUD-00…AUD-09 terminados; Hito 4 solo planificado.**
+
+## Correspondencia con la numeración definitiva
+Ver `docs/H4_MP_MAPPING.md` (`H4-xx` ↔ `MP-023+`, con las divisiones MP-025a/b y MP-026a/b pedidas por el propietario el 2026-11-24). La referencia `H4-xx` se conserva en este documento.
