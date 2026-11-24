@@ -4,7 +4,7 @@
 **Revisa:** Codex `gpt-5.6-terra` · high, sin navegador (`ctx_53f6eb860b17`). Resultado de esa revisión formal: **P0-1 CONFIRMADO** (reproducido dos veces en su propio PostgreSQL: `unknown`, edades −71,0 s, `source_timestamp` 14:33:21Z, 468 entidades, determinista), el `board` no expone `degraded`, y los P2-2/P2-3 respaldados por JSX/código; veredicto sobre el **documento**: `CHANGES_REQUESTED` por afirmaciones de ejecución sin artefacto. Esta versión (v2) responde a ese veredicto punto por punto (ver §0) y queda **pendiente de re-verificación**; no está APPROVED.
 **Fecha:** 2026-11-23 (v1) · 2026-11-23 (v2, corrección tras revisión formal)
 **Rama:** `audit/hito-03-adversarial`
-**Worktree:** `/Users/matu/orca/workspaces/madrid-pulse/audit-hito-03`
+**Worktree:** `<WORKTREES>/audit-hito-03`
 **Commit base auditado:** `d349465` (cadena MP-016→MP-022 + AUD-00/02/07 ya registrados)
 
 No se ha modificado código de producto. Los hallazgos de este documento

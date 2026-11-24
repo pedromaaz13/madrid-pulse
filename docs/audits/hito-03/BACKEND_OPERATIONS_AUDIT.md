@@ -2,7 +2,7 @@
 
 **Ejecutor:** Codex Terra · High
 **Fecha:** 2026-11-23
-**Rama/worktree:** `audit/hito-03-adversarial` / `/Users/matu/orca/workspaces/madrid-pulse/audit-hito-03`
+**Rama/worktree:** `audit/hito-03-adversarial` / `<WORKTREES>/audit-hito-03`
 **Alcance:** colector GTFS-RT, snapshots/API, PostgreSQL/PostGIS, histórico y operación. No se ha modificado código de producto.
 
 ## Veredicto

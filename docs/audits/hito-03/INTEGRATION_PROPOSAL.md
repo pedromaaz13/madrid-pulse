@@ -39,7 +39,7 @@ Encadenamiento comprobado con `git merge-base --is-ancestor` (AUD-00, revisado p
 
 ## 5. Comprobaciones previas recomendadas al propietario antes de empujar
 ```bash
-git -C /Users/matu/Documents/DATA/madrid-pulse log --format='%an <%ae>' main..mp-022-validacion-integrada | sort -u
-git -C /Users/matu/Documents/DATA/madrid-pulse log main..mp-022-validacion-integrada | grep -ci 'co-authored-by'
-git -C /Users/matu/Documents/DATA/madrid-pulse diff --check main...mp-022-validacion-integrada   # hoy: 3 avisos en docs del kit
+git -C <REPO_LOCAL> log --format='%an <%ae>' main..mp-022-validacion-integrada | sort -u
+git -C <REPO_LOCAL> log main..mp-022-validacion-integrada | grep -ci 'co-authored-by'
+git -C <REPO_LOCAL> diff --check main...mp-022-validacion-integrada   # hoy: 3 avisos en docs del kit
 ```

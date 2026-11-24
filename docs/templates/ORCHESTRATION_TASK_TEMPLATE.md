@@ -7,7 +7,7 @@ id: H4-xx
 titulo:
 prioridad: P0|P1|P2          esfuerzo_relativo: S|M|L
 hallazgos_que_cierra: [FR-xx]
-worktree: path:/Users/matu/orca/workspaces/madrid-pulse/<nombre>   # rama desde el HEAD indicado
+worktree: path:<WORKTREES>/<nombre>   # rama desde el HEAD indicado
 base_head: <sha>            # y baseline de regresión: beb9434
 dependencias: [H4-xx]       # solo tareas ya aprobadas (APPROVED) o gates humanos listados
 ejecutor:

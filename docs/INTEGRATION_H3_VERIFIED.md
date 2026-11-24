@@ -21,7 +21,7 @@
 ## 5. Visibilidad, licencia y secretos
 - **El repositorio `pedromaaz13/madrid-pulse` es PÚBLICO** (`gh repo view`: `visibility: PUBLIC`, último push 2026-11-20) y **no tiene licencia** (`licenseInfo: null`, sin fichero `LICENSE`). Todo lo que se empuje queda público. DEC-002 (licencia) y DEC-003 (visibilidad) seguían «pendientes» en los documentos: **la visibilidad ya es pública de hecho**. Sin licencia, el código queda con todos los derechos reservados por defecto y las fixtures OSM siguen obligadas por ODbL (`docs/legal/`). `main` no tiene protección de rama.
 - **Escaneo de secretos** (NV-14): no hay `gitleaks`/`trufflehog`/`detect-secrets` instalados y **no se instalan sin tu autorización**; se hizo un escaneo por patrones sobre las 65 432 líneas añadidas en `main..ce05316`: **0** claves privadas, AWS, tokens GitHub/Slack/Google/OpenAI/Anthropic, JWT/Bearer. Únicos hallazgos genéricos, todos locales y de prueba: `madrid_pulse_local` y `aud06_local` (contraseñas de contenedores desechables y defaults de desarrollo que ya figuran en `main`). Correo en el contenido: solo el tuyo de autoría (`pedromaaz13@gmail.com`, ya en el historial público); el otro correo de tu cuenta no aparece. Ficheros sensibles/generados (`.env`, `.dump`, `.parquet`, `.zip`, `.sqlite`, `__pycache__`, `.log`): **ninguno versionado**; `.gitignore` los cubre. El dump de 5433 no está en el repo. **Limitación:** es un escaneo por patrones, no un escáner dedicado; se puede repetir con uno si lo autorizas.
-- **Rutas locales:** `/Users/matu/orca/...` y `/Users/matu/Documents/...` aparecen en 9 documentos (informes de auditoría, log, plantilla). Revela el nombre de usuario del equipo; no son credenciales. **No se han modificado** porque forman parte de los resultados de la auditoría; si prefieres redactarlas, es un commit documental aparte que decides tú.
+- **Rutas locales:** normalizadas en 10 documentos de `docs/` (rutas absolutas de usuario → marcadores `<WORKTREES>`, `<REPO_LOCAL>`, `<SCRATCHPAD>`), commit documental aparte. El historial Git anterior conserva las rutas originales (no se reescribe). No eran credenciales.
 - **`scratch/` (23 ficheros, 22 scripts Python + 1 vitest):** revisados: sin credenciales, sin llamadas de red, sin DSN a 5433, sin rutas locales; son los comandos reproducibles que citan los informes (moverlos obligaría a editar rutas citadas en documentos aprobados). **Se conservan en `scratch/`**; no entran en CI ni en el lint (`apps/web` solo lintea su carpeta; CI lista módulos explícitos).
 - **Capturas:** 42 PNG de la auditoría (61,8 MB; el mayor 4,4 MB, bajo el límite de GitHub); `main` no tiene PNG hoy. Se conservan como evidencia; optimizarlas o llevarlas a una *release* es decisión tuya.
 - Kit instalado (`docs/hitos/hito-03/`, 34 ficheros): texto de tus propios encargos y un prototipo HTML/PNG propio; las referencias a Via Península y Valfiguer son análisis conceptual (sin código copiado). Es decisión tuya si lo quieres público.
@@ -44,7 +44,7 @@ No se tocó: informes AUD, `scratch/`, código, kit, ADR, TASKS de hitos cerrado
 
 ## 8. Secuencia exacta propuesta (para tu autorización; nada se ejecuta hasta entonces)
 ```bash
-cd /Users/matu/Documents/DATA/madrid-pulse
+cd <REPO_LOCAL>
 # 0. Estado previo (solo lectura)
 git status --short                                   # limpio
 git fetch origin && git rev-parse main origin/main   # ambos 990c95d

@@ -4,7 +4,7 @@
 **Revisa:** Codex Terra · Medium (pendiente, dispatch en curso)
 **Fecha:** 2026-11-23
 **Rama de auditoría:** `audit/hito-03-adversarial`, creada desde `mp-022-validacion-integrada` @ `beb9434`
-**Worktree:** `/Users/matu/orca/workspaces/madrid-pulse/audit-hito-03`
+**Worktree:** `<WORKTREES>/audit-hito-03`
 
 No se ha modificado código funcional, base de datos ni contratos. Este documento registra solo hechos verificados con comandos reales, reproducibles por cualquiera que tenga este repositorio.
 

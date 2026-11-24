@@ -4,7 +4,7 @@
 **Revisa:** Codex Sol · High (pendiente, contexto nuevo)
 **Fecha:** 2026-11-23
 **Rama de auditoría:** `audit/hito-03-adversarial` @ `c07fc75`
-**Worktree:** `/Users/matu/orca/workspaces/madrid-pulse/audit-hito-03`
+**Worktree:** `<WORKTREES>/audit-hito-03`
 **Alcance:** `packages/movement/{engine.py,model.py,schedule.py,rendering.py}`,
 `docs/adr/0014-snapshot-and-temporal-contract.md`, `apps/api/snapshot.py`,
 `apps/web/src/{domain/movement.ts,domain/format.ts,map/features.ts,map/layers.ts,ui/*}`.

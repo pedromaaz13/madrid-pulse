@@ -4,7 +4,7 @@
 **Revisa:** OpenAI Codex · Sol · High — **ronda 1: CHANGES_REQUESTED**, correcciones aplicadas en esta revisión (pendiente de re-evaluación)
 **Fecha:** 2026-11-23 (revisión 2)
 **Rama de auditoría:** `audit/hito-03-adversarial`, creada desde `mp-022-validacion-integrada` @ `beb9434`
-**Worktree:** `/Users/matu/orca/workspaces/madrid-pulse/audit-hito-03`
+**Worktree:** `<WORKTREES>/audit-hito-03`
 
 No se ha modificado ni una línea de código de producto, migración, contrato o dato
 persistente. Lo único que añade esta tarea al repositorio es este documento y los siete

@@ -2,7 +2,7 @@
 
 Mantenido en vivo por el coordinador (Claude Sonnet) a medida que cada `AUD-ID` reporta. AUD-09 puede partir de este registro en vez de reconstruirlo desde cero.
 
-**Run:** `run_3b3bfaf88f3d` · **Worktree:** `/Users/matu/orca/workspaces/madrid-pulse/audit-hito-03` (rama `audit/hito-03-adversarial`, base `mp-022-validacion-integrada@beb9434`)
+**Run:** `run_3b3bfaf88f3d` · **Worktree:** `<WORKTREES>/audit-hito-03` (rama `audit/hito-03-adversarial`, base `mp-022-validacion-integrada@beb9434`)
 
 | AUD-ID | Rol | Agente / modelo / esfuerzo (solicitado = efectivo) | Dispatch | Task | Commit | Veredicto |
 |---|---|---|---|---|---|---|
