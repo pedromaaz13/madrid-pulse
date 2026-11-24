@@ -48,7 +48,7 @@ Commit `308d950`: 11 rutas absolutas en 10 documentos sustituidas por marcadores
 Impacto en el historial: **ninguno** (no se reescribe nada); 100 commits nuevos sobre `990c95d`.
 
 ## 8. Secuencia exacta propuesta (cada paso requiere tu autorización explícita)
-0. Repetir Gitleaks (árbol e historial) sobre el HEAD final.
+0. Gitleaks repetido sobre `4637153` (historial completo + árbol): 0 hallazgos; repetir si se añaden commits.
 1. Decidir licencia/titular y correo (§2, §4) → commit documental `LICENSE` + `NOTICE` (no hecho).
 2. `git push -u origin integration/h3-audited` (publica 100 commits; repositorio público).
 3. Abrir PR `integration/h3-audited` → `main` con título y cuerpo que declaren NO-GO público; esperar CI real (python + frontend).
