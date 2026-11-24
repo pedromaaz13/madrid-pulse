@@ -1,5 +1,8 @@
 # Madrid Pulse
 
+> **Estado (2026-11-24): versión local auditada — NO-GO para despliegue público.**
+> El Hito 3 (`MP-016`→`MP-022`) está cerrado **solo en local** y la auditoría adversarial AUD-00…AUD-09 sigue demostrando **2 defectos P0 abiertos** (FR-01: el mapa pone en marcha trenes que el operador declara detenidos; FR-02: el replay `?at=` oculta datos reales) y 16 P1. Decisión y evidencia: [`docs/audits/hito-03/AUDIT_EXECUTIVE_DECISION.md`](docs/audits/hito-03/AUDIT_EXECUTIVE_DECISION.md). Uso previsto: local/demo supervisada. Las secciones «Estado actual» y «Estructura» de más abajo describen la fase inicial del proyecto y están **desactualizadas** (hallazgo FR-11 de la auditoría, pendiente en `MP-027`).
+
 Plataforma open source de visualización en tiempo real y analítica histórica de Cercanías Madrid.
 
 ## Visión

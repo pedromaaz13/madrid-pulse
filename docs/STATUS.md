@@ -1,5 +1,7 @@
 # STATUS.md — Tablero vivo
 
+> **Integración del Hito 3 (2026-11-24):** `main` queda marcado como **versión local auditada, NO-GO para despliegue público**. Cadena `MP-016`→`MP-022` `DONE`; auditoría AUD-00…AUD-09 aprobada formalmente con **2 P0 y 16 P1 abiertos** (`docs/audits/hito-03/`). Hito 4 **planificado, no implementado**: `docs/H4_TASK_MATRIX.md` y correspondencia `H4-xx` ↔ `MP-023+` en `docs/H4_MP_MAPPING.md`. Política de agentes: `docs/ORCHESTRATION_POLICY.md`. ADR-0014 y ADR-0015 siguen `Propuesto`. Base 5433: datos de AUD-06 **conservados** por decisión del propietario (`docs/audits/hito-03/INCIDENT_5433.md`). No hay push/PR/merge efectuado por agentes.
+
 > Punto de entrada del estado actual. El detalle por tarea vive en `docs/TASKS.md`; el historial de cambios, en `docs/CHANGELOG.md`.
 
 ## Hito autorizado actualmente
