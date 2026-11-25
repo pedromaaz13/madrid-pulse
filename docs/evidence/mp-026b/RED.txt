@@ -1,0 +1,125 @@
+Baseline 1d9a424aa86fc54ad75ddeb9100a1e2d5b0dc841
+test postgresql://mp_test:mp_local@127.0.0.1:5455/madrid_pulse
+git archive 1d9a424 | tar -x -C <checkout temporal>
+Superposición exclusiva de apps/api/tests/test_snapshot_consistency.py
+python -m unittest apps.api.tests.test_snapshot_consistency -v
+18ab7f3b26d7f5146d41dadcd2735e3886a9bc14163d4a6cafd374f834a22bfc  tests/fixtures/gtfs_c5_real/MANIFEST.md
+652bc1240824e03366ed2edf8b6d44104913f8cf1ed232d6fe2ea54d0e37d498  tests/fixtures/gtfs_c5_real/calendar.txt
+0c044d3b7a799b5d644be3f3b963bbdaf165ca1daef1afd6c30421dfa2eb3486  tests/fixtures/gtfs_c5_real/routes.txt
+351c20eb08295d788f85bf518d258fd881d7773cde4e6c94faa50eef8099676d  tests/fixtures/gtfs_c5_real/shapes.txt
+53cdd888e87f289c0bd45b60acbb0eeb69982a230a084d0cbfdf73d7bd383c1f  tests/fixtures/gtfs_c5_real/stop_times.txt
+fa77b60ee6ac6561de903fb5d18a6f7e65682466bf55b92344f62c3bc855f6c8  tests/fixtures/gtfs_c5_real/stops.txt
+4e18ba444d10a5a54e6c3985ef005e41b35487c126a2417ff40898975f469dc3  tests/fixtures/gtfs_c5_real/trips.txt
+cafe4f6713bfcfc4622a35067e39f0860a78f1bb7f46513ff2f4d2e73231352f  tests/fixtures/osm_c5_real/MANIFEST.md
+ec9d7decaf8d452b267df965d154c66abc7eb33d2e7cc4991db8f4dcbcab2948  tests/fixtures/osm_c5_real/relation_11331.json
+60416292689abedfe3ff20fee855c0e0bfad5e05b79cd54c8d22db1ee579cc8b  tests/fixtures/osm_c5_real/relation_3418148.json
+4af4497190bbac1b08f924b8bb751294fd63698d2dcec5798a0d67bfb76bee93  tests/fixtures/osm_c5_real/relation_3418149.json
+79f9966b2b7f3fdcebf1f41083d13ff58de39a496eca80caeb274c9b9f4d375a  tests/fixtures/osm_c5_real/relation_3418150.json
+1dfdbf702d918aab86f606ea6a1b718346b1baae6b19d17e2727a09a12307dec  apps/api/tests/test_snapshot_consistency.py
+Python 3.12.3
+test_aud06_two_runs_but_one_position_on_read_committed (apps.api.tests.test_snapshot_consistency.ConsistentResponses.test_aud06_two_runs_but_one_position_on_read_committed) ... FAIL
+test_board_matches_reference_during_both_commit_gaps (apps.api.tests.test_snapshot_consistency.ConsistentResponses.test_board_matches_reference_during_both_commit_gaps) ... FAIL
+test_concurrent_http_requests_are_independent (apps.api.tests.test_snapshot_consistency.ConsistentResponses.test_concurrent_http_requests_are_independent) ... FAIL
+test_empty_database_in_a_read_only_snapshot (apps.api.tests.test_snapshot_consistency.ConsistentResponses.test_empty_database_in_a_read_only_snapshot) ... FAIL
+test_middle_of_response_errors_and_query_cancellation_close_the_transaction (apps.api.tests.test_snapshot_consistency.ConsistentResponses.test_middle_of_response_errors_and_query_cancellation_close_the_transaction) ...
+  test_middle_of_response_errors_and_query_cancellation_close_the_transaction (apps.api.tests.test_snapshot_consistency.ConsistentResponses.test_middle_of_response_errors_and_query_cancellation_close_the_transaction) (path='snapshot') ... FAIL
+  test_middle_of_response_errors_and_query_cancellation_close_the_transaction (apps.api.tests.test_snapshot_consistency.ConsistentResponses.test_middle_of_response_errors_and_query_cancellation_close_the_transaction) (path='stations/18000/board') ... FAIL
+test_same_sequence_accepts_a_lower_run_committed_later (apps.api.tests.test_snapshot_consistency.ConsistentResponses.test_same_sequence_accepts_a_lower_run_committed_later) ... FAIL
+test_scope_fallback_keeps_the_callers_snapshot_and_role (apps.api.tests.test_snapshot_consistency.ConsistentResponses.test_scope_fallback_keeps_the_callers_snapshot_and_role) ... FAIL
+test_snapshot_matches_reference_during_both_commit_gaps (apps.api.tests.test_snapshot_consistency.ConsistentResponses.test_snapshot_matches_reference_during_both_commit_gaps) ... FAIL
+
+======================================================================
+FAIL: test_aud06_two_runs_but_one_position_on_read_committed (apps.api.tests.test_snapshot_consistency.ConsistentResponses.test_aud06_two_runs_but_one_position_on_read_committed)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp-026b-44270f.9RCAJe/apps/api/tests/test_snapshot_consistency.py", line 228, in test_aud06_two_runs_but_one_position_on_read_committed
+    self.assertEqual(mixed["revision"]["sequence"], first)
+AssertionError: 16 != 15
+
+======================================================================
+FAIL: test_board_matches_reference_during_both_commit_gaps (apps.api.tests.test_snapshot_consistency.ConsistentResponses.test_board_matches_reference_during_both_commit_gaps)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp-026b-44270f.9RCAJe/apps/api/tests/test_snapshot_consistency.py", line 207, in test_board_matches_reference_during_both_commit_gaps
+    self.exercise_interleaving(BOARD)
+  File "/private/tmp/mp-026b-44270f.9RCAJe/apps/api/tests/test_snapshot_consistency.py", line 193, in exercise_interleaving
+    self.assertEqual(actual, expected)
+AssertionError: {'sch[529 chars]a256:a96c16f9abf34f0bb551ebeac5def4eb38474ad87[5648 chars]n.']} != {'sch[529 chars]a256:39664cb9f22309569dd83750db8832011563edc65[5744 chars]n.']}
+Diff is 12627 characters long. Set self.maxDiff to None to see it.
+
+======================================================================
+FAIL: test_concurrent_http_requests_are_independent (apps.api.tests.test_snapshot_consistency.ConsistentResponses.test_concurrent_http_requests_are_independent)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp-026b-44270f.9RCAJe/apps/api/tests/test_snapshot_consistency.py", line 325, in test_concurrent_http_requests_are_independent
+    self.assertEqual(before[1], self.fetch(BOARD))
+AssertionError: {'sch[531 chars]a256:9276a7f92cc831737ec02632b19a66878deb54268[5639 chars]n.']} != {'sch[531 chars]a256:79d4829878fa850bc091c0ece59f37f7b27165e47[5639 chars]n.']}
+Diff is 9903 characters long. Set self.maxDiff to None to see it.
+
+======================================================================
+FAIL: test_empty_database_in_a_read_only_snapshot (apps.api.tests.test_snapshot_consistency.ConsistentResponses.test_empty_database_in_a_read_only_snapshot)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp-026b-44270f.9RCAJe/apps/api/tests/test_snapshot_consistency.py", line 121, in test_empty_database_in_a_read_only_snapshot
+    self.assertEqual(reader.info.transaction_status, TransactionStatus.IDLE)
+AssertionError: <TransactionStatus.INTRANS: 2> != <TransactionStatus.IDLE: 0>
+
+======================================================================
+FAIL: test_middle_of_response_errors_and_query_cancellation_close_the_transaction (apps.api.tests.test_snapshot_consistency.ConsistentResponses.test_middle_of_response_errors_and_query_cancellation_close_the_transaction) (path='snapshot')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp-026b-44270f.9RCAJe/apps/api/tests/test_snapshot_consistency.py", line 287, in test_middle_of_response_errors_and_query_cancellation_close_the_transaction
+    self.assertEqual(status, TransactionStatus.IDLE)
+AssertionError: <TransactionStatus.INERROR: 3> != <TransactionStatus.IDLE: 0>
+
+======================================================================
+FAIL: test_middle_of_response_errors_and_query_cancellation_close_the_transaction (apps.api.tests.test_snapshot_consistency.ConsistentResponses.test_middle_of_response_errors_and_query_cancellation_close_the_transaction) (path='stations/18000/board')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp-026b-44270f.9RCAJe/apps/api/tests/test_snapshot_consistency.py", line 287, in test_middle_of_response_errors_and_query_cancellation_close_the_transaction
+    self.assertEqual(status, TransactionStatus.IDLE)
+AssertionError: <TransactionStatus.INERROR: 3> != <TransactionStatus.IDLE: 0>
+
+======================================================================
+FAIL: test_same_sequence_accepts_a_lower_run_committed_later (apps.api.tests.test_snapshot_consistency.ConsistentResponses.test_same_sequence_accepts_a_lower_run_committed_later)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp-026b-44270f.9RCAJe/apps/api/tests/test_snapshot_consistency.py", line 251, in test_same_sequence_accepts_a_lower_run_committed_later
+    self.assertEqual(in_flight, before[1])
+AssertionError: {'sch[529 chars]a256:ff492403bb3012a6d04dab6024127443e49027d62[5655 chars]n.']} != {'sch[529 chars]a256:d8f1dce1a884772047698d8d1b3b49a92c875d8a8[5648 chars]n.']}
+Diff is 10065 characters long. Set self.maxDiff to None to see it.
+
+======================================================================
+FAIL: test_scope_fallback_keeps_the_callers_snapshot_and_role (apps.api.tests.test_snapshot_consistency.ConsistentResponses.test_scope_fallback_keeps_the_callers_snapshot_and_role)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp-026b-44270f.9RCAJe/apps/api/tests/test_snapshot_consistency.py", line 343, in test_scope_fallback_keeps_the_callers_snapshot_and_role
+    self.assertEqual(reader.execute("SELECT current_user").fetchone(), ("mp026b_scope_test",))
+AssertionError: Tuples differ: ('mp_test',) != ('mp026b_scope_test',)
+
+First differing element 0:
+'mp_test'
+'mp026b_scope_test'
+
+- ('mp_test',)
++ ('mp026b_scope_test',)
+
+======================================================================
+FAIL: test_snapshot_matches_reference_during_both_commit_gaps (apps.api.tests.test_snapshot_consistency.ConsistentResponses.test_snapshot_matches_reference_during_both_commit_gaps)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp-026b-44270f.9RCAJe/apps/api/tests/test_snapshot_consistency.py", line 204, in test_snapshot_matches_reference_during_both_commit_gaps
+    self.exercise_interleaving(SNAPSHOT)
+  File "/private/tmp/mp-026b-44270f.9RCAJe/apps/api/tests/test_snapshot_consistency.py", line 193, in exercise_interleaving
+    self.assertEqual(actual, expected)
+AssertionError: {'gtf[1707 chars]ip': None, 'timestamps': {'gps_observed_at': '[2764 chars]: 0}} != {'gtf[1707 chars]ip': 'SCHEDULED', 'timestamps': {'gps_observed[2771 chars]: 0}}
+Diff is 7536 characters long. Set self.maxDiff to None to see it.
+
+----------------------------------------------------------------------
+Ran 8 tests in 5.472s
+
+FAILED (failures=9)
+AUD-06: en el hueco sequence=16, posiciones=1; siguiente sequence=16, posiciones=2
+stations/18000/board: steps=[('trip_updates', None), ('vehicles', 1), ('marker', 19)]; reference=186, snapshot=820:820:; eligible=[(17,), (18,), (19,)]; actual={'act6-anchor': None}; reference={'act6-anchor': 120}
+snapshot: steps=[('vehicles', 1), ('trip_updates', None), ('marker', 27)]; reference=215, snapshot=832:832:; eligible=[(25,), (26,), (27,)]; actual={'act6-anchor': 120}; reference={'act6-anchor': 120}
+exit=1

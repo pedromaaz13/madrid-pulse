@@ -300,6 +300,8 @@ def main() -> None:
     try:
         config = ApiConfig.from_env()
         with psycopg.connect(config.database_dsn) as conn:
+            conn.isolation_level = psycopg.IsolationLevel.REPEATABLE_READ
+            conn.read_only = True
             require_disposable_database(conn)
             rows = build_rows(
                 conn, config=config, captured_at=captured_at, service_date=service_date

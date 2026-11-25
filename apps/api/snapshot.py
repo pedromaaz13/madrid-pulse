@@ -776,16 +776,22 @@ def build_snapshot(
 
     validity = network.gtfs_validity(now, expiring_days=config.gtfs_expiring_days)
     observed_through = now if network.mode == "replay" else None
-    histories = db.latest_vehicle_histories(conn, as_of=now, observed_through=observed_through)
-    trip_updates = db.latest_trip_updates(
-        conn,
-        [history.latest.position.source_trip_id for history in histories],
-        observed_after=service._trip_update_cutoff(now),
-        as_of=now,
-        observed_through=observed_through,
-    )
-    health = service.feed_health(conn, now, stale_after_s=config.feed_stale_after_s)
-    marker = db.revision_marker(conn, as_of=now)
+    with db.consistent_read(conn):
+        marker = db.revision_marker(conn, as_of=now)
+        histories = db.latest_vehicle_histories(
+            conn, as_of=now, observed_through=observed_through, max_run_id=marker.sequence
+        )
+        trip_updates = db.latest_trip_updates(
+            conn,
+            [history.latest.position.source_trip_id for history in histories],
+            observed_after=service._trip_update_cutoff(now),
+            as_of=now,
+            observed_through=observed_through,
+            max_run_id=marker.sequence,
+        )
+        health = service.feed_health(
+            conn, now, stale_after_s=config.feed_stale_after_s, max_run_id=marker.sequence
+        )
 
     vehicles = [
         build_vehicle_entry(
@@ -1082,15 +1088,21 @@ def build_station_board(
 
     trip_ids = [call.trip_id for _, _, call in visible]
     observed_through = now if network.mode == "replay" else None
-    trip_updates = db.latest_trip_updates(
-        conn, trip_ids, observed_after=service._trip_update_cutoff(now),
-        as_of=now, observed_through=observed_through,
-    )
-    observed = db.vehicles_for_trips(conn, trip_ids, as_of=now, observed_through=observed_through)
-    marker = db.revision_marker(conn, as_of=now)
-    health = service.feed_health(conn, now, stale_after_s=config.feed_stale_after_s)
-
-    known = db.known_trip_relationships(conn, trip_ids, as_of=now, observed_through=observed_through)
+    with db.consistent_read(conn):
+        marker = db.revision_marker(conn, as_of=now)
+        observed = db.vehicles_for_trips(
+            conn, trip_ids, as_of=now, observed_through=observed_through, max_run_id=marker.sequence
+        )
+        trip_updates = db.latest_trip_updates(
+            conn, trip_ids, observed_after=service._trip_update_cutoff(now),
+            as_of=now, observed_through=observed_through, max_run_id=marker.sequence,
+        )
+        health = service.feed_health(
+            conn, now, stale_after_s=config.feed_stale_after_s, max_run_id=marker.sequence
+        )
+        known = db.known_trip_relationships(
+            conn, trip_ids, as_of=now, observed_through=observed_through, max_run_id=marker.sequence
+        )
     entries: list[BoardEntryOut] = []
     for _, call_service_date, call in visible:
         trip_update = trip_updates.get(call.trip_id)

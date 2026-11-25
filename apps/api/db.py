@@ -2,14 +2,36 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from typing import Sequence
 
 import psycopg
+from psycopg.pq import TransactionStatus
 from psycopg.rows import dict_row
 
 from packages.contracts.canonical import TripUpdateObservation, VehiclePositionObservation
+
+
+@contextmanager
+def consistent_read(conn: psycopg.Connection) -> Iterator[None]:
+    """Acota la instantánea a la fase SQL de una respuesta.
+
+    Una conexión de petición llega inactiva. Los llamadores que ya poseen
+    una transacción (p. ej., un replay con snapshot importado) conservan su
+    instantánea y son responsables de cerrarla.
+    """
+    idle = conn.info.transaction_status == TransactionStatus.IDLE
+    with conn.transaction():
+        if idle:
+            conn.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
+        else:
+            isolation = conn.execute("SHOW transaction_isolation").fetchone()[0]
+            if isolation not in ("repeatable read", "serializable"):
+                raise ValueError("La lectura consistente requiere REPEATABLE READ o SERIALIZABLE")
+        yield
 
 
 @dataclass(frozen=True)
@@ -85,6 +107,7 @@ _KNOWN_UPDATE = """
     SELECT u.schedule_relationship, u.observed_at
     FROM trip_update_observation u JOIN source_ingestion_run r ON r.id = u.ingestion_run_id
     WHERE u.source_trip_id = v.source_trip_id AND r.started_at <= %(as_of)s
+      AND r.id <= COALESCE(%(max_run_id)s::bigint, r.id)
       AND u.observed_at >= %(cutoff)s
       AND u.observed_at <= COALESCE(%(observed_through)s, 'infinity'::timestamptz)
       AND (%(observed_through)s::timestamptz IS NOT NULL OR NOT r.is_retroactive)
@@ -92,7 +115,7 @@ _KNOWN_UPDATE = """
 """
 
 
-def known_trip_relationships(conn, trip_ids, *, as_of, observed_through=None):
+def known_trip_relationships(conn, trip_ids, *, as_of, observed_through=None, max_run_id=None):
     if not trip_ids:
         return {}
     with conn.cursor() as cur:
@@ -100,13 +123,14 @@ def known_trip_relationships(conn, trip_ids, *, as_of, observed_through=None):
             SELECT v.source_trip_id, known.schedule_relationship, known.observed_at
             FROM unnest(%(trip_ids)s::text[]) AS v(source_trip_id)
             CROSS JOIN LATERAL ({_KNOWN_UPDATE}) known
-        """, dict(trip_ids=sorted(set(trip_ids)), as_of=as_of,
+        """, dict(trip_ids=sorted(set(trip_ids)), as_of=as_of, max_run_id=max_run_id,
                   observed_through=observed_through, cutoff=trip_update_cutoff(as_of)))
         return {trip: (relationship, at) for trip, relationship, at in cur.fetchall()}
 
 
 def latest_vehicle_histories(
-    conn: psycopg.Connection, *, as_of: datetime, observed_through: datetime | None = None
+    conn: psycopg.Connection, *, as_of: datetime, observed_through: datetime | None = None,
+    max_run_id: int | None = None,
 ) -> list[VehicleHistory]:
     """Las dos observaciones más recientes de cada vehículo distinto visto.
 
@@ -138,6 +162,7 @@ def latest_vehicle_histories(
                     FROM vehicle_position_observation v
                     JOIN source_ingestion_run r ON r.id = v.ingestion_run_id
                     WHERE v.source_vehicle_id = vehicles.source_vehicle_id AND r.started_at <= %(as_of)s
+                      AND r.id <= COALESCE(%(max_run_id)s::bigint, r.id)
                       AND v.observed_at <= COALESCE(%(observed_through)s, 'infinity'::timestamptz)
                     ORDER BY v.observed_at DESC, v.id DESC LIMIT 2
                 ) latest
@@ -166,7 +191,8 @@ def latest_vehicle_histories(
             LEFT JOIN LATERAL ({_KNOWN_UPDATE}) known ON true
             ORDER BY source_vehicle_id, rank
             """,
-            {"as_of": as_of, "observed_through": observed_through, "cutoff": trip_update_cutoff(as_of)},
+            {"as_of": as_of, "observed_through": observed_through, "max_run_id": max_run_id,
+             "cutoff": trip_update_cutoff(as_of)},
         )
         by_vehicle: dict[str, list[dict]] = {}
         for row in cur.fetchall():
@@ -251,7 +277,8 @@ class FeedRunSample:
 
 
 def recent_ingestion_runs(
-    conn: psycopg.Connection, *, as_of: datetime, per_feed_limit: int = 50
+    conn: psycopg.Connection, *, as_of: datetime, per_feed_limit: int = 50,
+    max_run_id: int | None = None,
 ) -> list[FeedRunSample]:
     """Ejecuciones por feed hasta el reloj de la petición, inclusive.
 
@@ -261,6 +288,7 @@ def recent_ingestion_runs(
     `LATERAL` acotado usa el índice
     `source_ingestion_run_feed_started_at_idx` (migración 0002) y devuelve
     como máximo `per_feed_limit` filas de cada feed.
+    Cuando hay una cota de revisión, se aplica al ID antes de elegir las muestras.
     """
     with conn.cursor(row_factory=dict_row) as cur:
         cur.execute(
@@ -273,12 +301,13 @@ def recent_ingestion_runs(
                        run.status, run.entity_count, run.payload_hash
                 FROM source_ingestion_run run
                 WHERE run.feed_name = feeds.feed_name AND run.started_at <= %s
+                  AND run.id <= COALESCE(%s::bigint, run.id)
                 ORDER BY run.started_at DESC, run.id DESC
                 LIMIT %s
             ) AS recent
             ORDER BY recent.feed_name, recent.started_at DESC, recent.id DESC
             """,
-            (as_of, per_feed_limit),
+            (as_of, max_run_id, per_feed_limit),
         )
         rows = cur.fetchall()
     return [
@@ -308,11 +337,14 @@ def latest_trip_updates(
     observed_after: datetime,
     as_of: datetime | None = None,
     observed_through: datetime | None = None,
+    max_run_id: int | None = None,
 ) -> dict[str, TripUpdateObservation]:
     """Igual que ``latest_trip_update`` pero para muchos viajes en **una** consulta.
 
     El orden ``observed_at DESC, id DESC`` mantiene el desempate de ADR-0010.
     Un viaje sin fila dentro de la ventana queda fuera del diccionario.
+    El lateral permite usar el índice por viaje y detenerse en la primera
+    fila elegible, aunque la ventana contenga muchas actualizaciones.
     `as_of` acota las ingestas. `observed_through` acota el reloj de origen en replay.
     """
     if not source_trip_ids:
@@ -321,21 +353,29 @@ def latest_trip_updates(
     with conn.cursor(row_factory=dict_row) as cur:
         cur.execute(
             """
-            SELECT DISTINCT ON (source_trip_id)
-                   source_trip_id, observed_at, schedule_relationship, delay_seconds,
-                   delay_coverage, next_stop_id, payload_hash
-            FROM trip_update_observation u
-            WHERE source_trip_id = ANY(%(trip_ids)s) AND observed_at >= %(observed_after)s
-              AND observed_at <= COALESCE(%(observed_through)s, 'infinity'::timestamptz)
-              AND (%(as_of)s::timestamptz IS NULL OR EXISTS (
-                  SELECT 1 FROM source_ingestion_run r
-                  WHERE r.id = u.ingestion_run_id AND r.started_at <= %(as_of)s
-              ))
-            ORDER BY source_trip_id, observed_at DESC, id DESC
+            SELECT latest.*
+            FROM unnest(%(trip_ids)s::text[]) AS trips(source_trip_id)
+            CROSS JOIN LATERAL (
+                SELECT u.source_trip_id, u.observed_at, u.schedule_relationship, u.delay_seconds,
+                       u.delay_coverage, u.next_stop_id, u.payload_hash
+                FROM trip_update_observation u
+                WHERE u.source_trip_id = trips.source_trip_id
+                  AND u.observed_at >= %(observed_after)s
+                  AND u.ingestion_run_id <= COALESCE(%(max_run_id)s::bigint, u.ingestion_run_id)
+                  AND u.observed_at <= COALESCE(%(observed_through)s, 'infinity'::timestamptz)
+                  AND (%(as_of)s::timestamptz IS NULL OR EXISTS (
+                      SELECT 1 FROM source_ingestion_run r
+                      WHERE r.id = u.ingestion_run_id AND r.started_at <= %(as_of)s
+                  ))
+                ORDER BY u.observed_at DESC, u.id DESC
+                LIMIT 1
+            ) latest
+            ORDER BY latest.source_trip_id
             """,
             {
                 "trip_ids": unique_ids, "observed_after": observed_after,
                 "as_of": as_of, "observed_through": observed_through,
+                "max_run_id": max_run_id,
             },
         )
         rows = cur.fetchall()
@@ -355,17 +395,15 @@ def latest_trip_updates(
 
 @dataclass(frozen=True)
 class RevisionMarker:
-    """Revisión monotónica **dentro de un ámbito explícito** (ADR-0014).
+    """Cota de los runs elegibles y visibles (ADR-0014, enmienda §4.7).
 
-    `sequence` es el mayor `source_ingestion_run.id` considerado: una secuencia
-    real de PostgreSQL, monotónica, que sobrevive a reinicios del proceso de
-    API y que **no** avanza cuando el colector se detiene (no rejuvenece nada).
+    `sequence` es el mayor `source_ingestion_run.id` considerado. Un run con
+    un ID inferior puede hacerse visible más tarde sin cambiar la cota.
     `scope` acota dónde esa comparación es lícita: el `system_identifier` del
     clúster. Tras una restauración en otro clúster el `scope` cambia y comparar
     secuencias entre ámbitos distintos queda prohibido por contrato.
 
-    `sequence` es `None` cuando no hay ninguna ejecución de ingesta registrada:
-    ausencia de revisión, no revisión cero.
+    `sequence` es `None` cuando no hay ninguna ejecución de ingesta elegible.
     """
 
     scope: str
@@ -392,13 +430,12 @@ def _revision_scope(conn: psycopg.Connection) -> tuple[str, str]:
     mismo OID) en vez de confiar de más en una secuencia.
     """
     try:
-        with conn.cursor() as cur:
-            cur.execute("SELECT system_identifier FROM pg_control_system()")
-            row = cur.fetchone()
+        with conn.transaction():
+            row = conn.execute("SELECT system_identifier FROM pg_control_system()").fetchone()
         if row is not None and row[0] is not None:
             return f"pg:{row[0]}", "database_system_identifier"
-    except psycopg.Error:
-        conn.rollback()
+    except psycopg.errors.InsufficientPrivilege:
+        pass
     with conn.cursor() as cur:
         cur.execute("SELECT current_database(), oid FROM pg_database WHERE datname = current_database()")
         row = cur.fetchone()
@@ -413,6 +450,7 @@ def vehicles_for_trips(
     *,
     as_of: datetime,
     observed_through: datetime | None = None,
+    max_run_id: int | None = None,
 ) -> dict[str, VehiclePositionObservation]:
     """Última observación de vehículo de cada viaje, en **una** consulta.
 
@@ -435,10 +473,11 @@ def vehicles_for_trips(
             FROM vehicle_position_observation v
             JOIN source_ingestion_run r ON r.id = v.ingestion_run_id
             WHERE v.source_trip_id = ANY(%s) AND r.started_at <= %s
+              AND r.id <= COALESCE(%s::bigint, r.id)
               AND v.observed_at <= COALESCE(%s, 'infinity'::timestamptz)
             ORDER BY v.source_trip_id, v.observed_at DESC, v.id DESC
             """,
-            (unique_ids, as_of, observed_through),
+            (unique_ids, as_of, max_run_id, observed_through),
         )
         rows = cur.fetchall()
     return {

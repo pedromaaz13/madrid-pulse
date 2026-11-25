@@ -84,7 +84,7 @@ def main() -> None:
 
     shared: psycopg.Connection | None = None
     if args.reuse_connection:
-        shared = psycopg.connect(ApiConfig.from_env().database_dsn)
+        shared = psycopg.connect(ApiConfig.from_env().database_dsn, autocommit=True)
         app.dependency_overrides[get_connection] = lambda: shared
 
     clock = f"?at={args.at}" if args.at else ""

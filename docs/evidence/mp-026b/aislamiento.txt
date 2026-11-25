@@ -1,0 +1,70 @@
+MADRID_PULSE_ENV=test
+MADRID_PULSE_DATABASE_URL=postgresql://mp_test:mp_local@127.0.0.1:5455/madrid_pulse
+MADRID_PULSE_REQUIRE_DB=1
+Contenedor desechable propio mp-026b-44270f-postgres. Imagen local; --pull=never.
+a9c51a627e4ca97e2ab287c7860c4739df63ae89038a4b892a5a47f35b555d46
+PostgreSQL 17.5 (Debian 17.5-1.pgdg110+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 10.2.1-6) 10.2.1 20210110, 64-bit|madrid-pulse:disposable
+Retirada del contenedor inicial y su volumen 0398d2897f6b69375930402b1101ef6d512e42f6e57bc6d16e0920672aadcd80
+mp-026b-44270f-postgres
+Volumen inicial retirado.
+Segundo contenedor limpio mp-026b-44270f-ci, mismo DSN/puerto. Imagen local; --pull=never.
+WARNING: The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested
+4006e6bfe94f89f310376068d8c69e2af5c3c4ff717871a39cce6c2d8d86a2a5
+127.0.0.1:5432 - no response
+127.0.0.1:5432 - no response
+127.0.0.1:5432 - no response
+127.0.0.1:5432 - no response
+127.0.0.1:5432 - accepting connections
+psql -X -v ON_ERROR_STOP=1 < infra/migrations/0001_init.up.sql
+BEGIN
+CREATE EXTENSION
+NOTICE:  extension "postgis" already exists, skipping
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+COMMIT
+psql -X -v ON_ERROR_STOP=1 < infra/migrations/0002_api_batch_indexes.up.sql
+BEGIN
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+COMMIT
+psql -X -v ON_ERROR_STOP=1 < infra/migrations/0003_anchor_profile.up.sql
+ALTER TABLE
+psql -X -v ON_ERROR_STOP=1 < infra/migrations/0004_run_recency.up.sql
+BEGIN
+ALTER TABLE
+UPDATE 0
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE FUNCTION
+CREATE TRIGGER
+ALTER TABLE
+COMMIT
+python -m infra.operate.mark_disposable_db
+Base PostgreSQL marcada como desechable.
+PostgreSQL 17.5 (Debian 17.5-1.pgdg110+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 10.2.1-6) 10.2.1 20210110, 64-bit|madrid-pulse:disposable
+Retirada del contenedor de CI y su volumen 81270d22fb0cdd524a628b53467add2ccfb3248b1600a7722b4a3d663d840671
+mp-026b-44270f-ci
+Contenedores y volúmenes propios retirados.
+Temporal retirado: /private/tmp/mp-026b-44270f.9RCAJe
+Temporal retirado: /private/tmp/mp-026b-44270f-green.jaGakG
+Temporal retirado: /private/tmp/mp-026b-44270f-final.22uZyw
+Temporal retirado: /private/tmp/mp-026b-44270f-ci.k4eJxs

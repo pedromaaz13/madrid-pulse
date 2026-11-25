@@ -2796,7 +2796,7 @@
         "type": "object"
       },
       "SnapshotRevisionOut": {
-        "description": "Revisi\u00f3n ordenable **solo dentro de `scope`** (ADR-0014).\n\nRegla de contrato para el cliente: si `scope` coincide, ordenar por\n`sequence` y descartar una respuesta con `sequence` menor; con `sequence`\nigual, desempatar por `generated_at` y despu\u00e9s por `tiebreak`. Si `scope`\ndifiere, **no** comparar secuencias: tratarlo como discontinuidad.\n`snapshot_id` jam\u00e1s se ordena.",
+        "description": "Revisi\u00f3n ordenable **solo dentro de `scope`** (ADR-0014, enmienda \u00a74.7).\n\nLa cota `sequence` es el mayor ID de ingesta elegible que ve la respuesta\nen su instant\u00e1nea PostgreSQL de solo lectura. Es nula si no hay runs\nelegibles. Respuestas con la misma cota pueden contener datos distintos\ncuando una ingesta con ID inferior se confirma m\u00e1s tarde.\n\nRegla de contrato para el cliente: si `scope` coincide, ordenar por\n`sequence` y descartar una respuesta con `sequence` menor; con `sequence`\nigual, desempatar por `generated_at` y despu\u00e9s por `tiebreak`. Si `scope`\ndifiere, **no** comparar secuencias: tratarlo como discontinuidad.\n`snapshot_id` jam\u00e1s se ordena.",
         "properties": {
           "generated_at": {
             "format": "date-time",
@@ -2966,6 +2966,7 @@
         "type": "object"
       },
       "StationBoardOut": {
+        "description": "Tablero cuyo marcador y datos se leen en una sola instant\u00e1nea PostgreSQL.",
         "properties": {
           "calculated_from": {
             "default": "gtfs_calendar+calendar_dates+stop_times, cruzado con trip_update y observaciones de veh\u00edculo",

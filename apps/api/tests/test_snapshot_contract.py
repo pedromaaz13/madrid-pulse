@@ -65,6 +65,13 @@ class CountingConnection:
         self._conn = conn
         self.executed: list[str] = []
 
+    def __getattr__(self, name):
+        return getattr(self._conn, name)
+
+    def execute(self, query, *args, **kwargs):
+        self.executed.append(str(query).strip().split("\n")[0][:60])
+        return self._conn.execute(query, *args, **kwargs)
+
     def cursor(self, *args, **kwargs):
         inner = self._conn.cursor(*args, **kwargs)
         executed = self.executed
@@ -534,6 +541,7 @@ class SnapshotPostgresTests(NetworkFixtureMixin, unittest.TestCase):
 
     def setUp(self) -> None:
         self.conn = connect_disposable_or_skip()
+        self.conn.isolation_level = psycopg.IsolationLevel.REPEATABLE_READ
         self.conn.execute("SELECT 1")
         self.addCleanup(self.conn.close)
         self.addCleanup(self.conn.rollback)
@@ -829,6 +837,7 @@ class SnapshotPostgresTests(NetworkFixtureMixin, unittest.TestCase):
 class StationBoardPostgresTests(NetworkFixtureMixin, unittest.TestCase):
     def setUp(self) -> None:
         self.conn = connect_disposable_or_skip()
+        self.conn.isolation_level = psycopg.IsolationLevel.REPEATABLE_READ
         self.conn.execute("SELECT 1")
         self.addCleanup(self.conn.close)
         self.addCleanup(self.conn.rollback)
@@ -1152,6 +1161,7 @@ class ExtendedHoursBoardTests(unittest.TestCase):
 
     def setUp(self) -> None:
         self.conn = connect_disposable_or_skip()
+        self.conn.isolation_level = psycopg.IsolationLevel.REPEATABLE_READ
         self.conn.execute("SELECT 1")
         self.addCleanup(self.conn.close)
         self.addCleanup(self.conn.rollback)
@@ -1238,6 +1248,7 @@ class BoardWindowCoversItsCandidateServiceDaysTests(unittest.TestCase):
 
     def setUp(self) -> None:
         self.conn = connect_disposable_or_skip()
+        self.conn.isolation_level = psycopg.IsolationLevel.REPEATABLE_READ
         self.conn.execute("SELECT 1")
         self.addCleanup(self.conn.close)
         self.addCleanup(self.conn.rollback)

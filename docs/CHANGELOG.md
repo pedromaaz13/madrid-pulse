@@ -4,6 +4,16 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 
 ## [Unreleased]
 
+### MP-026b — Lectura consistente de snapshot y tablero (ADR-0014 §4.7, FR-07) (rama `pedromaaz13/mp-026b-snapshot-consistente`, apilada sobre MP-025a; sin fusionar)
+
+Ejecutor Codex `gpt-6.2-sol` · high (recibo de Orca); revisor Claude Opus 5.5 · high (argv verificado): APPROVED en la 1ª ronda sobre `ff5e6ad`. **No integrada en `main`.**
+
+#### Fixed
+- `/api/v1/snapshot` y `/api/v1/stations/{id}/board` leen marcador, vehículos, `trip_update` y salud en una única transacción REPEATABLE READ de solo lectura por petición: la carrera de AUD-06 ya no mezcla estados. La `revision`/`sequence` es una cota, no una identidad; **no hay garantía de reproducción exacta por hora civil** (sigue `UNVERIFIED`).
+
+#### Verified
+- RED 8/8 contra `1d9a424` y GREEN; 323 tests con 18 skipped; con 300 000 runs el snapshot baja de p50/p95 1 484,90/1 605,30 ms a 206,44/239,72 ms. Pendiente: Actions remoto.
+
 ### MP-025a — Modelo de estado de parada aprobado (ADR-0014 enmienda 1) (rama `pedromaaz13/mp-025a-estado-parada`, en revisión del propietario; sin fusionar)
 
 Ejecutor Codex `gpt-6.2-astra` · high (recibo de Orca); revisor Claude Opus 5.5 · high (argv verificado): ronda 1 CHANGES_REQUESTED, ronda 2 APPROVED sobre `0f0ce54`. **No integrada en `main`. No cierra FR-01**: eso exige MP-025b sobre ≥ 500 pares en vivo.

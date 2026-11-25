@@ -154,10 +154,26 @@ Regla de contrato para el cliente: con `scope` igual, ordenar por `sequence`
 y descartar toda respuesta de `sequence` menor; con `sequence` igual,
 desempatar por `generated_at` y luego por `tiebreak`. Con `scope` **distinto**,
 no comparar secuencias: es una discontinuidad (restauración, otro clúster), no
-un rebobinado. `sequence` es el mayor `source_ingestion_run.id` entre las
-ingestas elegibles. Sobrevive a reinicios y permanece estable mientras el
-conjunto elegible sea el mismo. En replay cambia al cruzar el
-`started_at` de ingestas ya guardadas.
+un rebobinado.
+
+Snapshot y tablero leen el marcador, vehículos, actualizaciones de viaje y
+salud dentro de una transacción PostgreSQL `REPEATABLE READ READ ONLY` propia
+de la petición. La cota `sequence` es el mayor `source_ingestion_run.id`
+**visible en esa instantánea** entre las ingestas elegibles al reloj de la
+petición (`started_at <= reloj`). Cada fila de ingesta que contribuye a la
+respuesta tiene un ID de run menor o igual a la cota. La consulta de salud
+aplica esa misma cota sobre `run.id` antes de elegir las muestras por feed;
+el tablero usa esas muestras para calcular su `revision.tiebreak`.
+
+Los escritores pueden reservar los IDs n y n+1 y confirmar primero n+1.
+La confirmación posterior de n puede cambiar los datos manteniendo la
+misma `sequence`. Si no hay runs elegibles (incluida una base vacía),
+`sequence` es `null`, `vehicles` es `[]` y los feeds esperados aparecen con
+estado `unknown`. El tablero sigue devolviendo los servicios del calendario
+como `scheduled_only`.
+
+En replay, `at` aplica el reloj del contrato a los runs disponibles al
+consultar. La visibilidad histórica por hora civil sigue `UNVERIFIED`.
 
 ### Las tres coordenadas, separadas
 

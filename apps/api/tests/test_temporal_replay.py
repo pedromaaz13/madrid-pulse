@@ -11,6 +11,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from fastapi.testclient import TestClient
+from psycopg import IsolationLevel
 
 from apps.api import main
 from services.collector.collector import run_cycle
@@ -35,6 +36,7 @@ class TemporalApiTests(unittest.TestCase):
         self.addCleanup(self.conn.rollback)
         # run_cycle usa transacciones propias. Una ya abierta las convierte
         # en savepoints y permite revertir todos los cortes después de probar.
+        self.conn.isolation_level = IsolationLevel.REPEATABLE_READ
         self.conn.execute("SELECT 1")
         main.app.dependency_overrides[main.get_connection] = lambda: self.conn
         self.addCleanup(main.app.dependency_overrides.clear)
