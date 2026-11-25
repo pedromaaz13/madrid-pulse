@@ -1,0 +1,1 @@
+MADRID_PULSE_ENV=test MADRID_PULSE_DATABASE_URL=postgresql://mp_test:mp_local@127.0.0.1:5454/madrid_pulse

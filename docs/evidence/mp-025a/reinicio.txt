@@ -1,0 +1,5 @@
+2e668a006c460882a111ba12ab5786d9a416d3c4
+PYTHONPATH=. python docs/evidence/mp-025a/reinicio.py seed / end / stale (tres procesos)
+progreso_en_valid_until_m=40829.8220670471
+progreso_primera_consulta_caducada_tras_reinicio_m=40829.8220670471
+PASS

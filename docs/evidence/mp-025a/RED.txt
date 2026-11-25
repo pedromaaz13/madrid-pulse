@@ -1,0 +1,742 @@
+Checkout de producción; se copian solo pruebas y fixtures desde 5de418d.
+beb94341ed0945cea084216caac3cf090d091a6e
+abd0d4f0a11503e8142aa8f63521d1780736b303dd76884d6bbacbfe56a0f4ea  tests/fixtures/mp025a/1532.json
+7ed74595fda12b7a0ebcd19ed472ad73f3d3579d92b6772a5d185f051020a088  tests/fixtures/mp025a/1533.json
+cb8f1608d591f6ce0f912f2e8e73e08c04716798239b808131d27e930311809c  tests/fixtures/mp025a/README.md
+c1cd63dddce4524237dc682180043b2a1a5360081c52722fabe6e2f178206de8  tests/fixtures/mp025a/frames.json
+0c4b34f6b19a93c56abf960d833256972a2b4b125af572e7c73c3c4b1746872e  tests/fixtures/mp025a/gtfs.zip
+10faf20f9964b9d534f319a1fefb3368b7de061440364c71a69f72f84df977ed  tests/fixtures/mp025a/manifest.json
+45b66f489bd7e6d2a06bf3b1e44dc804e6f4793aaa205d1c7e23c7159a397174  tests/fixtures/mp025a/synthetic.json
+python -m unittest tests.e2e.test_stop_state.RealStops.test_real_cohorts tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate packages.movement.tests.test_stop_state.SyntheticStops.test_reference_plans -v
+test_real_cohorts (tests.e2e.test_stop_state.RealStops.test_real_cohorts) ...
+  test_real_cohorts (tests.e2e.test_stop_state.RealStops.test_real_cohorts) (name='M1') ... FAIL
+  test_real_cohorts (tests.e2e.test_stop_state.RealStops.test_real_cohorts) (name='M2') ... FAIL
+  test_real_cohorts (tests.e2e.test_stop_state.RealStops.test_real_cohorts) (name='M2b') ... FAIL
+  test_real_cohorts (tests.e2e.test_stop_state.RealStops.test_real_cohorts) (name='M3') ... FAIL
+  test_real_cohorts (tests.e2e.test_stop_state.RealStops.test_real_cohorts) (name='M4') ... FAIL
+  test_real_cohorts (tests.e2e.test_stop_state.RealStops.test_real_cohorts) (name='M5') ... FAIL
+  test_real_cohorts (tests.e2e.test_stop_state.RealStops.test_real_cohorts) (name='M6') ... FAIL
+test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) ...
+  test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='20468') ... FAIL
+  test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='20844') ... FAIL
+  test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='20842') ... FAIL
+  test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='20283') ... FAIL
+  test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='20282') ... FAIL
+  test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='19687') ... FAIL
+  test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='20281') ... FAIL
+  test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='20280') ... FAIL
+  test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='19664') ... FAIL
+  test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='20279') ... FAIL
+  test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='19689') ... FAIL
+  test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='19667') ... FAIL
+  test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='20277') ... FAIL
+  test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='19682') ... FAIL
+  test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='19685') ... FAIL
+  test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='19681') ... FAIL
+  test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='20836') ... FAIL
+  test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='19661') ... FAIL
+  test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='19660') ... FAIL
+  test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='20288') ... FAIL
+  test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='20286') ... FAIL
+  test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='20285') ... FAIL
+  test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='20284') ... FAIL
+  test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='20849') ... FAIL
+  test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='19668') ... FAIL
+  test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='19675') ... FAIL
+  test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='19678') ... FAIL
+  test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='19677') ... FAIL
+  test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='19671') ... FAIL
+  test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='19674') ... FAIL
+  test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='19670') ... FAIL
+  test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='20846') ... FAIL
+  test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='20845') ... FAIL
+  test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='20478') ... FAIL
+  test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='20476') ... FAIL
+  test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='20850') ... FAIL
+  test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='20474') ... FAIL
+  test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='20472') ... FAIL
+  test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='20859') ... FAIL
+  test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='20470') ... FAIL
+  test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='20854') ... FAIL
+  test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='20853') ... FAIL
+  test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='19656') ... FAIL
+  test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='20863') ... FAIL
+test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) ... FAIL
+test_reference_plans (packages.movement.tests.test_stop_state.SyntheticStops.test_reference_plans) ...
+  test_reference_plans (packages.movement.tests.test_stop_state.SyntheticStops.test_reference_plans) (case='S1 pre-salida −300 s, STOPPED_AT origen') ... FAIL
+  test_reference_plans (packages.movement.tests.test_stop_state.SyntheticStops.test_reference_plans) (case='S2 pre-salida −60 s, STOPPED_AT origen') ... FAIL
+  test_reference_plans (packages.movement.tests.test_stop_state.SyntheticStops.test_reference_plans) (case='S2b R2 sin STOPPED_AT (IN_TRANSIT_TO), salida a +60 s dentro del horizonte') ... FAIL
+  test_reference_plans (packages.movement.tests.test_stop_state.SyntheticStops.test_reference_plans) (case='S3 salida retrasada +120 s, STOPPED_AT origen') ... FAIL
+  test_reference_plans (packages.movement.tests.test_stop_state.SyntheticStops.test_reference_plans) (case='S4 intermedia con espera 60 s, ancla +5,38 m, STOPPED_AT') ... FAIL
+  test_reference_plans (packages.movement.tests.test_stop_state.SyntheticStops.test_reference_plans) (case='S5 intermedia SIN espera programada, STOPPED_AT') ... FAIL
+  test_reference_plans (packages.movement.tests.test_stop_state.SyntheticStops.test_reference_plans) (case='S5b contraejemplo del revisor: INCOMING_AT a la parada ANTERIOR, ancla en zona de S5') ... FAIL
+  test_reference_plans (packages.movement.tests.test_stop_state.SyntheticStops.test_reference_plans) (case='S6 CANCELED, IN_TRANSIT_TO a mitad de tramo') ... FAIL
+  test_reference_plans (packages.movement.tests.test_stop_state.SyntheticStops.test_reference_plans) (case='S6b control: en marcha a mitad de tramo') ... FAIL
+  test_reference_plans (packages.movement.tests.test_stop_state.SyntheticStops.test_reference_plans) (case='S7 STOPPED_AT con stop_id ajeno, a mitad de tramo') ... FAIL
+  test_reference_plans (packages.movement.tests.test_stop_state.SyntheticStops.test_reference_plans) (case='S10 INCOMING_AT con parada 1182 m POR DETRÁS') ... FAIL
+  test_reference_plans (packages.movement.tests.test_stop_state.SyntheticStops.test_reference_plans) (case='S11 ancla 500 m ANTES de la primera parada (fuera de zona), en ventana') ... FAIL
+  test_reference_plans (packages.movement.tests.test_stop_state.SyntheticStops.test_reference_plans) (case='S12 zonas solapadas: paradas a 0 y 60 m (≤ 2τ), ancla en 40 m, IN_TRANSIT_TO') ... FAIL
+  test_reference_plans (packages.movement.tests.test_stop_state.SyntheticStops.test_reference_plans) (case='S13 tramo de duración real 0 (T0→T1 misma hora): fusión con el siguiente') ... FAIL
+  test_reference_plans (packages.movement.tests.test_stop_state.SyntheticStops.test_reference_plans) (case='S14 stop_id repetido (X en 0 y 4000 m), STOPPED_AT X con ancla en 10 m') ... FAIL
+  test_reference_plans (packages.movement.tests.test_stop_state.SyntheticStops.test_reference_plans) (case='S8 DST adelanto 2027-03-28, tramo 01:50→02:10') ... FAIL
+  test_reference_plans (packages.movement.tests.test_stop_state.SyntheticStops.test_reference_plans) (case='S9 DST atraso 2027-10-31, tramo 01:30→03:30') ... FAIL
+  test_reference_plans (packages.movement.tests.test_stop_state.SyntheticStops.test_reference_plans) (case='S15 DST en la ESPERA del fallback: W1 01:30→03:30 del 2027-10-31, estado ausente, entrada por muestras') ... FAIL
+  test_reference_plans (packages.movement.tests.test_stop_state.SyntheticStops.test_reference_plans) (case='S15b igual que S15 sin muestra previa en la zona (reinicio): la espera empieza en el ancla y se DECLARA') ... FAIL
+  test_reference_plans (packages.movement.tests.test_stop_state.SyntheticStops.test_reference_plans) (case='S16 tres observaciones consecutivas en zona (e0, +20, +40), espera programada 120 s, estado ausente') ... FAIL
+
+======================================================================
+FAIL: test_real_cohorts (tests.e2e.test_stop_state.RealStops.test_real_cohorts) (name='M1')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/tests/e2e/test_stop_state.py", line 130, in test_real_cohorts
+    self.assertEqual((sum(counts[name]), len(counts[name])), (0, total))
+AssertionError: Tuples differ: (25, 25) != (0, 25)
+
+First differing element 0:
+25
+0
+
+- (25, 25)
+?  ^^
+
++ (0, 25)
+?  ^
+
+
+======================================================================
+FAIL: test_real_cohorts (tests.e2e.test_stop_state.RealStops.test_real_cohorts) (name='M2')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/tests/e2e/test_stop_state.py", line 130, in test_real_cohorts
+    self.assertEqual((sum(counts[name]), len(counts[name])), (0, total))
+AssertionError: Tuples differ: (17, 17) != (0, 17)
+
+First differing element 0:
+17
+0
+
+- (17, 17)
+?  ^^
+
++ (0, 17)
+?  ^
+
+
+======================================================================
+FAIL: test_real_cohorts (tests.e2e.test_stop_state.RealStops.test_real_cohorts) (name='M2b')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/tests/e2e/test_stop_state.py", line 130, in test_real_cohorts
+    self.assertEqual((sum(counts[name]), len(counts[name])), (0, total))
+AssertionError: Tuples differ: (17, 17) != (0, 17)
+
+First differing element 0:
+17
+0
+
+- (17, 17)
+?  ^^
+
++ (0, 17)
+?  ^
+
+
+======================================================================
+FAIL: test_real_cohorts (tests.e2e.test_stop_state.RealStops.test_real_cohorts) (name='M3')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/tests/e2e/test_stop_state.py", line 130, in test_real_cohorts
+    self.assertEqual((sum(counts[name]), len(counts[name])), (0, total))
+AssertionError: Tuples differ: (4, 4) != (0, 4)
+
+First differing element 0:
+4
+0
+
+- (4, 4)
+?  ^
+
++ (0, 4)
+?  ^
+
+
+======================================================================
+FAIL: test_real_cohorts (tests.e2e.test_stop_state.RealStops.test_real_cohorts) (name='M4')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/tests/e2e/test_stop_state.py", line 130, in test_real_cohorts
+    self.assertEqual((sum(counts[name]), len(counts[name])), (0, total))
+AssertionError: Tuples differ: (7, 7) != (0, 7)
+
+First differing element 0:
+7
+0
+
+- (7, 7)
+?  ^
+
++ (0, 7)
+?  ^
+
+
+======================================================================
+FAIL: test_real_cohorts (tests.e2e.test_stop_state.RealStops.test_real_cohorts) (name='M5')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/tests/e2e/test_stop_state.py", line 130, in test_real_cohorts
+    self.assertEqual((sum(counts[name]), len(counts[name])), (0, total))
+AssertionError: Tuples differ: (20, 44) != (0, 44)
+
+First differing element 0:
+20
+0
+
+- (20, 44)
+?  -
+
++ (0, 44)
+
+======================================================================
+FAIL: test_real_cohorts (tests.e2e.test_stop_state.RealStops.test_real_cohorts) (name='M6')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/tests/e2e/test_stop_state.py", line 130, in test_real_cohorts
+    self.assertEqual((sum(counts[name]), len(counts[name])), (0, total))
+AssertionError: Tuples differ: (1, 1) != (0, 1)
+
+First differing element 0:
+1
+0
+
+- (1, 1)
+?  ^
+
++ (0, 1)
+?  ^
+
+
+======================================================================
+FAIL: test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='20468')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/tests/e2e/test_stop_state.py", line 154, in test_f1_and_one_coordinate
+    self.assertEqual(frozen.rendered.progress_m, end.rendered.progress_m)
+AssertionError: 47406.793825682216 != 48969.470898400745
+
+======================================================================
+FAIL: test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='20844')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/tests/e2e/test_stop_state.py", line 154, in test_f1_and_one_coordinate
+    self.assertEqual(frozen.rendered.progress_m, end.rendered.progress_m)
+AssertionError: 12604.456931907103 != 14795.909134092795
+
+======================================================================
+FAIL: test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='20842')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/tests/e2e/test_stop_state.py", line 154, in test_f1_and_one_coordinate
+    self.assertEqual(frozen.rendered.progress_m, end.rendered.progress_m)
+AssertionError: 61.67329373455408 != 2878.3424279681667
+
+======================================================================
+FAIL: test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='20283')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/tests/e2e/test_stop_state.py", line 154, in test_f1_and_one_coordinate
+    self.assertEqual(frozen.rendered.progress_m, end.rendered.progress_m)
+AssertionError: 68.38740007108092 != 4008.8825958402513
+
+======================================================================
+FAIL: test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='20282')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/tests/e2e/test_stop_state.py", line 154, in test_f1_and_one_coordinate
+    self.assertEqual(frozen.rendered.progress_m, end.rendered.progress_m)
+AssertionError: 12033.74512223166 != 14177.12526665888
+
+======================================================================
+FAIL: test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='19687')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/tests/e2e/test_stop_state.py", line 154, in test_f1_and_one_coordinate
+    self.assertEqual(frozen.rendered.progress_m, end.rendered.progress_m)
+AssertionError: 98.27634715381777 != 4079.6189954248425
+
+======================================================================
+FAIL: test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='20281')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/tests/e2e/test_stop_state.py", line 154, in test_f1_and_one_coordinate
+    self.assertEqual(frozen.rendered.progress_m, end.rendered.progress_m)
+AssertionError: 10327.668671582851 != 12547.502708121212
+
+======================================================================
+FAIL: test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='20280')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/tests/e2e/test_stop_state.py", line 154, in test_f1_and_one_coordinate
+    self.assertEqual(frozen.rendered.progress_m, end.rendered.progress_m)
+AssertionError: 40505.11607812403 != 43882.74477942538
+
+======================================================================
+FAIL: test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='19664')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/tests/e2e/test_stop_state.py", line 154, in test_f1_and_one_coordinate
+    self.assertEqual(frozen.rendered.progress_m, end.rendered.progress_m)
+AssertionError: 26272.06909058288 != 28804.998914912685
+
+======================================================================
+FAIL: test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='20279')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/tests/e2e/test_stop_state.py", line 154, in test_f1_and_one_coordinate
+    self.assertEqual(frozen.rendered.progress_m, end.rendered.progress_m)
+AssertionError: 14524.40813812095 != 16801.518309854644
+
+======================================================================
+FAIL: test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='19689')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/tests/e2e/test_stop_state.py", line 154, in test_f1_and_one_coordinate
+    self.assertEqual(frozen.rendered.progress_m, end.rendered.progress_m)
+AssertionError: 98.27634715381777 != 4079.6189954248425
+
+======================================================================
+FAIL: test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='19667')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/tests/e2e/test_stop_state.py", line 154, in test_f1_and_one_coordinate
+    self.assertEqual(frozen.rendered.progress_m, end.rendered.progress_m)
+AssertionError: 39544.93098238385 != 41615.30103853031
+
+======================================================================
+FAIL: test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='20277')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/tests/e2e/test_stop_state.py", line 154, in test_f1_and_one_coordinate
+    self.assertEqual(frozen.rendered.progress_m, end.rendered.progress_m)
+AssertionError: 21847.85848686428 != 24218.89809909536
+
+======================================================================
+FAIL: test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='19682')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/tests/e2e/test_stop_state.py", line 154, in test_f1_and_one_coordinate
+    self.assertEqual(frozen.rendered.progress_m, end.rendered.progress_m)
+AssertionError: 61.67329373455408 != 2878.3424279681667
+
+======================================================================
+FAIL: test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='19685')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/tests/e2e/test_stop_state.py", line 154, in test_f1_and_one_coordinate
+    self.assertEqual(frozen.rendered.progress_m, end.rendered.progress_m)
+AssertionError: 98.27634715381777 != 4079.6189954248425
+
+======================================================================
+FAIL: test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='19681')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/tests/e2e/test_stop_state.py", line 154, in test_f1_and_one_coordinate
+    self.assertEqual(frozen.rendered.progress_m, end.rendered.progress_m)
+AssertionError: 98.27634715381777 != 4079.6189954248425
+
+======================================================================
+FAIL: test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='20836')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/tests/e2e/test_stop_state.py", line 154, in test_f1_and_one_coordinate
+    self.assertEqual(frozen.rendered.progress_m, end.rendered.progress_m)
+AssertionError: 30046.46903634405 != 33091.570701849545
+
+======================================================================
+FAIL: test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='19661')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/tests/e2e/test_stop_state.py", line 154, in test_f1_and_one_coordinate
+    self.assertEqual(frozen.rendered.progress_m, end.rendered.progress_m)
+AssertionError: 40835.269721368124 != 43196.202553778785
+
+======================================================================
+FAIL: test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='19660')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/tests/e2e/test_stop_state.py", line 154, in test_f1_and_one_coordinate
+    self.assertEqual(frozen.rendered.progress_m, end.rendered.progress_m)
+AssertionError: 33092.811436057505 != 35606.499019058756
+
+======================================================================
+FAIL: test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='20288')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/tests/e2e/test_stop_state.py", line 154, in test_f1_and_one_coordinate
+    self.assertEqual(frozen.rendered.progress_m, end.rendered.progress_m)
+AssertionError: 96.02021055846775 != 3576.9812597624136
+
+======================================================================
+FAIL: test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='20286')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/tests/e2e/test_stop_state.py", line 154, in test_f1_and_one_coordinate
+    self.assertEqual(frozen.rendered.progress_m, end.rendered.progress_m)
+AssertionError: 96.02021055846775 != 3576.9812597624136
+
+======================================================================
+FAIL: test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='20285')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/tests/e2e/test_stop_state.py", line 154, in test_f1_and_one_coordinate
+    self.assertEqual(frozen.rendered.progress_m, end.rendered.progress_m)
+AssertionError: 68.38740007108092 != 4008.8825958402513
+
+======================================================================
+FAIL: test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='20284')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/tests/e2e/test_stop_state.py", line 154, in test_f1_and_one_coordinate
+    self.assertEqual(frozen.rendered.progress_m, end.rendered.progress_m)
+AssertionError: 6875.068122787095 != 9458.732011861259
+
+======================================================================
+FAIL: test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='20849')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/tests/e2e/test_stop_state.py", line 154, in test_f1_and_one_coordinate
+    self.assertEqual(frozen.rendered.progress_m, end.rendered.progress_m)
+AssertionError: 4074.16802311607 != 7597.072633337271
+
+======================================================================
+FAIL: test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='19668')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/tests/e2e/test_stop_state.py", line 154, in test_f1_and_one_coordinate
+    self.assertEqual(frozen.rendered.progress_m, end.rendered.progress_m)
+AssertionError: 15534.928354648562 != 17758.965400522084
+
+======================================================================
+FAIL: test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='19675')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/tests/e2e/test_stop_state.py", line 154, in test_f1_and_one_coordinate
+    self.assertEqual(frozen.rendered.progress_m, end.rendered.progress_m)
+AssertionError: 20463.327581158057 != 22582.801904960517
+
+======================================================================
+FAIL: test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='19678')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/tests/e2e/test_stop_state.py", line 154, in test_f1_and_one_coordinate
+    self.assertEqual(frozen.rendered.progress_m, end.rendered.progress_m)
+AssertionError: 61.67329373455408 != 2878.3424279681667
+
+======================================================================
+FAIL: test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='19677')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/tests/e2e/test_stop_state.py", line 154, in test_f1_and_one_coordinate
+    self.assertEqual(frozen.rendered.progress_m, end.rendered.progress_m)
+AssertionError: 98.27634715381777 != 4079.6189954248425
+
+======================================================================
+FAIL: test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='19671')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/tests/e2e/test_stop_state.py", line 154, in test_f1_and_one_coordinate
+    self.assertEqual(frozen.rendered.progress_m, end.rendered.progress_m)
+AssertionError: 31950.766071779326 != 33171.36983350654
+
+======================================================================
+FAIL: test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='19674')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/tests/e2e/test_stop_state.py", line 154, in test_f1_and_one_coordinate
+    self.assertEqual(frozen.rendered.progress_m, end.rendered.progress_m)
+AssertionError: 61.67329373455408 != 2878.3424279681667
+
+======================================================================
+FAIL: test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='19670')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/tests/e2e/test_stop_state.py", line 154, in test_f1_and_one_coordinate
+    self.assertEqual(frozen.rendered.progress_m, end.rendered.progress_m)
+AssertionError: 7371.066856244217 != 10542.624069276895
+
+======================================================================
+FAIL: test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='20846')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/tests/e2e/test_stop_state.py", line 154, in test_f1_and_one_coordinate
+    self.assertEqual(frozen.rendered.progress_m, end.rendered.progress_m)
+AssertionError: 3939.278920451678 != 5925.320421239641
+
+======================================================================
+FAIL: test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='20845')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/tests/e2e/test_stop_state.py", line 154, in test_f1_and_one_coordinate
+    self.assertEqual(frozen.rendered.progress_m, end.rendered.progress_m)
+AssertionError: 29271.90937877909 != 31495.48732524643
+
+======================================================================
+FAIL: test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='20478')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/tests/e2e/test_stop_state.py", line 154, in test_f1_and_one_coordinate
+    self.assertEqual(frozen.rendered.progress_m, end.rendered.progress_m)
+AssertionError: 32.468178765193265 != 5433.023191282933
+
+======================================================================
+FAIL: test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='20476')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/tests/e2e/test_stop_state.py", line 154, in test_f1_and_one_coordinate
+    self.assertEqual(frozen.rendered.progress_m, end.rendered.progress_m)
+AssertionError: 32.468178765193265 != 5433.023191282933
+
+======================================================================
+FAIL: test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='20850')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/tests/e2e/test_stop_state.py", line 154, in test_f1_and_one_coordinate
+    self.assertEqual(frozen.rendered.progress_m, end.rendered.progress_m)
+AssertionError: 61.67329373455408 != 2878.3424279681667
+
+======================================================================
+FAIL: test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='20474')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/tests/e2e/test_stop_state.py", line 154, in test_f1_and_one_coordinate
+    self.assertEqual(frozen.rendered.progress_m, end.rendered.progress_m)
+AssertionError: 32.468178765193265 != 5433.023191282933
+
+======================================================================
+FAIL: test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='20472')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/tests/e2e/test_stop_state.py", line 154, in test_f1_and_one_coordinate
+    self.assertEqual(frozen.rendered.progress_m, end.rendered.progress_m)
+AssertionError: 10812.106102892845 != 14285.932849205274
+
+======================================================================
+FAIL: test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='20859')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/tests/e2e/test_stop_state.py", line 154, in test_f1_and_one_coordinate
+    self.assertEqual(frozen.rendered.progress_m, end.rendered.progress_m)
+AssertionError: 4074.16802311607 != 7597.072633337271
+
+======================================================================
+FAIL: test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='20470')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/tests/e2e/test_stop_state.py", line 154, in test_f1_and_one_coordinate
+    self.assertEqual(frozen.rendered.progress_m, end.rendered.progress_m)
+AssertionError: 29435.695293483295 != 32055.499532432706
+
+======================================================================
+FAIL: test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='20854')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/tests/e2e/test_stop_state.py", line 154, in test_f1_and_one_coordinate
+    self.assertEqual(frozen.rendered.progress_m, end.rendered.progress_m)
+AssertionError: 61.67329373455408 != 2878.3424279681667
+
+======================================================================
+FAIL: test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='20853')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/tests/e2e/test_stop_state.py", line 154, in test_f1_and_one_coordinate
+    self.assertEqual(frozen.rendered.progress_m, end.rendered.progress_m)
+AssertionError: 7593.705504370397 != 9663.098484126156
+
+======================================================================
+FAIL: test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='19656')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/tests/e2e/test_stop_state.py", line 154, in test_f1_and_one_coordinate
+    self.assertEqual(frozen.rendered.progress_m, end.rendered.progress_m)
+AssertionError: 41198.72734986132 != 45165.46901365631
+
+======================================================================
+FAIL: test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate) (vid='20863')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/tests/e2e/test_stop_state.py", line 154, in test_f1_and_one_coordinate
+    self.assertEqual(frozen.rendered.progress_m, end.rendered.progress_m)
+AssertionError: 4074.16802311607 != 7597.072633337271
+
+======================================================================
+FAIL: test_f1_and_one_coordinate (tests.e2e.test_stop_state.RealStops.test_f1_and_one_coordinate)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/tests/e2e/test_stop_state.py", line 165, in test_f1_and_one_coordinate
+    self.assertLessEqual(maximum, 0.01)
+AssertionError: 429.38787523871457 not less than or equal to 0.01
+
+======================================================================
+FAIL: test_reference_plans (packages.movement.tests.test_stop_state.SyntheticStops.test_reference_plans) (case='S1 pre-salida −300 s, STOPPED_AT origen')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/packages/movement/tests/test_stop_state.py", line 54, in test_reference_plans
+    self.assertAlmostEqual(plan.max_progress_m, want["max_progress"], delta=1e-6)
+AssertionError: 2881.767706503327 != 70.51484948027553 within 1e-06 delta (2811.2528570230515 difference)
+
+======================================================================
+FAIL: test_reference_plans (packages.movement.tests.test_stop_state.SyntheticStops.test_reference_plans) (case='S2 pre-salida −60 s, STOPPED_AT origen')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/packages/movement/tests/test_stop_state.py", line 54, in test_reference_plans
+    self.assertAlmostEqual(plan.max_progress_m, want["max_progress"], delta=1e-6)
+AssertionError: 2881.767706503327 != 70.51484948027553 within 1e-06 delta (2811.2528570230515 difference)
+
+======================================================================
+FAIL: test_reference_plans (packages.movement.tests.test_stop_state.SyntheticStops.test_reference_plans) (case='S2b R2 sin STOPPED_AT (IN_TRANSIT_TO), salida a +60 s dentro del horizonte')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/packages/movement/tests/test_stop_state.py", line 54, in test_reference_plans
+    self.assertAlmostEqual(plan.max_progress_m, want["max_progress"], delta=1e-6)
+AssertionError: 2881.767706503327 != 2090.412506128542 within 1e-06 delta (791.355200374785 difference)
+
+======================================================================
+FAIL: test_reference_plans (packages.movement.tests.test_stop_state.SyntheticStops.test_reference_plans) (case='S3 salida retrasada +120 s, STOPPED_AT origen')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/packages/movement/tests/test_stop_state.py", line 54, in test_reference_plans
+    self.assertAlmostEqual(plan.max_progress_m, want["max_progress"], delta=1e-6)
+AssertionError: 2881.767706503327 != 70.51484948027553 within 1e-06 delta (2811.2528570230515 difference)
+
+======================================================================
+FAIL: test_reference_plans (packages.movement.tests.test_stop_state.SyntheticStops.test_reference_plans) (case='S4 intermedia con espera 60 s, ancla +5,38 m, STOPPED_AT')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/packages/movement/tests/test_stop_state.py", line 54, in test_reference_plans
+    self.assertAlmostEqual(plan.max_progress_m, want["max_progress"], delta=1e-6)
+AssertionError: 22936.763972706045 != 20433.65069986241 within 1e-06 delta (2503.113272843635 difference)
+
+======================================================================
+FAIL: test_reference_plans (packages.movement.tests.test_stop_state.SyntheticStops.test_reference_plans) (case='S5 intermedia SIN espera programada, STOPPED_AT')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/packages/movement/tests/test_stop_state.py", line 54, in test_reference_plans
+    self.assertAlmostEqual(plan.max_progress_m, want["max_progress"], delta=1e-6)
+AssertionError: 4451.866854464349 != 2087.412506128542 within 1e-06 delta (2364.4543483358066 difference)
+
+======================================================================
+FAIL: test_reference_plans (packages.movement.tests.test_stop_state.SyntheticStops.test_reference_plans) (case='S5b contraejemplo del revisor: INCOMING_AT a la parada ANTERIOR, ancla en zona de S5')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/packages/movement/tests/test_stop_state.py", line 54, in test_reference_plans
+    self.assertAlmostEqual(plan.max_progress_m, want["max_progress"], delta=1e-6)
+AssertionError: 4451.866854464349 != 4057.2373107276044 within 1e-06 delta (394.6295437367444 difference)
+
+======================================================================
+FAIL: test_reference_plans (packages.movement.tests.test_stop_state.SyntheticStops.test_reference_plans) (case='S6 CANCELED, IN_TRANSIT_TO a mitad de tramo')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/packages/movement/tests/test_stop_state.py", line 54, in test_reference_plans
+    self.assertAlmostEqual(plan.max_progress_m, want["max_progress"], delta=1e-6)
+AssertionError: 5416.118262875636 != 3272.3073888879794 within 1e-06 delta (2143.8108739876566 difference)
+
+======================================================================
+FAIL: test_reference_plans (packages.movement.tests.test_stop_state.SyntheticStops.test_reference_plans) (case='S6b control: en marcha a mitad de tramo')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/packages/movement/tests/test_stop_state.py", line 54, in test_reference_plans
+    self.assertAlmostEqual(plan.max_progress_m, want["max_progress"], delta=1e-6)
+AssertionError: 5416.118262875636 != 4454.202271647417 within 1e-06 delta (961.9159912282194 difference)
+
+======================================================================
+FAIL: test_reference_plans (packages.movement.tests.test_stop_state.SyntheticStops.test_reference_plans) (case='S7 STOPPED_AT con stop_id ajeno, a mitad de tramo')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/packages/movement/tests/test_stop_state.py", line 54, in test_reference_plans
+    self.assertAlmostEqual(plan.max_progress_m, want["max_progress"], delta=1e-6)
+AssertionError: 5416.118262875636 != 4454.202271647417 within 1e-06 delta (961.9159912282194 difference)
+
+======================================================================
+FAIL: test_reference_plans (packages.movement.tests.test_stop_state.SyntheticStops.test_reference_plans) (case='S10 INCOMING_AT con parada 1182 m POR DETRÁS')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/packages/movement/tests/test_stop_state.py", line 54, in test_reference_plans
+    self.assertAlmostEqual(plan.max_progress_m, want["max_progress"], delta=1e-6)
+AssertionError: 5416.118262875636 != 4454.202271647417 within 1e-06 delta (961.9159912282194 difference)
+
+======================================================================
+FAIL: test_reference_plans (packages.movement.tests.test_stop_state.SyntheticStops.test_reference_plans) (case='S11 ancla 500 m ANTES de la primera parada (fuera de zona), en ventana')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/packages/movement/tests/test_stop_state.py", line 54, in test_reference_plans
+    self.assertAlmostEqual(plan.max_progress_m, want["max_progress"], delta=1e-6)
+AssertionError: 2878.3424279681667 != -433.88515051972445 within 1e-06 delta (3312.227578487891 difference)
+
+======================================================================
+FAIL: test_reference_plans (packages.movement.tests.test_stop_state.SyntheticStops.test_reference_plans) (case='S12 zonas solapadas: paradas a 0 y 60 m (≤ 2τ), ancla en 40 m, IN_TRANSIT_TO')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/packages/movement/tests/test_stop_state.py", line 54, in test_reference_plans
+    self.assertAlmostEqual(plan.max_progress_m, want["max_progress"], delta=1e-6)
+AssertionError: 2440.0 != 2560.0 within 1e-06 delta (120.0 difference)
+
+======================================================================
+FAIL: test_reference_plans (packages.movement.tests.test_stop_state.SyntheticStops.test_reference_plans) (case='S13 tramo de duración real 0 (T0→T1 misma hora): fusión con el siguiente')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/packages/movement/tests/test_stop_state.py", line 54, in test_reference_plans
+    self.assertAlmostEqual(plan.max_progress_m, want["max_progress"], delta=1e-6)
+AssertionError: 3000.0 != 1000.0 within 1e-06 delta (2000.0 difference)
+
+======================================================================
+FAIL: test_reference_plans (packages.movement.tests.test_stop_state.SyntheticStops.test_reference_plans) (case='S14 stop_id repetido (X en 0 y 4000 m), STOPPED_AT X con ancla en 10 m')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/packages/movement/tests/test_stop_state.py", line 54, in test_reference_plans
+    self.assertAlmostEqual(plan.max_progress_m, want["max_progress"], delta=1e-6)
+AssertionError: 3009.999999999976 != 10.0 within 1e-06 delta (2999.999999999976 difference)
+
+======================================================================
+FAIL: test_reference_plans (packages.movement.tests.test_stop_state.SyntheticStops.test_reference_plans) (case='S8 DST adelanto 2027-03-28, tramo 01:50→02:10')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/packages/movement/tests/test_stop_state.py", line 54, in test_reference_plans
+    self.assertAlmostEqual(plan.max_progress_m, want["max_progress"], delta=1e-6)
+AssertionError: 16000.0 != 11000.0 within 1e-06 delta (5000.0 difference)
+
+======================================================================
+FAIL: test_reference_plans (packages.movement.tests.test_stop_state.SyntheticStops.test_reference_plans) (case='S9 DST atraso 2027-10-31, tramo 01:30→03:30')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/packages/movement/tests/test_stop_state.py", line 54, in test_reference_plans
+    self.assertAlmostEqual(plan.max_progress_m, want["max_progress"], delta=1e-6)
+AssertionError: 9888.888888888889 != 10222.222222222223 within 1e-06 delta (333.33333333333394 difference)
+
+======================================================================
+FAIL: test_reference_plans (packages.movement.tests.test_stop_state.SyntheticStops.test_reference_plans) (case='S15 DST en la ESPERA del fallback: W1 01:30→03:30 del 2027-10-31, estado ausente, entrada por muestras')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/packages/movement/tests/test_stop_state.py", line 54, in test_reference_plans
+    self.assertAlmostEqual(plan.max_progress_m, want["max_progress"], delta=1e-6)
+AssertionError: 11003.000000000005 != 10447.444444444445 within 1e-06 delta (555.5555555555602 difference)
+
+======================================================================
+FAIL: test_reference_plans (packages.movement.tests.test_stop_state.SyntheticStops.test_reference_plans) (case='S15b igual que S15 sin muestra previa en la zona (reinicio): la espera empieza en el ancla y se DECLARA')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/packages/movement/tests/test_stop_state.py", line 54, in test_reference_plans
+    self.assertAlmostEqual(plan.max_progress_m, want["max_progress"], delta=1e-6)
+AssertionError: 11003.000000000005 != 10003.0 within 1e-06 delta (1000.0000000000055 difference)
+
+======================================================================
+FAIL: test_reference_plans (packages.movement.tests.test_stop_state.SyntheticStops.test_reference_plans) (case='S16 tres observaciones consecutivas en zona (e0, +20, +40), espera programada 120 s, estado ausente')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp025a-red.xquHdv/packages/movement/tests/test_stop_state.py", line 54, in test_reference_plans
+    self.assertAlmostEqual(plan.max_progress_m, want["max_progress"], delta=1e-6)
+AssertionError: 9000.0 != 6780.777777777777 within 1e-06 delta (2219.2222222222226 difference)
+
+----------------------------------------------------------------------
+Ran 3 tests in 10.365s
+
+FAILED (failures=72)
+exit=1
