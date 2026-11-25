@@ -22,8 +22,8 @@ Qué mide, y de dónde sale cada número:
 
 Uso:
 
-    python infra/operate/measure-cost.py \
-        --database-url postgresql://... \
+    MADRID_PULSE_ENV=dev MADRID_PULSE_DATABASE_URL=postgresql://... \
+    PYTHONPATH="$PWD" python infra/operate/measure-cost.py \
         --window-start 2026-11-23T05:23:00Z \
         --samples-csv ruta/rss_samples.csv \
         [--parquet-dir data/parquet] [--feed-samples 5]
@@ -41,6 +41,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import psycopg
+
+from packages.database import DatabaseConfigurationError, database_settings_from_env
 
 FEEDS = (
     "https://gtfsrt.renfe.com/vehicle_positions.json",
@@ -199,19 +201,22 @@ def measure_parquet(parquet_dir: Path) -> dict[str, object]:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--database-url", required=True)
     parser.add_argument("--window-start", required=True, help="Instante ISO-8601 (UTC).")
     parser.add_argument("--size-before-bytes", type=int, default=None)
     parser.add_argument("--samples-csv", type=Path, default=None)
     parser.add_argument("--parquet-dir", type=Path, default=Path("data/parquet"))
     parser.add_argument("--feed-samples", type=int, default=5)
     args = parser.parse_args()
+    try:
+        database_url, _ = database_settings_from_env()
+    except DatabaseConfigurationError as exc:
+        parser.error(str(exc))
 
     window_start = _parse_instant(args.window_start)
     now = datetime.now(timezone.utc)
     window_s = (now - window_start).total_seconds()
 
-    database = measure_database(args.database_url, window_start)
+    database = measure_database(database_url, window_start)
     transfer = measure_feed_transfer(args.feed_samples)
     process = measure_process(args.samples_csv) if args.samples_csv else None
     parquet = measure_parquet(args.parquet_dir)

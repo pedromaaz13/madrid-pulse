@@ -1,0 +1,84 @@
+HEAD=dd92247f36f87124bc182007e06ec19f7bd235b4
+Python 3.12.3
+MADRID_PULSE_ENV=test MADRID_PULSE_MODE=replay MADRID_PULSE_REQUIRE_DB=1 MADRID_PULSE_DATABASE_URL=postgresql://mp026a_clock:mp026a_clock_local@127.0.0.1:5453/madrid_pulse
+Comando por fila: /Users/matu/orca/workspaces/madrid-pulse/audit-hito-03/.venv/bin/python -m tests.run_ci_with_clock <reloj UTC> apps.api.tests.test_api_contract apps.api.tests.test_closure_matrix apps.api.tests.test_history_contract apps.api.tests.test_snapshot_contract apps.api.tests.test_temporal_replay packages.contracts.tests.test_canonical_normalization packages.contracts.tests.test_nucleo packages.contracts.tests.test_raw_parsing packages.contracts.tests.test_synthetic_schema packages.geo.tests.test_catalog packages.geo.tests.test_real_feed packages.gtfs.tests.test_catalog packages.gtfs.tests.test_real_feed packages.movement.tests.test_engine packages.movement.tests.test_rendering packages.movement.tests.test_real_soak_postgres packages.quality.tests.test_engine packages.quality.tests.test_persistence services.collector.tests.test_collector_cycle services.collector.tests.test_http_client services.collector.tests.test_supervised_loop services.snapshotter.tests.test_export services.snapshotter.tests.test_export_replay services.snapshotter.tests.test_gold services.snapshotter.tests.test_history services.snapshotter.tests.test_idempotency tests.fixtures.test_parse_fixtures tests.e2e.test_mp022_synthetic_derived tests.e2e.test_replay
+Módulos=29
+Reloj Python simulado: 2026-11-25T12:00:00+00:00
+test_empty_database_declares_missing_feeds_after_gtfs_expiry (apps.api.tests.test_temporal_replay.TemporalApiTests.test_empty_database_declares_missing_feeds_after_gtfs_expiry) ... ok
+test_ingestion_is_eligible_at_the_exact_clock (apps.api.tests.test_temporal_replay.TemporalApiTests.test_ingestion_is_eligible_at_the_exact_clock) ... ok
+test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache (apps.api.tests.test_temporal_replay.TemporalApiTests.test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache) ... ok
+test_replay_gtfs_validity_uses_at_instead_of_wall_clock (apps.api.tests.test_temporal_replay.TemporalApiTests.test_replay_gtfs_validity_uses_at_instead_of_wall_clock) ... ok
+Ran 298 tests in 28.433s
+OK (skipped=18)
+casos=298 fallos=0 errores=0 skips=18
+Exit=0
+
+Reloj Python simulado: 2026-12-05T12:00:00+00:00
+test_empty_database_declares_missing_feeds_after_gtfs_expiry (apps.api.tests.test_temporal_replay.TemporalApiTests.test_empty_database_declares_missing_feeds_after_gtfs_expiry) ... ok
+test_ingestion_is_eligible_at_the_exact_clock (apps.api.tests.test_temporal_replay.TemporalApiTests.test_ingestion_is_eligible_at_the_exact_clock) ... ok
+test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache (apps.api.tests.test_temporal_replay.TemporalApiTests.test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache) ... ok
+test_replay_gtfs_validity_uses_at_instead_of_wall_clock (apps.api.tests.test_temporal_replay.TemporalApiTests.test_replay_gtfs_validity_uses_at_instead_of_wall_clock) ... ok
+Ran 298 tests in 28.873s
+OK (skipped=18)
+casos=298 fallos=0 errores=0 skips=18
+Exit=0
+
+Reloj Python simulado: 2026-12-06T12:00:00+00:00
+test_empty_database_declares_missing_feeds_after_gtfs_expiry (apps.api.tests.test_temporal_replay.TemporalApiTests.test_empty_database_declares_missing_feeds_after_gtfs_expiry) ... ok
+test_ingestion_is_eligible_at_the_exact_clock (apps.api.tests.test_temporal_replay.TemporalApiTests.test_ingestion_is_eligible_at_the_exact_clock) ... ok
+test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache (apps.api.tests.test_temporal_replay.TemporalApiTests.test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache) ... ok
+test_replay_gtfs_validity_uses_at_instead_of_wall_clock (apps.api.tests.test_temporal_replay.TemporalApiTests.test_replay_gtfs_validity_uses_at_instead_of_wall_clock) ... ok
+Ran 298 tests in 28.358s
+OK (skipped=18)
+casos=298 fallos=0 errores=0 skips=18
+Exit=0
+
+Reloj Python simulado: 2026-12-07T12:00:00+00:00
+test_empty_database_declares_missing_feeds_after_gtfs_expiry (apps.api.tests.test_temporal_replay.TemporalApiTests.test_empty_database_declares_missing_feeds_after_gtfs_expiry) ... ok
+test_ingestion_is_eligible_at_the_exact_clock (apps.api.tests.test_temporal_replay.TemporalApiTests.test_ingestion_is_eligible_at_the_exact_clock) ... ok
+test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache (apps.api.tests.test_temporal_replay.TemporalApiTests.test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache) ... ok
+test_replay_gtfs_validity_uses_at_instead_of_wall_clock (apps.api.tests.test_temporal_replay.TemporalApiTests.test_replay_gtfs_validity_uses_at_instead_of_wall_clock) ... ok
+Ran 298 tests in 28.294s
+OK (skipped=18)
+casos=298 fallos=0 errores=0 skips=18
+Exit=0
+
+Reloj Python simulado: 2026-12-18T12:00:00+00:00
+test_empty_database_declares_missing_feeds_after_gtfs_expiry (apps.api.tests.test_temporal_replay.TemporalApiTests.test_empty_database_declares_missing_feeds_after_gtfs_expiry) ... ok
+test_ingestion_is_eligible_at_the_exact_clock (apps.api.tests.test_temporal_replay.TemporalApiTests.test_ingestion_is_eligible_at_the_exact_clock) ... ok
+test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache (apps.api.tests.test_temporal_replay.TemporalApiTests.test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache) ... ok
+test_replay_gtfs_validity_uses_at_instead_of_wall_clock (apps.api.tests.test_temporal_replay.TemporalApiTests.test_replay_gtfs_validity_uses_at_instead_of_wall_clock) ... ok
+Ran 298 tests in 28.305s
+OK (skipped=18)
+casos=298 fallos=0 errores=0 skips=18
+Exit=0
+
+Reloj Python simulado: 2026-12-19T12:00:00+00:00
+test_empty_database_declares_missing_feeds_after_gtfs_expiry (apps.api.tests.test_temporal_replay.TemporalApiTests.test_empty_database_declares_missing_feeds_after_gtfs_expiry) ... ok
+test_ingestion_is_eligible_at_the_exact_clock (apps.api.tests.test_temporal_replay.TemporalApiTests.test_ingestion_is_eligible_at_the_exact_clock) ... ok
+test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache (apps.api.tests.test_temporal_replay.TemporalApiTests.test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache) ... ok
+test_replay_gtfs_validity_uses_at_instead_of_wall_clock (apps.api.tests.test_temporal_replay.TemporalApiTests.test_replay_gtfs_validity_uses_at_instead_of_wall_clock) ... ok
+Ran 298 tests in 28.217s
+OK (skipped=18)
+casos=298 fallos=0 errores=0 skips=18
+Exit=0
+
+Reloj Python simulado: 2026-12-20T12:00:00+00:00
+test_empty_database_declares_missing_feeds_after_gtfs_expiry (apps.api.tests.test_temporal_replay.TemporalApiTests.test_empty_database_declares_missing_feeds_after_gtfs_expiry) ... ok
+test_ingestion_is_eligible_at_the_exact_clock (apps.api.tests.test_temporal_replay.TemporalApiTests.test_ingestion_is_eligible_at_the_exact_clock) ... ok
+test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache (apps.api.tests.test_temporal_replay.TemporalApiTests.test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache) ... ok
+test_replay_gtfs_validity_uses_at_instead_of_wall_clock (apps.api.tests.test_temporal_replay.TemporalApiTests.test_replay_gtfs_validity_uses_at_instead_of_wall_clock) ... ok
+Ran 298 tests in 28.213s
+OK (skipped=18)
+casos=298 fallos=0 errores=0 skips=18
+Exit=0
+
+Reloj Python simulado: 2027-01-15T12:00:00+00:00
+test_empty_database_declares_missing_feeds_after_gtfs_expiry (apps.api.tests.test_temporal_replay.TemporalApiTests.test_empty_database_declares_missing_feeds_after_gtfs_expiry) ... ok
+test_ingestion_is_eligible_at_the_exact_clock (apps.api.tests.test_temporal_replay.TemporalApiTests.test_ingestion_is_eligible_at_the_exact_clock) ... ok
+test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache (apps.api.tests.test_temporal_replay.TemporalApiTests.test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache) ... ok
+test_replay_gtfs_validity_uses_at_instead_of_wall_clock (apps.api.tests.test_temporal_replay.TemporalApiTests.test_replay_gtfs_validity_uses_at_instead_of_wall_clock) ... ok
+Ran 298 tests in 28.351s
+OK (skipped=18)
+casos=298 fallos=0 errores=0 skips=18
+Exit=0

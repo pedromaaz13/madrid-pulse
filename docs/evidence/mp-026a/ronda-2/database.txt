@@ -1,0 +1,52 @@
+DSN=postgresql://mp026a_r2:mp026a_r2_local@127.0.0.1:5453/madrid_pulse
+Host 127.0.0.1, puerto 5453, base madrid_pulse, esquema public, rol local propietario mp026a_r2.
+Contenedor propio mp026a-r2-db, postgis/postgis:17-3.5, volumen anónimo desechable. MADRID_PULSE_ENV=test, MADRID_PULSE_REQUIRE_DB=1.
+WARNING: The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested
+fc60cbee2f1833ee939b380a287c8d7e956c531bda8000c5094d82aa25366966
+Migración infra/migrations/0001_init.up.sql
+psql: error: connection to server on socket "/var/run/postgresql/.s.PGSQL.5432" failed: No such file or directory
+	Is the server running locally and accepting connections on that socket?
+127.0.0.1:5432 - accepting connections
+Migración infra/migrations/0001_init.up.sql
+BEGIN
+CREATE EXTENSION
+NOTICE:  extension "postgis" already exists, skipping
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+COMMIT
+Migración infra/migrations/0002_api_batch_indexes.up.sql
+BEGIN
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+COMMIT
+Base PostgreSQL marcada como desechable.
+ current_database | current_schema | current_user |     disposable_mark
+------------------+----------------+--------------+-------------------------
+ madrid_pulse     | public         | mp026a_r2    | madrid-pulse:disposable
+(1 row)
+
+Contenedor propio mp026a-r2-db, volumen anónimo c5ebf438ba44bfa9067c2d915f76fb9daeebdef625c8b18a50c5258e3c4187a9
+Comando: docker rm -fv mp026a-r2-db
+mp026a-r2-db
+Ausencia del contenedor y su volumen verificada.
+Comando: git worktree remove --force /tmp/mp026a-r2-red.otQSrG/baseline
+Checkout temporal RED eliminado.
+Exit=0

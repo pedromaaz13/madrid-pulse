@@ -18,6 +18,7 @@ from . import history, service, snapshot
 from .config import ApiConfig
 from .gtfs_source import LoadedNetwork, load_network
 from .schemas import (
+    CATALOG_SCHEMA_VERSION,
     CatalogOut,
     HealthOut,
     HistoryCirculationDetailOut,
@@ -34,6 +35,10 @@ from .schemas import (
 
 _STATE: dict[str, object] = {}
 logger = logging.getLogger(__name__)
+REPLAY_AT_DESCRIPTION = (
+    "Reloj con zona horaria explícita, solo en replay. Se admiten fechas UTC del "
+    "0001-01-04 al 9999-12-28 inclusive. En live o fuera de rango se rechaza con 400."
+)
 
 
 @asynccontextmanager
@@ -89,16 +94,20 @@ def now_utc() -> datetime:
 
 @app.get("/api/v1/health", response_model=HealthOut)
 def health(
+    at: datetime | None = Query(default=None, description=REPLAY_AT_DESCRIPTION),
     config: ApiConfig = Depends(get_config),
     network: LoadedNetwork = Depends(get_network),
     conn: psycopg.Connection = Depends(get_connection),
 ) -> HealthOut:
-    result = service.feed_health(conn, now_utc(), stale_after_s=config.feed_stale_after_s)
+    now = _replay_clock(config, network, at)
+    result = service.feed_health(conn, now, stale_after_s=config.feed_stale_after_s)
+    validity = network.gtfs_validity(now, expiring_days=config.gtfs_expiring_days)
     return result.model_copy(update={
         "mode": network.mode,
         "gtfs_version": network.gtfs_version,
         "gtfs_valid_from": network.gtfs_valid_from.isoformat(),
         "gtfs_valid_until": network.gtfs_valid_until.isoformat(),
+        **validity.model_dump(),
     })
 
 
@@ -156,6 +165,8 @@ def station_detail(station_id: str, network: LoadedNetwork = Depends(get_network
 def _replay_clock(
     config: ApiConfig, network: LoadedNetwork, at: datetime | None
 ) -> datetime:
+    if at is None:
+        return now_utc()
     try:
         return snapshot.resolve_clock(config, network, at)
     except ValueError as exc:
@@ -165,24 +176,25 @@ def _replay_clock(
 @app.get("/api/v1/catalog", response_model=CatalogOut)
 def catalog(
     request: Request,
-    response: Response,
+    at: datetime | None = Query(default=None, description=REPLAY_AT_DESCRIPTION),
+    config: ApiConfig = Depends(get_config),
     network: LoadedNetwork = Depends(get_network),
 ) -> CatalogOut | Response:
-    """Catálogo cacheable, versionado por GTFS + geometría.
+    """Catálogo cacheable con la vigencia GTFS al reloj de la petición.
 
-    Responde `304` cuando el cliente ya tiene la versión vigente: el catálogo
-    solo cambia si cambia el GTFS o la geometría, nunca con un sondeo. Es
-    deliberadamente el **único** recurso cacheable: `/snapshot` se sirve con
-    `no-store` para que ningún dato viejo se rotule como nuevo.
+    Responde `304` cuando coinciden las versiones estática y del esquema,
+    el modo y el estado de vigencia. El estado de los sondeos se sirve en `/snapshot`.
     """
-    etag = f'"{network.catalog_version}"'
+    now = _replay_clock(config, network, at)
+    validity = network.gtfs_validity(now, expiring_days=config.gtfs_expiring_days)
+    etag = f'"{network.catalog_version}.{network.mode}.{validity.gtfs_status}.{CATALOG_SCHEMA_VERSION}"'
     headers = {"ETag": etag, "Cache-Control": "no-cache"}
     if request.headers.get("if-none-match") == etag:
         return Response(status_code=304, headers=headers)
-    cached = network._catalog_json.get(network.catalog_version)
+    cached = network._catalog_json.get(etag)
     if cached is None:
-        cached = snapshot.build_catalog_payload(network).model_dump_json().encode()
-        network._catalog_json[network.catalog_version] = cached
+        cached = snapshot.build_catalog_payload(network, validity).model_dump_json().encode()
+        network._catalog_json[etag] = cached
     # Devolver una `Response` ya serializada evita revalidar y reserializar el
     # mismo payload inmutable en cada petición (ver la medición en
     # docs/evidence/mp-019-explain-y-bench.md). `response_model` sigue
@@ -193,13 +205,7 @@ def catalog(
 @app.get("/api/v1/snapshot", response_model=SnapshotOut)
 def live_snapshot(
     response: Response,
-    at: datetime | None = Query(
-        default=None,
-        description=(
-            "Reloj explícito, solo admitido en modo replay. En live se rechaza con 400: "
-            "un instante arbitrario permitiría falsificar edades."
-        ),
-    ),
+    at: datetime | None = Query(default=None, description=REPLAY_AT_DESCRIPTION),
     display_lag_s: float | None = Query(
         default=None,
         ge=0,
@@ -221,7 +227,7 @@ def live_snapshot(
 def station_board(
     station_id: str,
     response: Response,
-    at: datetime | None = Query(default=None, description="Reloj explícito, solo en replay."),
+    at: datetime | None = Query(default=None, description=REPLAY_AT_DESCRIPTION),
     lookback_s: float = Query(default=600.0, ge=0, le=7200),
     lookahead_s: float = Query(default=7200.0, ge=0, le=86400),
     limit: int = Query(default=20, ge=1, le=200),

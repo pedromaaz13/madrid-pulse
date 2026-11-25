@@ -22,6 +22,13 @@ import sys
 from datetime import date
 from pathlib import Path
 
+import psycopg
+
+from packages.database import (
+    DISPOSABLE_ENVIRONMENTS,
+    DatabaseConfigurationError,
+    require_disposable_database,
+)
 from packages.gtfs import load_feed
 from services.snapshotter.config import SnapshotterConfig
 from services.snapshotter.export import export_service_date
@@ -42,7 +49,14 @@ def main() -> None:
         raise SystemExit(2)
     service_date = date.fromisoformat(sys.argv[1])
 
-    config = SnapshotterConfig.from_env()
+    try:
+        config = SnapshotterConfig.from_env()
+        if config.environment in DISPOSABLE_ENVIRONMENTS:
+            with psycopg.connect(config.database_url, autocommit=True) as conn:
+                require_disposable_database(conn)
+    except DatabaseConfigurationError as exc:
+        raise SystemExit(str(exc)) from None
+
     output_dir = Path(config.output_dir)
     results = export_service_date(config.database_url, service_date, output_dir)
     for result in results:

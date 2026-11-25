@@ -42,7 +42,8 @@ from packages.contracts.canonical import (  # noqa: E402
 )
 from packages.geo import point_at_arc_length  # noqa: E402
 from services.collector import db as collector_db  # noqa: E402
-from services.collector.config import CollectorConfig  # noqa: E402
+from tests.clock import api_wall_clock  # noqa: E402
+from tests.postgres import connect_disposable_or_skip  # noqa: E402
 
 MADRID = ZoneInfo("Europe/Madrid")
 TRIP_ID = "1022J19502C5"
@@ -55,15 +56,6 @@ ATOCHA = "18000"
 def _instant(seconds: float) -> datetime:
     midnight = datetime.combine(SERVICE_DATE, time.min, tzinfo=MADRID).astimezone(timezone.utc)
     return midnight + timedelta(seconds=seconds)
-
-
-def _connect_or_skip() -> psycopg.Connection:
-    try:
-        return psycopg.connect(
-            CollectorConfig.from_env().database_url, autocommit=False, connect_timeout=3
-        )
-    except psycopg.OperationalError as exc:
-        raise unittest.SkipTest(f"PostgreSQL local no disponible: {exc}")
 
 
 class CountingConnection:
@@ -440,16 +432,20 @@ class EtaProvenanceTests(unittest.TestCase):
 
 class CatalogContractTests(unittest.TestCase):
     def setUp(self) -> None:
+        self.enterContext(api_wall_clock(datetime(2026, 11, 25, 12, tzinfo=timezone.utc)))
         self.client = TestClient(app)
         self.client.__enter__()
         self.addCleanup(self.client.__exit__, None, None, None)
 
-    def test_catalog_is_cacheable_by_version_and_answers_304(self) -> None:
+    def test_catalog_is_cacheable_by_representation_and_answers_304(self) -> None:
         response = self.client.get("/api/v1/catalog")
         self.assertEqual(response.status_code, 200)
         etag = response.headers["etag"]
         payload = response.json()
-        self.assertEqual(etag, f'"{payload["catalog_version"]}"')
+        self.assertEqual(
+            etag,
+            f'"{payload["catalog_version"]}.{payload["mode"]}.{payload["gtfs_status"]}.{payload["schema_version"]}"',
+        )
         again = self.client.get("/api/v1/catalog", headers={"If-None-Match": etag})
         self.assertEqual(again.status_code, 304)
 
@@ -506,6 +502,7 @@ class CatalogContractTests(unittest.TestCase):
 
 class ReplayClockTests(unittest.TestCase):
     def setUp(self) -> None:
+        connect_disposable_or_skip().close()
         self.client = TestClient(app)
         self.client.__enter__()
         self.addCleanup(self.client.__exit__, None, None, None)
@@ -536,11 +533,12 @@ class SnapshotPostgresTests(NetworkFixtureMixin, unittest.TestCase):
     contra PostgreSQL real, siempre con `rollback`."""
 
     def setUp(self) -> None:
-        self.conn = _connect_or_skip()
+        self.conn = connect_disposable_or_skip()
         self.conn.execute("SELECT 1")
         self.addCleanup(self.conn.close)
         self.addCleanup(self.conn.rollback)
-        self.base = datetime.now(timezone.utc).replace(microsecond=0)
+        # Mantener el reloj dentro de la vigencia de la fixture C5.
+        self.base = datetime(2026, 11, 25, 12, tzinfo=timezone.utc)
 
     def _ingest_vehicle(
         self,
@@ -830,7 +828,7 @@ class SnapshotPostgresTests(NetworkFixtureMixin, unittest.TestCase):
 
 class StationBoardPostgresTests(NetworkFixtureMixin, unittest.TestCase):
     def setUp(self) -> None:
-        self.conn = _connect_or_skip()
+        self.conn = connect_disposable_or_skip()
         self.conn.execute("SELECT 1")
         self.addCleanup(self.conn.close)
         self.addCleanup(self.conn.rollback)
@@ -1153,7 +1151,7 @@ class ExtendedHoursBoardTests(unittest.TestCase):
         cls.network = load_network(cls.config)
 
     def setUp(self) -> None:
-        self.conn = _connect_or_skip()
+        self.conn = connect_disposable_or_skip()
         self.conn.execute("SELECT 1")
         self.addCleanup(self.conn.close)
         self.addCleanup(self.conn.rollback)
@@ -1239,7 +1237,7 @@ class BoardWindowCoversItsCandidateServiceDaysTests(unittest.TestCase):
         cls.network = load_network(cls.config)
 
     def setUp(self) -> None:
-        self.conn = _connect_or_skip()
+        self.conn = connect_disposable_or_skip()
         self.conn.execute("SELECT 1")
         self.addCleanup(self.conn.close)
         self.addCleanup(self.conn.rollback)

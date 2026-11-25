@@ -1,0 +1,208 @@
+beb94341ed0945cea084216caac3cf090d091a6e
+c3f785989e1b6853dcb7159d048c18b6cfe98d0ad722c8b55bce06ae5404eb6c  tests/e2e/database_isolation_checks.py
+Comando: env -i MADRID_PULSE_DATABASE_URL=postgresql://mp023:mp023_local@127.0.0.1:5451/madrid_pulse <venv>/bin/python -m unittest -v tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests
+test_missing_url_stops_each_service_before_io (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_missing_url_stops_each_service_before_io) ... 2026-11-25 13:41:41,492 WARNING MADRID_PULSE_GTFS_SOURCE no definido: avisos por estación (sin routeId) se descartarán como fuera de alcance en vez de resolverse por stop_id (limitación documentada, no un fallo).
+2026-11-25 13:41:41,492 INFO Colector iniciado: 3 feeds, poll=30s, timeout=10s, max_retries=3, estaciones Madrid=sin catálogo
+
+  test_missing_url_stops_each_service_before_io (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_missing_url_stops_each_service_before_io) (service='services.collector.__main__', env={}) ... FAIL
+2026-11-25 13:41:41,494 WARNING MADRID_PULSE_GTFS_SOURCE no definido: avisos por estación (sin routeId) se descartarán como fuera de alcance en vez de resolverse por stop_id (limitación documentada, no un fallo).
+2026-11-25 13:41:41,494 INFO Colector iniciado: 3 feeds, poll=30s, timeout=10s, max_retries=3, estaciones Madrid=sin catálogo
+  test_missing_url_stops_each_service_before_io (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_missing_url_stops_each_service_before_io) (service='services.collector.__main__', env={'MADRID_PULSE_DATABASE_URL': '  ', 'MADRID_PULSE_ENV': 'test'}) ... FAIL
+2026-11-25 13:41:41,650 INFO API mode=replay GTFS=sha256:c31190232573fc17fe43f62c1e3b22e345bb2c4daf84611a636ea23044ce0810 vigencia=2026-11-19..2026-12-06
+  test_missing_url_stops_each_service_before_io (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_missing_url_stops_each_service_before_io) (service='tests.e2e.database_isolation_checks', env={}) ... FAIL
+2026-11-25 13:41:41,848 INFO API mode=replay GTFS=sha256:c31190232573fc17fe43f62c1e3b22e345bb2c4daf84611a636ea23044ce0810 vigencia=2026-11-19..2026-12-06
+  test_missing_url_stops_each_service_before_io (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_missing_url_stops_each_service_before_io) (service='tests.e2e.database_isolation_checks', env={'MADRID_PULSE_DATABASE_URL': '  ', 'MADRID_PULSE_ENV': 'test'}) ... FAIL
+  test_missing_url_stops_each_service_before_io (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_missing_url_stops_each_service_before_io) (service='services.snapshotter.__main__', env={}) ... FAIL
+  test_missing_url_stops_each_service_before_io (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_missing_url_stops_each_service_before_io) (service='services.snapshotter.__main__', env={'MADRID_PULSE_DATABASE_URL': '  ', 'MADRID_PULSE_ENV': 'test'}) ... FAIL
+test_shared_target_is_rejected_before_connection (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_shared_target_is_rejected_before_connection) ...
+  test_shared_target_is_rejected_before_connection (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_shared_target_is_rejected_before_connection) (config='CollectorConfig', url='postgresql://test@127.0.0.1:5433/sandbox') ... FAIL
+  test_shared_target_is_rejected_before_connection (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_shared_target_is_rejected_before_connection) (config='CollectorConfig', url='postgresql://test@localhost:05433/sandbox') ... FAIL
+  test_shared_target_is_rejected_before_connection (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_shared_target_is_rejected_before_connection) (config='CollectorConfig', url='postgresql://test@some-host:5433/sandbox?hostaddr=127.0.0.1') ... FAIL
+  test_shared_target_is_rejected_before_connection (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_shared_target_is_rejected_before_connection) (config='ApiConfig', url='postgresql://test@127.0.0.1:5433/sandbox') ... FAIL
+  test_shared_target_is_rejected_before_connection (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_shared_target_is_rejected_before_connection) (config='ApiConfig', url='postgresql://test@localhost:05433/sandbox') ... FAIL
+  test_shared_target_is_rejected_before_connection (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_shared_target_is_rejected_before_connection) (config='ApiConfig', url='postgresql://test@some-host:5433/sandbox?hostaddr=127.0.0.1') ... FAIL
+  test_shared_target_is_rejected_before_connection (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_shared_target_is_rejected_before_connection) (config='SnapshotterConfig', url='postgresql://test@127.0.0.1:5433/sandbox') ... FAIL
+  test_shared_target_is_rejected_before_connection (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_shared_target_is_rejected_before_connection) (config='SnapshotterConfig', url='postgresql://test@localhost:05433/sandbox') ... FAIL
+  test_shared_target_is_rejected_before_connection (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_shared_target_is_rejected_before_connection) (config='SnapshotterConfig', url='postgresql://test@some-host:5433/sandbox?hostaddr=127.0.0.1') ... FAIL
+test_suite_refuses_an_unmarked_database (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_suite_refuses_an_unmarked_database) ... 2026-11-25 13:41:42,066 INFO API mode=replay GTFS=sha256:c31190232573fc17fe43f62c1e3b22e345bb2c4daf84611a636ea23044ce0810 vigencia=2026-11-19..2026-12-06
+2026-11-25 13:41:42,217 INFO HTTP Request: GET http://testserver/api/v1/live/vehicles "HTTP/1.1 200 OK"
+2026-11-25 13:41:42,220 INFO HTTP Request: GET http://testserver/api/v1/stations "HTTP/1.1 200 OK"
+FAIL
+
+======================================================================
+FAIL: test_missing_url_stops_each_service_before_io (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_missing_url_stops_each_service_before_io) (service='services.collector.__main__', env={})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp023-red.EeAmKN/tests/e2e/database_isolation_checks.py", line 63, in test_missing_url_stops_each_service_before_io
+    service()
+  File "/private/tmp/mp023-red.EeAmKN/services/collector/__main__.py", line 89, in main
+    with psycopg.connect(config.database_url, autocommit=False) as conn:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/matu/.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py", line 1134, in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/matu/.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py", line 1138, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/matu/.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py", line 1193, in _execute_mock_call
+    raise effect
+AssertionError: intentó conectar
+
+======================================================================
+FAIL: test_missing_url_stops_each_service_before_io (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_missing_url_stops_each_service_before_io) (service='services.collector.__main__', env={'MADRID_PULSE_DATABASE_URL': '  ', 'MADRID_PULSE_ENV': 'test'})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp023-red.EeAmKN/tests/e2e/database_isolation_checks.py", line 63, in test_missing_url_stops_each_service_before_io
+    service()
+  File "/private/tmp/mp023-red.EeAmKN/services/collector/__main__.py", line 89, in main
+    with psycopg.connect(config.database_url, autocommit=False) as conn:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/matu/.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py", line 1134, in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/matu/.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py", line 1138, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/matu/.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py", line 1193, in _execute_mock_call
+    raise effect
+AssertionError: intentó conectar
+
+======================================================================
+FAIL: test_missing_url_stops_each_service_before_io (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_missing_url_stops_each_service_before_io) (service='tests.e2e.database_isolation_checks', env={})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp023-red.EeAmKN/tests/e2e/database_isolation_checks.py", line 52, in test_missing_url_stops_each_service_before_io
+    with (
+AssertionError: (<class 'SystemExit'>, <class 'ValueError'>) not raised
+
+======================================================================
+FAIL: test_missing_url_stops_each_service_before_io (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_missing_url_stops_each_service_before_io) (service='tests.e2e.database_isolation_checks', env={'MADRID_PULSE_DATABASE_URL': '  ', 'MADRID_PULSE_ENV': 'test'})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp023-red.EeAmKN/tests/e2e/database_isolation_checks.py", line 52, in test_missing_url_stops_each_service_before_io
+    with (
+AssertionError: (<class 'SystemExit'>, <class 'ValueError'>) not raised
+
+======================================================================
+FAIL: test_missing_url_stops_each_service_before_io (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_missing_url_stops_each_service_before_io) (service='services.snapshotter.__main__', env={})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp023-red.EeAmKN/tests/e2e/database_isolation_checks.py", line 63, in test_missing_url_stops_each_service_before_io
+    service()
+  File "/private/tmp/mp023-red.EeAmKN/services/snapshotter/__main__.py", line 47, in main
+    results = export_service_date(config.database_url, service_date, output_dir)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/matu/.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py", line 1134, in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/matu/.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py", line 1138, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/matu/.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py", line 1193, in _execute_mock_call
+    raise effect
+AssertionError: intentó exportar
+
+======================================================================
+FAIL: test_missing_url_stops_each_service_before_io (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_missing_url_stops_each_service_before_io) (service='services.snapshotter.__main__', env={'MADRID_PULSE_DATABASE_URL': '  ', 'MADRID_PULSE_ENV': 'test'})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp023-red.EeAmKN/tests/e2e/database_isolation_checks.py", line 63, in test_missing_url_stops_each_service_before_io
+    service()
+  File "/private/tmp/mp023-red.EeAmKN/services/snapshotter/__main__.py", line 47, in main
+    results = export_service_date(config.database_url, service_date, output_dir)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/matu/.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py", line 1134, in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/matu/.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py", line 1138, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/matu/.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py", line 1193, in _execute_mock_call
+    raise effect
+AssertionError: intentó exportar
+
+======================================================================
+FAIL: test_shared_target_is_rejected_before_connection (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_shared_target_is_rejected_before_connection) (config='CollectorConfig', url='postgresql://test@127.0.0.1:5433/sandbox')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp023-red.EeAmKN/tests/e2e/database_isolation_checks.py", line 86, in test_shared_target_is_rejected_before_connection
+    with (
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_shared_target_is_rejected_before_connection (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_shared_target_is_rejected_before_connection) (config='CollectorConfig', url='postgresql://test@localhost:05433/sandbox')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp023-red.EeAmKN/tests/e2e/database_isolation_checks.py", line 86, in test_shared_target_is_rejected_before_connection
+    with (
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_shared_target_is_rejected_before_connection (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_shared_target_is_rejected_before_connection) (config='CollectorConfig', url='postgresql://test@some-host:5433/sandbox?hostaddr=127.0.0.1')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp023-red.EeAmKN/tests/e2e/database_isolation_checks.py", line 86, in test_shared_target_is_rejected_before_connection
+    with (
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_shared_target_is_rejected_before_connection (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_shared_target_is_rejected_before_connection) (config='ApiConfig', url='postgresql://test@127.0.0.1:5433/sandbox')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp023-red.EeAmKN/tests/e2e/database_isolation_checks.py", line 86, in test_shared_target_is_rejected_before_connection
+    with (
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_shared_target_is_rejected_before_connection (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_shared_target_is_rejected_before_connection) (config='ApiConfig', url='postgresql://test@localhost:05433/sandbox')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp023-red.EeAmKN/tests/e2e/database_isolation_checks.py", line 86, in test_shared_target_is_rejected_before_connection
+    with (
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_shared_target_is_rejected_before_connection (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_shared_target_is_rejected_before_connection) (config='ApiConfig', url='postgresql://test@some-host:5433/sandbox?hostaddr=127.0.0.1')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp023-red.EeAmKN/tests/e2e/database_isolation_checks.py", line 86, in test_shared_target_is_rejected_before_connection
+    with (
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_shared_target_is_rejected_before_connection (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_shared_target_is_rejected_before_connection) (config='SnapshotterConfig', url='postgresql://test@127.0.0.1:5433/sandbox')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp023-red.EeAmKN/tests/e2e/database_isolation_checks.py", line 86, in test_shared_target_is_rejected_before_connection
+    with (
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_shared_target_is_rejected_before_connection (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_shared_target_is_rejected_before_connection) (config='SnapshotterConfig', url='postgresql://test@localhost:05433/sandbox')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp023-red.EeAmKN/tests/e2e/database_isolation_checks.py", line 86, in test_shared_target_is_rejected_before_connection
+    with (
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_shared_target_is_rejected_before_connection (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_shared_target_is_rejected_before_connection) (config='SnapshotterConfig', url='postgresql://test@some-host:5433/sandbox?hostaddr=127.0.0.1')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp023-red.EeAmKN/tests/e2e/database_isolation_checks.py", line 86, in test_shared_target_is_rejected_before_connection
+    with (
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_suite_refuses_an_unmarked_database (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_suite_refuses_an_unmarked_database)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp023-red.EeAmKN/tests/e2e/database_isolation_checks.py", line 75, in test_suite_refuses_an_unmarked_database
+    self.assertEqual(len(result.skipped), 1)
+AssertionError: 0 != 1
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.730s
+
+FAILED (failures=16)
+Código de salida: 1

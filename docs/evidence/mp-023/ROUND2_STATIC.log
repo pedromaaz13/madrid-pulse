@@ -1,0 +1,34 @@
++ git rev-parse HEAD
+6d1d3600bde4f82e20a3b82ac48a3020208d16db
++ git diff --check 97c8951 HEAD
++ git diff --name-only 97c8951 HEAD -- '*.py'
++ xargs ruff check --isolated --select E4,E7,E9,F --ignore E402,E731 --output-format concise
+All checks passed!
++ python3 scripts/governance/check_docs.py
+Documentación de gobernanza correcta.
+++ printf '%s\n' packages/database.py tests/e2e/database_isolation_checks.py
++ expected=$'packages/database.py\ntests/e2e/database_isolation_checks.py'
+++ git grep -l -e 5433 -- . ':!docs' ':!infra/docker' ':!tests/fixtures' ':!apps/web/src/__fixtures__'
++ actual=$'packages/database.py\ntests/e2e/database_isolation_checks.py'
++ test $'packages/database.py\ntests/e2e/database_isolation_checks.py' = $'packages/database.py\ntests/e2e/database_isolation_checks.py'
++ git grep -n -e 5433 -- . ':!docs' ':!infra/docker' ':!tests/fixtures' ':!apps/web/src/__fixtures__'
+packages/database.py:17:SHARED_DEV_PORT = 5433
+tests/e2e/database_isolation_checks.py:33:SHARED_DEV_PORT = 5433
++ git grep -n MADRID_PULSE_DATABASE_DSN -- docs/deployment apps/api/README.md services infra
++ git diff --exit-code 97c8951 HEAD -- docs/governance/PROJECT_STATE.json docs/STATUS.md docs/TASKS.md docs/CHANGELOG.md docs/hitos docs/audits infra/docker
++ printf 'Comprobaciones estáticas: PASS\n'
+Comprobaciones estáticas: PASS
+++ docker inspect --format '{{range .Mounts}}{{if eq .Type "volume"}}{{.Name}}{{end}}{{end}}' mp023-round2
++ mp023_volume=f861ee72ee3c14b86ec98572ef5fe8c9370ed780b4949a3e797ae64a8bf845e3
++ test -n f861ee72ee3c14b86ec98572ef5fe8c9370ed780b4949a3e797ae64a8bf845e3
++ docker rm -fv mp023-round2
+mp023-round2
+++ docker ps -a --filter 'name=^/mp023-round2$' --format '{{.Names}}'
++ test -z ''
++ docker volume inspect f861ee72ee3c14b86ec98572ef5fe8c9370ed780b4949a3e797ae64a8bf845e3
+[]
+Error response from daemon: get f861ee72ee3c14b86ec98572ef5fe8c9370ed780b4949a3e797ae64a8bf845e3: no such volume
++ git worktree list
++ rg /tmp/mp023-round2-red
++ printf 'Limpieza: PASS\n'
+Limpieza: PASS

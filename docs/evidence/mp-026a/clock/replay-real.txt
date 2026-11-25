@@ -1,0 +1,81 @@
+HEAD=dd92247f36f87124bc182007e06ec19f7bd235b4
+Comando: /Users/matu/orca/workspaces/madrid-pulse/audit-hito-03/.venv/bin/python /Users/matu/orca/workspaces/madrid-pulse/h4-planning/data/hito-03/replay/comprobar.py
+Catálogo Madrid: 42 rutas, 12 líneas/variantes, 36097 viajes.
+1532 vehículos Madrid 119 matches 119 actualizaciones nacionales 469 SKIPPED sin arrival 49 avisos nacionales 72
+{'C1': 8, 'C10': 11, 'C2': 17, 'C3': 13, 'C4a': 10, 'C4b': 11, 'C5': 28, 'C7': 10, 'C8a': 5, 'C8b': 5, 'C9': 1}
+1533 vehículos Madrid 121 matches 121 actualizaciones nacionales 474 SKIPPED sin arrival 49 avisos nacionales 73
+{'C1': 7, 'C10': 13, 'C2': 17, 'C3': 13, 'C4a': 10, 'C4b': 12, 'C5': 28, 'C7': 10, 'C8a': 5, 'C8b': 5, 'C9': 1}
+MADRID_PULSE_ENV=replay MADRID_PULSE_MODE=replay MADRID_PULSE_REQUIRE_DB=1 MADRID_PULSE_DATABASE_URL=postgresql://mp026a_clock:mp026a_clock_local@127.0.0.1:5453/madrid_pulse
+MADRID_PULSE_GTFS_SOURCE=/Users/matu/orca/workspaces/madrid-pulse/h4-planning/data/hito-03/replay/fomento_transit.zip MADRID_PULSE_SHORT_NAME= MADRID_PULSE_GTFS_EXPIRING_DAYS=7 MADRID_PULSE_FEED_STALE_AFTER_S=180
+Comando: PYTHONPATH=. /Users/matu/orca/workspaces/madrid-pulse/audit-hito-03/.venv/bin/python docs/evidence/mp-026a/replay_real.py ingest /Users/matu/orca/workspaces/madrid-pulse/h4-planning/data/hito-03/replay
+1532 vehicle_positions entities 463 inserted 119
+1532 trip_updates entities 469 inserted 122
+1532 alerts entities 72 inserted 4
+1533 vehicle_positions entities 468 inserted 121
+1533 trip_updates entities 474 inserted 77
+1533 alerts entities 73 inserted 0
+Comando: PYTHONPATH=. /Users/matu/orca/workspaces/madrid-pulse/audit-hito-03/.venv/bin/python docs/evidence/mp-026a/clock/probe_real.py
+pared=2026-12-20T12:00:00Z at=2026-11-19T22:59:59Z health HTTP=200 gtfs_status=not_yet_valid
+pared=2026-12-20T12:00:00Z at=2026-11-19T22:59:59Z catalog HTTP=200 gtfs_status=not_yet_valid
+pared=2026-12-20T12:00:00Z at=2026-11-19T22:59:59Z snapshot HTTP=200 gtfs_status=not_yet_valid
+pared=2026-12-20T12:00:00Z at=2026-11-19T23:00:00Z health HTTP=200 gtfs_status=valid
+pared=2026-12-20T12:00:00Z at=2026-11-19T23:00:00Z catalog HTTP=200 gtfs_status=valid
+pared=2026-12-20T12:00:00Z at=2026-11-19T23:00:00Z snapshot HTTP=200 gtfs_status=valid
+pared=2026-12-20T12:00:00Z at=2026-11-20T14:32:10Z health HTTP=200 gtfs_status=valid
+pared=2026-12-20T12:00:00Z at=2026-11-20T14:32:10Z catalog HTTP=200 gtfs_status=valid
+pared=2026-12-20T12:00:00Z at=2026-11-20T14:32:10Z snapshot HTTP=200 gtfs_status=valid
+pared=2026-12-20T12:00:00Z at=2026-12-18T12:00:00Z health HTTP=200 gtfs_status=expiring
+pared=2026-12-20T12:00:00Z at=2026-12-18T12:00:00Z catalog HTTP=200 gtfs_status=expiring
+pared=2026-12-20T12:00:00Z at=2026-12-18T12:00:00Z snapshot HTTP=200 gtfs_status=expiring
+pared=2026-12-20T12:00:00Z at=2026-12-19T22:59:59Z health HTTP=200 gtfs_status=expiring
+pared=2026-12-20T12:00:00Z at=2026-12-19T22:59:59Z catalog HTTP=200 gtfs_status=expiring
+pared=2026-12-20T12:00:00Z at=2026-12-19T22:59:59Z snapshot HTTP=200 gtfs_status=expiring
+pared=2026-12-20T12:00:00Z at=2026-12-19T23:00:00Z health HTTP=200 gtfs_status=expired
+pared=2026-12-20T12:00:00Z at=2026-12-19T23:00:00Z catalog HTTP=200 gtfs_status=expired
+pared=2026-12-20T12:00:00Z at=2026-12-19T23:00:00Z snapshot HTTP=200 gtfs_status=expired
+pared=2026-12-20T12:00:00Z at=2026-12-20T12:00:00Z health HTTP=200 gtfs_status=expired
+pared=2026-12-20T12:00:00Z at=2026-12-20T12:00:00Z catalog HTTP=200 gtfs_status=expired
+pared=2026-12-20T12:00:00Z at=2026-12-20T12:00:00Z snapshot HTTP=200 gtfs_status=expired
+pared=2026-12-20T12:00:00Z at=None health HTTP=200 gtfs_status=expired
+pared=2026-12-20T12:00:00Z at=None catalog HTTP=200 gtfs_status=expired
+pared=2026-12-20T12:00:00Z at=None snapshot HTTP=200 gtfs_status=expired
+pared=2027-01-15T12:00:00Z at=2026-11-19T22:59:59Z health HTTP=200 gtfs_status=not_yet_valid
+pared=2027-01-15T12:00:00Z at=2026-11-19T22:59:59Z catalog HTTP=200 gtfs_status=not_yet_valid
+pared=2027-01-15T12:00:00Z at=2026-11-19T22:59:59Z snapshot HTTP=200 gtfs_status=not_yet_valid
+pared=2027-01-15T12:00:00Z at=2026-11-19T23:00:00Z health HTTP=200 gtfs_status=valid
+pared=2027-01-15T12:00:00Z at=2026-11-19T23:00:00Z catalog HTTP=200 gtfs_status=valid
+pared=2027-01-15T12:00:00Z at=2026-11-19T23:00:00Z snapshot HTTP=200 gtfs_status=valid
+pared=2027-01-15T12:00:00Z at=2026-11-20T14:32:10Z health HTTP=200 gtfs_status=valid
+pared=2027-01-15T12:00:00Z at=2026-11-20T14:32:10Z catalog HTTP=200 gtfs_status=valid
+pared=2027-01-15T12:00:00Z at=2026-11-20T14:32:10Z snapshot HTTP=200 gtfs_status=valid
+pared=2027-01-15T12:00:00Z at=2026-12-18T12:00:00Z health HTTP=200 gtfs_status=expiring
+pared=2027-01-15T12:00:00Z at=2026-12-18T12:00:00Z catalog HTTP=200 gtfs_status=expiring
+pared=2027-01-15T12:00:00Z at=2026-12-18T12:00:00Z snapshot HTTP=200 gtfs_status=expiring
+pared=2027-01-15T12:00:00Z at=2026-12-19T22:59:59Z health HTTP=200 gtfs_status=expiring
+pared=2027-01-15T12:00:00Z at=2026-12-19T22:59:59Z catalog HTTP=200 gtfs_status=expiring
+pared=2027-01-15T12:00:00Z at=2026-12-19T22:59:59Z snapshot HTTP=200 gtfs_status=expiring
+pared=2027-01-15T12:00:00Z at=2026-12-19T23:00:00Z health HTTP=200 gtfs_status=expired
+pared=2027-01-15T12:00:00Z at=2026-12-19T23:00:00Z catalog HTTP=200 gtfs_status=expired
+pared=2027-01-15T12:00:00Z at=2026-12-19T23:00:00Z snapshot HTTP=200 gtfs_status=expired
+pared=2027-01-15T12:00:00Z at=2026-12-20T12:00:00Z health HTTP=200 gtfs_status=expired
+pared=2027-01-15T12:00:00Z at=2026-12-20T12:00:00Z catalog HTTP=200 gtfs_status=expired
+pared=2027-01-15T12:00:00Z at=2026-12-20T12:00:00Z snapshot HTTP=200 gtfs_status=expired
+pared=2027-01-15T12:00:00Z at=None health HTTP=200 gtfs_status=expired
+pared=2027-01-15T12:00:00Z at=None catalog HTTP=200 gtfs_status=expired
+pared=2027-01-15T12:00:00Z at=None snapshot HTTP=200 gtfs_status=expired
+pared=2026-12-18T12:00:00Z at=None health HTTP=200 gtfs_status=expiring
+pared=2026-12-18T12:00:00Z at=None catalog HTTP=200 gtfs_status=expiring
+pared=2026-12-18T12:00:00Z at=None snapshot HTTP=200 gtfs_status=expiring
+pared=2026-12-19T22:59:59Z at=None health HTTP=200 gtfs_status=expiring
+pared=2026-12-19T22:59:59Z at=None catalog HTTP=200 gtfs_status=expiring
+pared=2026-12-19T22:59:59Z at=None snapshot HTTP=200 gtfs_status=expiring
+pared=2026-12-19T23:00:00Z at=None health HTTP=200 gtfs_status=expired
+pared=2026-12-19T23:00:00Z at=None catalog HTTP=200 gtfs_status=expired
+pared=2026-12-19T23:00:00Z at=None snapshot HTTP=200 gtfs_status=expired
+pared=2026-12-20T12:00:00Z at=None health HTTP=200 gtfs_status=expired
+pared=2026-12-20T12:00:00Z at=None catalog HTTP=200 gtfs_status=expired
+pared=2026-12-20T12:00:00Z at=None snapshot HTTP=200 gtfs_status=expired
+pared=2027-01-15T12:00:00Z at=None health HTTP=200 gtfs_status=expired
+pared=2027-01-15T12:00:00Z at=None catalog HTTP=200 gtfs_status=expired
+pared=2027-01-15T12:00:00Z at=None snapshot HTTP=200 gtfs_status=expired
+Exit=0

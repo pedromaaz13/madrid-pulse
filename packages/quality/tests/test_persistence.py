@@ -6,34 +6,21 @@ import unittest
 from pathlib import Path
 from datetime import datetime, timezone
 
-import psycopg
-
 from packages.contracts.canonical import VehiclePositionObservation
 from packages.quality import db as quality_db
 from packages.quality.engine import QualityEvent
 from services.collector import db as collector_db
-from services.collector.config import CollectorConfig
 from services.collector.collector import run_cycle
 from services.collector.config import FeedConfig
 from services.collector.http_client import RetryPolicy
+from tests.postgres import connect_disposable_or_skip
 
 FIXTURES_DIR = Path(__file__).resolve().parents[3] / "tests" / "fixtures"
 
 
-def _connect_or_skip() -> psycopg.Connection:
-    # `.from_env()`, no `CollectorConfig()` a secas -- ver hallazgo de MP-015
-    # en `services/snapshotter/tests/test_export_replay.py`.
-    try:
-        return psycopg.connect(
-            CollectorConfig.from_env().database_url, autocommit=False, connect_timeout=3
-        )
-    except psycopg.OperationalError as exc:
-        raise unittest.SkipTest(f"PostgreSQL local no disponible: {exc}")
-
-
 class QualityPersistenceTests(unittest.TestCase):
     def setUp(self) -> None:
-        self.conn = _connect_or_skip()
+        self.conn = connect_disposable_or_skip()
         self.conn.execute("SELECT 1")
         self.addCleanup(self.conn.close)
         self.addCleanup(self.conn.rollback)

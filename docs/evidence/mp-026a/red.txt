@@ -1,0 +1,445 @@
+HEAD=beb94341ed0945cea084216caac3cf090d091a6e
+MADRID_PULSE_ENV=test MADRID_PULSE_MODE=replay MADRID_PULSE_REQUIRE_DB=1 MADRID_PULSE_DATABASE_URL=postgresql://mp026a:mp026a_local@127.0.0.1:5453/madrid_pulse
+RED: MADRID_PULSE_DATABASE_DSN se fija explícitamente al mismo destino; se copiaron las pruebas, sus fixtures y los dos módulos de aislamiento MP-023 que usa el arnés.
+f1d377832afad20f9e65786c1d5d1d50f24dcd0f6c1730b1bdf0f5d4cf4e095b  apps/api/tests/test_temporal_replay.py
+e8b6deb06396341cf89b6dfa7d3248e4b8041fb9aa15fb0cc1cc83f798977b73  tests/fixtures/mp026a/first-delays.json
+ab54fbc5eb69e1b3350cceb76ff3e60a8d01fe18e10c5c44f5cf3f9b86b6f27e  tests/fixtures/mp026a/first-vehicles.json
+8b12604263390393ca97b77c5511eec818981d086b6db5900884832a292fd060  tests/fixtures/mp026a/future-header.json
+0a4efcc8adb0248fda4b4db868dc31a1c56a5a203d5b40f19ae0e1ffb2ee7da4  tests/fixtures/mp026a/second-delays.json
+f30c1beef66e27a01e3ce6633cf1e956c75c8093e567742cd3ae4a7acd66e367  tests/fixtures/mp026a/second-vehicles.json
+652bc1240824e03366ed2edf8b6d44104913f8cf1ed232d6fe2ea54d0e37d498  tests/fixtures/gtfs_c5_real/calendar.txt
+0c044d3b7a799b5d644be3f3b963bbdaf165ca1daef1afd6c30421dfa2eb3486  tests/fixtures/gtfs_c5_real/routes.txt
+351c20eb08295d788f85bf518d258fd881d7773cde4e6c94faa50eef8099676d  tests/fixtures/gtfs_c5_real/shapes.txt
+53cdd888e87f289c0bd45b60acbb0eeb69982a230a084d0cbfdf73d7bd383c1f  tests/fixtures/gtfs_c5_real/stop_times.txt
+fa77b60ee6ac6561de903fb5d18a6f7e65682466bf55b92344f62c3bc855f6c8  tests/fixtures/gtfs_c5_real/stops.txt
+4e18ba444d10a5a54e6c3985ef005e41b35487c126a2417ff40898975f469dc3  tests/fixtures/gtfs_c5_real/trips.txt
+79f9966b2b7f3fdcebf1f41083d13ff58de39a496eca80caeb274c9b9f4d375a  tests/fixtures/osm_c5_real/relation_3418150.json
+Comando: /Users/matu/orca/workspaces/madrid-pulse/audit-hito-03/.venv/bin/python -m unittest apps.api.tests.test_temporal_replay -v
+test_before_first_ingestion_is_declared_without_ages (apps.api.tests.test_temporal_replay.TemporalApiTests.test_before_first_ingestion_is_declared_without_ages) ...
+  test_before_first_ingestion_is_declared_without_ages (apps.api.tests.test_temporal_replay.TemporalApiTests.test_before_first_ingestion_is_declared_without_ages) (endpoint='snapshot') ... FAIL
+  test_before_first_ingestion_is_declared_without_ages (apps.api.tests.test_temporal_replay.TemporalApiTests.test_before_first_ingestion_is_declared_without_ages) (endpoint='health') ... FAIL
+test_before_first_ingestion_is_declared_without_ages (apps.api.tests.test_temporal_replay.TemporalApiTests.test_before_first_ingestion_is_declared_without_ages) ... FAIL
+test_board_excludes_delays_from_future_ingestions (apps.api.tests.test_temporal_replay.TemporalApiTests.test_board_excludes_delays_from_future_ingestions) ... FAIL
+test_future_source_timestamp_has_its_own_reason (apps.api.tests.test_temporal_replay.TemporalApiTests.test_future_source_timestamp_has_its_own_reason) ...
+  test_future_source_timestamp_has_its_own_reason (apps.api.tests.test_temporal_replay.TemporalApiTests.test_future_source_timestamp_has_its_own_reason) (endpoint='snapshot') ... FAIL
+  test_future_source_timestamp_has_its_own_reason (apps.api.tests.test_temporal_replay.TemporalApiTests.test_future_source_timestamp_has_its_own_reason) (endpoint='health') ... FAIL
+test_health_and_snapshot_use_same_clock (apps.api.tests.test_temporal_replay.TemporalApiTests.test_health_and_snapshot_use_same_clock) ... FAIL
+test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache (apps.api.tests.test_temporal_replay.TemporalApiTests.test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache) ...
+  test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache (apps.api.tests.test_temporal_replay.TemporalApiTests.test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache) (instant='2026-12-16T22:59:59Z', endpoint='health') ... FAIL
+  test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache (apps.api.tests.test_temporal_replay.TemporalApiTests.test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache) (instant='2026-12-16T22:59:59Z', endpoint='catalog') ... FAIL
+  test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache (apps.api.tests.test_temporal_replay.TemporalApiTests.test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache) (instant='2026-12-16T22:59:59Z', endpoint='snapshot') ... FAIL
+  test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache (apps.api.tests.test_temporal_replay.TemporalApiTests.test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache) (instant='2026-12-16T23:00:00Z', endpoint='health') ... FAIL
+  test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache (apps.api.tests.test_temporal_replay.TemporalApiTests.test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache) (instant='2026-12-16T23:00:00Z', endpoint='catalog') ... FAIL
+  test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache (apps.api.tests.test_temporal_replay.TemporalApiTests.test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache) (instant='2026-12-16T23:00:00Z', endpoint='snapshot') ... FAIL
+  test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache (apps.api.tests.test_temporal_replay.TemporalApiTests.test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache) (instant='2026-12-16T23:00:00Z', endpoint='conditional catalog') ... FAIL
+  test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache (apps.api.tests.test_temporal_replay.TemporalApiTests.test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache) (instant='2026-12-18T12:00:00Z', endpoint='health') ... FAIL
+  test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache (apps.api.tests.test_temporal_replay.TemporalApiTests.test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache) (instant='2026-12-18T12:00:00Z', endpoint='catalog') ... FAIL
+  test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache (apps.api.tests.test_temporal_replay.TemporalApiTests.test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache) (instant='2026-12-18T12:00:00Z', endpoint='snapshot') ... FAIL
+  test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache (apps.api.tests.test_temporal_replay.TemporalApiTests.test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache) (instant='2026-12-18T12:00:00Z', endpoint='conditional catalog') ... FAIL
+  test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache (apps.api.tests.test_temporal_replay.TemporalApiTests.test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache) (instant='2026-12-19T22:59:59Z', endpoint='health') ... FAIL
+  test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache (apps.api.tests.test_temporal_replay.TemporalApiTests.test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache) (instant='2026-12-19T22:59:59Z', endpoint='catalog') ... FAIL
+  test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache (apps.api.tests.test_temporal_replay.TemporalApiTests.test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache) (instant='2026-12-19T22:59:59Z', endpoint='snapshot') ... FAIL
+  test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache (apps.api.tests.test_temporal_replay.TemporalApiTests.test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache) (instant='2026-12-19T22:59:59Z', endpoint='conditional catalog') ... FAIL
+  test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache (apps.api.tests.test_temporal_replay.TemporalApiTests.test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache) (instant='2026-12-19T23:00:00Z', endpoint='health') ... FAIL
+  test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache (apps.api.tests.test_temporal_replay.TemporalApiTests.test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache) (instant='2026-12-19T23:00:00Z', endpoint='catalog') ... FAIL
+  test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache (apps.api.tests.test_temporal_replay.TemporalApiTests.test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache) (instant='2026-12-19T23:00:00Z', endpoint='snapshot') ... FAIL
+  test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache (apps.api.tests.test_temporal_replay.TemporalApiTests.test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache) (instant='2026-12-19T23:00:00Z', endpoint='conditional catalog') ... FAIL
+  test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache (apps.api.tests.test_temporal_replay.TemporalApiTests.test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache) (instant='2026-12-20T12:00:00Z', endpoint='health') ... FAIL
+  test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache (apps.api.tests.test_temporal_replay.TemporalApiTests.test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache) (instant='2026-12-20T12:00:00Z', endpoint='catalog') ... FAIL
+  test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache (apps.api.tests.test_temporal_replay.TemporalApiTests.test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache) (instant='2026-12-20T12:00:00Z', endpoint='snapshot') ... FAIL
+  test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache (apps.api.tests.test_temporal_replay.TemporalApiTests.test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache) (instant='2026-12-20T12:00:00Z', endpoint='conditional catalog') ... FAIL
+test_live_http_still_rejects_an_explicit_at (apps.api.tests.test_temporal_replay.TemporalApiTests.test_live_http_still_rejects_an_explicit_at) ... ok
+test_live_startup_still_rejects_an_expired_source (apps.api.tests.test_temporal_replay.TemporalApiTests.test_live_startup_still_rejects_an_expired_source) ... ok
+test_replay_gtfs_validity_uses_at_instead_of_wall_clock (apps.api.tests.test_temporal_replay.TemporalApiTests.test_replay_gtfs_validity_uses_at_instead_of_wall_clock) ...
+  test_replay_gtfs_validity_uses_at_instead_of_wall_clock (apps.api.tests.test_temporal_replay.TemporalApiTests.test_replay_gtfs_validity_uses_at_instead_of_wall_clock) (at='2026-11-18T12:00:00Z', endpoint='health') ... FAIL
+  test_replay_gtfs_validity_uses_at_instead_of_wall_clock (apps.api.tests.test_temporal_replay.TemporalApiTests.test_replay_gtfs_validity_uses_at_instead_of_wall_clock) (at='2026-11-18T12:00:00Z', endpoint='catalog') ... FAIL
+  test_replay_gtfs_validity_uses_at_instead_of_wall_clock (apps.api.tests.test_temporal_replay.TemporalApiTests.test_replay_gtfs_validity_uses_at_instead_of_wall_clock) (at='2026-11-18T12:00:00Z', endpoint='snapshot') ... FAIL
+  test_replay_gtfs_validity_uses_at_instead_of_wall_clock (apps.api.tests.test_temporal_replay.TemporalApiTests.test_replay_gtfs_validity_uses_at_instead_of_wall_clock) (at='2026-11-19T12:00:00Z', endpoint='health') ... FAIL
+  test_replay_gtfs_validity_uses_at_instead_of_wall_clock (apps.api.tests.test_temporal_replay.TemporalApiTests.test_replay_gtfs_validity_uses_at_instead_of_wall_clock) (at='2026-11-19T12:00:00Z', endpoint='catalog') ... FAIL
+  test_replay_gtfs_validity_uses_at_instead_of_wall_clock (apps.api.tests.test_temporal_replay.TemporalApiTests.test_replay_gtfs_validity_uses_at_instead_of_wall_clock) (at='2026-11-19T12:00:00Z', endpoint='snapshot') ... FAIL
+  test_replay_gtfs_validity_uses_at_instead_of_wall_clock (apps.api.tests.test_temporal_replay.TemporalApiTests.test_replay_gtfs_validity_uses_at_instead_of_wall_clock) (at='2026-12-07T12:00:00Z', endpoint='health') ... FAIL
+  test_replay_gtfs_validity_uses_at_instead_of_wall_clock (apps.api.tests.test_temporal_replay.TemporalApiTests.test_replay_gtfs_validity_uses_at_instead_of_wall_clock) (at='2026-12-07T12:00:00Z', endpoint='catalog') ... FAIL
+  test_replay_gtfs_validity_uses_at_instead_of_wall_clock (apps.api.tests.test_temporal_replay.TemporalApiTests.test_replay_gtfs_validity_uses_at_instead_of_wall_clock) (at='2026-12-07T12:00:00Z', endpoint='snapshot') ... FAIL
+test_snapshot_uses_first_ingestion_and_its_observations (apps.api.tests.test_temporal_replay.TemporalApiTests.test_snapshot_uses_first_ingestion_and_its_observations) ... FAIL
+
+======================================================================
+FAIL: test_before_first_ingestion_is_declared_without_ages (apps.api.tests.test_temporal_replay.TemporalApiTests.test_before_first_ingestion_is_declared_without_ages) (endpoint='snapshot')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp026a-red.2ZUJ59/baseline/apps/api/tests/test_temporal_replay.py", line 108, in test_before_first_ingestion_is_declared_without_ages
+    self.assertIsNone(feed["source_timestamp"])
+AssertionError: '2026-11-19T03:59:21Z' is not None
+
+======================================================================
+FAIL: test_before_first_ingestion_is_declared_without_ages (apps.api.tests.test_temporal_replay.TemporalApiTests.test_before_first_ingestion_is_declared_without_ages) (endpoint='health')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp026a-red.2ZUJ59/baseline/apps/api/tests/test_temporal_replay.py", line 107, in test_before_first_ingestion_is_declared_without_ages
+    self.assertEqual(feed["status"], "unknown")
+AssertionError: 'stale' != 'unknown'
+- stale
++ unknown
+
+
+======================================================================
+FAIL: test_before_first_ingestion_is_declared_without_ages (apps.api.tests.test_temporal_replay.TemporalApiTests.test_before_first_ingestion_is_declared_without_ages)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp026a-red.2ZUJ59/baseline/apps/api/tests/test_temporal_replay.py", line 112, in test_before_first_ingestion_is_declared_without_ages
+    self.assertEqual(snapshot_at["vehicles"], [])
+AssertionError: Lists differ: [{'vehicle_id': 'mp026a-existing', 'trip_i[3945 chars][]}}] != []
+
+First list contains 2 additional elements.
+First extra element 0:
+{'vehicle_id': 'mp026a-existing', 'trip_id': '1022J19502C5', 'service_date': '2026-11-19', 'route_id': '10T0017C5', 'line': 'C5', 'pattern_id': 'gtfs-pattern:6af8a161a0f2b7a5736d', 'circulation_status': 'active', 'schedule_relationship': 'SCHEDULED', 'timestamps': {'gps_observed_at': '2026-11-19T03:58:08Z', 'received_at': '2026-11-19T03:59:21Z', 'feed_published_at': '2026-11-19T03:59:21Z', 'snapshot_generated_at': '2026-11-19T03:58:03Z', 'display_at': '2026-11-19T03:58:03Z'}, 'raw': {'lat': 40.3282, 'lon': -3.8506, 'source': 'renfe_gtfs_rt_vehicle_position', 'gps_observed_at': '2026-11-19T03:58:08Z', 'payload_hash': 'f2f8dc5d8f90c088675529ed1f63ad2dc4dc5b574646406cfe7924fdc93629f7'}, 'map_matched': {'resolution': 'map_matched', 'lat': 40.3347127, 'lon': -3.8550488, 'progress_m': 3089.005105135814, 'distance_from_raw_m': 816.490497802322, 'pattern_id': 'gtfs-pattern:6af8a161a0f2b7a5736d', 'geometry_version': 'osm-relation:3418150@sha256:79f9966b2b7f3fdcebf1f41083d13ff58de39a496eca80caeb274c9b9f4d375a'}, 'rendered': {'rendering_method': 'anchor', 'coordinate_space': 'raw', 'lat': 40.3282, 'lon': -3.8506, 'progress_m': None, 'pattern_id': 'gtfs-pattern:6af8a161a0f2b7a5736d', 'geometry_version': None, 'geometry_candidate_version': 'osm-relation:3418150@sha256:79f9966b2b7f3fdcebf1f41083d13ff58de39a496eca80caeb274c9b9f4d375a', 'confidence_index': None, 'calculated_at': '2026-11-19T03:58:03Z', 'display_at': '2026-11-19T03:58:03Z', 'valid_until': None, 'last_confirmed_at': '2026-11-19T03:58:08Z', 'anchor_observed_at': '2026-11-19T03:58:08Z', 'anchor_age_s': 0.0, 'anchor_distance_from_raw_m': None, 'progress_envelope': None, 'reason': 'patrón no catalogado en el GTFS cargado: GPS bruto etiquetado'}, 'position': None, 'delay': {'seconds': 80, 'coverage': 'reported', 'observed_at': '2026-11-19T03:58:08Z', 'age_s': 0.0, 'source': 'operator_trip_update', 'expired': False, 'approximation': 'trip_level_delay_applied_to_all_stops'}, 'quality': {'stale': False, 'flags': []}}
+
+Diff is 5409 characters long. Set self.maxDiff to None to see it.
+
+======================================================================
+FAIL: test_board_excludes_delays_from_future_ingestions (apps.api.tests.test_temporal_replay.TemporalApiTests.test_board_excludes_delays_from_future_ingestions)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp026a-red.2ZUJ59/baseline/apps/api/tests/test_temporal_replay.py", line 134, in test_board_excludes_delays_from_future_ingestions
+    self.assertEqual(entry["departure"]["delay_seconds"], 20)
+AssertionError: 80 != 20
+
+======================================================================
+FAIL: test_future_source_timestamp_has_its_own_reason (apps.api.tests.test_temporal_replay.TemporalApiTests.test_future_source_timestamp_has_its_own_reason) (endpoint='snapshot')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp026a-red.2ZUJ59/baseline/apps/api/tests/test_temporal_replay.py", line 125, in test_future_source_timestamp_has_its_own_reason
+    self.assertIsNone(feed["data_age_s"])
+AssertionError: -71.0 is not None
+
+======================================================================
+FAIL: test_future_source_timestamp_has_its_own_reason (apps.api.tests.test_temporal_replay.TemporalApiTests.test_future_source_timestamp_has_its_own_reason) (endpoint='health')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp026a-red.2ZUJ59/baseline/apps/api/tests/test_temporal_replay.py", line 123, in test_future_source_timestamp_has_its_own_reason
+    self.assertEqual(feed["status"], "unknown")
+AssertionError: 'stale' != 'unknown'
+- stale
++ unknown
+
+
+======================================================================
+FAIL: test_health_and_snapshot_use_same_clock (apps.api.tests.test_temporal_replay.TemporalApiTests.test_health_and_snapshot_use_same_clock)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp026a-red.2ZUJ59/baseline/apps/api/tests/test_temporal_replay.py", line 96, in test_health_and_snapshot_use_same_clock
+    self.assertEqual(health_at["feeds"], snapshot_at["feeds"])
+AssertionError: Lists differ: [{'fe[32 chars]s': 'stale', 'source_timestamp': '2026-11-19T0[329 chars]: 0}] != [{'fe[32 chars]s': 'unknown', 'source_timestamp': '2026-11-19[299 chars]: 0}]
+
+First differing element 0:
+{'fee[31 chars]s': 'stale', 'source_timestamp': '2026-11-19T0[117 chars]': 0}
+{'fee[31 chars]s': 'unknown', 'source_timestamp': '2026-11-19[101 chars]': 0}
+
+- [{'data_age_s': 551695.564444,
++ [{'data_age_s': 2.0,
+    'entities': 1,
+    'feed_name': 'trip_updates',
+-   'poll_age_s': 551622.564444,
++   'poll_age_s': -71.0,
+    'rejected': 0,
+    'source_timestamp': '2026-11-19T03:58:08Z',
+-   'status': 'stale',
++   'status': 'unknown',
+    'unchanged_for_s': 0.0},
+-  {'data_age_s': 551622.564444,
++  {'data_age_s': -71.0,
+    'entities': 2,
+    'feed_name': 'vehicle_positions',
+-   'poll_age_s': 551622.564444,
++   'poll_age_s': -71.0,
+    'rejected': 0,
+    'source_timestamp': '2026-11-19T03:59:21Z',
+-   'status': 'stale',
++   'status': 'unknown',
+    'unchanged_for_s': 0.0}]
+
+======================================================================
+FAIL: test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache (apps.api.tests.test_temporal_replay.TemporalApiTests.test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache) (instant='2026-12-16T22:59:59Z', endpoint='health')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp026a-red.2ZUJ59/baseline/apps/api/tests/test_temporal_replay.py", line 180, in test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache
+    self.assertEqual(body.get("gtfs_status"), expected)
+AssertionError: None != 'valid'
+
+======================================================================
+FAIL: test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache (apps.api.tests.test_temporal_replay.TemporalApiTests.test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache) (instant='2026-12-16T22:59:59Z', endpoint='catalog')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp026a-red.2ZUJ59/baseline/apps/api/tests/test_temporal_replay.py", line 180, in test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache
+    self.assertEqual(body.get("gtfs_status"), expected)
+AssertionError: None != 'valid'
+
+======================================================================
+FAIL: test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache (apps.api.tests.test_temporal_replay.TemporalApiTests.test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache) (instant='2026-12-16T22:59:59Z', endpoint='snapshot')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp026a-red.2ZUJ59/baseline/apps/api/tests/test_temporal_replay.py", line 180, in test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache
+    self.assertEqual(body.get("gtfs_status"), expected)
+AssertionError: None != 'valid'
+
+======================================================================
+FAIL: test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache (apps.api.tests.test_temporal_replay.TemporalApiTests.test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache) (instant='2026-12-16T23:00:00Z', endpoint='health')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp026a-red.2ZUJ59/baseline/apps/api/tests/test_temporal_replay.py", line 180, in test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache
+    self.assertEqual(body.get("gtfs_status"), expected)
+AssertionError: None != 'expiring'
+
+======================================================================
+FAIL: test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache (apps.api.tests.test_temporal_replay.TemporalApiTests.test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache) (instant='2026-12-16T23:00:00Z', endpoint='catalog')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp026a-red.2ZUJ59/baseline/apps/api/tests/test_temporal_replay.py", line 180, in test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache
+    self.assertEqual(body.get("gtfs_status"), expected)
+AssertionError: None != 'expiring'
+
+======================================================================
+FAIL: test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache (apps.api.tests.test_temporal_replay.TemporalApiTests.test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache) (instant='2026-12-16T23:00:00Z', endpoint='snapshot')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp026a-red.2ZUJ59/baseline/apps/api/tests/test_temporal_replay.py", line 180, in test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache
+    self.assertEqual(body.get("gtfs_status"), expected)
+AssertionError: None != 'expiring'
+
+======================================================================
+FAIL: test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache (apps.api.tests.test_temporal_replay.TemporalApiTests.test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache) (instant='2026-12-16T23:00:00Z', endpoint='conditional catalog')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp026a-red.2ZUJ59/baseline/apps/api/tests/test_temporal_replay.py", line 184, in test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache
+    self._assert_catalog_cache(client, etag, catalog_version, expected)
+  File "/private/tmp/mp026a-red.2ZUJ59/baseline/apps/api/tests/test_temporal_replay.py", line 190, in _assert_catalog_cache
+    self.assertEqual(refreshed.status_code, 200)
+AssertionError: 304 != 200
+
+======================================================================
+FAIL: test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache (apps.api.tests.test_temporal_replay.TemporalApiTests.test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache) (instant='2026-12-18T12:00:00Z', endpoint='health')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp026a-red.2ZUJ59/baseline/apps/api/tests/test_temporal_replay.py", line 180, in test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache
+    self.assertEqual(body.get("gtfs_status"), expected)
+AssertionError: None != 'expiring'
+
+======================================================================
+FAIL: test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache (apps.api.tests.test_temporal_replay.TemporalApiTests.test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache) (instant='2026-12-18T12:00:00Z', endpoint='catalog')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp026a-red.2ZUJ59/baseline/apps/api/tests/test_temporal_replay.py", line 180, in test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache
+    self.assertEqual(body.get("gtfs_status"), expected)
+AssertionError: None != 'expiring'
+
+======================================================================
+FAIL: test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache (apps.api.tests.test_temporal_replay.TemporalApiTests.test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache) (instant='2026-12-18T12:00:00Z', endpoint='snapshot')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp026a-red.2ZUJ59/baseline/apps/api/tests/test_temporal_replay.py", line 180, in test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache
+    self.assertEqual(body.get("gtfs_status"), expected)
+AssertionError: None != 'expiring'
+
+======================================================================
+FAIL: test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache (apps.api.tests.test_temporal_replay.TemporalApiTests.test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache) (instant='2026-12-18T12:00:00Z', endpoint='conditional catalog')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp026a-red.2ZUJ59/baseline/apps/api/tests/test_temporal_replay.py", line 184, in test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache
+    self._assert_catalog_cache(client, etag, catalog_version, expected)
+  File "/private/tmp/mp026a-red.2ZUJ59/baseline/apps/api/tests/test_temporal_replay.py", line 190, in _assert_catalog_cache
+    self.assertEqual(refreshed.status_code, 200)
+AssertionError: 304 != 200
+
+======================================================================
+FAIL: test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache (apps.api.tests.test_temporal_replay.TemporalApiTests.test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache) (instant='2026-12-19T22:59:59Z', endpoint='health')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp026a-red.2ZUJ59/baseline/apps/api/tests/test_temporal_replay.py", line 180, in test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache
+    self.assertEqual(body.get("gtfs_status"), expected)
+AssertionError: None != 'expiring'
+
+======================================================================
+FAIL: test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache (apps.api.tests.test_temporal_replay.TemporalApiTests.test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache) (instant='2026-12-19T22:59:59Z', endpoint='catalog')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp026a-red.2ZUJ59/baseline/apps/api/tests/test_temporal_replay.py", line 180, in test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache
+    self.assertEqual(body.get("gtfs_status"), expected)
+AssertionError: None != 'expiring'
+
+======================================================================
+FAIL: test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache (apps.api.tests.test_temporal_replay.TemporalApiTests.test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache) (instant='2026-12-19T22:59:59Z', endpoint='snapshot')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp026a-red.2ZUJ59/baseline/apps/api/tests/test_temporal_replay.py", line 180, in test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache
+    self.assertEqual(body.get("gtfs_status"), expected)
+AssertionError: None != 'expiring'
+
+======================================================================
+FAIL: test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache (apps.api.tests.test_temporal_replay.TemporalApiTests.test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache) (instant='2026-12-19T22:59:59Z', endpoint='conditional catalog')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp026a-red.2ZUJ59/baseline/apps/api/tests/test_temporal_replay.py", line 184, in test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache
+    self._assert_catalog_cache(client, etag, catalog_version, expected)
+  File "/private/tmp/mp026a-red.2ZUJ59/baseline/apps/api/tests/test_temporal_replay.py", line 190, in _assert_catalog_cache
+    self.assertEqual(refreshed.status_code, 200)
+AssertionError: 304 != 200
+
+======================================================================
+FAIL: test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache (apps.api.tests.test_temporal_replay.TemporalApiTests.test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache) (instant='2026-12-19T23:00:00Z', endpoint='health')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp026a-red.2ZUJ59/baseline/apps/api/tests/test_temporal_replay.py", line 180, in test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache
+    self.assertEqual(body.get("gtfs_status"), expected)
+AssertionError: None != 'expired'
+
+======================================================================
+FAIL: test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache (apps.api.tests.test_temporal_replay.TemporalApiTests.test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache) (instant='2026-12-19T23:00:00Z', endpoint='catalog')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp026a-red.2ZUJ59/baseline/apps/api/tests/test_temporal_replay.py", line 180, in test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache
+    self.assertEqual(body.get("gtfs_status"), expected)
+AssertionError: None != 'expired'
+
+======================================================================
+FAIL: test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache (apps.api.tests.test_temporal_replay.TemporalApiTests.test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache) (instant='2026-12-19T23:00:00Z', endpoint='snapshot')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp026a-red.2ZUJ59/baseline/apps/api/tests/test_temporal_replay.py", line 180, in test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache
+    self.assertEqual(body.get("gtfs_status"), expected)
+AssertionError: None != 'expired'
+
+======================================================================
+FAIL: test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache (apps.api.tests.test_temporal_replay.TemporalApiTests.test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache) (instant='2026-12-19T23:00:00Z', endpoint='conditional catalog')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp026a-red.2ZUJ59/baseline/apps/api/tests/test_temporal_replay.py", line 184, in test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache
+    self._assert_catalog_cache(client, etag, catalog_version, expected)
+  File "/private/tmp/mp026a-red.2ZUJ59/baseline/apps/api/tests/test_temporal_replay.py", line 190, in _assert_catalog_cache
+    self.assertEqual(refreshed.status_code, 200)
+AssertionError: 304 != 200
+
+======================================================================
+FAIL: test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache (apps.api.tests.test_temporal_replay.TemporalApiTests.test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache) (instant='2026-12-20T12:00:00Z', endpoint='health')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp026a-red.2ZUJ59/baseline/apps/api/tests/test_temporal_replay.py", line 180, in test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache
+    self.assertEqual(body.get("gtfs_status"), expected)
+AssertionError: None != 'expired'
+
+======================================================================
+FAIL: test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache (apps.api.tests.test_temporal_replay.TemporalApiTests.test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache) (instant='2026-12-20T12:00:00Z', endpoint='catalog')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp026a-red.2ZUJ59/baseline/apps/api/tests/test_temporal_replay.py", line 180, in test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache
+    self.assertEqual(body.get("gtfs_status"), expected)
+AssertionError: None != 'expired'
+
+======================================================================
+FAIL: test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache (apps.api.tests.test_temporal_replay.TemporalApiTests.test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache) (instant='2026-12-20T12:00:00Z', endpoint='snapshot')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp026a-red.2ZUJ59/baseline/apps/api/tests/test_temporal_replay.py", line 180, in test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache
+    self.assertEqual(body.get("gtfs_status"), expected)
+AssertionError: None != 'expired'
+
+======================================================================
+FAIL: test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache (apps.api.tests.test_temporal_replay.TemporalApiTests.test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache) (instant='2026-12-20T12:00:00Z', endpoint='conditional catalog')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp026a-red.2ZUJ59/baseline/apps/api/tests/test_temporal_replay.py", line 184, in test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache
+    self._assert_catalog_cache(client, etag, catalog_version, expected)
+  File "/private/tmp/mp026a-red.2ZUJ59/baseline/apps/api/tests/test_temporal_replay.py", line 190, in _assert_catalog_cache
+    self.assertEqual(refreshed.status_code, 200)
+AssertionError: 304 != 200
+
+======================================================================
+FAIL: test_replay_gtfs_validity_uses_at_instead_of_wall_clock (apps.api.tests.test_temporal_replay.TemporalApiTests.test_replay_gtfs_validity_uses_at_instead_of_wall_clock) (at='2026-11-18T12:00:00Z', endpoint='health')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp026a-red.2ZUJ59/baseline/apps/api/tests/test_temporal_replay.py", line 207, in test_replay_gtfs_validity_uses_at_instead_of_wall_clock
+    self.assertEqual(self._get(client, endpoint, at).get("gtfs_status"), expected)
+AssertionError: None != 'not_yet_valid'
+
+======================================================================
+FAIL: test_replay_gtfs_validity_uses_at_instead_of_wall_clock (apps.api.tests.test_temporal_replay.TemporalApiTests.test_replay_gtfs_validity_uses_at_instead_of_wall_clock) (at='2026-11-18T12:00:00Z', endpoint='catalog')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp026a-red.2ZUJ59/baseline/apps/api/tests/test_temporal_replay.py", line 207, in test_replay_gtfs_validity_uses_at_instead_of_wall_clock
+    self.assertEqual(self._get(client, endpoint, at).get("gtfs_status"), expected)
+AssertionError: None != 'not_yet_valid'
+
+======================================================================
+FAIL: test_replay_gtfs_validity_uses_at_instead_of_wall_clock (apps.api.tests.test_temporal_replay.TemporalApiTests.test_replay_gtfs_validity_uses_at_instead_of_wall_clock) (at='2026-11-18T12:00:00Z', endpoint='snapshot')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp026a-red.2ZUJ59/baseline/apps/api/tests/test_temporal_replay.py", line 207, in test_replay_gtfs_validity_uses_at_instead_of_wall_clock
+    self.assertEqual(self._get(client, endpoint, at).get("gtfs_status"), expected)
+AssertionError: None != 'not_yet_valid'
+
+======================================================================
+FAIL: test_replay_gtfs_validity_uses_at_instead_of_wall_clock (apps.api.tests.test_temporal_replay.TemporalApiTests.test_replay_gtfs_validity_uses_at_instead_of_wall_clock) (at='2026-11-19T12:00:00Z', endpoint='health')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp026a-red.2ZUJ59/baseline/apps/api/tests/test_temporal_replay.py", line 207, in test_replay_gtfs_validity_uses_at_instead_of_wall_clock
+    self.assertEqual(self._get(client, endpoint, at).get("gtfs_status"), expected)
+AssertionError: None != 'valid'
+
+======================================================================
+FAIL: test_replay_gtfs_validity_uses_at_instead_of_wall_clock (apps.api.tests.test_temporal_replay.TemporalApiTests.test_replay_gtfs_validity_uses_at_instead_of_wall_clock) (at='2026-11-19T12:00:00Z', endpoint='catalog')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp026a-red.2ZUJ59/baseline/apps/api/tests/test_temporal_replay.py", line 207, in test_replay_gtfs_validity_uses_at_instead_of_wall_clock
+    self.assertEqual(self._get(client, endpoint, at).get("gtfs_status"), expected)
+AssertionError: None != 'valid'
+
+======================================================================
+FAIL: test_replay_gtfs_validity_uses_at_instead_of_wall_clock (apps.api.tests.test_temporal_replay.TemporalApiTests.test_replay_gtfs_validity_uses_at_instead_of_wall_clock) (at='2026-11-19T12:00:00Z', endpoint='snapshot')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp026a-red.2ZUJ59/baseline/apps/api/tests/test_temporal_replay.py", line 207, in test_replay_gtfs_validity_uses_at_instead_of_wall_clock
+    self.assertEqual(self._get(client, endpoint, at).get("gtfs_status"), expected)
+AssertionError: None != 'valid'
+
+======================================================================
+FAIL: test_replay_gtfs_validity_uses_at_instead_of_wall_clock (apps.api.tests.test_temporal_replay.TemporalApiTests.test_replay_gtfs_validity_uses_at_instead_of_wall_clock) (at='2026-12-07T12:00:00Z', endpoint='health')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp026a-red.2ZUJ59/baseline/apps/api/tests/test_temporal_replay.py", line 207, in test_replay_gtfs_validity_uses_at_instead_of_wall_clock
+    self.assertEqual(self._get(client, endpoint, at).get("gtfs_status"), expected)
+AssertionError: None != 'expired'
+
+======================================================================
+FAIL: test_replay_gtfs_validity_uses_at_instead_of_wall_clock (apps.api.tests.test_temporal_replay.TemporalApiTests.test_replay_gtfs_validity_uses_at_instead_of_wall_clock) (at='2026-12-07T12:00:00Z', endpoint='catalog')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp026a-red.2ZUJ59/baseline/apps/api/tests/test_temporal_replay.py", line 207, in test_replay_gtfs_validity_uses_at_instead_of_wall_clock
+    self.assertEqual(self._get(client, endpoint, at).get("gtfs_status"), expected)
+AssertionError: None != 'expired'
+
+======================================================================
+FAIL: test_replay_gtfs_validity_uses_at_instead_of_wall_clock (apps.api.tests.test_temporal_replay.TemporalApiTests.test_replay_gtfs_validity_uses_at_instead_of_wall_clock) (at='2026-12-07T12:00:00Z', endpoint='snapshot')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp026a-red.2ZUJ59/baseline/apps/api/tests/test_temporal_replay.py", line 207, in test_replay_gtfs_validity_uses_at_instead_of_wall_clock
+    self.assertEqual(self._get(client, endpoint, at).get("gtfs_status"), expected)
+AssertionError: None != 'expired'
+
+======================================================================
+FAIL: test_snapshot_uses_first_ingestion_and_its_observations (apps.api.tests.test_temporal_replay.TemporalApiTests.test_snapshot_uses_first_ingestion_and_its_observations)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp026a-red.2ZUJ59/baseline/apps/api/tests/test_temporal_replay.py", line 78, in test_snapshot_uses_first_ingestion_and_its_observations
+    self.assertEqual(
+AssertionError: Tuples differ: ('unknown', '2026-11-19T03:59:21Z', -71.0, -71.0) != ('ok', '2026-11-19T03:58:02Z', 8, 6)
+
+First differing element 0:
+'unknown'
+'ok'
+
+- ('unknown', '2026-11-19T03:59:21Z', -71.0, -71.0)
++ ('ok', '2026-11-19T03:58:02Z', 8, 6)
+
+----------------------------------------------------------------------
+Ran 9 tests in 4.585s
+
+FAILED (failures=40)
+Exit=1

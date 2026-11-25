@@ -1,0 +1,42 @@
+{
+  "header": {
+    "gtfsRealtimeVersion": "2.0",
+    "timestamp": "1795060761"
+  },
+  "entity": [
+    {
+      "id": "mp026a-existing",
+      "vehicle": {
+        "trip": {
+          "tripId": "1022J19502C5"
+        },
+        "vehicle": {
+          "id": "mp026a-existing",
+          "label": "mp026a-existing"
+        },
+        "position": {
+          "latitude": 40.3282,
+          "longitude": -3.8506
+        },
+        "timestamp": "1795060688"
+      }
+    },
+    {
+      "id": "mp026a-second-only",
+      "vehicle": {
+        "trip": {
+          "tripId": "1022J19502C5"
+        },
+        "vehicle": {
+          "id": "mp026a-second-only",
+          "label": "mp026a-second-only"
+        },
+        "position": {
+          "latitude": 40.3283,
+          "longitude": -3.8506
+        },
+        "timestamp": "1795060689"
+      }
+    }
+  ]
+}

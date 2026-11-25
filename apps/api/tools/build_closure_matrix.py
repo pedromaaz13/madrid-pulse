@@ -28,6 +28,7 @@ import psycopg
 from apps.api import snapshot
 from apps.api.config import ApiConfig
 from apps.api.gtfs_source import load_network
+from packages.database import DatabaseConfigurationError, require_disposable_database
 from packages.gtfs import scheduled_trip_instances_for_date
 
 
@@ -91,7 +92,8 @@ def build_rows(
     service_date: date,
 ) -> list[dict[str, object]]:
     network = load_network(config)
-    catalog = snapshot.build_catalog_payload(network)
+    validity = network.gtfs_validity(captured_at, expiring_days=config.gtfs_expiring_days)
+    catalog = snapshot.build_catalog_payload(network, validity)
     route_to_line = {
         route_id: line.line_id for line in catalog.lines for route_id in line.route_ids
     }
@@ -295,11 +297,17 @@ def main() -> None:
 
     captured_at = datetime.fromisoformat(args.captured_at.replace("Z", "+00:00"))
     service_date = date.fromisoformat(args.service_date)
-    config = ApiConfig.from_env()
-    with psycopg.connect(config.database_dsn) as conn:
-        rows = build_rows(
-            conn, config=config, captured_at=captured_at, service_date=service_date
-        )
+    try:
+        config = ApiConfig.from_env()
+        with psycopg.connect(config.database_dsn) as conn:
+            require_disposable_database(conn)
+            rows = build_rows(
+                conn, config=config, captured_at=captured_at, service_date=service_date
+            )
+    except DatabaseConfigurationError as exc:
+        raise SystemExit(str(exc)) from None
+    except psycopg.OperationalError:
+        raise SystemExit("PostgreSQL no disponible para calcular la matriz de cobertura.") from None
     write_csv(args.csv, rows)
     write_markdown(args.markdown, rows)
     print(f"{len(rows)} líneas escritas en {args.csv} y {args.markdown}")

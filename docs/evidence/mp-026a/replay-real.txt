@@ -1,0 +1,56 @@
+Datos externos y de solo lectura: /Users/matu/orca/workspaces/madrid-pulse/h4-planning/data/hito-03/replay
+b612e881c296b254cfdafc8f1d29900b8fe310755ac625ed6a8ca207dab03c45  docs/evidence/mp-026a/replay_real.py
+40e0b99af024f67e7e4015c6830f8ee5fad7e062f48d874e962e6e1eba81f9b1  manifest.json
+44b576cb5708378fbc3269bdf9f70a1d87950eb5995aafd2687f2fb969b02ab8  comprobar.py
+c5b40823c5cacbec6d9a21d88ec0530d9604a6d4331df98c330e608f0bacb11e  fomento_transit.zip
+88c7eefec6a6bb23139cf5b65994c3378da9373094dd2ab650ddf6e86afde43a  1532/alerts.json
+6d8e63bca6cfdbf5496cebe78b318ec72d831f5ebad1fe22b5c8a02d49589407  1532/trip_updates.json
+c50da3eecdd34ab7b85f3e039e759cf4740788cd4725310276d69b7ab1c13a5f  1532/vehicle_positions.json
+fa7d28bb85e7f7c36883c112ac63417fc4ef9009ad26623df428469b513cf4f9  1533/alerts.json
+60e2680fb548b79576144ddf3e0578d29f797390e8e4638d689403a780a04c7f  1533/trip_updates.json
+77f8faa14ccd183fc16f81702dc8af0ac0c98dc5558582a684bb96f3e59ca9e9  1533/vehicle_positions.json
+Comando: /Users/matu/orca/workspaces/madrid-pulse/audit-hito-03/.venv/bin/python /Users/matu/orca/workspaces/madrid-pulse/h4-planning/data/hito-03/replay/comprobar.py
+Catálogo Madrid: 42 rutas, 12 líneas/variantes, 36097 viajes.
+1532 vehículos Madrid 119 matches 119 actualizaciones nacionales 469 SKIPPED sin arrival 49 avisos nacionales 72
+{'C1': 8, 'C10': 11, 'C2': 17, 'C3': 13, 'C4a': 10, 'C4b': 11, 'C5': 28, 'C7': 10, 'C8a': 5, 'C8b': 5, 'C9': 1}
+1533 vehículos Madrid 121 matches 121 actualizaciones nacionales 474 SKIPPED sin arrival 49 avisos nacionales 73
+{'C1': 7, 'C10': 13, 'C2': 17, 'C3': 13, 'C4a': 10, 'C4b': 12, 'C5': 28, 'C7': 10, 'C8a': 5, 'C8b': 5, 'C9': 1}
+MADRID_PULSE_ENV=replay MADRID_PULSE_MODE=replay MADRID_PULSE_REQUIRE_DB=1 MADRID_PULSE_DATABASE_URL=postgresql://mp026a:mp026a_local@127.0.0.1:5453/madrid_pulse
+MADRID_PULSE_GTFS_SOURCE=/Users/matu/orca/workspaces/madrid-pulse/h4-planning/data/hito-03/replay/fomento_transit.zip MADRID_PULSE_SHORT_NAME= MADRID_PULSE_GTFS_EXPIRING_DAYS=7 MADRID_PULSE_FEED_STALE_AFTER_S=180
+Ingesta HEAD=83e474158ffa185c3d8e88e6bb454c149e7bd849
+Comando: PYTHONPATH=. /Users/matu/orca/workspaces/madrid-pulse/audit-hito-03/.venv/bin/python /Users/matu/orca/workspaces/madrid-pulse/mp-026a-replay-gtfs/docs/evidence/mp-026a/replay_real.py ingest /Users/matu/orca/workspaces/madrid-pulse/h4-planning/data/hito-03/replay
+1532 vehicle_positions entities 463 inserted 119
+1532 trip_updates entities 469 inserted 122
+1532 alerts entities 72 inserted 4
+1533 vehicle_positions entities 468 inserted 121
+1533 trip_updates entities 474 inserted 77
+1533 alerts entities 73 inserted 0
+Antes HEAD=beb94341ed0945cea084216caac3cf090d091a6e
+Comando: MADRID_PULSE_DATABASE_DSN=postgresql://mp026a:mp026a_local@127.0.0.1:5453/madrid_pulse PYTHONPATH=. /Users/matu/orca/workspaces/madrid-pulse/audit-hito-03/.venv/bin/python /Users/matu/orca/workspaces/madrid-pulse/mp-026a-replay-gtfs/docs/evidence/mp-026a/replay_real.py probe /Users/matu/orca/workspaces/madrid-pulse/h4-planning/data/hito-03/replay
+{"at": "2026-11-20T14:32:03Z", "snapshot_vehicle_feed": {"feed_name": "vehicle_positions", "status": "unknown", "source_timestamp": "2026-11-20T14:33:21Z", "data_age_s": -78.0, "poll_age_s": -78.0, "unchanged_for_s": 0.0, "entities": 468, "rejected": 0}, "health_vehicle_feed": {"feed_name": "vehicle_positions", "status": "stale", "source_timestamp": "2026-11-20T14:33:21Z", "data_age_s": 427462.935116, "poll_age_s": 427462.935116, "unchanged_for_s": 0.0, "entities": 468, "rejected": 0}, "revision": 219, "vehicles_total": 122, "latest_gps_observed_at": "2026-11-20T14:33:21+00:00", "vehicles_received_after_at": 122}
+{"at": "2026-11-20T14:32:10Z", "snapshot_vehicle_feed": {"feed_name": "vehicle_positions", "status": "unknown", "source_timestamp": "2026-11-20T14:33:21Z", "data_age_s": -71.0, "poll_age_s": -71.0, "unchanged_for_s": 0.0, "entities": 468, "rejected": 0}, "health_vehicle_feed": {"feed_name": "vehicle_positions", "status": "stale", "source_timestamp": "2026-11-20T14:33:21Z", "data_age_s": 427463.276446, "poll_age_s": 427463.276446, "unchanged_for_s": 0.0, "entities": 468, "rejected": 0}, "revision": 219, "vehicles_total": 122, "latest_gps_observed_at": "2026-11-20T14:33:21+00:00", "vehicles_received_after_at": 121}
+{"at": "2026-11-20T14:33:40Z", "snapshot_vehicle_feed": {"feed_name": "vehicle_positions", "status": "ok", "source_timestamp": "2026-11-20T14:33:21Z", "data_age_s": 19.0, "poll_age_s": 19.0, "unchanged_for_s": 0.0, "entities": 468, "rejected": 0}, "health_vehicle_feed": {"feed_name": "vehicle_positions", "status": "stale", "source_timestamp": "2026-11-20T14:33:21Z", "data_age_s": 427463.655942, "poll_age_s": 427463.655942, "unchanged_for_s": 0.0, "entities": 468, "rejected": 0}, "revision": 219, "vehicles_total": 122, "latest_gps_observed_at": "2026-11-20T14:33:21+00:00", "vehicles_received_after_at": 0}
+{"clock": "2026-12-10T12:00:00Z", "endpoint": "health", "gtfs_status": null, "gtfs_status_reason": null, "gtfs_valid_until": "2026-12-19"}
+{"clock": "2026-12-10T12:00:00Z", "endpoint": "catalog", "gtfs_status": null, "gtfs_status_reason": null, "gtfs_valid_until": "2026-12-19"}
+{"clock": "2026-12-10T12:00:00Z", "endpoint": "snapshot", "gtfs_status": null, "gtfs_status_reason": null, "gtfs_valid_until": null}
+{"clock": "2026-12-18T12:00:00Z", "endpoint": "health", "gtfs_status": null, "gtfs_status_reason": null, "gtfs_valid_until": "2026-12-19"}
+{"clock": "2026-12-18T12:00:00Z", "endpoint": "catalog", "gtfs_status": null, "gtfs_status_reason": null, "gtfs_valid_until": "2026-12-19"}
+{"clock": "2026-12-18T12:00:00Z", "endpoint": "snapshot", "gtfs_status": null, "gtfs_status_reason": null, "gtfs_valid_until": null}
+{"clock": "2026-12-20T12:00:00Z", "endpoint": "health", "gtfs_status": null, "gtfs_status_reason": null, "gtfs_valid_until": "2026-12-19"}
+{"clock": "2026-12-20T12:00:00Z", "endpoint": "catalog", "gtfs_status": null, "gtfs_status_reason": null, "gtfs_valid_until": "2026-12-19"}
+{"clock": "2026-12-20T12:00:00Z", "endpoint": "snapshot", "gtfs_status": null, "gtfs_status_reason": null, "gtfs_valid_until": null}
+Después HEAD=83e474158ffa185c3d8e88e6bb454c149e7bd849
+Comando: PYTHONPATH=. /Users/matu/orca/workspaces/madrid-pulse/audit-hito-03/.venv/bin/python /Users/matu/orca/workspaces/madrid-pulse/mp-026a-replay-gtfs/docs/evidence/mp-026a/replay_real.py probe /Users/matu/orca/workspaces/madrid-pulse/h4-planning/data/hito-03/replay
+{"at": "2026-11-20T14:32:03Z", "snapshot_vehicle_feed": {"feed_name": "vehicle_positions", "status": "unknown", "source_timestamp": null, "data_age_s": null, "poll_age_s": null, "unchanged_for_s": null, "entities": null, "rejected": 0, "reason": "no_ingestion_at_or_before_clock"}, "health_vehicle_feed": {"feed_name": "vehicle_positions", "status": "unknown", "source_timestamp": null, "data_age_s": null, "poll_age_s": null, "unchanged_for_s": null, "entities": null, "rejected": 0, "reason": "no_ingestion_at_or_before_clock"}, "revision": null, "vehicles_total": 0, "latest_gps_observed_at": null, "vehicles_received_after_at": 0}
+{"at": "2026-11-20T14:32:10Z", "snapshot_vehicle_feed": {"feed_name": "vehicle_positions", "status": "ok", "source_timestamp": "2026-11-20T14:32:04Z", "data_age_s": 6.0, "poll_age_s": 6.0, "unchanged_for_s": 0.0, "entities": 463, "rejected": 0, "reason": null}, "health_vehicle_feed": {"feed_name": "vehicle_positions", "status": "ok", "source_timestamp": "2026-11-20T14:32:04Z", "data_age_s": 6.0, "poll_age_s": 6.0, "unchanged_for_s": 0.0, "entities": 463, "rejected": 0, "reason": null}, "revision": 216, "vehicles_total": 119, "latest_gps_observed_at": "2026-11-20T14:32:04+00:00", "vehicles_received_after_at": 0}
+{"at": "2026-11-20T14:33:40Z", "snapshot_vehicle_feed": {"feed_name": "vehicle_positions", "status": "ok", "source_timestamp": "2026-11-20T14:33:21Z", "data_age_s": 19.0, "poll_age_s": 19.0, "unchanged_for_s": 0.0, "entities": 468, "rejected": 0, "reason": null}, "health_vehicle_feed": {"feed_name": "vehicle_positions", "status": "ok", "source_timestamp": "2026-11-20T14:33:21Z", "data_age_s": 19.0, "poll_age_s": 19.0, "unchanged_for_s": 0.0, "entities": 468, "rejected": 0, "reason": null}, "revision": 219, "vehicles_total": 122, "latest_gps_observed_at": "2026-11-20T14:33:21+00:00", "vehicles_received_after_at": 0}
+{"clock": "2026-12-10T12:00:00Z", "endpoint": "health", "gtfs_status": "valid", "gtfs_status_reason": null, "gtfs_valid_until": "2026-12-19"}
+{"clock": "2026-12-10T12:00:00Z", "endpoint": "catalog", "gtfs_status": "valid", "gtfs_status_reason": null, "gtfs_valid_until": "2026-12-19"}
+{"clock": "2026-12-10T12:00:00Z", "endpoint": "snapshot", "gtfs_status": "valid", "gtfs_status_reason": null, "gtfs_valid_until": null}
+{"clock": "2026-12-18T12:00:00Z", "endpoint": "health", "gtfs_status": "expiring", "gtfs_status_reason": "gtfs_expiry_approaching", "gtfs_valid_until": "2026-12-19"}
+{"clock": "2026-12-18T12:00:00Z", "endpoint": "catalog", "gtfs_status": "expiring", "gtfs_status_reason": "gtfs_expiry_approaching", "gtfs_valid_until": "2026-12-19"}
+{"clock": "2026-12-18T12:00:00Z", "endpoint": "snapshot", "gtfs_status": "expiring", "gtfs_status_reason": "gtfs_expiry_approaching", "gtfs_valid_until": null}
+{"clock": "2026-12-20T12:00:00Z", "endpoint": "health", "gtfs_status": "expired", "gtfs_status_reason": "gtfs_validity_ended", "gtfs_valid_until": "2026-12-19"}
+{"clock": "2026-12-20T12:00:00Z", "endpoint": "catalog", "gtfs_status": "expired", "gtfs_status_reason": "gtfs_validity_ended", "gtfs_valid_until": "2026-12-19"}
+{"clock": "2026-12-20T12:00:00Z", "endpoint": "snapshot", "gtfs_status": "expired", "gtfs_status_reason": "gtfs_validity_ended", "gtfs_valid_until": null}
+Exit=0
