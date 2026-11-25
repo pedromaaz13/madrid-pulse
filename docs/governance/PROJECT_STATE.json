@@ -1471,7 +1471,7 @@
       "review_status": "CHANGES_REQUESTED",
       "integration_status": "NOT_INTEGRATED",
       "deployment_status": "NOT_DEPLOYED",
-      "head": "7165a6a",
+      "head": "68d7df7",
       "evidence": [
         "docs/adr/0014-amendment-stop-state.md",
         "docs/evidence/mp-024/README.md",
@@ -1481,7 +1481,7 @@
       "merge_sha": null,
       "review_date": "2026-11-25",
       "gate": "Aprobación humana donde indica docs/H4_MP_MAPPING.md; prueba RED en beb9434 y GREEN tras el fix",
-      "notes": "Propuesta de enmienda de ADR-0014 (estado Propuesto) con evidencia comparativa reproducible. Ejecutor Claude Opus High (argv verificado); revisor Codex Astra High (recibo de Orca; esfuerzo no verificable en argv). Ronda 1: CHANGES_REQUESTED (7 B, 4 A); ronda 2: B1, B3, B4, B7, A1, A2, A4 resueltos y B2, B5, B6, A3 parciales. Las correcciones de esos cuatro puntos (7165a6a) NO fueron re-verificadas por Codex (límite de rondas ordinarias; Codex además alcanzó su límite de uso). Sin dictamen APPROVED. El gate humano HG-ADR-0014 sigue abierto: nadie ha aprobado el ADR. NO integrada: rama pedromaaz13/mp-024-adr-estado-parada.",
+      "notes": "Propuesta de enmienda de ADR-0014 (estado Propuesto) con evidencia comparativa reproducible. Ejecutor Claude Opus High (argv verificado); revisor Codex Astra High (recibo de Orca; esfuerzo no verificable en argv). Ronda 1: CHANGES_REQUESTED (7 B, 4 A). Ronda 2: B1, B3, B4, B7, A1, A2, A4 resueltos; B2, B5, B6, A3 parciales. Verificación focalizada del delta final (autorizada por el propietario, sobre c7b4df6): B5, B6 y A3 RESUELTOS; B2 PARCIAL solo en la garantía de replay por hora (started_at vs visibilidad del commit). Corrección posterior (68d7df7): garantía de replay acotada a «reconstrucción exacta dado el identificador del ancla/run»; la visibilidad histórica por hora queda UNVERIFIED para MP-026b/MP-032; NO re-verificada. Sin dictamen APPROVED. HG-ADR-0014 sigue abierto: nadie ha aprobado el ADR. NO integrada: rama pedromaaz13/mp-024-adr-estado-parada (PR #7).",
       "head_kind": "branch_tip",
       "id": "MP-024",
       "title": "Enmienda de ADR-0014 (estado de parada) (H4-00)",
