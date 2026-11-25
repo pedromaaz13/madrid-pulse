@@ -29,9 +29,12 @@ from packages.gtfs import Topology, build_catalog, load_feed
 from packages.movement import MovementEngine, TripSchedule
 
 from .config import ApiConfig
+from .schemas import GtfsValidityOut
 
 if TYPE_CHECKING:  # evita un ciclo de importación con apps.api.service
     from .service import ServiceDateResolver
+
+MADRID = ZoneInfo("Europe/Madrid")
 
 
 @dataclass(frozen=True)
@@ -49,7 +52,7 @@ class LoadedNetwork:
     corridor_catalog: CorridorCatalog
     geometry_catalog_version: str
     catalog_version: str
-    """ETag del catálogo completo: cambia si cambia el GTFS **o** la geometría."""
+    """Versión del contenido estático del catálogo, GTFS y geometría."""
 
     _engines: dict[str, MovementEngine] = field(default_factory=dict, repr=False)
     _schedule_caches: dict[str, dict[str, TripSchedule]] = field(
@@ -64,20 +67,35 @@ class LoadedNetwork:
     """
 
     _catalog_json: dict[str, bytes] = field(default_factory=dict, repr=False)
-    """Payload del catálogo ya serializado, memoizado por `catalog_version`.
+    """Payload del catálogo serializado, memoizado por ETag.
 
     Medido en MP-019: `/api/v1/catalog` no toca PostgreSQL, pero serializar la
     geometría real (79 KB con la fixture C5, 352 KB con el núcleo completo)
-    costaba ~124 ms de p50 en **cada** petición. El contenido es inmutable por
-    proceso por definición -- cambia solo si cambia `catalog_version`, y
-    entonces el proceso ya cargó otro catálogo -- así que cachearlo no puede
-    servir un dato viejo rotulado como nuevo.
+    costaba ~124 ms de p50 en **cada** petición. El ETag incluye el estado
+    de vigencia, el modo y la versión del contenido estático.
     """
 
     _board_indexes: dict[date, dict[str, tuple]] = field(default_factory=dict, repr=False)
     """Índice de llamadas programadas por estación, memoizado por fecha de
     servicio. Es catálogo derivado (depende solo del GTFS cargado), no estado
     operativo: ninguna observación ni retraso entra aquí."""
+
+    def gtfs_validity(self, now: datetime, *, expiring_days: int) -> GtfsValidityOut:
+        today = now.astimezone(MADRID).date()
+        if today < self.gtfs_valid_from:
+            return GtfsValidityOut(
+                gtfs_status="not_yet_valid", gtfs_status_reason="gtfs_validity_not_started"
+            )
+        days_left = (self.gtfs_valid_until - today).days
+        if days_left < 0:
+            return GtfsValidityOut(
+                gtfs_status="expired", gtfs_status_reason="gtfs_validity_ended"
+            )
+        if days_left <= expiring_days:
+            return GtfsValidityOut(
+                gtfs_status="expiring", gtfs_status_reason="gtfs_expiry_approaching"
+            )
+        return GtfsValidityOut(gtfs_status="valid", gtfs_status_reason=None)
 
     @property
     def extended_service_horizon_s(self) -> float:
@@ -154,7 +172,7 @@ def load_network(config: ApiConfig) -> LoadedNetwork:
     parse_date = lambda value: datetime.strptime(value, "%Y%m%d").date()  # noqa: E731
     valid_from = min(parse_date(item.start_date) for item in topology.calendar)
     valid_until = max(parse_date(item.end_date) for item in topology.calendar)
-    madrid_today = datetime.now(ZoneInfo("Europe/Madrid")).date()
+    madrid_today = datetime.now(MADRID).date()
     if config.mode == "live" and not (valid_from <= madrid_today <= valid_until):
         raise ValueError(
             f"GTFS fuera de vigencia para live: {valid_from.isoformat()}..{valid_until.isoformat()}"

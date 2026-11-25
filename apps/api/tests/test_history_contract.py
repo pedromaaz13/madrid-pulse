@@ -23,6 +23,7 @@ import tempfile
 import unittest
 from datetime import date, datetime, timezone
 from pathlib import Path
+from unittest.mock import patch
 
 import duckdb
 from fastapi.testclient import TestClient
@@ -140,6 +141,13 @@ class HistoryContractTests(unittest.TestCase):
         shutil.rmtree(cls.archive_root, ignore_errors=True)
 
     def setUp(self) -> None:
+        self.enterContext(patch.dict(os.environ, {
+            "MADRID_PULSE_ENV": "test",
+            "MADRID_PULSE_DATABASE_URL": "postgresql://unused@127.0.0.1:1/unused",
+        }))
+        self.enterContext(patch(
+            "psycopg.connect", side_effect=AssertionError("El histórico no usa PostgreSQL"),
+        ))
         archive = history.Archive(root=self.archive_root)
         app.dependency_overrides[get_archive] = lambda: archive
         self.addCleanup(app.dependency_overrides.clear)

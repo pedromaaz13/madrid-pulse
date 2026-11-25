@@ -4,12 +4,36 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 
 ## [Unreleased]
 
-### MP-024 — Propuesta de enmienda de ADR-0014 (rama `pedromaaz13/mp-024-adr-estado-parada`, sin fusionar)
+### MP-024 — Propuesta de enmienda de ADR-0014 (PR #7)
 
-Solo documentación y evidencia offline; **ningún cambio de código de producto**. ADR en estado `Propuesto`: no está aprobado ni implementado. Ejecutor Claude Opus 5.5 · high; revisor Codex `gpt-6.2-astra` · high: **sin dictamen APPROVED** (2 rondas con CHANGES_REQUESTED parcial; las correcciones finales no se re-verificaron).
+Solo documentación y evidencia offline; **ningún cambio de código de producto**. **Decisión del propietario (2026-11-25): dirección aprobada** (A con C como degradación R8; F1; P-024 provisional; limitaciones aceptadas; ver `docs/adr/0014-amendment-owner-decision.md`); el dictamen de revisor sigue sin ser APPROVED y los supuestos `UNVERIFIED` siguen sin validar; aún no está implementado (MP-025a). Ejecutor Claude Opus 5.5 · high; revisor Codex `gpt-6.2-astra` · high: **sin dictamen APPROVED** (2 rondas con CHANGES_REQUESTED parcial; las correcciones finales no se re-verificaron).
 
 #### Added
 - `docs/adr/0014-amendment-stop-state.md` (alternativas A/B/C/D comparadas por pruebas, reglas, criterios de aceptación, decisión del propietario) y `docs/evidence/mp-024/` (arnés offline determinista, equivalencia Python↔TypeScript y resultados).
+
+### MP-026a — Replay temporal `?at=` y vigencia del GTFS (integrada por PR #6, merge `7a5312f`)
+
+Ejecutor Codex `gpt-6.2-sol` · high (recibo de Orca); revisor Claude Opus 5.5 · high (argv verificado): 2 rondas, APPROVED. **Integrada en `main`** (PR #5, merge commit `4b80ce7`, 2026-11-25).
+
+#### Fixed
+- FR-02: las lecturas de ingestas y observaciones se acotan al instante pedido; antes del primer dato el estado es «sin dato» con edades `null`, nunca negativas; `?at=` fuera de rango → 400 (antes 500).
+- FR-19: la vigencia del GTFS se evalúa en ejecución con el reloj de la petición (`valid`/`expiring`/`expired`/`not_yet_valid`) en health, catálogo y snapshot, y degrada el snapshot con causa visible.
+
+#### Changed
+- Contrato con tres excepciones declaradas a «aditivo» (`poll_age_s` nullable, `feeds` siempre con tres, formato del ETag) y esquema `1.1`.
+
+#### Verified
+- RED contra `beb9434`/`fe0ea85` y GREEN; 296 tests con 18 skipped sobre PostgreSQL desechable; web 89 tests. Pendiente: Actions remoto y rotulado en la UI (MP-030).
+
+### MP-023 — Configuración segura de PostgreSQL (integrada por PR #5, merge `4b80ce7`)
+
+Implementada por Codex `gpt-6.2-sol` · medium (recibo de Orca); revisada por Claude Sonnet 5.5 · high (argv verificado), 2 rondas, 0 bloqueantes. **Integrada en `main`** (PR #6, merge commit `7a5312f`, 2026-11-25).
+
+#### Changed
+- API, colector y snapshotter sin valor por defecto de conexión: una sola variable `MADRID_PULSE_DATABASE_URL` y `MADRID_PULSE_ENV` obligatorios; fallo seguro antes de abrir conexiones; el puerto compartido de desarrollo se rechaza en cualquier host; marca de base desechable para escribir/probar; CI con base desechable, `MADRID_PULSE_REQUIRE_DB=1` y la marca tras las migraciones.
+
+#### Verified
+- RED contra `beb9434` y GREEN; 283 tests con 18 skipped en 28 módulos contra PostgreSQL desechable propio; arranques sin variables con 0 filas y 0 conexiones; el contenedor compartido de desarrollo no se tocó. Evidencia: `docs/evidence/mp-023/`. Pendiente: ejecución real en GitHub Actions.
 
 ### Gobernanza documental y roadmap maestro (2026-11-25, rama `docs/governance-roadmap`, sin fusionar)
 

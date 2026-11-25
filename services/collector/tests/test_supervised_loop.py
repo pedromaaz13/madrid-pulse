@@ -39,7 +39,12 @@ def _fake_connection():
 class SupervisedLoopTests(unittest.TestCase):
     def setUp(self) -> None:
         patches = [
+            mock.patch.dict("os.environ", {
+                "MADRID_PULSE_ENV": "test",
+                "MADRID_PULSE_DATABASE_URL": "postgresql://integration@127.0.0.1/integration",
+            }, clear=True),
             mock.patch.object(collector_main.psycopg, "connect", lambda *a, **k: _fake_connection()),
+            mock.patch.object(collector_main, "require_disposable_database"),
             mock.patch.object(collector_main, "_load_madrid_stop_ids", lambda source: None),
             mock.patch.object(collector_main.time, "sleep", lambda seconds: None),
         ]

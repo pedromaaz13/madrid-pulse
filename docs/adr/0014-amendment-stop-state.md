@@ -1,6 +1,6 @@
 # ADR-0014 · Enmienda 1: modelo de estado de parada, horizonte por tramo y revisión coherente
 
-- **Estado:** `Propuesto`. No lo promueven ni el ejecutor ni el revisor: lo decide el propietario del repositorio (`AGENTS.md`, regla 8). Su aprobación es el **gate humano antes de cualquier código de MP-025a** (`docs/H4_MP_MAPPING.md`).
+- **Estado:** **Dirección aprobada por el propietario el 2026-11-25** (A con C como degradación R8; F1; perfil P-024 provisional; limitaciones aceptadas): ver [`0014-amendment-owner-decision.md`](0014-amendment-owner-decision.md). Hasta entonces fue `Propuesto`. **La decisión no convierte en APPROVED el dictamen histórico de Astra (CHANGES_REQUESTED parcial) ni valida los supuestos `UNVERIFIED`.** ADR-0014 base sigue `Propuesto` salvo lo que esta enmienda sustituye; su promoción completa no está decidida.
 - **Fecha:** 2026-11-25. Ronda 2 el mismo día, tras el dictamen `CHANGES_REQUESTED` (7 B, 4 A) de Codex `gpt-6.2-astra` · high sobre `f0f8224`; la tabla de correcciones está en el Anexo. Cierre de la 2ª ronda ordinaria (B2, B5, B6 y A3 parciales) el mismo día; **no hay tercera ronda automática** (ORCHESTRATION_POLICY §3.3): las correcciones de ese cierre no las re-verifica Codex salvo decisión del propietario.
 - **Tarea:** MP-024 (H4-00).
 - **Ejecutor:** Claude `claude-opus-5-5` · high.

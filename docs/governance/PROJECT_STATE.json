@@ -1440,18 +1440,22 @@
       "source": "docs/audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md"
     },
     {
-      "implementation_status": "PLANNED",
-      "review_status": "NOT_REVIEWED",
-      "integration_status": "NOT_INTEGRATED",
+      "implementation_status": "IMPLEMENTED",
+      "review_status": "APPROVED",
+      "integration_status": "MERGED",
       "deployment_status": "NOT_DEPLOYED",
-      "head": "UNKNOWN",
-      "evidence": [],
-      "pr": null,
-      "merge_sha": null,
-      "review_date": null,
+      "head": "c005dcd",
+      "evidence": [
+        "docs/evidence/mp-023/README.md",
+        "docs/evidence/mp-023/ROUND2.md",
+        "docs/operations/DATABASE_ISOLATION.md"
+      ],
+      "pr": 5,
+      "merge_sha": "4b80ce7",
+      "review_date": "2026-11-25",
       "gate": "Aprobación humana donde indica docs/H4_MP_MAPPING.md; prueba RED en beb9434 y GREEN tras el fix",
-      "notes": "Planificada; implementación H4 no autorizada.",
-      "head_kind": "none",
+      "notes": "Implementada y aprobada por Claude Sonnet High en 2 rondas (0 B). Regresión RED en beb9434 / GREEN; suite de 28 módulos 283 tests/18 skipped sobre PostgreSQL desechable propio (puerto 5451; revisor 5461); 5433 no tocada. Recomendaciones registradas y no aplicadas: A5 (arnés de aislamiento no está en CI), A6 parcial (suite con entorno vacío: 12 errores, solo molestia local), A7 (reinicio del supervisor ante error de configuración), A10 (cambios menores en export.py y measure-cost.py). Integrada en main por PR #5 (merge commit 4b80ce7, 2026-11-25) por autorización del propietario.",
+      "head_kind": "branch_tip",
       "id": "MP-023",
       "title": "Eliminar defaults peligrosos de PostgreSQL (H4-11)",
       "track": "PRODUCT",
@@ -1464,10 +1468,11 @@
       "aliases": [
         "H4-11"
       ],
-      "priority": "P1"
+      "priority": "P1",
+      "integration_kind": "merge_commit"
     },
     {
-      "implementation_status": "IMPLEMENTED_WITH_OPEN_GATE",
+      "implementation_status": "IMPLEMENTED",
       "review_status": "CHANGES_REQUESTED",
       "integration_status": "NOT_INTEGRATED",
       "deployment_status": "NOT_DEPLOYED",
@@ -1475,13 +1480,14 @@
       "evidence": [
         "docs/adr/0014-amendment-stop-state.md",
         "docs/evidence/mp-024/README.md",
-        "docs/evidence/mp-024/stop_state_comparison.py"
+        "docs/evidence/mp-024/stop_state_comparison.py",
+        "docs/adr/0014-amendment-owner-decision.md"
       ],
       "pr": null,
       "merge_sha": null,
       "review_date": "2026-11-25",
       "gate": "Aprobación humana donde indica docs/H4_MP_MAPPING.md; prueba RED en beb9434 y GREEN tras el fix",
-      "notes": "Propuesta de enmienda de ADR-0014 (estado Propuesto) con evidencia comparativa reproducible. Ejecutor Claude Opus High (argv verificado); revisor Codex Astra High (recibo de Orca; esfuerzo no verificable en argv). Ronda 1: CHANGES_REQUESTED (7 B, 4 A). Ronda 2: B1, B3, B4, B7, A1, A2, A4 resueltos; B2, B5, B6, A3 parciales. Verificación focalizada del delta final (autorizada por el propietario, sobre c7b4df6): B5, B6 y A3 RESUELTOS; B2 PARCIAL solo en la garantía de replay por hora (started_at vs visibilidad del commit). Corrección posterior (68d7df7): garantía de replay acotada a «reconstrucción exacta dado el identificador del ancla/run»; la visibilidad histórica por hora queda UNVERIFIED para MP-026b/MP-032; NO re-verificada. Sin dictamen APPROVED. HG-ADR-0014 sigue abierto: nadie ha aprobado el ADR. NO integrada: rama pedromaaz13/mp-024-adr-estado-parada (PR #7).",
+      "notes": "Propuesta de enmienda de ADR-0014 (estado Propuesto) con evidencia comparativa reproducible. Ejecutor Claude Opus High (argv verificado); revisor Codex Astra High (recibo de Orca; esfuerzo no verificable en argv). Ronda 1: CHANGES_REQUESTED (7 B, 4 A). Ronda 2: B1, B3, B4, B7, A1, A2, A4 resueltos; B2, B5, B6, A3 parciales. Verificación focalizada del delta final (autorizada por el propietario, sobre c7b4df6): B5, B6 y A3 RESUELTOS; B2 PARCIAL solo en la garantía de replay por hora (started_at vs visibilidad del commit). Corrección posterior (68d7df7): garantía de replay acotada a «reconstrucción exacta dado el identificador del ancla/run»; la visibilidad histórica por hora queda UNVERIFIED para MP-026b/MP-032; NO re-verificada. Sin dictamen APPROVED. DECISIÓN DEL PROPIETARIO (2026-11-25): dirección aprobada (A con C como R8, F1, P-024 provisional) con limitaciones aceptadas; HG-ADR-0014 = APPROVED_BY_OWNER solo para esa dirección. El dictamen de revisor sigue CHANGES_REQUESTED y los supuestos UNVERIFIED siguen sin validar.",
       "head_kind": "branch_tip",
       "id": "MP-024",
       "title": "Enmienda de ADR-0014 (estado de parada) (H4-00)",
@@ -1511,7 +1517,7 @@
       "merge_sha": null,
       "review_date": null,
       "gate": "Aprobación humana donde indica docs/H4_MP_MAPPING.md; prueba RED en beb9434 y GREEN tras el fix",
-      "notes": "Planificada; implementación H4 no autorizada.",
+      "notes": "Planificada; implementación H4 no autorizada. Autorizada por el propietario el 2026-11-25 (ejecución y PR en borrador sin merge automático); no cierra HG-H4-SCOPE.",
       "head_kind": "none",
       "id": "MP-025a",
       "title": "Modelo de estado de parada: cierre determinista (H4-04)",
@@ -1563,18 +1569,23 @@
       "priority": "P0"
     },
     {
-      "implementation_status": "PLANNED",
-      "review_status": "NOT_REVIEWED",
-      "integration_status": "NOT_INTEGRATED",
+      "implementation_status": "IMPLEMENTED",
+      "review_status": "APPROVED",
+      "integration_status": "MERGED",
       "deployment_status": "NOT_DEPLOYED",
-      "head": "UNKNOWN",
-      "evidence": [],
-      "pr": null,
-      "merge_sha": null,
-      "review_date": null,
+      "head": "ec45d95",
+      "evidence": [
+        "docs/evidence/mp-026a/README.md",
+        "docs/operations/GTFS_STATIC_REFRESH.md",
+        "docs/DATA_CONTRACTS.md",
+        "docs/evidence/mp-026a/CLOCK_ROBUSTNESS.md"
+      ],
+      "pr": 6,
+      "merge_sha": "7a5312f",
+      "review_date": "2026-11-25",
       "gate": "Aprobación humana donde indica docs/H4_MP_MAPPING.md; prueba RED en beb9434 y GREEN tras el fix",
-      "notes": "Modelos: docs/H4_TASK_MATRIX.md (PROPUESTA; aprobación de alcance y reparto pendiente, HG-H4-SCOPE abierto) fija ejecutor y revisor de referencia; el plan importado propone otra asignación opcional; precedencia provisional: la matriz H4 hasta que el propietario decida.",
-      "head_kind": "none",
+      "notes": "FR-02 (replay ?at=) y FR-19 (vigencia GTFS en ejecución) corregidos. Ejecutor Codex gpt-6.2-sol high (recibo de Orca; argv no verificable); revisor Claude Opus 5.5 high (argv verificado): ronda 1 CHANGES_REQUESTED (1 B, 6 A), ronda 2 APPROVED. RED en fe0ea85/beb9434 y GREEN; suite 296 tests con 18 skipped; web 89 tests. Contrato con 3 excepciones a «aditivo» declaradas y esquema 1.1. PROPUESTO (no aceptado): display_lag_s sin límite superior da 500 (preexistente). Robustez temporal (autorizada por el propietario): suite con reloj controlado en 8 fechas (2026-11-25 a 2027-01-15) con 298 tests/18 skipped; fechas de fixtures sin ampliar; replay histórico evalúa la vigencia contra el instante reproducido; delta de pruebas dd92247..ec45d95 APPROVED por Claude Opus High, aprobación del código funcional conservada en 70170c7. Pendiente: rotulado de la degradación GTFS en la UI (MP-030) y ejecución real en GitHub Actions. Integrada en main por PR #6 (merge commit 7a5312f, 2026-11-25) tras #5.",
+      "head_kind": "branch_tip",
       "id": "MP-026a",
       "title": "FR-02 replay ?at= y FR-19 vigencia GTFS (H4-01)",
       "track": "PRODUCT",
@@ -1587,7 +1598,8 @@
       "aliases": [
         "H4-01"
       ],
-      "priority": "P0"
+      "priority": "P0",
+      "integration_kind": "merge_commit"
     },
     {
       "implementation_status": "PLANNED",
@@ -1600,7 +1612,7 @@
       "merge_sha": null,
       "review_date": null,
       "gate": "Aprobación humana donde indica docs/H4_MP_MAPPING.md; prueba RED en beb9434 y GREEN tras el fix",
-      "notes": "Planificada; implementación H4 no autorizada.",
+      "notes": "Planificada; implementación H4 no autorizada. Autorizada por el propietario el 2026-11-25 (ejecución y PR en borrador sin merge automático); no cierra HG-H4-SCOPE.",
       "head_kind": "none",
       "id": "MP-026b",
       "title": "FR-07 snapshot consistente (H4-01)",
@@ -2659,7 +2671,13 @@
     {
       "id": "HG-ADR-0014",
       "title": "Aprobación del ADR-0014 enmendado (MP-024)",
-      "status": "OPEN"
+      "status": "APPROVED_BY_OWNER",
+      "approved_by": "owner",
+      "date": "2026-11-25",
+      "evidence": [
+        "docs/adr/0014-amendment-owner-decision.md"
+      ],
+      "note": "Aprobada la DIRECCIÓN de la enmienda (A con C como R8; F1; P-024 provisional) con limitaciones aceptadas. No convierte en APPROVED el dictamen de Astra ni valida lo UNVERIFIED. La promoción completa de ADR-0014 base no está decidida."
     },
     {
       "id": "HG-ADR-0015",

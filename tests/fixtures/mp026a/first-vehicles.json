@@ -1,0 +1,25 @@
+{
+  "header": {
+    "gtfsRealtimeVersion": "2.0",
+    "timestamp": "1795060682"
+  },
+  "entity": [
+    {
+      "id": "mp026a-existing",
+      "vehicle": {
+        "trip": {
+          "tripId": "1022J19502C5"
+        },
+        "vehicle": {
+          "id": "mp026a-existing",
+          "label": "mp026a-existing"
+        },
+        "position": {
+          "latitude": 40.3281,
+          "longitude": -3.8506
+        },
+        "timestamp": "1795060680"
+      }
+    }
+  ]
+}

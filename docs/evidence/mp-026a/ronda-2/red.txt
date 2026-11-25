@@ -1,0 +1,224 @@
+HEAD=fe0ea85da3caba5c6a462bdda25b9b4cf7c2053e
+Python 3.12.3
+MADRID_PULSE_ENV=test MADRID_PULSE_MODE=replay MADRID_PULSE_REQUIRE_DB=1 MADRID_PULSE_DATABASE_URL=postgresql://mp026a_r2:mp026a_r2_local@127.0.0.1:5453/madrid_pulse
+Solo se copió el módulo de regresión sobre el checkout RED.
+78bd2b41c542e0a4f3a41933b8e06790768d1d4527af751fccdd01d33e60a0b1  apps/api/tests/test_temporal_replay.py
+e8b6deb06396341cf89b6dfa7d3248e4b8041fb9aa15fb0cc1cc83f798977b73  tests/fixtures/mp026a/first-delays.json
+ab54fbc5eb69e1b3350cceb76ff3e60a8d01fe18e10c5c44f5cf3f9b86b6f27e  tests/fixtures/mp026a/first-vehicles.json
+8b12604263390393ca97b77c5511eec818981d086b6db5900884832a292fd060  tests/fixtures/mp026a/future-header.json
+0a4efcc8adb0248fda4b4db868dc31a1c56a5a203d5b40f19ae0e1ffb2ee7da4  tests/fixtures/mp026a/second-delays.json
+f30c1beef66e27a01e3ce6633cf1e956c75c8093e567742cd3ae4a7acd66e367  tests/fixtures/mp026a/second-vehicles.json
+652bc1240824e03366ed2edf8b6d44104913f8cf1ed232d6fe2ea54d0e37d498  tests/fixtures/gtfs_c5_real/calendar.txt
+0c044d3b7a799b5d644be3f3b963bbdaf165ca1daef1afd6c30421dfa2eb3486  tests/fixtures/gtfs_c5_real/routes.txt
+351c20eb08295d788f85bf518d258fd881d7773cde4e6c94faa50eef8099676d  tests/fixtures/gtfs_c5_real/shapes.txt
+53cdd888e87f289c0bd45b60acbb0eeb69982a230a084d0cbfdf73d7bd383c1f  tests/fixtures/gtfs_c5_real/stop_times.txt
+fa77b60ee6ac6561de903fb5d18a6f7e65682466bf55b92344f62c3bc855f6c8  tests/fixtures/gtfs_c5_real/stops.txt
+4e18ba444d10a5a54e6c3985ef005e41b35487c126a2417ff40898975f469dc3  tests/fixtures/gtfs_c5_real/trips.txt
+79f9966b2b7f3fdcebf1f41083d13ff58de39a496eca80caeb274c9b9f4d375a  tests/fixtures/osm_c5_real/relation_3418150.json
+Comando: /Users/matu/orca/workspaces/madrid-pulse/audit-hito-03/.venv/bin/python -m unittest apps.api.tests.test_temporal_replay -v
+test_before_first_ingestion_is_declared_without_ages (apps.api.tests.test_temporal_replay.TemporalApiTests.test_before_first_ingestion_is_declared_without_ages) ... ok
+test_board_excludes_delays_from_future_ingestions (apps.api.tests.test_temporal_replay.TemporalApiTests.test_board_excludes_delays_from_future_ingestions) ... ok
+test_extreme_replay_clocks_are_rejected_on_every_surface (apps.api.tests.test_temporal_replay.TemporalApiTests.test_extreme_replay_clocks_are_rejected_on_every_surface) ...
+  test_extreme_replay_clocks_are_rejected_on_every_surface (apps.api.tests.test_temporal_replay.TemporalApiTests.test_extreme_replay_clocks_are_rejected_on_every_surface) (at='0001-01-01T00:00:00Z', endpoint='health') ... FAIL
+  test_extreme_replay_clocks_are_rejected_on_every_surface (apps.api.tests.test_temporal_replay.TemporalApiTests.test_extreme_replay_clocks_are_rejected_on_every_surface) (at='0001-01-01T00:00:00Z', endpoint='catalog') ... FAIL
+  test_extreme_replay_clocks_are_rejected_on_every_surface (apps.api.tests.test_temporal_replay.TemporalApiTests.test_extreme_replay_clocks_are_rejected_on_every_surface) (at='0001-01-01T00:00:00Z', endpoint='snapshot') ... FAIL
+  test_extreme_replay_clocks_are_rejected_on_every_surface (apps.api.tests.test_temporal_replay.TemporalApiTests.test_extreme_replay_clocks_are_rejected_on_every_surface) (at='0001-01-01T00:00:00Z', endpoint='stations/35607/board') ... FAIL
+  test_extreme_replay_clocks_are_rejected_on_every_surface (apps.api.tests.test_temporal_replay.TemporalApiTests.test_extreme_replay_clocks_are_rejected_on_every_surface) (at='0001-01-01T00:30:00+01:00', endpoint='health') ... FAIL
+  test_extreme_replay_clocks_are_rejected_on_every_surface (apps.api.tests.test_temporal_replay.TemporalApiTests.test_extreme_replay_clocks_are_rejected_on_every_surface) (at='0001-01-01T00:30:00+01:00', endpoint='catalog') ... FAIL
+  test_extreme_replay_clocks_are_rejected_on_every_surface (apps.api.tests.test_temporal_replay.TemporalApiTests.test_extreme_replay_clocks_are_rejected_on_every_surface) (at='0001-01-01T00:30:00+01:00', endpoint='snapshot') ... FAIL
+  test_extreme_replay_clocks_are_rejected_on_every_surface (apps.api.tests.test_temporal_replay.TemporalApiTests.test_extreme_replay_clocks_are_rejected_on_every_surface) (at='0001-01-01T00:30:00+01:00', endpoint='stations/35607/board') ... FAIL
+  test_extreme_replay_clocks_are_rejected_on_every_surface (apps.api.tests.test_temporal_replay.TemporalApiTests.test_extreme_replay_clocks_are_rejected_on_every_surface) (at='9999-12-31T23:59:59Z', endpoint='health') ... FAIL
+  test_extreme_replay_clocks_are_rejected_on_every_surface (apps.api.tests.test_temporal_replay.TemporalApiTests.test_extreme_replay_clocks_are_rejected_on_every_surface) (at='9999-12-31T23:59:59Z', endpoint='catalog') ... FAIL
+  test_extreme_replay_clocks_are_rejected_on_every_surface (apps.api.tests.test_temporal_replay.TemporalApiTests.test_extreme_replay_clocks_are_rejected_on_every_surface) (at='9999-12-31T23:59:59Z', endpoint='snapshot') ... FAIL
+  test_extreme_replay_clocks_are_rejected_on_every_surface (apps.api.tests.test_temporal_replay.TemporalApiTests.test_extreme_replay_clocks_are_rejected_on_every_surface) (at='9999-12-31T23:59:59Z', endpoint='stations/35607/board') ... FAIL
+  test_extreme_replay_clocks_are_rejected_on_every_surface (apps.api.tests.test_temporal_replay.TemporalApiTests.test_extreme_replay_clocks_are_rejected_on_every_surface) (at='9999-12-31T23:30:00-01:00', endpoint='health') ... FAIL
+  test_extreme_replay_clocks_are_rejected_on_every_surface (apps.api.tests.test_temporal_replay.TemporalApiTests.test_extreme_replay_clocks_are_rejected_on_every_surface) (at='9999-12-31T23:30:00-01:00', endpoint='catalog') ... FAIL
+  test_extreme_replay_clocks_are_rejected_on_every_surface (apps.api.tests.test_temporal_replay.TemporalApiTests.test_extreme_replay_clocks_are_rejected_on_every_surface) (at='9999-12-31T23:30:00-01:00', endpoint='snapshot') ... FAIL
+  test_extreme_replay_clocks_are_rejected_on_every_surface (apps.api.tests.test_temporal_replay.TemporalApiTests.test_extreme_replay_clocks_are_rejected_on_every_surface) (at='9999-12-31T23:30:00-01:00', endpoint='stations/35607/board') ... FAIL
+test_future_source_timestamp_has_its_own_reason (apps.api.tests.test_temporal_replay.TemporalApiTests.test_future_source_timestamp_has_its_own_reason) ... ok
+test_health_and_snapshot_use_same_clock (apps.api.tests.test_temporal_replay.TemporalApiTests.test_health_and_snapshot_use_same_clock) ... ok
+test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache (apps.api.tests.test_temporal_replay.TemporalApiTests.test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache) ... ok
+test_live_http_still_rejects_an_explicit_at (apps.api.tests.test_temporal_replay.TemporalApiTests.test_live_http_still_rejects_an_explicit_at) ... ok
+test_live_startup_still_rejects_an_expired_source (apps.api.tests.test_temporal_replay.TemporalApiTests.test_live_startup_still_rejects_an_expired_source) ... ok
+test_only_replay_filters_future_observation_timestamps (apps.api.tests.test_temporal_replay.TemporalApiTests.test_only_replay_filters_future_observation_timestamps) ... FAIL
+test_replay_gtfs_validity_uses_at_instead_of_wall_clock (apps.api.tests.test_temporal_replay.TemporalApiTests.test_replay_gtfs_validity_uses_at_instead_of_wall_clock) ... ok
+test_snapshot_marks_each_nonvalid_gtfs_state_as_degraded (apps.api.tests.test_temporal_replay.TemporalApiTests.test_snapshot_marks_each_nonvalid_gtfs_state_as_degraded) ...
+  test_snapshot_marks_each_nonvalid_gtfs_state_as_degraded (apps.api.tests.test_temporal_replay.TemporalApiTests.test_snapshot_marks_each_nonvalid_gtfs_state_as_degraded) (at='2026-11-18T12:00:00Z') ... FAIL
+  test_snapshot_marks_each_nonvalid_gtfs_state_as_degraded (apps.api.tests.test_temporal_replay.TemporalApiTests.test_snapshot_marks_each_nonvalid_gtfs_state_as_degraded) (at='2026-12-04T12:00:00Z') ... FAIL
+  test_snapshot_marks_each_nonvalid_gtfs_state_as_degraded (apps.api.tests.test_temporal_replay.TemporalApiTests.test_snapshot_marks_each_nonvalid_gtfs_state_as_degraded) (at='2026-12-07T12:00:00Z') ... FAIL
+test_snapshot_uses_first_ingestion_and_its_observations (apps.api.tests.test_temporal_replay.TemporalApiTests.test_snapshot_uses_first_ingestion_and_its_observations) ... ok
+test_vehicle_list_and_detail_exclude_future_ingestions (apps.api.tests.test_temporal_replay.TemporalApiTests.test_vehicle_list_and_detail_exclude_future_ingestions) ... FAIL
+
+======================================================================
+FAIL: test_extreme_replay_clocks_are_rejected_on_every_surface (apps.api.tests.test_temporal_replay.TemporalApiTests.test_extreme_replay_clocks_are_rejected_on_every_surface) (at='0001-01-01T00:00:00Z', endpoint='health')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp026a-r2-red.otQSrG/baseline/apps/api/tests/test_temporal_replay.py", line 148, in test_extreme_replay_clocks_are_rejected_on_every_surface
+    self.assertEqual(reply.status_code, 400, reply.text)
+AssertionError: 500 != 400 : Internal Server Error
+
+======================================================================
+FAIL: test_extreme_replay_clocks_are_rejected_on_every_surface (apps.api.tests.test_temporal_replay.TemporalApiTests.test_extreme_replay_clocks_are_rejected_on_every_surface) (at='0001-01-01T00:00:00Z', endpoint='catalog')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp026a-r2-red.otQSrG/baseline/apps/api/tests/test_temporal_replay.py", line 148, in test_extreme_replay_clocks_are_rejected_on_every_surface
+    self.assertEqual(reply.status_code, 400, reply.text)
+AssertionError: 500 != 400 : Internal Server Error
+
+======================================================================
+FAIL: test_extreme_replay_clocks_are_rejected_on_every_surface (apps.api.tests.test_temporal_replay.TemporalApiTests.test_extreme_replay_clocks_are_rejected_on_every_surface) (at='0001-01-01T00:00:00Z', endpoint='snapshot')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp026a-r2-red.otQSrG/baseline/apps/api/tests/test_temporal_replay.py", line 148, in test_extreme_replay_clocks_are_rejected_on_every_surface
+    self.assertEqual(reply.status_code, 400, reply.text)
+AssertionError: 500 != 400 : Internal Server Error
+
+======================================================================
+FAIL: test_extreme_replay_clocks_are_rejected_on_every_surface (apps.api.tests.test_temporal_replay.TemporalApiTests.test_extreme_replay_clocks_are_rejected_on_every_surface) (at='0001-01-01T00:00:00Z', endpoint='stations/35607/board')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp026a-r2-red.otQSrG/baseline/apps/api/tests/test_temporal_replay.py", line 148, in test_extreme_replay_clocks_are_rejected_on_every_surface
+    self.assertEqual(reply.status_code, 400, reply.text)
+AssertionError: 500 != 400 : Internal Server Error
+
+======================================================================
+FAIL: test_extreme_replay_clocks_are_rejected_on_every_surface (apps.api.tests.test_temporal_replay.TemporalApiTests.test_extreme_replay_clocks_are_rejected_on_every_surface) (at='0001-01-01T00:30:00+01:00', endpoint='health')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp026a-r2-red.otQSrG/baseline/apps/api/tests/test_temporal_replay.py", line 148, in test_extreme_replay_clocks_are_rejected_on_every_surface
+    self.assertEqual(reply.status_code, 400, reply.text)
+AssertionError: 500 != 400 : Internal Server Error
+
+======================================================================
+FAIL: test_extreme_replay_clocks_are_rejected_on_every_surface (apps.api.tests.test_temporal_replay.TemporalApiTests.test_extreme_replay_clocks_are_rejected_on_every_surface) (at='0001-01-01T00:30:00+01:00', endpoint='catalog')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp026a-r2-red.otQSrG/baseline/apps/api/tests/test_temporal_replay.py", line 148, in test_extreme_replay_clocks_are_rejected_on_every_surface
+    self.assertEqual(reply.status_code, 400, reply.text)
+AssertionError: 500 != 400 : Internal Server Error
+
+======================================================================
+FAIL: test_extreme_replay_clocks_are_rejected_on_every_surface (apps.api.tests.test_temporal_replay.TemporalApiTests.test_extreme_replay_clocks_are_rejected_on_every_surface) (at='0001-01-01T00:30:00+01:00', endpoint='snapshot')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp026a-r2-red.otQSrG/baseline/apps/api/tests/test_temporal_replay.py", line 148, in test_extreme_replay_clocks_are_rejected_on_every_surface
+    self.assertEqual(reply.status_code, 400, reply.text)
+AssertionError: 500 != 400 : Internal Server Error
+
+======================================================================
+FAIL: test_extreme_replay_clocks_are_rejected_on_every_surface (apps.api.tests.test_temporal_replay.TemporalApiTests.test_extreme_replay_clocks_are_rejected_on_every_surface) (at='0001-01-01T00:30:00+01:00', endpoint='stations/35607/board')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp026a-r2-red.otQSrG/baseline/apps/api/tests/test_temporal_replay.py", line 148, in test_extreme_replay_clocks_are_rejected_on_every_surface
+    self.assertEqual(reply.status_code, 400, reply.text)
+AssertionError: 500 != 400 : Internal Server Error
+
+======================================================================
+FAIL: test_extreme_replay_clocks_are_rejected_on_every_surface (apps.api.tests.test_temporal_replay.TemporalApiTests.test_extreme_replay_clocks_are_rejected_on_every_surface) (at='9999-12-31T23:59:59Z', endpoint='health')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp026a-r2-red.otQSrG/baseline/apps/api/tests/test_temporal_replay.py", line 148, in test_extreme_replay_clocks_are_rejected_on_every_surface
+    self.assertEqual(reply.status_code, 400, reply.text)
+AssertionError: 500 != 400 : Internal Server Error
+
+======================================================================
+FAIL: test_extreme_replay_clocks_are_rejected_on_every_surface (apps.api.tests.test_temporal_replay.TemporalApiTests.test_extreme_replay_clocks_are_rejected_on_every_surface) (at='9999-12-31T23:59:59Z', endpoint='catalog')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp026a-r2-red.otQSrG/baseline/apps/api/tests/test_temporal_replay.py", line 148, in test_extreme_replay_clocks_are_rejected_on_every_surface
+    self.assertEqual(reply.status_code, 400, reply.text)
+AssertionError: 500 != 400 : Internal Server Error
+
+======================================================================
+FAIL: test_extreme_replay_clocks_are_rejected_on_every_surface (apps.api.tests.test_temporal_replay.TemporalApiTests.test_extreme_replay_clocks_are_rejected_on_every_surface) (at='9999-12-31T23:59:59Z', endpoint='snapshot')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp026a-r2-red.otQSrG/baseline/apps/api/tests/test_temporal_replay.py", line 148, in test_extreme_replay_clocks_are_rejected_on_every_surface
+    self.assertEqual(reply.status_code, 400, reply.text)
+AssertionError: 500 != 400 : Internal Server Error
+
+======================================================================
+FAIL: test_extreme_replay_clocks_are_rejected_on_every_surface (apps.api.tests.test_temporal_replay.TemporalApiTests.test_extreme_replay_clocks_are_rejected_on_every_surface) (at='9999-12-31T23:59:59Z', endpoint='stations/35607/board')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp026a-r2-red.otQSrG/baseline/apps/api/tests/test_temporal_replay.py", line 148, in test_extreme_replay_clocks_are_rejected_on_every_surface
+    self.assertEqual(reply.status_code, 400, reply.text)
+AssertionError: 500 != 400 : Internal Server Error
+
+======================================================================
+FAIL: test_extreme_replay_clocks_are_rejected_on_every_surface (apps.api.tests.test_temporal_replay.TemporalApiTests.test_extreme_replay_clocks_are_rejected_on_every_surface) (at='9999-12-31T23:30:00-01:00', endpoint='health')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp026a-r2-red.otQSrG/baseline/apps/api/tests/test_temporal_replay.py", line 148, in test_extreme_replay_clocks_are_rejected_on_every_surface
+    self.assertEqual(reply.status_code, 400, reply.text)
+AssertionError: 500 != 400 : Internal Server Error
+
+======================================================================
+FAIL: test_extreme_replay_clocks_are_rejected_on_every_surface (apps.api.tests.test_temporal_replay.TemporalApiTests.test_extreme_replay_clocks_are_rejected_on_every_surface) (at='9999-12-31T23:30:00-01:00', endpoint='catalog')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp026a-r2-red.otQSrG/baseline/apps/api/tests/test_temporal_replay.py", line 148, in test_extreme_replay_clocks_are_rejected_on_every_surface
+    self.assertEqual(reply.status_code, 400, reply.text)
+AssertionError: 500 != 400 : Internal Server Error
+
+======================================================================
+FAIL: test_extreme_replay_clocks_are_rejected_on_every_surface (apps.api.tests.test_temporal_replay.TemporalApiTests.test_extreme_replay_clocks_are_rejected_on_every_surface) (at='9999-12-31T23:30:00-01:00', endpoint='snapshot')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp026a-r2-red.otQSrG/baseline/apps/api/tests/test_temporal_replay.py", line 148, in test_extreme_replay_clocks_are_rejected_on_every_surface
+    self.assertEqual(reply.status_code, 400, reply.text)
+AssertionError: 500 != 400 : Internal Server Error
+
+======================================================================
+FAIL: test_extreme_replay_clocks_are_rejected_on_every_surface (apps.api.tests.test_temporal_replay.TemporalApiTests.test_extreme_replay_clocks_are_rejected_on_every_surface) (at='9999-12-31T23:30:00-01:00', endpoint='stations/35607/board')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp026a-r2-red.otQSrG/baseline/apps/api/tests/test_temporal_replay.py", line 148, in test_extreme_replay_clocks_are_rejected_on_every_surface
+    self.assertEqual(reply.status_code, 400, reply.text)
+AssertionError: 500 != 400 : Internal Server Error
+
+======================================================================
+FAIL: test_only_replay_filters_future_observation_timestamps (apps.api.tests.test_temporal_replay.TemporalApiTests.test_only_replay_filters_future_observation_timestamps)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp026a-r2-red.otQSrG/baseline/apps/api/tests/test_temporal_replay.py", line 212, in test_only_replay_filters_future_observation_timestamps
+    self.assertIn("mp026a-existing", vehicles)
+AssertionError: 'mp026a-existing' not found in {}
+
+======================================================================
+FAIL: test_snapshot_marks_each_nonvalid_gtfs_state_as_degraded (apps.api.tests.test_temporal_replay.TemporalApiTests.test_snapshot_marks_each_nonvalid_gtfs_state_as_degraded) (at='2026-11-18T12:00:00Z')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp026a-r2-red.otQSrG/baseline/apps/api/tests/test_temporal_replay.py", line 186, in test_snapshot_marks_each_nonvalid_gtfs_state_as_degraded
+    self.assertEqual(len(items), 1)
+AssertionError: 0 != 1
+
+======================================================================
+FAIL: test_snapshot_marks_each_nonvalid_gtfs_state_as_degraded (apps.api.tests.test_temporal_replay.TemporalApiTests.test_snapshot_marks_each_nonvalid_gtfs_state_as_degraded) (at='2026-12-04T12:00:00Z')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp026a-r2-red.otQSrG/baseline/apps/api/tests/test_temporal_replay.py", line 186, in test_snapshot_marks_each_nonvalid_gtfs_state_as_degraded
+    self.assertEqual(len(items), 1)
+AssertionError: 0 != 1
+
+======================================================================
+FAIL: test_snapshot_marks_each_nonvalid_gtfs_state_as_degraded (apps.api.tests.test_temporal_replay.TemporalApiTests.test_snapshot_marks_each_nonvalid_gtfs_state_as_degraded) (at='2026-12-07T12:00:00Z')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp026a-r2-red.otQSrG/baseline/apps/api/tests/test_temporal_replay.py", line 186, in test_snapshot_marks_each_nonvalid_gtfs_state_as_degraded
+    self.assertEqual(len(items), 1)
+AssertionError: 0 != 1
+
+======================================================================
+FAIL: test_vehicle_list_and_detail_exclude_future_ingestions (apps.api.tests.test_temporal_replay.TemporalApiTests.test_vehicle_list_and_detail_exclude_future_ingestions)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp026a-r2-red.otQSrG/baseline/apps/api/tests/test_temporal_replay.py", line 167, in test_vehicle_list_and_detail_exclude_future_ingestions
+    self.assertEqual(future.status_code, 404)
+AssertionError: 200 != 404
+
+----------------------------------------------------------------------
+Ran 13 tests in 5.204s
+
+FAILED (failures=21)
+Exit=1

@@ -6,6 +6,8 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
+from packages.database import database_settings_from_env
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
@@ -27,13 +29,16 @@ class ApiConfig:
     lectura y solo desde `apps/api/history.py`; nada del estado operativo
     pasa por aquí."""
 
+    gtfs_expiring_days: int = 7
+
     @classmethod
     def from_env(cls) -> "ApiConfig":
+        database_url, _ = database_settings_from_env()
+        gtfs_expiring_days = int(os.environ.get("MADRID_PULSE_GTFS_EXPIRING_DAYS", "7"))
+        if gtfs_expiring_days < 0:
+            raise ValueError("MADRID_PULSE_GTFS_EXPIRING_DAYS debe ser un entero no negativo")
         return cls(
-            database_dsn=os.environ.get(
-                "MADRID_PULSE_DATABASE_DSN",
-                "postgresql://madrid_pulse:madrid_pulse_local@127.0.0.1:5433/madrid_pulse",
-            ),
+            database_dsn=database_url,
             network_id=os.environ.get("MADRID_PULSE_NETWORK_ID", "10"),
             short_name=os.environ.get("MADRID_PULSE_SHORT_NAME", "C5"),
             gtfs_fixture_dir=Path(
@@ -62,4 +67,5 @@ class ApiConfig:
             archive_dir=Path(
                 os.environ.get("SNAPSHOTTER_OUTPUT_DIR", str(REPO_ROOT / "data" / "parquet"))
             ),
+            gtfs_expiring_days=gtfs_expiring_days,
         )

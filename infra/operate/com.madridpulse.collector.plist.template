@@ -6,6 +6,7 @@
   (agente de usuario, sin privilegios de administrador):
 
       sed -e 's|<<REPO_ROOT>>|'"$PWD"'|g' \
+          -e 's|<<DEPLOYMENT_ENV>>|dev|g' \
           -e 's|<<DATABASE_URL>>|postgresql://...|g' \
           -e 's|<<GTFS_SOURCE>>|'"$PWD"'/data/gtfs_static/fomento_transit.zip|g' \
           infra/operate/com.madridpulse.collector.plist.template \
@@ -45,6 +46,8 @@
   <dict>
     <key>PYTHONPATH</key>
     <string><<REPO_ROOT>></string>
+    <key>MADRID_PULSE_ENV</key>
+    <string><<DEPLOYMENT_ENV>></string>
     <key>MADRID_PULSE_DATABASE_URL</key>
     <string><<DATABASE_URL>></string>
     <key>MADRID_PULSE_GTFS_SOURCE</key>

@@ -70,21 +70,34 @@ congelados y el modo live exige un ZIP ajeno a `tests/fixtures/` cuya ventana
 de calendario incluya la fecha actual de Madrid. Ambos publican en
 `/api/v1/health` el modo, el SHA-256 del catálogo y su vigencia.
 
+Define `MADRID_PULSE_DATABASE_URL` y `MADRID_PULSE_ENV` según la
+[guía de aislamiento](../../docs/operations/DATABASE_ISOLATION.md).
+`MADRID_PULSE_MODE` sigue eligiendo cómo la API interpreta su fuente y su reloj.
+
 ```sh
 # Replay reproducible (fixture reducida, valor por defecto)
-MADRID_PULSE_MODE=replay \
+MADRID_PULSE_ENV=replay MADRID_PULSE_MODE=replay \
+MADRID_PULSE_DATABASE_URL=postgresql://mp_test:mp_local@127.0.0.1:5442/madrid_pulse \
 MADRID_PULSE_GTFS_SOURCE="$PWD/tests/fixtures/gtfs_c5_real" \
 .venv/bin/uvicorn apps.api.main:app --port 8000
 
 # Live: descargar primero el ZIP oficial y comprobar que sigue vigente
 .venv/bin/python -m apps.api.tools.fetch_gtfs_static
-MADRID_PULSE_MODE=live \
+MADRID_PULSE_ENV=live MADRID_PULSE_MODE=live \
+MADRID_PULSE_DATABASE_URL='postgresql://rol:contraseña@db.interna:5432/madrid_pulse' \
 MADRID_PULSE_GTFS_SOURCE="$PWD/data/gtfs_static/fomento_transit.zip" \
 .venv/bin/uvicorn apps.api.main:app --port 8000
 ```
 
 Un arranque live con fixture, modo desconocido o catálogo vencido falla con
-un diagnóstico explícito. `data_age_s` mide la edad de la cabecera publicada;
+un diagnóstico explícito. Durante la ejecución, `/health`, `/catalog` y
+`/snapshot` publican `gtfs_status` y `gtfs_status_reason` al reloj de la
+petición. `MADRID_PULSE_GTFS_EXPIRING_DAYS` fija el aviso (7 días por defecto,
+incluido el último día de vigencia en Madrid). El catálogo sigue accesible
+cuando vence, con estado `expired`. Consulta el
+[procedimiento de refresco](../../docs/operations/GTFS_STATIC_REFRESH.md).
+
+`data_age_s` mide la edad de la cabecera publicada;
 `poll_age_s`, la edad del último intento del colector. Por ello un fichero viejo
 recién descargado y un colector detenido se distinguen, y los feeds
 `vehicle_positions`, `trip_updates` y `alerts` conservan estados separados.
@@ -117,11 +130,11 @@ silencio.
 
 El contrato completo está en `docs/DATA_CONTRACTS.md`; aquí solo lo operativo.
 
-`GET /api/v1/catalog` publica lo inmutable del proceso (líneas, patrones,
-estaciones, geometría y cobertura) versionado por `catalog_version` =
-`gtfs_version` + `geometry_catalog_version`, con `ETag`; `If-None-Match`
-devuelve `304`. El payload serializado se memoiza por versión: medido
-`122,67 ms → 0,40 ms` de p50 (ver `docs/evidence/mp-019-explain-y-bench.md`).
+`GET /api/v1/catalog` publica líneas, patrones, estaciones, geometría y
+cobertura. La versión estática `catalog_version` deriva de `gtfs_version` y
+`geometry_catalog_version`. El `ETag` incorpora también el modo, el estado
+de vigencia y la versión de esquema. La API memoiza el payload serializado
+por ETag y devuelve `304` si coincide el `If-None-Match` del cliente.
 
 `GET /api/v1/snapshot` publica lo operativo con `Cache-Control: no-store`:
 `raw`/`map_matched`/`rendered` separados, los cinco instantes del anexo,
@@ -132,7 +145,10 @@ devuelve `304`. El payload serializado se memoiza por versión: medido
 `scheduled_trip_instances_for_date` (calendario + excepciones + `stop_times`),
 nunca por proximidad geográfica.
 
-Ambos aceptan `?at=` **solo en modo replay** (en `live`, `400`):
+Snapshot, tablero, health y catálogo aceptan `?at=` **solo en modo replay**
+(en `live`, `400`). Se aceptan fechas UTC entre `0001-01-04` y
+`9999-12-28` inclusive. Sin `at` usan el reloj real. Snapshot y health
+declaran edades `null` cuando el feed aún carece de ingestas a ese instante.
 
 ```sh
 curl -s 'http://127.0.0.1:8000/api/v1/snapshot?at=2026-11-20T14:32:14Z' | jq '.counts, .revision'
@@ -148,7 +164,8 @@ línea — es el modo que usan los tests y el piloto. El filtro sigue siendo
 configuración, nunca un literal en la lógica (ADR-0011).
 
 ```sh
-MADRID_PULSE_MODE=replay MADRID_PULSE_SHORT_NAME= \
+MADRID_PULSE_ENV=replay MADRID_PULSE_MODE=replay MADRID_PULSE_SHORT_NAME= \
+MADRID_PULSE_DATABASE_URL=postgresql://mp_test:mp_local@127.0.0.1:5442/madrid_pulse \
 MADRID_PULSE_GTFS_SOURCE="$PWD/data/gtfs_static/fomento_transit.zip" \
   .venv/bin/uvicorn apps.api.main:app --port 8000
 ```
@@ -185,6 +202,8 @@ dentro de la anticipación.
 ### Medición y evidencia reproducibles
 
 ```sh
+export MADRID_PULSE_ENV=replay
+export MADRID_PULSE_DATABASE_URL=postgresql://mp_test:mp_local@127.0.0.1:5442/madrid_pulse
 .venv/bin/python -m apps.api.tools.bench_snapshot --iterations 60 --at 2026-11-19T05:20:00Z
 .venv/bin/python -m apps.api.tools.bench_snapshot --iterations 60 --reuse-connection
 ```
@@ -204,12 +223,14 @@ PostgreSQL desechable; resultado en
 ## Pruebas
 
 ```sh
-.venv/bin/python -m unittest apps.api.tests.test_api_contract -v
+MADRID_PULSE_ENV=test \
+MADRID_PULSE_DATABASE_URL=postgresql://mp_test:mp_local@127.0.0.1:5442/madrid_pulse \
+  .venv/bin/python -m unittest apps.api.tests.test_api_contract -v
 ```
 
 Usa la fixture reducida (sin red) más PostgreSQL real para
-`/api/v1/health` y `/api/v1/live/vehicles` (requiere el contenedor
-`madrid-pulse` levantado). Un test adicional (`ResolvedTripEndToEndTests`)
+`/api/v1/health` y `/api/v1/live/vehicles` (requiere una base marcada como
+desechable en `MADRID_PULSE_DATABASE_URL`). Un test adicional (`ResolvedTripEndToEndTests`)
 construye una observación sintética para un trip real de la fixture
 reducida y prueba la resolución de extremo a extremo (ruta, map-matching,
 motor de movimiento) sin depender del GTFS completo.
@@ -217,8 +238,10 @@ motor de movimiento) sin depender del GTFS completo.
 ## Ejecución local
 
 ```sh
-.venv/bin/uvicorn apps.api.main:app --reload --port 8000
+MADRID_PULSE_ENV=dev \
+MADRID_PULSE_DATABASE_URL=postgresql://mp_test:mp_local@127.0.0.1:5442/madrid_pulse \
+  .venv/bin/uvicorn apps.api.main:app --reload --port 8000
 ```
 
-Requiere PostgreSQL levantado (`docker compose -p madrid-pulse -f infra/docker/docker-compose.yml up -d`)
-y, para vehículos C5 reales, el GTFS completo (sección anterior).
+Requiere una `MADRID_PULSE_DATABASE_URL` explícita y, para vehículos C5 reales,
+el GTFS completo (sección anterior).

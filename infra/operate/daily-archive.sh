@@ -17,6 +17,9 @@
 
 set -euo pipefail
 
+: "${MADRID_PULSE_DATABASE_URL:?Define MADRID_PULSE_DATABASE_URL}"
+: "${MADRID_PULSE_ENV:?Define MADRID_PULSE_ENV}"
+
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 PYTHON="${MADRID_PULSE_PYTHON:-${REPO_ROOT}/.venv/bin/python}"
 

@@ -23,18 +23,18 @@ Baseline de producto auditado: `beb9434`.
 | Dimensión | Estado | Tareas |
 | --- | --- | --- |
 | implementation_status | NOT_STARTED | 0 |
-| implementation_status | PLANNED | 37 |
+| implementation_status | PLANNED | 35 |
 | implementation_status | IN_PROGRESS | 0 |
-| implementation_status | IMPLEMENTED | 30 |
-| implementation_status | IMPLEMENTED_WITH_OPEN_GATE | 3 |
+| implementation_status | IMPLEMENTED | 33 |
+| implementation_status | IMPLEMENTED_WITH_OPEN_GATE | 2 |
 | implementation_status | BLOCKED | 0 |
 | implementation_status | DROPPED | 0 |
-| review_status | NOT_REVIEWED | 37 |
+| review_status | NOT_REVIEWED | 35 |
 | review_status | IN_REVIEW | 0 |
 | review_status | CHANGES_REQUESTED | 1 |
-| review_status | APPROVED | 32 |
-| integration_status | NOT_INTEGRATED | 38 |
-| integration_status | MERGED | 32 |
+| review_status | APPROVED | 34 |
+| integration_status | NOT_INTEGRATED | 36 |
+| integration_status | MERGED | 34 |
 | deployment_status | NOT_DEPLOYED | 50 |
 | deployment_status | NOT_APPLICABLE | 20 |
 | deployment_status | STAGING | 0 |
@@ -71,7 +71,7 @@ Universo completo de hallazgos: `docs/audits/hito-03/FINDINGS_REGISTER.md` (hast
 | --- | --- | --- | --- |
 | HG-AUDIT-DECISION | Aceptación del dictamen de auditoría H3 (NO-GO público / CONDITIONAL GO local) | OPEN | El propietario ordenó conservar NO-GO/CONDITIONAL GO y fusionó el PR #3; no hay un registro de aceptación formal del dictamen en el repositorio. |
 | HG-H4-SCOPE | Autorización del alcance y matriz de H4 | OPEN | El propietario confirmó MP-023..MP-035 solo como mapa provisional. |
-| HG-ADR-0014 | Aprobación del ADR-0014 enmendado (MP-024) | OPEN | — |
+| HG-ADR-0014 | Aprobación del ADR-0014 enmendado (MP-024) | APPROVED_BY_OWNER | Aprobada la DIRECCIÓN de la enmienda (A con C como R8; F1; P-024 provisional) con limitaciones aceptadas. No convierte en APPROVED el dictamen de Astra ni valida lo UNVERIFIED. La promoción completa de ADR-0014 base no está decidida. |
 | HG-ADR-0015 | Promoción de ADR-0015 (archivo frío) | OPEN | — |
 | HG-DESIGN-CHOICE | Elección del concepto A/B/C | OPEN | — |
 | HG-MVP0-PUBLISH | Publicar la URL de demostración (MVP 0) | OPEN | — |

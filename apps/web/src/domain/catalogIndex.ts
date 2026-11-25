@@ -3,9 +3,8 @@ import { indexPolyline } from "./geometry";
 import type { PatternAxis } from "./movement";
 
 /**
- * Índices derivados del catálogo. Se construyen **una vez por
- * `catalog_version`**: el catálogo solo cambia con el GTFS o la geometría,
- * nunca con un sondeo, así que ningún poll recalcula longitudes de arco.
+ * Los índices dependen del GTFS y de la geometría. Se reutilizan mientras
+ * coincida `catalog_version`, incluso cuando cambia la vigencia GTFS.
  */
 export interface CatalogIndex {
   catalog: Catalog;

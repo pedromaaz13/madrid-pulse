@@ -226,9 +226,8 @@ def _circulation_status(
     network: LoadedNetwork, source_trip_id: str, route_id: str | None, active_service_ids: frozenset[str]
 ) -> str:
     """Separa "existe un histórico" de "está programado hoy" (hallazgo MP-017:
-    `latest_vehicle_histories` no acota por tiempo -- un vehículo con último
-    dato de hace semanas se devolvía igual, sin distinguir alta/caducidad de
-    su circulación). No usa `quality.stale` (edad del GPS): un vehículo puede
+    `latest_vehicle_histories` conserva las observaciones antiguas elegibles,
+    incluso si la circulación ha caducado). No usa `quality.stale` (edad del GPS): un vehículo puede
     tener GPS reciente y aun así pertenecer a un `service_id` no programado
     para la fecha de servicio actual (dato residual de un día anterior que
     nunca se limpió), o viceversa, estar `stale` pero seguir `active` si su
@@ -323,11 +322,14 @@ def list_vehicles(conn: psycopg.Connection, network: LoadedNetwork, now: datetim
     devuelve la misma fila por viaje -- mismo orden y mismo desempate
     `id DESC` de ADR-0010 -- en una sola consulta por lote.
     """
-    histories = db.latest_vehicle_histories(conn)
+    observed_through = now if network.mode == "replay" else None
+    histories = db.latest_vehicle_histories(conn, as_of=now, observed_through=observed_through)
     trip_updates = db.latest_trip_updates(
         conn,
         [history.latest.position.source_trip_id for history in histories],
         observed_after=_trip_update_cutoff(now),
+        as_of=now,
+        observed_through=observed_through,
     )
     resolver = network.service_date_resolver(now)
     return [
@@ -345,32 +347,43 @@ def list_vehicles(conn: psycopg.Connection, network: LoadedNetwork, now: datetim
 def get_vehicle(
     conn: psycopg.Connection, network: LoadedNetwork, vehicle_id: str, now: datetime
 ) -> VehicleOut | None:
-    history = db.vehicle_history(conn, vehicle_id)
+    observed_through = now if network.mode == "replay" else None
+    history = db.vehicle_history(conn, vehicle_id, as_of=now, observed_through=observed_through)
     if history is None:
         return None
     trip_update = db.latest_trip_update(
-        conn, history.latest.position.source_trip_id, observed_after=_trip_update_cutoff(now)
+        conn, history.latest.position.source_trip_id, observed_after=_trip_update_cutoff(now),
+        as_of=now, observed_through=observed_through,
     )
     return vehicle_to_out(
         network, history, trip_update, now, network.service_date_resolver(now)
     )
 
 
+FEED_RESOURCES = {
+    "vehicle_positions": "vehicles",
+    "trip_updates": "delays_and_eta",
+    "alerts": "alerts",
+}
+
+
 def feed_health(conn: psycopg.Connection, now: datetime, *, stale_after_s: float) -> HealthOut:
-    runs = db.recent_ingestion_runs(conn)
+    runs = db.recent_ingestion_runs(conn, as_of=now)
     by_feed: dict[str, list[db.FeedRunSample]] = {}
     for run in runs:
         by_feed.setdefault(run.feed_name, []).append(run)
 
     feeds: list[FeedHealthOut] = []
-    for feed_name, samples in by_feed.items():
-        samples.sort(key=lambda item: item.started_at, reverse=True)
+    for feed_name, samples in sorted(by_feed.items()):
         latest = samples[0]
         poll_age_s = (now - latest.started_at).total_seconds()
         data_age_s = (
             (now - latest.source_timestamp).total_seconds()
             if latest.source_timestamp is not None else None
         )
+        future_source = data_age_s is not None and data_age_s < 0
+        if future_source:
+            data_age_s = None
         unchanged_for_s = 0.0
         for sample in samples[1:]:
             if sample.payload_hash != latest.payload_hash:
@@ -378,7 +391,7 @@ def feed_health(conn: psycopg.Connection, now: datetime, *, stale_after_s: float
             unchanged_for_s = (now - sample.started_at).total_seconds()
         if latest.status == "error":
             status = "error"
-        elif data_age_s is None or data_age_s < 0 or poll_age_s < 0 or latest.status != "ok":
+        elif data_age_s is None or latest.status != "ok":
             status = "unknown"
         elif data_age_s > stale_after_s or poll_age_s > stale_after_s:
             status = "stale"
@@ -395,9 +408,23 @@ def feed_health(conn: psycopg.Connection, now: datetime, *, stale_after_s: float
                 unchanged_for_s=unchanged_for_s,
                 entities=latest.entity_count,
                 rejected=rejected,
+                reason="source_timestamp_in_future" if future_source else None,
             )
         )
-    feeds.sort(key=lambda item: item.feed_name)
+    for feed_name in sorted(FEED_RESOURCES.keys() - by_feed.keys()):
+        feeds.append(
+            FeedHealthOut(
+                feed_name=feed_name,
+                status="unknown",
+                source_timestamp=None,
+                data_age_s=None,
+                poll_age_s=None,
+                unchanged_for_s=None,
+                entities=None,
+                rejected=0,
+                reason="no_ingestion_at_or_before_clock",
+            )
+        )
     return HealthOut(feeds=feeds)
 
 
