@@ -1,0 +1,54 @@
+DSN=postgresql://mp026a_clock:mp026a_clock_local@127.0.0.1:5453/madrid_pulse
+Contenedor propio mp026a-clock-db, postgis/postgis:17-3.5, volumen anónimo desechable, esquema public.
+MADRID_PULSE_ENV=test, MADRID_PULSE_MODE=replay, MADRID_PULSE_REQUIRE_DB=1.
+WARNING: The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested
+f472ff7fe8ba4bf7d0bbb7b060f86e3b5c4b9c69bc12681d6a00482795283bcb
+127.0.0.1:5432 - no response
+127.0.0.1:5432 - no response
+127.0.0.1:5432 - no response
+127.0.0.1:5432 - no response
+127.0.0.1:5432 - no response
+127.0.0.1:5432 - accepting connections
+127.0.0.1:5432 - accepting connections
+Migración infra/migrations/0001_init.up.sql
+BEGIN
+NOTICE:  extension "postgis" already exists, skipping
+CREATE EXTENSION
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+COMMIT
+Migración infra/migrations/0002_api_batch_indexes.up.sql
+BEGIN
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+COMMIT
+Base PostgreSQL marcada como desechable.
+ current_database | current_schema | current_user |     disposable_mark     |         postgres_wall
+------------------+----------------+--------------+-------------------------+-------------------------------
+ madrid_pulse     | public         | mp026a_clock | madrid-pulse:disposable | 2026-11-25 17:10:36.057438+00
+(1 row)
+
+Contenedor propio mp026a-clock-db, volumen anónimo 23a314903eca65d2dd63be977484744b74fddfe179ccd383077e3c39edb3dc50
+Comando: docker rm -fv mp026a-clock-db
+mp026a-clock-db
+Ausencia del contenedor y su volumen verificada.
+Temporales de baseline y matriz eliminados.
+Exit=0
