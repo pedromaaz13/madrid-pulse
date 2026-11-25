@@ -2007,8 +2007,46 @@
         "type": "object"
       },
       "ProgressEnvelopeOut": {
-        "description": "Plan de progreso compacto, v\u00e1lido para `reference_at <= t <= rendered.valid_until`:\n\n```text\nt0 = dwell_until or reference_at\nprogress(t) = min(progress_m_at_reference + speed_mps * max(0, t - t0),\n                  max_progress_m)\n```\n\n`dwell_until` es una espera programada real: hasta ese instante el progreso\nse mantiene en el del ancla. `speed_mps == 0` es avance nulo declarado (el\nhorario no autoriza avanzar en el horizonte), no dato ausente. El cliente\nconvierte el progreso en coordenada sobre la longitud de arco del patr\u00f3n\nque ya tiene del cat\u00e1logo; nunca interpola lat/lon en l\u00ednea recta entre\nestaciones.",
+        "description": "Plan de progreso compacto, v\u00e1lido para `reference_at <= t <= rendered.valid_until`:\n\n```text\nt0 = dwell_until or reference_at\nprogress(t) = min(progress_m_at_reference + speed_mps * max(0, t - t0),\n                  max_progress_m)\n```\n\n`dwell_until` es una espera programada real: hasta ese instante el progreso\nse mantiene en el del ancla. `speed_mps == 0` es avance nulo declarado (el\nhorario no autoriza avanzar en el horizonte), no dato ausente. El cliente\nconvierte el progreso en coordenada sobre la longitud de arco del patr\u00f3n\nque ya tiene del cat\u00e1logo; nunca interpola lat/lon en l\u00ednea recta entre\nestaciones. La fase es hold:<hold_reason> con velocidad cero o antes de\nt0, cap:<cap_kind> desde cap_reached_at y moving en otro caso.",
         "properties": {
+          "cap_kind": {
+            "anyOf": [
+              {
+                "enum": [
+                  "stop",
+                  "horizon"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cap Kind"
+          },
+          "cap_reached_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cap Reached At"
+          },
+          "cap_stop_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cap Stop Id"
+          },
           "dwell_until": {
             "anyOf": [
               {
@@ -2020,6 +2058,28 @@
               }
             ],
             "title": "Dwell Until"
+          },
+          "envelope_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Envelope Id"
+          },
+          "hold_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hold Reason"
           },
           "horizon_s": {
             "title": "Horizon S",
@@ -2197,6 +2257,36 @@
             "title": "Display At",
             "type": "string"
           },
+          "dwell_basis": {
+            "anyOf": [
+              {
+                "enum": [
+                  "muestras",
+                  "ancla"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dwell Basis"
+          },
+          "frozen_basis": {
+            "anyOf": [
+              {
+                "enum": [
+                  "authorized_envelope_end",
+                  "anchor_version_changed"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Frozen Basis"
+          },
           "geometry_candidate_version": {
             "anyOf": [
               {
@@ -2230,6 +2320,17 @@
               }
             ],
             "title": "Last Confirmed At"
+          },
+          "last_confirmed_progress_m": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Confirmed Progress M"
           },
           "lat": {
             "anyOf": [
@@ -2307,6 +2408,16 @@
             ],
             "title": "Rendering Method",
             "type": "string"
+          },
+          "stop_state": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StopStateOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "valid_until": {
             "anyOf": [
@@ -2958,6 +3069,68 @@
           "lon"
         ],
         "title": "StationOut",
+        "type": "object"
+      },
+      "StopStateOut": {
+        "properties": {
+          "coherent": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Coherent"
+          },
+          "observation_observed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Observation Observed At"
+          },
+          "operator_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Operator Status"
+          },
+          "operator_stop_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Operator Stop Id"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source",
+          "operator_status",
+          "operator_stop_id",
+          "observation_observed_at",
+          "coherent"
+        ],
+        "title": "StopStateOut",
         "type": "object"
       },
       "ValidationError": {

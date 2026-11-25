@@ -33,12 +33,14 @@ import time
 import psycopg
 
 from packages.contracts.nucleo import MADRID_PREFIX
+from packages.gtfs import load_feed
 from packages.database import (
     DISPOSABLE_ENVIRONMENTS,
     DatabaseConfigurationError,
     require_disposable_database,
 )
-from packages.gtfs import load_feed
+from apps.api.config import ApiConfig
+from apps.api.gtfs_source import load_network
 from services.collector.collector import run_cycle
 from services.collector.config import CollectorConfig
 from services.collector.http_client import RetryPolicy
@@ -55,21 +57,14 @@ modo que el supervisor y las bitácoras puedan diferenciar "la base se fue" de
 """
 
 
-def _load_madrid_stop_ids(gtfs_source: str | None) -> frozenset[str] | None:
-    """Carga el conjunto de `stop_id` del núcleo Madrid, si hay fuente GTFS.
-
-    Usado solo para resolver avisos por estación en `_persist_alerts`
-    (hallazgo MP-017) -- nunca para filtrar posiciones/viajes, que ya tienen
-    su propio filtro por núcleo de `route_id`/`trip_id` (ADR-0008).
-    """
-    if not gtfs_source:
-        logger.warning(
-            "MADRID_PULSE_GTFS_SOURCE no definido: avisos por estación (sin routeId) "
-            "se descartarán como fuera de alcance en vez de resolverse por stop_id "
-            "(limitación documentada, no un fallo)."
-        )
-        return None
-    topology = load_feed(gtfs_source, network_id=MADRID_PREFIX)
+def _load_madrid_stop_ids(gtfs_source: str, conn: psycopg.Connection) -> frozenset[str] | None:
+    config = ApiConfig.from_env()
+    network = load_network(config)
+    with conn.transaction():
+        conn.execute("SELECT set_config('madrid_pulse.anchor_profile', %s, false)",
+                     (network.anchor_profile(network.engine.thresholds),))
+    topology = (load_feed(gtfs_source, network_id=MADRID_PREFIX)
+                if config.short_name or config.network_id != MADRID_PREFIX else network.topology)
     return frozenset(stop.stop_id for stop in topology.stops)
 
 
@@ -88,20 +83,25 @@ def _run() -> None:
         backoff_base_seconds=config.backoff_base_seconds,
         timeout_seconds=config.request_timeout_seconds,
     )
-    madrid_stop_ids = _load_madrid_stop_ids(config.gtfs_source)
-    logger.info(
-        "Colector iniciado: %d feeds, poll=%.0fs, timeout=%.0fs, max_retries=%d, "
-        "estaciones Madrid=%s",
-        len(config.feeds),
-        config.poll_interval_seconds,
-        config.request_timeout_seconds,
-        config.max_retries,
-        len(madrid_stop_ids) if madrid_stop_ids is not None else "sin catálogo",
-    )
     with psycopg.connect(config.database_url, autocommit=False) as conn:
         if config.environment in DISPOSABLE_ENVIRONMENTS:
             require_disposable_database(conn)
             conn.rollback()  # Finaliza la transacción de comprobación antes del polling.
+        # Bloqueo de sesión. Sigue vigente entre commits y se libera al desconectar.
+        with conn.transaction():
+            acquired = conn.execute("SELECT pg_try_advisory_lock(1297101395)").fetchone()[0]
+            if not acquired:
+                raise SystemExit("Ya hay otro colector activo en esta base de datos.")
+        madrid_stop_ids = _load_madrid_stop_ids(config.gtfs_source, conn) if config.gtfs_source else None
+        logger.info(
+            "Colector iniciado: %d feeds, poll=%.0fs, timeout=%.0fs, max_retries=%d, "
+            "estaciones Madrid=%s",
+            len(config.feeds),
+            config.poll_interval_seconds,
+            config.request_timeout_seconds,
+            config.max_retries,
+            len(madrid_stop_ids) if madrid_stop_ids is not None else "sin catálogo",
+        )
         while True:
             for feed in config.feeds:
                 try:

@@ -10,7 +10,8 @@ snapshot es ligero.
 from __future__ import annotations
 
 import hashlib
-from dataclasses import dataclass, field
+import json
+from dataclasses import asdict, dataclass, field
 from datetime import date, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -80,6 +81,11 @@ class LoadedNetwork:
     servicio. Es catálogo derivado (depende solo del GTFS cargado), no estado
     operativo: ninguna observación ni retraso entra aquí."""
 
+    def anchor_profile(self, thresholds) -> str:
+        """Huella reproducible del catálogo (GTFS + geometrías) y los umbrales."""
+        payload = json.dumps([self.catalog_version, asdict(thresholds)], sort_keys=True)
+        return hashlib.sha256(payload.encode()).hexdigest()
+
     def gtfs_validity(self, now: datetime, *, expiring_days: int) -> GtfsValidityOut:
         today = now.astimezone(MADRID).date()
         if today < self.gtfs_valid_from:
@@ -130,7 +136,7 @@ class LoadedNetwork:
         if existing is not None:
             return existing
         cache = self._schedule_caches.setdefault(coverage.geometry_version, {})
-        engine = MovementEngine(self.topology, coverage.corridor, schedule_cache=cache)
+        engine = MovementEngine(self.topology, coverage.corridor, thresholds=self.engine.thresholds, schedule_cache=cache)
         self._engines[coverage.geometry_version] = engine
         return engine
 
@@ -168,7 +174,7 @@ def load_network(config: ApiConfig) -> LoadedNetwork:
     )
     geometry = load_relation_geometry_json(config.osm_relation_path)
     corridor = build_corridor(geometry)
-    engine = MovementEngine(topology, corridor, schedule_cache={})
+    engine = MovementEngine(topology, corridor, thresholds=config.thresholds, schedule_cache={})
     parse_date = lambda value: datetime.strptime(value, "%Y%m%d").date()  # noqa: E731
     valid_from = min(parse_date(item.start_date) for item in topology.calendar)
     valid_until = max(parse_date(item.end_date) for item in topology.calendar)

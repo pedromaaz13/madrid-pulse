@@ -28,6 +28,13 @@ class ObservedRow:
     position: VehiclePositionObservation
     received_at: datetime
     feed_published_at: datetime | None = None
+    ingestion_run_id: int | None = None
+    anchor_profile: str | None = None
+    base_relationship: str | None = None
+    base_run: int | None = None
+    base_observed_at: datetime | None = None
+    prior_gps: tuple[datetime, float, float] | None = None
+    known_relationship: str | None = None
 
 
 @dataclass(frozen=True)
@@ -54,6 +61,15 @@ def _row_to_observed(row: dict) -> ObservedRow:
     published = row.get("feed_published_at")
     return ObservedRow(
         position=position,
+        ingestion_run_id=row.get("ingestion_run_id"),
+        anchor_profile=row.get("anchor_profile"),
+        base_relationship=row.get("base_relationship"),
+        base_run=row.get("base_run"),
+        base_observed_at=row.get("base_observed_at"),
+        known_relationship=row.get("known_relationship"),
+        prior_gps=(row["prior_at"], row["prior_lat"], row["prior_lon"])
+        if row.get("prior_lat") is not None
+        else None,
         received_at=row["received_at"].astimezone(timezone.utc),
         feed_published_at=published.astimezone(timezone.utc) if published is not None else None,
     )
@@ -76,7 +92,7 @@ def latest_vehicle_histories(
                 SELECT v.source_vehicle_id, v.source_trip_id, v.observed_at, v.received_at,
                        v.latitude, v.longitude, v.current_status, v.current_stop_id,
                        v.speed_kmh, v.bearing, v.raw_vehicle_label, v.payload_hash,
-                       r.source_timestamp AS feed_published_at,
+                       v.ingestion_run_id, r.anchor_profile, r.source_timestamp AS feed_published_at,
                        row_number() OVER (
                            PARTITION BY v.source_vehicle_id
                            ORDER BY v.observed_at DESC, v.id DESC
@@ -86,7 +102,41 @@ def latest_vehicle_histories(
                 WHERE r.started_at <= %(as_of)s
                   AND v.observed_at <= COALESCE(%(observed_through)s, 'infinity'::timestamptz)
             )
-            SELECT * FROM ranked WHERE rank <= 2
+            SELECT v.*, prior.observed_at AS prior_at, prior.latitude AS prior_lat,
+                   prior.longitude AS prior_lon, known.schedule_relationship AS known_relationship,
+                   base.schedule_relationship AS base_relationship,
+                   base.ingestion_run_id AS base_run, base.observed_at AS base_observed_at
+            FROM ranked v
+            LEFT JOIN LATERAL (
+                SELECT u.schedule_relationship, u.ingestion_run_id, u.observed_at
+                FROM trip_update_observation u
+                JOIN source_ingestion_run r ON r.id = u.ingestion_run_id
+                WHERE u.source_trip_id = v.source_trip_id AND r.id <= v.ingestion_run_id
+                  AND (%(observed_through)s::timestamptz IS NOT NULL OR NOT EXISTS (
+                      SELECT 1 FROM source_ingestion_run earlier
+                      WHERE earlier.id < r.id AND earlier.started_at > r.started_at
+                  ))
+                ORDER BY r.id DESC, u.observed_at DESC, u.id DESC LIMIT 1
+            ) base ON true
+            LEFT JOIN LATERAL (
+                SELECT p.source_trip_id, p.observed_at, p.latitude, p.longitude
+                FROM vehicle_position_observation p
+                WHERE p.source_vehicle_id = v.source_vehicle_id
+                  AND p.ingestion_run_id <= v.ingestion_run_id AND p.observed_at < v.observed_at
+                ORDER BY p.observed_at DESC, p.id DESC LIMIT 1
+            ) prior ON prior.source_trip_id = v.source_trip_id
+            LEFT JOIN LATERAL (
+                SELECT u.schedule_relationship, u.ingestion_run_id
+                FROM trip_update_observation u JOIN source_ingestion_run r ON r.id = u.ingestion_run_id
+                WHERE u.source_trip_id = v.source_trip_id AND r.started_at <= %(as_of)s
+                  AND u.observed_at <= COALESCE(%(observed_through)s, 'infinity'::timestamptz)
+                  AND (%(observed_through)s::timestamptz IS NOT NULL OR NOT EXISTS (
+                      SELECT 1 FROM source_ingestion_run earlier
+                      WHERE earlier.id < r.id AND earlier.started_at > r.started_at
+                  ))
+                ORDER BY r.id DESC, u.observed_at DESC, u.id DESC LIMIT 1
+            ) known ON true
+            WHERE rank <= 2
             ORDER BY source_vehicle_id, rank
             """,
             {"as_of": as_of, "observed_through": observed_through},

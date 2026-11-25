@@ -143,6 +143,11 @@ export interface MapMatched {
 }
 
 export interface ProgressEnvelope {
+  hold_reason?: string | null;
+  cap_stop_id?: string | null;
+  cap_kind?: "stop" | "horizon" | null;
+  cap_reached_at?: string | null;
+  envelope_id?: string | null;
   reference_at: string;
   progress_m_at_reference: number;
   speed_mps: number;
@@ -152,6 +157,16 @@ export interface ProgressEnvelope {
 }
 
 export interface Rendered {
+  stop_state?: {
+    source: string;
+    operator_status: string | null;
+    operator_stop_id: string | null;
+    observation_observed_at: string | null;
+    coherent: boolean | null;
+  } | null;
+  frozen_basis?: "authorized_envelope_end" | "anchor_version_changed" | null;
+  last_confirmed_progress_m?: number | null;
+  dwell_basis?: "muestras" | "ancla" | null;
   rendering_method: RenderingMethod;
   coordinate_space: CoordinateSpace | null;
   lat: number | null;

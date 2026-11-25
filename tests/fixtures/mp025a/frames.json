@@ -1,0 +1,937 @@
+[
+ {
+  "case": "S1 pre-salida \u2212300 s, STOPPED_AT origen",
+  "envelope": {
+   "reference_at": "2026-11-20T13:25:00.000+00:00",
+   "progress_m_at_reference": 70.51484948027553,
+   "speed_mps": 0.0,
+   "max_progress_m": 70.51484948027553,
+   "horizon_s": 180.0,
+   "dwell_until": null,
+   "hold_reason": "operator_stopped_at",
+   "cap_stop_id": null,
+   "cap_kind": null,
+   "cap_reached_at": null,
+   "envelope_id": "6db416630752df5b633c330220b503a8124ff6dfdf0fb48579d70a34c782e429"
+  },
+  "frames": [
+   [
+    1795181100000,
+    70.51484948027553,
+    "hold:operator_stopped_at"
+   ],
+   [
+    1795181130000,
+    70.51484948027553,
+    "hold:operator_stopped_at"
+   ],
+   [
+    1795181190000,
+    70.51484948027553,
+    "hold:operator_stopped_at"
+   ],
+   [
+    1795181280000,
+    70.51484948027553,
+    "hold:operator_stopped_at"
+   ]
+  ]
+ },
+ {
+  "case": "S2 pre-salida \u221260 s, STOPPED_AT origen",
+  "envelope": {
+   "reference_at": "2026-11-20T13:29:00.000+00:00",
+   "progress_m_at_reference": 70.51484948027553,
+   "speed_mps": 0.0,
+   "max_progress_m": 70.51484948027553,
+   "horizon_s": 180.0,
+   "dwell_until": null,
+   "hold_reason": "operator_stopped_at",
+   "cap_stop_id": null,
+   "cap_kind": null,
+   "cap_reached_at": null,
+   "envelope_id": "0e6fa92b04b844a2f8cc752be97e280d05b70b0e4de0a9d64deac4eab7507358"
+  },
+  "frames": [
+   [
+    1795181340000,
+    70.51484948027553,
+    "hold:operator_stopped_at"
+   ],
+   [
+    1795181370000,
+    70.51484948027553,
+    "hold:operator_stopped_at"
+   ],
+   [
+    1795181430000,
+    70.51484948027553,
+    "hold:operator_stopped_at"
+   ],
+   [
+    1795181520000,
+    70.51484948027553,
+    "hold:operator_stopped_at"
+   ]
+  ]
+ },
+ {
+  "case": "S2b R2 sin STOPPED_AT (IN_TRANSIT_TO), salida a +60 s dentro del horizonte",
+  "envelope": {
+   "reference_at": "2026-11-20T13:29:00.000+00:00",
+   "progress_m_at_reference": 70.51484948027553,
+   "speed_mps": 16.869147138735556,
+   "max_progress_m": 2090.412506128542,
+   "horizon_s": 180.0,
+   "dwell_until": "2026-11-20T13:30:00.000+00:00",
+   "hold_reason": "before_first_departure",
+   "cap_stop_id": "35606",
+   "cap_kind": "stop",
+   "cap_reached_at": "2026-11-20T13:31:59.740+00:00",
+   "envelope_id": "ce9c9b2c3058e8ea0397186d15a3b535d8d435a166da964d2914a2f58d55df6a"
+  },
+  "frames": [
+   [
+    1795181340000,
+    70.51484948027553,
+    "hold:before_first_departure"
+   ],
+   [
+    1795181370000,
+    70.51484948027553,
+    "hold:before_first_departure"
+   ],
+   [
+    1795181399999,
+    70.51484948027553,
+    "hold:before_first_departure"
+   ],
+   [
+    1795181400000,
+    70.51484948027553,
+    "moving"
+   ],
+   [
+    1795181400001,
+    70.53171862741426,
+    "moving"
+   ],
+   [
+    1795181430000,
+    576.5892636423422,
+    "moving"
+   ],
+   [
+    1795181519739,
+    2090.4096587253325,
+    "moving"
+   ],
+   [
+    1795181519740,
+    2090.412506128542,
+    "cap:stop"
+   ],
+   [
+    1795181519741,
+    2090.412506128542,
+    "cap:stop"
+   ],
+   [
+    1795181520000,
+    2090.412506128542,
+    "cap:stop"
+   ]
+  ]
+ },
+ {
+  "case": "S3 salida retrasada +120 s, STOPPED_AT origen",
+  "envelope": {
+   "reference_at": "2026-11-20T13:32:00.000+00:00",
+   "progress_m_at_reference": 70.51484948027553,
+   "speed_mps": 0.0,
+   "max_progress_m": 70.51484948027553,
+   "horizon_s": 180.0,
+   "dwell_until": null,
+   "hold_reason": "operator_stopped_at",
+   "cap_stop_id": null,
+   "cap_kind": null,
+   "cap_reached_at": null,
+   "envelope_id": "31721cf746cabdd2340ca615bd700d853252d3469629f7d313de133d553be589"
+  },
+  "frames": [
+   [
+    1795181520000,
+    70.51484948027553,
+    "hold:operator_stopped_at"
+   ],
+   [
+    1795181550000,
+    70.51484948027553,
+    "hold:operator_stopped_at"
+   ],
+   [
+    1795181610000,
+    70.51484948027553,
+    "hold:operator_stopped_at"
+   ],
+   [
+    1795181700000,
+    70.51484948027553,
+    "hold:operator_stopped_at"
+   ]
+  ]
+ },
+ {
+  "case": "S4 intermedia con espera 60 s, ancla +5,38 m, STOPPED_AT",
+  "envelope": {
+   "reference_at": "2026-11-20T14:00:20.000+00:00",
+   "progress_m_at_reference": 20433.65069986241,
+   "speed_mps": 0.0,
+   "max_progress_m": 20433.65069986241,
+   "horizon_s": 180.0,
+   "dwell_until": null,
+   "hold_reason": "operator_stopped_at",
+   "cap_stop_id": null,
+   "cap_kind": null,
+   "cap_reached_at": null,
+   "envelope_id": "a7c21d4f2c255e63ad5fb1a08ed8532b428232a1f6de107cdd76ee103e5f2ea6"
+  },
+  "frames": [
+   [
+    1795183220000,
+    20433.65069986241,
+    "hold:operator_stopped_at"
+   ],
+   [
+    1795183250000,
+    20433.65069986241,
+    "hold:operator_stopped_at"
+   ],
+   [
+    1795183310000,
+    20433.65069986241,
+    "hold:operator_stopped_at"
+   ],
+   [
+    1795183400000,
+    20433.65069986241,
+    "hold:operator_stopped_at"
+   ]
+  ]
+ },
+ {
+  "case": "S5 intermedia SIN espera programada, STOPPED_AT",
+  "envelope": {
+   "reference_at": "2026-11-20T13:32:30.000+00:00",
+   "progress_m_at_reference": 2087.412506128542,
+   "speed_mps": 0.0,
+   "max_progress_m": 2087.412506128542,
+   "horizon_s": 180.0,
+   "dwell_until": null,
+   "hold_reason": "operator_stopped_at",
+   "cap_stop_id": null,
+   "cap_kind": null,
+   "cap_reached_at": null,
+   "envelope_id": "15ab8afa1d7f71bba3c1289cf3e400940bb62588ee96522446f72be646637fef"
+  },
+  "frames": [
+   [
+    1795181550000,
+    2087.412506128542,
+    "hold:operator_stopped_at"
+   ],
+   [
+    1795181580000,
+    2087.412506128542,
+    "hold:operator_stopped_at"
+   ],
+   [
+    1795181640000,
+    2087.412506128542,
+    "hold:operator_stopped_at"
+   ],
+   [
+    1795181730000,
+    2087.412506128542,
+    "hold:operator_stopped_at"
+   ]
+  ]
+ },
+ {
+  "case": "S5b contraejemplo del revisor: INCOMING_AT a la parada ANTERIOR, ancla en zona de S5",
+  "envelope": {
+   "reference_at": "2026-11-20T13:32:30.000+00:00",
+   "progress_m_at_reference": 2087.412506128542,
+   "speed_mps": 13.132165363993748,
+   "max_progress_m": 4057.2373107276044,
+   "horizon_s": 180.0,
+   "dwell_until": "2026-11-20T13:33:00.000+00:00",
+   "hold_reason": "schedule_stop_zone",
+   "cap_stop_id": "35610",
+   "cap_kind": "horizon",
+   "cap_reached_at": "2026-11-20T13:35:30.000+00:00",
+   "envelope_id": "ceb393defcbb1f4a95c3ecfe9e70e95a13749cc5478bcc91a72f49a29acb04f0"
+  },
+  "frames": [
+   [
+    1795181550000,
+    2087.412506128542,
+    "hold:schedule_stop_zone"
+   ],
+   [
+    1795181579999,
+    2087.412506128542,
+    "hold:schedule_stop_zone"
+   ],
+   [
+    1795181580000,
+    2087.412506128542,
+    "moving"
+   ],
+   [
+    1795181580001,
+    2087.425638293906,
+    "moving"
+   ],
+   [
+    1795181640000,
+    2875.342427968167,
+    "moving"
+   ],
+   [
+    1795181729999,
+    4057.22417856224,
+    "moving"
+   ],
+   [
+    1795181730000,
+    4057.2373107276044,
+    "cap:horizon"
+   ],
+   [
+    1795181730001,
+    4057.2373107276044,
+    "cap:horizon"
+   ]
+  ]
+ },
+ {
+  "case": "S6 CANCELED, IN_TRANSIT_TO a mitad de tramo",
+  "envelope": {
+   "reference_at": "2026-11-20T13:33:30.000+00:00",
+   "progress_m_at_reference": 3272.3073888879794,
+   "speed_mps": 0.0,
+   "max_progress_m": 3272.3073888879794,
+   "horizon_s": 180.0,
+   "dwell_until": null,
+   "hold_reason": "trip_canceled",
+   "cap_stop_id": null,
+   "cap_kind": null,
+   "cap_reached_at": null,
+   "envelope_id": "54045d4139bc3411842c76a01f68f437fd481900f7e018491f32b73a8889674f"
+  },
+  "frames": [
+   [
+    1795181610000,
+    3272.3073888879794,
+    "hold:trip_canceled"
+   ],
+   [
+    1795181640000,
+    3272.3073888879794,
+    "hold:trip_canceled"
+   ],
+   [
+    1795181700000,
+    3272.3073888879794,
+    "hold:trip_canceled"
+   ],
+   [
+    1795181790000,
+    3272.3073888879794,
+    "hold:trip_canceled"
+   ]
+  ]
+ },
+ {
+  "case": "S6b control: en marcha a mitad de tramo",
+  "envelope": {
+   "reference_at": "2026-11-20T13:33:30.000+00:00",
+   "progress_m_at_reference": 3272.3073888879794,
+   "speed_mps": 13.132165363993748,
+   "max_progress_m": 4454.202271647417,
+   "horizon_s": 180.0,
+   "dwell_until": null,
+   "hold_reason": null,
+   "cap_stop_id": "35610",
+   "cap_kind": "stop",
+   "cap_reached_at": "2026-11-20T13:35:00.000+00:00",
+   "envelope_id": "c0fe2f6d7e5bf81742d98b8309969f762beb1936267916ecfc1e5ae2a275e058"
+  },
+  "frames": [
+   [
+    1795181610000,
+    3272.3073888879794,
+    "moving"
+   ],
+   [
+    1795181640000,
+    3666.2723498077917,
+    "moving"
+   ],
+   [
+    1795181699999,
+    4454.189139482052,
+    "moving"
+   ],
+   [
+    1795181700000,
+    4454.202271647417,
+    "cap:stop"
+   ],
+   [
+    1795181700001,
+    4454.202271647417,
+    "cap:stop"
+   ],
+   [
+    1795181790000,
+    4454.202271647417,
+    "cap:stop"
+   ]
+  ]
+ },
+ {
+  "case": "S7 STOPPED_AT con stop_id ajeno, a mitad de tramo",
+  "envelope": {
+   "reference_at": "2026-11-20T13:33:30.000+00:00",
+   "progress_m_at_reference": 3272.3073888879794,
+   "speed_mps": 13.132165363993748,
+   "max_progress_m": 4454.202271647417,
+   "horizon_s": 180.0,
+   "dwell_until": null,
+   "hold_reason": null,
+   "cap_stop_id": "35610",
+   "cap_kind": "stop",
+   "cap_reached_at": "2026-11-20T13:35:00.000+00:00",
+   "envelope_id": "9a7fff8e55dc1feade6746fc5e2896b5c77e7f0d0dc142fe94d01785952b0db8"
+  },
+  "frames": [
+   [
+    1795181610000,
+    3272.3073888879794,
+    "moving"
+   ],
+   [
+    1795181640000,
+    3666.2723498077917,
+    "moving"
+   ],
+   [
+    1795181699999,
+    4454.189139482052,
+    "moving"
+   ],
+   [
+    1795181700000,
+    4454.202271647417,
+    "cap:stop"
+   ],
+   [
+    1795181700001,
+    4454.202271647417,
+    "cap:stop"
+   ],
+   [
+    1795181790000,
+    4454.202271647417,
+    "cap:stop"
+   ]
+  ]
+ },
+ {
+  "case": "S10 INCOMING_AT con parada 1182 m POR DETR\u00c1S",
+  "envelope": {
+   "reference_at": "2026-11-20T13:33:30.000+00:00",
+   "progress_m_at_reference": 3272.3073888879794,
+   "speed_mps": 13.132165363993748,
+   "max_progress_m": 4454.202271647417,
+   "horizon_s": 180.0,
+   "dwell_until": null,
+   "hold_reason": null,
+   "cap_stop_id": "35610",
+   "cap_kind": "stop",
+   "cap_reached_at": "2026-11-20T13:35:00.000+00:00",
+   "envelope_id": "1a23220e816c21e5bf59c699f8c4e75588c327b4d5cbd54f69cbd2245b5607a7"
+  },
+  "frames": [
+   [
+    1795181610000,
+    3272.3073888879794,
+    "moving"
+   ],
+   [
+    1795181640000,
+    3666.2723498077917,
+    "moving"
+   ],
+   [
+    1795181699999,
+    4454.189139482052,
+    "moving"
+   ],
+   [
+    1795181700000,
+    4454.202271647417,
+    "cap:stop"
+   ],
+   [
+    1795181700001,
+    4454.202271647417,
+    "cap:stop"
+   ],
+   [
+    1795181790000,
+    4454.202271647417,
+    "cap:stop"
+   ]
+  ]
+ },
+ {
+  "case": "S11 ancla 500 m ANTES de la primera parada (fuera de zona), en ventana",
+  "envelope": {
+   "reference_at": "2026-11-20T13:31:00.000+00:00",
+   "progress_m_at_reference": -433.88515051972445,
+   "speed_mps": 0.0,
+   "max_progress_m": -433.88515051972445,
+   "horizon_s": 180.0,
+   "dwell_until": null,
+   "hold_reason": "outside_schedule_extent",
+   "cap_stop_id": null,
+   "cap_kind": null,
+   "cap_reached_at": null,
+   "envelope_id": "e811103443ceb46b2d4fb1a209c91a7732d4550c91d242e822dfa72d1d1b7bb3"
+  },
+  "frames": [
+   [
+    1795181460000,
+    -433.88515051972445,
+    "hold:outside_schedule_extent"
+   ],
+   [
+    1795181490000,
+    -433.88515051972445,
+    "hold:outside_schedule_extent"
+   ],
+   [
+    1795181550000,
+    -433.88515051972445,
+    "hold:outside_schedule_extent"
+   ],
+   [
+    1795181640000,
+    -433.88515051972445,
+    "hold:outside_schedule_extent"
+   ]
+  ]
+ },
+ {
+  "case": "S12 zonas solapadas: paradas a 0 y 60 m (\u2264 2\u03c4), ancla en 40 m, IN_TRANSIT_TO",
+  "envelope": {
+   "reference_at": "2026-11-20T09:00:20.000+00:00",
+   "progress_m_at_reference": 40.0,
+   "speed_mps": 14.0,
+   "max_progress_m": 2560.0,
+   "horizon_s": 180.0,
+   "dwell_until": null,
+   "hold_reason": null,
+   "cap_stop_id": "Z2",
+   "cap_kind": "horizon",
+   "cap_reached_at": "2026-11-20T09:03:20.000+00:00",
+   "envelope_id": "98c5cbb13b5819b201becc0a6ee6a37521b8b29be16c495a4f834cbaaa526593"
+  },
+  "frames": [
+   [
+    1795165220000,
+    40.0,
+    "moving"
+   ],
+   [
+    1795165250000,
+    460.0,
+    "moving"
+   ],
+   [
+    1795165310000,
+    1300.0,
+    "moving"
+   ],
+   [
+    1795165399999,
+    2559.986,
+    "moving"
+   ],
+   [
+    1795165400000,
+    2560.0,
+    "cap:horizon"
+   ],
+   [
+    1795165400001,
+    2560.0,
+    "cap:horizon"
+   ]
+  ]
+ },
+ {
+  "case": "S13 tramo de duraci\u00f3n real 0 (T0\u2192T1 misma hora): fusi\u00f3n con el siguiente",
+  "envelope": {
+   "reference_at": "2026-11-20T09:00:00.000+00:00",
+   "progress_m_at_reference": 0.0,
+   "speed_mps": 16.666666666666668,
+   "max_progress_m": 1000.0,
+   "horizon_s": 180.0,
+   "dwell_until": null,
+   "hold_reason": null,
+   "cap_stop_id": "T1",
+   "cap_kind": "stop",
+   "cap_reached_at": "2026-11-20T09:01:00.000+00:00",
+   "envelope_id": "162a66f45f12fc01ab48aa1613448393682f7d98894005d13549a2d9f3a9a958"
+  },
+  "frames": [
+   [
+    1795165200000,
+    0.0,
+    "moving"
+   ],
+   [
+    1795165230000,
+    500.00000000000006,
+    "moving"
+   ],
+   [
+    1795165259999,
+    999.9833333333335,
+    "moving"
+   ],
+   [
+    1795165260000,
+    1000.0,
+    "cap:stop"
+   ],
+   [
+    1795165260001,
+    1000.0,
+    "cap:stop"
+   ],
+   [
+    1795165290000,
+    1000.0,
+    "cap:stop"
+   ],
+   [
+    1795165380000,
+    1000.0,
+    "cap:stop"
+   ]
+  ]
+ },
+ {
+  "case": "S14 stop_id repetido (X en 0 y 4000 m), STOPPED_AT X con ancla en 10 m",
+  "envelope": {
+   "reference_at": "2026-11-20T09:00:05.000+00:00",
+   "progress_m_at_reference": 10.0,
+   "speed_mps": 0.0,
+   "max_progress_m": 10.0,
+   "horizon_s": 180.0,
+   "dwell_until": null,
+   "hold_reason": "operator_stopped_at",
+   "cap_stop_id": null,
+   "cap_kind": null,
+   "cap_reached_at": null,
+   "envelope_id": "2bd9e3c79800a56147327f26a2d0e65d200feea3067aea5458b82f916b3dade5"
+  },
+  "frames": [
+   [
+    1795165205000,
+    10.0,
+    "hold:operator_stopped_at"
+   ],
+   [
+    1795165235000,
+    10.0,
+    "hold:operator_stopped_at"
+   ],
+   [
+    1795165295000,
+    10.0,
+    "hold:operator_stopped_at"
+   ],
+   [
+    1795165385000,
+    10.0,
+    "hold:operator_stopped_at"
+   ]
+  ]
+ },
+ {
+  "case": "S8 DST adelanto 2027-03-28, tramo 01:50\u219202:10",
+  "envelope": {
+   "reference_at": "2027-03-28T00:58:00.000+00:00",
+   "progress_m_at_reference": 8000.000000000001,
+   "speed_mps": 16.666666666666668,
+   "max_progress_m": 11000.0,
+   "horizon_s": 180.0,
+   "dwell_until": null,
+   "hold_reason": null,
+   "cap_stop_id": "X1",
+   "cap_kind": "horizon",
+   "cap_reached_at": "2027-03-28T01:01:00.000+00:00",
+   "envelope_id": "8309ab2eeb2b12c5cc025efadc82d9584b1b5d2f3d24e25f325837a772c685a9"
+  },
+  "frames": [
+   [
+    1806195480000,
+    8000.000000000001,
+    "moving"
+   ],
+   [
+    1806195510000,
+    8500.000000000002,
+    "moving"
+   ],
+   [
+    1806195570000,
+    9500.0,
+    "moving"
+   ],
+   [
+    1806195659999,
+    10999.983333333334,
+    "moving"
+   ],
+   [
+    1806195660000,
+    11000.0,
+    "cap:horizon"
+   ],
+   [
+    1806195660001,
+    11000.0,
+    "cap:horizon"
+   ]
+  ]
+ },
+ {
+  "case": "S9 DST atraso 2027-10-31, tramo 01:30\u219203:30",
+  "envelope": {
+   "reference_at": "2027-10-31T00:59:00.000+00:00",
+   "progress_m_at_reference": 9888.888888888889,
+   "speed_mps": 1.8518518518518519,
+   "max_progress_m": 10222.222222222223,
+   "horizon_s": 180.0,
+   "dwell_until": null,
+   "hold_reason": null,
+   "cap_stop_id": "X1",
+   "cap_kind": "horizon",
+   "cap_reached_at": "2027-10-31T01:02:00.000+00:00",
+   "envelope_id": "e954101bc33e708b10cd40e08d4bfae2f5ebeccb9adbfed5b11f4b3474478c03"
+  },
+  "frames": [
+   [
+    1824944340000,
+    9888.888888888889,
+    "moving"
+   ],
+   [
+    1824944370000,
+    9944.444444444443,
+    "moving"
+   ],
+   [
+    1824944430000,
+    10055.555555555555,
+    "moving"
+   ],
+   [
+    1824944519999,
+    10222.22037037037,
+    "moving"
+   ],
+   [
+    1824944520000,
+    10222.222222222223,
+    "cap:horizon"
+   ],
+   [
+    1824944520001,
+    10222.222222222223,
+    "cap:horizon"
+   ]
+  ]
+ },
+ {
+  "case": "S15 DST en la ESPERA del fallback: W1 01:30\u219203:30 del 2027-10-31, estado ausente, entrada por muestras",
+  "envelope": {
+   "reference_at": "2027-10-31T02:28:20.000+00:00",
+   "progress_m_at_reference": 10003.0,
+   "speed_mps": 5.555555555555555,
+   "max_progress_m": 10447.444444444445,
+   "horizon_s": 180.0,
+   "dwell_until": "2027-10-31T02:30:00.000+00:00",
+   "hold_reason": "schedule_stop_zone",
+   "cap_stop_id": "W2",
+   "cap_kind": "horizon",
+   "cap_reached_at": "2027-10-31T02:31:20.000+00:00",
+   "envelope_id": "8585069f53d92f072aa6be2de490db50ed2f06167c777acaf1131ff597c10b04"
+  },
+  "frames": [
+   [
+    1824949700000,
+    10003.0,
+    "hold:schedule_stop_zone"
+   ],
+   [
+    1824949730000,
+    10003.0,
+    "hold:schedule_stop_zone"
+   ],
+   [
+    1824949790000,
+    10003.0,
+    "hold:schedule_stop_zone"
+   ],
+   [
+    1824949799999,
+    10003.0,
+    "hold:schedule_stop_zone"
+   ],
+   [
+    1824949800000,
+    10003.0,
+    "moving"
+   ],
+   [
+    1824949800001,
+    10003.005555555555,
+    "moving"
+   ],
+   [
+    1824949879999,
+    10447.43888888889,
+    "moving"
+   ],
+   [
+    1824949880000,
+    10447.444444444445,
+    "cap:horizon"
+   ],
+   [
+    1824949880001,
+    10447.444444444445,
+    "cap:horizon"
+   ]
+  ]
+ },
+ {
+  "case": "S15b igual que S15 sin muestra previa en la zona (reinicio): la espera empieza en el ancla y se DECLARA",
+  "envelope": {
+   "reference_at": "2027-10-31T02:28:20.000+00:00",
+   "progress_m_at_reference": 10003.0,
+   "speed_mps": 0.0,
+   "max_progress_m": 10003.0,
+   "horizon_s": 180.0,
+   "dwell_until": null,
+   "hold_reason": "schedule_stop_zone",
+   "cap_stop_id": null,
+   "cap_kind": null,
+   "cap_reached_at": null,
+   "envelope_id": "2183d290d07f8afbb43d5a2a7edf45e800ed3779d43ee1d2f94f68e8d98dfb4a"
+  },
+  "frames": [
+   [
+    1824949700000,
+    10003.0,
+    "hold:schedule_stop_zone"
+   ],
+   [
+    1824949730000,
+    10003.0,
+    "hold:schedule_stop_zone"
+   ],
+   [
+    1824949790000,
+    10003.0,
+    "hold:schedule_stop_zone"
+   ],
+   [
+    1824949880000,
+    10003.0,
+    "hold:schedule_stop_zone"
+   ]
+  ]
+ },
+ {
+  "case": "S16 tres observaciones consecutivas en zona (e0, +20, +40), espera programada 120 s, estado ausente",
+  "envelope": {
+   "reference_at": "2026-11-20T09:06:10.000+00:00",
+   "progress_m_at_reference": 5003.0,
+   "speed_mps": 22.22222222222222,
+   "max_progress_m": 6780.777777777777,
+   "horizon_s": 180.0,
+   "dwell_until": "2026-11-20T09:07:50.000+00:00",
+   "hold_reason": "schedule_stop_zone",
+   "cap_stop_id": "V2",
+   "cap_kind": "horizon",
+   "cap_reached_at": "2026-11-20T09:09:10.000+00:00",
+   "envelope_id": "08bef9d64a90daf6a7ac943019bfd8920f5361a6bc7f583236c89b19f6429761"
+  },
+  "frames": [
+   [
+    1795165570000,
+    5003.0,
+    "hold:schedule_stop_zone"
+   ],
+   [
+    1795165600000,
+    5003.0,
+    "hold:schedule_stop_zone"
+   ],
+   [
+    1795165660000,
+    5003.0,
+    "hold:schedule_stop_zone"
+   ],
+   [
+    1795165669999,
+    5003.0,
+    "hold:schedule_stop_zone"
+   ],
+   [
+    1795165670000,
+    5003.0,
+    "moving"
+   ],
+   [
+    1795165670001,
+    5003.022222222222,
+    "moving"
+   ],
+   [
+    1795165749999,
+    6780.7555555555555,
+    "moving"
+   ],
+   [
+    1795165750000,
+    6780.777777777777,
+    "cap:horizon"
+   ],
+   [
+    1795165750001,
+    6780.777777777777,
+    "cap:horizon"
+   ]
+  ]
+ }
+]

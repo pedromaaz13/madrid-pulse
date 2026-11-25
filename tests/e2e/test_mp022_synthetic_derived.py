@@ -113,7 +113,7 @@ class SyntheticDerivedRecoveryAcceptanceTests(unittest.TestCase):
 
         recovery_progress = min(
             max(item.progress_m for item in self.schedule.points),
-            estimated.progress_m + self.fixture["recovery_ahead_of_estimate_m"],
+            before.progress_m + self.fixture["recovery_ahead_of_estimate_m"],
         )
         recovery_at = anchor_at + timedelta(seconds=self.fixture["recovered_after_s"])
         recovered_raw = self.observation(

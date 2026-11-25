@@ -1,0 +1,21 @@
+{
+  "attribution": "Renfe Operadora, CC BY 4.0. Extracto de los cortes 1532/1533 y horario estático, reducido a 44 circulaciones con corredor.",
+  "source": {
+    "fomento_transit.zip": "c5b40823c5cacbec6d9a21d88ec0530d9604a6d4331df98c330e608f0bacb11e",
+    "1532/vehicle_positions.json": "c50da3eecdd34ab7b85f3e039e759cf4740788cd4725310276d69b7ab1c13a5f",
+    "1533/vehicle_positions.json": "77f8faa14ccd183fc16f81702dc8af0ac0c98dc5558582a684bb96f3e59ca9e9"
+  },
+  "fixtures": {
+    "1532.json": "abd0d4f0a11503e8142aa8f63521d1780736b303dd76884d6bbacbfe56a0f4ea",
+    "1533.json": "7ed74595fda12b7a0ebcd19ed472ad73f3d3579d92b6772a5d185f051020a088",
+    "frames.json": "c1cd63dddce4524237dc682180043b2a1a5360081c52722fabe6e2f178206de8",
+    "gtfs.zip": "0c4b34f6b19a93c56abf960d833256972a2b4b125af572e7c73c3c4b1746872e",
+    "synthetic.json": "45b66f489bd7e6d2a06bf3b1e44dc804e6f4793aaa205d1c7e23c7159a397174"
+  },
+  "date": "2026-11-20",
+  "license": "https://creativecommons.org/licenses/by/4.0/",
+  "urls": [
+    "https://gtfsrt.renfe.com/vehicle_positions.json",
+    "https://ssl.renfe.com/ftransit/Fichero_CER_FOMENTO/fomento_transit.zip"
+  ]
+}

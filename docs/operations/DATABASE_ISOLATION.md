@@ -87,3 +87,19 @@ El criterio de cero literales `5433` fuera de la base compartida excluye
 `apps/web/src/__fixtures__/`. Los dos literales de código autorizados son
 las constantes explícitas de `packages/database.py` y del arnés
 `tests/e2e/database_isolation_checks.py`.
+
+## Un colector por base
+
+F1 requiere que el orden de los runs del directo coincida con su orden de
+confirmación. El proceso de polling adquiere el bloqueo asesor de sesión
+PostgreSQL 1297101395 antes de abrir los feeds. Un segundo proceso sale con
+código 1 y el diagnóstico «Ya hay otro colector activo». El cierre de la
+conexión libera el bloqueo, también tras una caída. Las cargas históricas
+deben dirigirse a una base de replay separada.
+
+Configura el mismo GTFS, catálogo geométrico y parámetros P-024 en el colector
+y la API. La migración 0003 guarda su huella en el run: antes el esquema
+carecía de procedencia para distinguir un cambio de versión tras reiniciar.
+Los runs anteriores o ingeridos sin GTFS quedan con huella NULL. Al caducar se
+publica anchor_version_changed. La carga retroactiva se identifica comparando
+started_at con los runs de id menor, según DATA_CONTRACTS.md.

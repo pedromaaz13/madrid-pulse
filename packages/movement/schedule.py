@@ -85,10 +85,20 @@ class SchedulePoint:
 
 
 @dataclass(frozen=True)
+class StopOccurrence:
+    stop_id: str
+    stop_sequence: int
+    progress_m: float
+    arrival_s: float
+    departure_s: float
+
+
+@dataclass(frozen=True)
 class TripSchedule:
     points: tuple[SchedulePoint, ...]
     corridor_length_m: float
     forward: bool
+    stops: tuple[StopOccurrence, ...] = ()
 
     def progress_at(self, seconds: float) -> float:
         if seconds <= self.points[0].seconds:
@@ -156,6 +166,7 @@ def build_trip_schedule(topology: Topology, corridor: Corridor, trip_id: str) ->
         raise ValueError(f"trip {trip_id!r} no tiene al menos dos stop_times")
     stops = {stop.stop_id: stop for stop in topology.stops}
     projected: list[tuple[float, float]] = []
+    occurrences = []
     for item in times:
         stop = stops.get(item.stop_id)
         if stop is None:
@@ -165,6 +176,7 @@ def build_trip_schedule(topology: Topology, corridor: Corridor, trip_id: str) ->
         departure = item.departure_time or item.arrival_time
         arrival_s = parse_gtfs_time(arrival)
         departure_s = parse_gtfs_time(departure)
+        occurrences.append((item, physical_arc, arrival_s, departure_s))
         if departure_s > arrival_s:
             projected.append((arrival_s, physical_arc))
         projected.append((departure_s, physical_arc))
@@ -178,4 +190,8 @@ def build_trip_schedule(topology: Topology, corridor: Corridor, trip_id: str) ->
         raise ValueError(f"horario no monótono para {trip_id!r}")
     if any(right.progress_m < left.progress_m for left, right in zip(points, points[1:])):
         raise ValueError(f"paradas no monótonas sobre el corredor para {trip_id!r}")
-    return TripSchedule(points=points, corridor_length_m=length_m, forward=forward)
+    directed_stops = tuple(
+        StopOccurrence(item.stop_id, item.stop_sequence, arc if forward else length_m - arc, arr, dep)
+        for item, arc, arr, dep in occurrences
+    )
+    return TripSchedule(points, length_m, forward, directed_stops)

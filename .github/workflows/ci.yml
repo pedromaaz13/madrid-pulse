@@ -63,6 +63,9 @@ jobs:
             packages.gtfs.tests.test_catalog \
             packages.gtfs.tests.test_real_feed \
             packages.movement.tests.test_engine \
+            packages.movement.tests.test_stop_state \
+            tests.e2e.test_stop_state \
+            tests.e2e.test_stop_state_db \
             packages.movement.tests.test_rendering \
             packages.movement.tests.test_real_soak_postgres \
             packages.quality.tests.test_engine \
