@@ -1,5 +1,5 @@
 == 0) validación del arnés (ORCHESTRATION_POLICY §3.4) ==
-   HEAD=f0f8224f7b5d098eb1f2b043efaa933c00b6111e  producto idéntico a beb9434: True
+   HEAD=559a5c2e98a3be088713ccdcd0d1bcbd8ea17c4f  producto idéntico a beb9434: True
    observed_max_age_s                 packages/movement/model.py:39  valor=60.0  comprobado=texto+ejecución
    stale_after_s                      packages/movement/model.py:40  valor=180.0  comprobado=texto+ejecución
    max_estimated_speed_kmh            packages/movement/model.py:45  valor=160.0  comprobado=texto+ejecución
@@ -23,8 +23,11 @@
 
 == 1) hechos del corte 1533 ==
    in_transit_behind_detail(trip,stop,m_por_detras): [('1023V20277C4a', '60100', 4288.52), ('1023V20281C4a', '37011', 2416.28), ('1023V20845C5', '35609', 3234.47), ('1023V20846C5', '35606', 1848.87)]
+   zona_con_2_muestras_consecutivas: 31
    reproyeccion_n_max_m: (44, 0.0016052595365907284)
    estructura_gtfs_44_viajes: {'trips': 44, 'legs': 829, 'stop_id_repetidos': 0, 'tramos_sep<=τ(50)': 0, 'tramos_sep<=2τ(100)': 0, 'tramos_duracion_real<=0': 0}
+   C(Dmin=30)_envolventes_que_cambian_con_entrada_por_muestras: (14, ['1023V19661C5', '1023V19667C5', '1023V19668C5', '1023V19675C5', '1023V19677C5', '1023V19681C5', '1023V20279C4a', '1023V20280C4a', '1023V20281C4a', '1023V20282C4a', '1023V20470C4b', '1023V20472C4b', '1023V20842C5', '1023V20849C5'])
+   C(Dmin=180)_envolventes_que_cambian_con_entrada_por_muestras: (14, ['1023V19661C5', '1023V19667C5', '1023V19668C5', '1023V19675C5', '1023V19677C5', '1023V19681C5', '1023V20279C4a', '1023V20280C4a', '1023V20281C4a', '1023V20282C4a', '1023V20470C4b', '1023V20472C4b', '1023V20842C5', '1023V20849C5'])
    [producción] FR05_retroceso_179_181_n_gt0: (25, 25)
    [producción] FR05_retroceso_p50_max_m: (2357.8671699409097, 3959.2240780028524)
    [producción] FR27_muestras(edades_enteras_61-179,estimated): 2975
@@ -35,7 +38,8 @@
 -- BASE(beb9434): grupo M 1/7 PASS
    M1_stopped_same_gps_speed_gt0: (25, 25)
    M1_stopped_same_gps_advance_gt0: (25, 25)
-   M2_predeparture_speed_gt0: (17, 17)
+   M2a_R1_pre_salida_STOPPED_AT_speed_gt0: (17, 17)
+   M2b_R2_avance_hasta_min(salida,horizonte)_gt0: (17, 17)
    M3_delayed_origin_speed_gt0: (4, 4)
    M4_intermediate_stopped_speed_gt0: (7, 7)
    M5_cross_stop_margin_1m: (29, 44)
@@ -48,8 +52,9 @@
    M7_over_advance_gt100m: (32, 44)
    M8_rewind_if_frozen_at_anchor_p50_max: (2816.6691342336126, 5400.55501251774)
    rules: {'beb9434': 44}
+   GROUP_M_si_M2b_sustituye_a_M2a: 1
    FAIL  AC-M1 0/25 STOPPED_AT GPS idéntico con speed_mps>0
-   FAIL  AC-M2 0/17 pre-salida con speed_mps>0
+   FAIL  AC-M2 (R1) 0/17 pre-salida STOPPED_AT con speed_mps>0
    FAIL  AC-M3 0/4 salida retrasada con speed_mps>0
    FAIL  AC-M4 0/7 intermedias con speed_mps>0
    FAIL  AC-M5 0/44 cruzan parada > τ
@@ -58,7 +63,8 @@
 -- D(tolerancia=50): grupo M 1/7 PASS
    M1_stopped_same_gps_speed_gt0: (25, 25)
    M1_stopped_same_gps_advance_gt0: (25, 25)
-   M2_predeparture_speed_gt0: (17, 17)
+   M2a_R1_pre_salida_STOPPED_AT_speed_gt0: (17, 17)
+   M2b_R2_avance_hasta_min(salida,horizonte)_gt0: (17, 17)
    M3_delayed_origin_speed_gt0: (4, 4)
    M4_intermediate_stopped_speed_gt0: (7, 7)
    M5_cross_stop_margin_1m: (29, 44)
@@ -71,8 +77,9 @@
    M7_over_advance_gt100m: (32, 44)
    M8_rewind_if_frozen_at_anchor_p50_max: (2816.6691342336126, 5400.55501251774)
    rules: {'tolerancia': 44}
+   GROUP_M_si_M2b_sustituye_a_M2a: 1
    FAIL  AC-M1 0/25 STOPPED_AT GPS idéntico con speed_mps>0
-   FAIL  AC-M2 0/17 pre-salida con speed_mps>0
+   FAIL  AC-M2 (R1) 0/17 pre-salida STOPPED_AT con speed_mps>0
    FAIL  AC-M3 0/4 salida retrasada con speed_mps>0
    FAIL  AC-M4 0/7 intermedias con speed_mps>0
    FAIL  AC-M5 0/44 cruzan parada > τ
@@ -81,7 +88,8 @@
 -- B1(offset±600): grupo M 1/7 PASS
    M1_stopped_same_gps_speed_gt0: (21, 25)
    M1_stopped_same_gps_advance_gt0: (21, 25)
-   M2_predeparture_speed_gt0: (13, 17)
+   M2a_R1_pre_salida_STOPPED_AT_speed_gt0: (13, 17)
+   M2b_R2_avance_hasta_min(salida,horizonte)_gt0: (13, 17)
    M3_delayed_origin_speed_gt0: (4, 4)
    M4_intermediate_stopped_speed_gt0: (7, 7)
    M5_cross_stop_margin_1m: (26, 44)
@@ -94,8 +102,9 @@
    M7_over_advance_gt100m: (24, 44)
    M8_rewind_if_frozen_at_anchor_p50_max: (2558.296856701984, 8000.0)
    rules: {'offset±600': 44}
+   GROUP_M_si_M2b_sustituye_a_M2a: 1
    FAIL  AC-M1 0/25 STOPPED_AT GPS idéntico con speed_mps>0
-   FAIL  AC-M2 0/17 pre-salida con speed_mps>0
+   FAIL  AC-M2 (R1) 0/17 pre-salida STOPPED_AT con speed_mps>0
    FAIL  AC-M3 0/4 salida retrasada con speed_mps>0
    FAIL  AC-M4 0/7 intermedias con speed_mps>0
    FAIL  AC-M5 0/44 cruzan parada > τ
@@ -104,7 +113,8 @@
 -- B2(offset+ventana): grupo M 1/7 PASS
    M1_stopped_same_gps_speed_gt0: (10, 25)
    M1_stopped_same_gps_advance_gt0: (10, 25)
-   M2_predeparture_speed_gt0: (2, 17)
+   M2a_R1_pre_salida_STOPPED_AT_speed_gt0: (2, 17)
+   M2b_R2_avance_hasta_min(salida,horizonte)_gt0: (0, 17)
    M3_delayed_origin_speed_gt0: (4, 4)
    M4_intermediate_stopped_speed_gt0: (7, 7)
    M5_cross_stop_margin_1m: (23, 44)
@@ -117,8 +127,9 @@
    M7_over_advance_gt100m: (18, 44)
    M8_rewind_if_frozen_at_anchor_p50_max: (2221.9355412059413, 8000.0)
    rules: {'offset±600': 27, 'pre_salida': 17}
+   GROUP_M_si_M2b_sustituye_a_M2a: 2
    FAIL  AC-M1 0/25 STOPPED_AT GPS idéntico con speed_mps>0
-   FAIL  AC-M2 0/17 pre-salida con speed_mps>0
+   FAIL  AC-M2 (R1) 0/17 pre-salida STOPPED_AT con speed_mps>0
    FAIL  AC-M3 0/4 salida retrasada con speed_mps>0
    FAIL  AC-M4 0/7 intermedias con speed_mps>0
    FAIL  AC-M5 0/44 cruzan parada > τ
@@ -127,7 +138,8 @@
 -- C(τ=50,Dmin=30): grupo M 3/7 PASS
    M1_stopped_same_gps_speed_gt0: (10, 25)
    M1_stopped_same_gps_advance_gt0: (10, 25)
-   M2_predeparture_speed_gt0: (2, 17)
+   M2a_R1_pre_salida_STOPPED_AT_speed_gt0: (2, 17)
+   M2b_R2_avance_hasta_min(salida,horizonte)_gt0: (0, 17)
    M3_delayed_origin_speed_gt0: (4, 4)
    M4_intermediate_stopped_speed_gt0: (7, 7)
    M5_cross_stop_margin_1m: (13, 44)
@@ -138,10 +150,11 @@
    COST_stopped1532_departed_pred_eq0: (0, 27, [])
    M7_snap_77s_p50_p90_max: (570.1021579412791, 1338.3069977992607, 3669.3990515216938)
    M7_over_advance_gt100m: (15, 44)
-   M8_rewind_if_frozen_at_anchor_p50_max: (1588.0967503295365, 3310.9873117890224)
-   rules: {'R8:R2': 15, 'R8:R2+R5': 2, 'R8:R5': 3, 'R8:R8-zona': 24}
+   M8_rewind_if_frozen_at_anchor_p50_max: (1588.0967503295365, 3973.184774146827)
+   rules: {'R8:R2': 15, 'R8:R2+R5': 2, 'R8:R5': 3, 'R8:R8-zona': 10, 'R8:R8-zona-consumida': 14}
+   GROUP_M_si_M2b_sustituye_a_M2a: 4
    FAIL  AC-M1 0/25 STOPPED_AT GPS idéntico con speed_mps>0
-   FAIL  AC-M2 0/17 pre-salida con speed_mps>0
+   FAIL  AC-M2 (R1) 0/17 pre-salida STOPPED_AT con speed_mps>0
    FAIL  AC-M3 0/4 salida retrasada con speed_mps>0
    FAIL  AC-M4 0/7 intermedias con speed_mps>0
    PASS  AC-M5 0/44 cruzan parada > τ
@@ -150,7 +163,8 @@
 -- A(τ=50): grupo M 7/7 PASS
    M1_stopped_same_gps_speed_gt0: (0, 25)
    M1_stopped_same_gps_advance_gt0: (0, 25)
-   M2_predeparture_speed_gt0: (0, 17)
+   M2a_R1_pre_salida_STOPPED_AT_speed_gt0: (0, 17)
+   M2b_R2_avance_hasta_min(salida,horizonte)_gt0: (0, 17)
    M3_delayed_origin_speed_gt0: (0, 4)
    M4_intermediate_stopped_speed_gt0: (0, 7)
    M5_cross_stop_margin_1m: (2, 44)
@@ -163,8 +177,9 @@
    M7_over_advance_gt100m: (2, 44)
    M8_rewind_if_frozen_at_anchor_p50_max: (0.0, 2371.0396122310667)
    rules: {'R1': 28, 'R4': 8, 'R5': 8}
+   GROUP_M_si_M2b_sustituye_a_M2a: 7
    PASS  AC-M1 0/25 STOPPED_AT GPS idéntico con speed_mps>0
-   PASS  AC-M2 0/17 pre-salida con speed_mps>0
+   PASS  AC-M2 (R1) 0/17 pre-salida STOPPED_AT con speed_mps>0
    PASS  AC-M3 0/4 salida retrasada con speed_mps>0
    PASS  AC-M4 0/7 intermedias con speed_mps>0
    PASS  AC-M5 0/44 cruzan parada > τ
@@ -185,10 +200,10 @@
    {'alternative': 'A(τ=75)', 'grupo_M': 7, 'M1': (0, 25), 'M5b': (0, 44), 'M6_30s': 0.0, 'coste': (3, 27), 'R7/R8': 0}
    {'alternative': 'A(τ=100)', 'grupo_M': 7, 'M1': (0, 25), 'M5b': (0, 44), 'M6_30s': 0.0, 'coste': (3, 27), 'R7/R8': 0}
    {'alternative': 'A(τ=150)', 'grupo_M': 7, 'M1': (0, 25), 'M5b': (0, 44), 'M6_30s': 0.0, 'coste': (3, 27), 'R7/R8': 0}
-   {'alternative': 'C(Dmin=0)', 'grupo_M': 3, 'M3': (4, 4), 'M4': (7, 7), 'guarda': (0, 9)}
-   {'alternative': 'C(Dmin=30)', 'grupo_M': 3, 'M3': (4, 4), 'M4': (7, 7), 'guarda': (0, 9)}
-   {'alternative': 'C(Dmin=60)', 'grupo_M': 3, 'M3': (4, 4), 'M4': (7, 7), 'guarda': (0, 9)}
-   {'alternative': 'C(Dmin=180)', 'grupo_M': 4, 'M3': (0, 4), 'M4': (0, 7), 'guarda': (7, 9)}
+   {'alternative': 'C(Dmin=0)', 'grupo_M': 3, 'grupo_M_con_M2b': 4, 'M1': (10, 25), 'M2a': (2, 17), 'M2b': (0, 17), 'M3': (4, 4), 'M4': (7, 7), 'guarda': (0, 9)}
+   {'alternative': 'C(Dmin=30)', 'grupo_M': 3, 'grupo_M_con_M2b': 4, 'M1': (10, 25), 'M2a': (2, 17), 'M2b': (0, 17), 'M3': (4, 4), 'M4': (7, 7), 'guarda': (0, 9)}
+   {'alternative': 'C(Dmin=60)', 'grupo_M': 3, 'grupo_M_con_M2b': 4, 'M1': (10, 25), 'M2a': (2, 17), 'M2b': (0, 17), 'M3': (4, 4), 'M4': (7, 7), 'guarda': (0, 9)}
+   {'alternative': 'C(Dmin=180)', 'grupo_M': 2, 'grupo_M_con_M2b': 3, 'M1': (10, 25), 'M2a': (2, 17), 'M2b': (0, 17), 'M3': (4, 4), 'M4': (4, 7), 'guarda': (7, 9)}
 
 == 4) grupo S: pruebas sintéticas de reglas (predicados exactos) ==
 -- S1 pre-salida −300 s, STOPPED_AT origen  [criterio: avance == 0 en todo el horizonte]
@@ -259,35 +274,41 @@
    PASS  A(τ=50)                  speed=16.666666666666668 (esperada 16.666666666666668), tope=T1
 -- S14 stop_id repetido (X en 0 y 4000 m), STOPPED_AT X con ancla en 10 m  [criterio: ocurrencia más cercana (0 m): R1 coherente]
    PASS  A(τ=50)                  regla=R1, coherent=True
--- S8 DST adelanto 2027-03-28, tramo 01:50→02:10  [criterio: avance = 3000.0000 ± 1e-6 m en 180 s reales]
+-- S8 DST adelanto 2027-03-28, tramo 01:50→02:10  [criterio: avance = 3000.000000 ± 1e-6 m en 180 s reales]
    FAIL  BASE(beb9434)            avance 7999.999999999999 m (esperado 3000.0)
    FAIL  D(tolerancia=50)         avance 7999.999999999999 m (esperado 3000.0)
    FAIL  B1(offset±600)           avance 7999.999999999999 m (esperado 3000.0)
    FAIL  B2(offset+ventana)       avance 7999.999999999999 m (esperado 3000.0)
    PASS  C(τ=50,Dmin=30)          avance 2999.999999999999 m (esperado 3000.0)
    PASS  A(τ=50)                  avance 2999.999999999999 m (esperado 3000.0)
--- S9 DST atraso 2027-10-31, tramo 01:30→03:30  [criterio: avance = 333.3333 ± 1e-6 m en 180 s reales]
+-- S9 DST atraso 2027-10-31, tramo 01:30→03:30  [criterio: avance = 1000/3 m (333,333 333…) ± 1e-6 m en 180 s reales]
    FAIL  BASE(beb9434)            avance 0.0 m (esperado 333.3333333333333)
    FAIL  D(tolerancia=50)         avance 0.0 m (esperado 333.3333333333333)
    FAIL  B1(offset±600)           avance 0.0 m (esperado 333.3333333333333)
    FAIL  B2(offset+ventana)       avance 0.0 m (esperado 333.3333333333333)
    PASS  C(τ=50,Dmin=30)          avance 333.33333333333394 m (esperado 333.3333333333333)
    PASS  A(τ=50)                  avance 333.33333333333394 m (esperado 333.3333333333333)
--- S15 DST en la ESPERA del fallback: W1 01:30→03:30 del 2027-10-31, estado ausente, entrada conservada  [criterio: espera 10 800 s reales; sin avance a +90 s; avanza a +180 s]
-   PASS  C(τ=50,Dmin=30)          espera real=10800.0 s (pared 7200), dwell_until=+100.0 s, +90 s=0.0 m, +180 s=444.444 m, base=conservada
-   PASS  A(τ=50)                  espera real=10800.0 s (pared 7200), dwell_until=+100.0 s, +90 s=0.0 m, +180 s=444.444 m, base=conservada
--- S15b igual que S15 sin historia de entrada (reinicio): la espera se reinicia y se DECLARA  [criterio: retención con dwell_basis=reiniciada]
-   PASS  C(τ=50,Dmin=30)          avance=0.0 m, base=reiniciada
-   PASS  A(τ=50)                  avance=0.0 m, base=reiniciada
+-- S15 DST en la ESPERA del fallback: W1 01:30→03:30 del 2027-10-31, estado ausente, entrada por muestras  [criterio: espera 10 800 s reales; sin avance a +90 s; avanza a +180 s]
+   PASS  C(τ=50,Dmin=30)          espera real=10800.0 s (pared 7200), dwell_until=+100.0 s, +90 s=0.0 m, +180 s=444.444 m, base=muestras
+   PASS  A(τ=50)                  espera real=10800.0 s (pared 7200), dwell_until=+100.0 s, +90 s=0.0 m, +180 s=444.444 m, base=muestras
+-- S15b igual que S15 sin muestra previa en la zona (reinicio): la espera empieza en el ancla y se DECLARA  [criterio: retención con dwell_basis=ancla]
+   PASS  C(τ=50,Dmin=30)          avance=0.0 m, base=ancla
+   PASS  A(τ=50)                  avance=0.0 m, base=ancla
+-- S16 tres observaciones consecutivas en zona (e0, +20, +40), espera programada 120 s, estado ausente  [criterio: el par (latest+previous) prueba la entrada e0+20; la espera nunca termina antes de lo probado]
+   PASS  C(τ=50,Dmin=30)          par latest+previous → entrada e0+20 s, dwell_until e0+140 s; con 3 muestras → entrada e0, dwell_until e0+120 s (el par retiene 20 s MÁS, nunca menos)
+   PASS  A(τ=50)                  par latest+previous → entrada e0+20 s, dwell_until e0+140 s; con 3 muestras → entrada e0, dwell_until e0+120 s (el par retiene 20 s MÁS, nunca menos)
 
 == 5) grupo T: camino STALE real (R-STALE) con el prototipo A, 25 en ventana ==
-   sin_cambio: {'n': '25', 'recortes_efectivos': '0', 'F1_max_retroceso_m': '0.0', 'F2_|salto−rewind_m|_max': '0.0', 'F2_con_rewind>0': '7', 'reinicio_distinto': '0', 'F1_|congelado−esperado|_max': '0.0'}
-   CANCELED_en_+20s: {'n': '25', 'recortes_efectivos': '7', 'F1_max_retroceso_m': '0.0', 'F2_|salto−rewind_m|_max': '0.0', 'F2_con_rewind>0': '7', 'reinicio_distinto': '0', 'F1_|congelado−esperado|_max': '0.0'}
-   CANCELED_en_+120s: {'n': '25', 'recortes_efectivos': '4', 'F1_max_retroceso_m': '0.0', 'F2_|salto−rewind_m|_max': '0.0', 'F2_con_rewind>0': '7', 'reinicio_distinto': '0', 'F1_|congelado−esperado|_max': '0.0'}
-   CANCELED_+60s_y_anulado_+150s: {'n': '25', 'recortes_efectivos': '5', 'F1_max_retroceso_m': '0.0', 'F2_|salto−rewind_m|_max': '0.0', 'F2_con_rewind>0': '7', 'reinicio_distinto': '0', 'F1_|congelado−esperado|_max': '0.0'}
-   CANCELED_en_+180.5s(inadmisible): {'n': '25', 'recortes_efectivos': '0', 'F1_max_retroceso_m': '0.0', 'F2_|salto−rewind_m|_max': '0.0', 'F2_con_rewind>0': '7', 'reinicio_distinto': '0', 'F1_|congelado−esperado|_max': '0.0'}
+   sin_cambio: {'n': '25', 'base': "{'sin_cancelacion': 25}", 'F1_max_retroceso_m': '0.0', 'F2_|salto−rewind_m|_max': '0.0', 'F2_con_rewind>0': '7', 'reinicio_distinto': '0'}
+   posterior_obs+20_visible+20: {'n': '25', 'base': "{'sin_cancelacion': 25}", 'F1_max_retroceso_m': '0.0', 'F2_|salto−rewind_m|_max': '0.0', 'F2_con_rewind>0': '7', 'reinicio_distinto': '0'}
+   posterior_obs+20_visible+181(contraejemplo): {'n': '25', 'base': "{'sin_cancelacion': 25}", 'F1_max_retroceso_m': '0.0', 'F2_|salto−rewind_m|_max': '0.0', 'F2_con_rewind>0': '7', 'reinicio_distinto': '0'}
+   posterior_obs+60_y_anulada+150: {'n': '25', 'base': "{'sin_cancelacion': 25}", 'F1_max_retroceso_m': '0.0', 'F2_|salto−rewind_m|_max': '0.0', 'F2_con_rewind>0': '7', 'reinicio_distinto': '0'}
+   base_obs−300(reciente): {'n': '25', 'base': "{'cancelada': 25}", 'F1_max_retroceso_m': '0.0', 'F2_|salto−rewind_m|_max': '0.0', 'F2_con_rewind>0': '0', 'reinicio_distinto': '0'}
+   base_obs−86400(ayer): {'n': '25', 'base': "{'cancelacion_caducada': 25}", 'F1_max_retroceso_m': '0.0', 'F2_|salto−rewind_m|_max': '0.0', 'F2_con_rewind>0': '7', 'reinicio_distinto': '0'}
+   base_obs−700_recibida−5(edad>umbral): {'n': '25', 'base': "{'cancelacion_caducada': 25}", 'F1_max_retroceso_m': '0.0', 'F2_|salto−rewind_m|_max': '0.0', 'F2_con_rewind>0': '7', 'reinicio_distinto': '0'}
+   CONDICION_VIOLADA_base_run99_visible+100: {'n': '25', 'base': "{'cancelada': 25}", 'F1_max_retroceso_m': '1310.6580078721745', 'F2_|salto−rewind_m|_max': '0.0', 'F2_con_rewind>0': '0', 'reinicio_distinto': '0'}
    cambio_de_version: {'frozen_basis': 'anchor_version_changed', 'en_ancla': 'True'}
-   CANCELED_+20s_caso_en_marcha: {'trip': '1023V19667C5', 'avance_en_corte_m': '213.73697317413462', 'igual_a_+50s': 'True', 'igual_congelado_F1': 'True', 'sin_corte_a_+50s_m': '534.3424329353293'}
+   contraejemplo_19667: {'observed': "{'+179_m': 1284.8910846632498, '+181_m': 213.73697317413462, 'retroceso_m': 1071.1541114891152}", 'inmutable': "{'+179_m': 1284.8910846632498, '+181_m': 1284.8910846632498, 'retroceso_m': 0.0}"}
 
 == 6) ramas de presentación (motor real) ==
    P1_motor_usa_previous: True

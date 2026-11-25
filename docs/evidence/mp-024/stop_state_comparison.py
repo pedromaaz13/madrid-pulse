@@ -96,6 +96,7 @@ MIN_DWELL_S = 30.0
 TAU_SWEEP = (5.0, 5.3, 5.5, 10.0, 20.8, 30.0, 37.9, 38.1, 40.0, 50.0, 75.0, 100.0, 150.0)
 D_MIN_SWEEP = (0.0, 30.0, 60.0, 180.0)
 OFFSET_SYM_S = 600.0
+CANCEL_MAX_AGE_S = 600.0  # P-024 provisional (§6): edad máxima de una cancelación aplicable
 
 EXPECTED_INPUTS = {
     "1532/alerts.json", "1532/trip_updates.json", "1532/vehicle_positions.json",
@@ -210,6 +211,7 @@ class Ctx:
     current_stop_id: str | None
     canceled: bool = False
     zone_entry_at: datetime | None = None
+    anchor_run: int = 100  # ingestion_run_id del ancla (modelo de disponibilidad por run, §4.4)
     label: str = ""
     extra: dict = field(default_factory=dict)
 
@@ -329,7 +331,7 @@ def schedule_rules(ctx: Ctx, tau: float, coherent: bool | None, prefix: str, min
             k = min(zone, key=lambda s: (abs(s.progress_m - a), s.index))
             dwell_real = (ctx.instant(k.departure_s) - ctx.instant(k.arrival_s)).total_seconds()  # R-DST
             entry = ctx.zone_entry_at or ctx.anchor_at
-            basis = "conservada" if ctx.zone_entry_at is not None else "reiniciada"
+            basis = "muestras" if ctx.zone_entry_at is not None else "ancla"
             until = entry + timedelta(seconds=max(min_dwell, dwell_real))
             if until >= ctx.horizon_end:
                 return hold(ctx, "schedule_stop_zone", prefix + "R8-zona", coherent, basis)
@@ -338,6 +340,28 @@ def schedule_rules(ctx: Ctx, tau: float, coherent: bool | None, prefix: str, min
                            hold_reason="schedule_stop_zone", dwell_basis=basis)
             return leg(ctx, tau, prefix + "R8-zona-consumida", coherent, dwell_basis=basis)
     return leg(ctx, tau, prefix + "R5", coherent)
+
+
+def zone_entry_from_history(stops: tuple[StopInfo, ...], tau: float,
+                            history: list[tuple[datetime, float]]) -> tuple[datetime | None, int]:
+    """Entrada en zona PROBADA por las muestras (§4.6): la observación más antigua de la racha
+    consecutiva final (mismo viaje) cuya parada de zona es la del ancla. `history` va de la
+    más antigua a la más reciente y termina en el ancla. Devuelve (entrada, n_muestras); la
+    entrada real es <= la devuelta (cota superior), nunca posterior."""
+    def zone_of(p: float) -> StopInfo | None:
+        z = [s for s in stops if abs(s.progress_m - p) <= tau]
+        return min(z, key=lambda s: (abs(s.progress_m - p), s.index)) if z else None
+    anchor_at, anchor_p = history[-1]
+    k = zone_of(anchor_p)
+    if k is None:
+        return None, 0
+    entry, n = anchor_at, 1
+    for obs_at, prog in reversed(history[:-1]):
+        z = zone_of(prog)
+        if z is None or z.index != k.index:
+            break
+        entry, n = obs_at, n + 1
+    return entry, n
 
 
 def classify(ctx: Ctx, tau: float) -> tuple[str, StopInfo | None, str]:
@@ -532,9 +556,16 @@ def build_real(replay: Path) -> tuple[list[RealCase], list[Pair], dict, Topology
         anchor_s = service_seconds(latest.observed_at, sd)
         cohort = ("pre_salida" if anchor_s < schedule.points[0].seconds
                   else "post_llegada" if anchor_s > schedule.points[-1].seconds else "en_ventana")
+        history = [(latest.observed_at, mv.anchor_progress_m)]
+        if previous is not None:
+            history.insert(0, (previous.observed_at,
+                               schedule.directed_progress(engine.map_match(previous).physical_arc_m)))
+        entry, n_samples = zone_entry_from_history(stops, TAU_STOP_M, history)
+        facts["zona_con_2_muestras_consecutivas"] = facts.get("zona_con_2_muestras_consecutivas", 0) + (n_samples >= 2)
         ctx = Ctx(trip_id=trip_id, schedule=schedule, stops=stops, service_date=sd, anchor_at=latest.observed_at,
                   anchor_progress_m=mv.anchor_progress_m, horizon_end=rd.valid_until, status=latest.current_status,
-                  current_stop_id=latest.current_stop_id, label=trip_id)
+                  current_stop_id=latest.current_stop_id, label=trip_id,
+                  zone_entry_at=entry if n_samples >= 2 else None)
         same_gps = (previous is not None and previous.latitude == latest.latitude
                     and previous.longitude == latest.longitude)
         cases.append(RealCase(vid, ctx, cohort, same_gps, latest.current_stop_id == stops[0].stop_id,
@@ -609,7 +640,11 @@ def real_metrics(name: str, alt: Callable[[Ctx], Plan], cases: list[RealCase], p
     res: dict = {"alternative": name}
     res["M1_stopped_same_gps_speed_gt0"] = (sum(map(pub, same)), len(same))
     res["M1_stopped_same_gps_advance_gt0"] = (sum(map(adv, same)), len(same))
-    res["M2_predeparture_speed_gt0"] = (sum(map(pub, pre)), len(pre))
+    assert all((c.ctx.status or "").upper() == "STOPPED_AT" for c in pre), "las 17 pre-salidas son STOPPED_AT"
+    res["M2a_R1_pre_salida_STOPPED_AT_speed_gt0"] = (sum(map(pub, pre)), len(pre))
+    before_dep = lambda c: advance(plans[c.vid].env, min(c.ctx.horizon_end,
+                                                         c.ctx.instant(c.ctx.stops[0].departure_s))) > 0.0
+    res["M2b_R2_avance_hasta_min(salida,horizonte)_gt0"] = (sum(map(before_dep, pre)), len(pre))
     res["M3_delayed_origin_speed_gt0"] = (sum(map(pub, late)), len(late))
     res["M4_intermediate_stopped_speed_gt0"] = (sum(map(pub, mid)), len(mid))
 
@@ -655,13 +690,17 @@ def real_metrics(name: str, alt: Callable[[Ctx], Plan], cases: list[RealCase], p
     res["rules"] = dict(sorted(rules.items()))
     res["GROUP_M_pass"] = {
         "AC-M1 0/25 STOPPED_AT GPS idéntico con speed_mps>0": res["M1_stopped_same_gps_speed_gt0"][0] == 0,
-        "AC-M2 0/17 pre-salida con speed_mps>0": res["M2_predeparture_speed_gt0"][0] == 0,
+        "AC-M2 (R1) 0/17 pre-salida STOPPED_AT con speed_mps>0": res["M2a_R1_pre_salida_STOPPED_AT_speed_gt0"][0] == 0,
         "AC-M3 0/4 salida retrasada con speed_mps>0": res["M3_delayed_origin_speed_gt0"][0] == 0,
         "AC-M4 0/7 intermedias con speed_mps>0": res["M4_intermediate_stopped_speed_gt0"][0] == 0,
         "AC-M5 0/44 cruzan parada > τ": res["M5b_cross_stop_beyond_tau"][0] == 0,
         "AC-M6 19656 avance a 30 s == 0": res["M6_19656_advance_30s_60s"][0] == 0.0,
         "AC-M7 guarda 0/9 IN_TRANSIT_TO/INCOMING_AT que avanzaron con predicción == 0": not guard,
     }
+    alt_m = dict(res["GROUP_M_pass"])
+    alt_m.pop("AC-M2 (R1) 0/17 pre-salida STOPPED_AT con speed_mps>0")
+    alt_m["M2b (R2) 0/17 con avance antes de la salida"] = res["M2b_R2_avance_hasta_min(salida,horizonte)_gt0"][0] == 0
+    res["GROUP_M_si_M2b_sustituye_a_M2a"] = sum(alt_m.values())
     return res
 
 
@@ -677,114 +716,128 @@ def quantile(values: list[float], q: float) -> float:
 # =========================================================================
 @dataclass(frozen=True)
 class Update:
-    at: datetime  # observed_at de la trip_update
+    """Una `trip_update` con sus tres relojes (§4.4).
+
+    - `observed_at`: cuándo OCURRIÓ según la fuente (cabecera del feed);
+    - `received_at`: cuándo la recibió el colector (`0001_init.up.sql:110`);
+    - `run`: `ingestion_run_id` del ciclo que la confirmó;
+    - `visible_at`: cuándo quedó visible para una consulta (commit del ciclo). Con un
+      único colector y un commit por ciclo (`collector.py:115-118`), `visible_at` sigue el
+      orden de `run`; los escenarios «condición violada» rompen esa hipótesis a propósito.
+    """
+
+    observed_at: datetime
+    received_at: datetime
+    run: int
+    visible_at: datetime
     kind: str  # CANCELED | SCHEDULED
 
 
-def authorized_plan(ctx: Ctx, plan_fn: Callable[[Ctx], Plan], updates: Iterable[Update],
-                    until: datetime) -> tuple[Plan, datetime | None]:
-    """Envolvente autorizada para el ancla con las actualizaciones admisibles hasta `until`.
+def authorized_plan(ctx: Ctx, plan_fn: Callable[[Ctx], Plan], updates: Iterable[Update], query_at: datetime,
+                    policy: str = "inmutable") -> tuple[Plan, str]:
+    """Envolvente autorizada para el ancla vista por una consulta en `query_at`.
 
-    - Estado base: la última `trip_update` con `at <= reference_at` (en producción:
-      `ingestion_run_id <= run del ancla`).
-    - Actualización admisible: `reference_at < at <= min(valid_until, until)`. Solo
-      RECORTA (monotonía de autorización): un CANCELED fija `max_progress_m` en el
-      progreso publicado en `at`. Una actualización no restrictiva se ignora hasta la
-      siguiente ancla.
+    `inmutable` (política adoptada, §4.4): solo cuentan las filas con `run <= anchor_run`
+    (estado disponible cuando el ancla lo estuvo); de ellas, la última por `(run, observed_at)`;
+    una CANCELED solo aplica si `anchor_at - observed_at <= CANCEL_MAX_AGE_S`. Ninguna fila
+    posterior al run del ancla modifica esta envolvente ni su congelación: se aplica a la
+    SIGUIENTE ancla. `observed` reproduce la política de la ronda 2 (recorte en `observed_at`)
+    solo para mostrar el contraejemplo del revisor.
     """
-    updates = sorted(updates, key=lambda u: u.at)
-    base = [u for u in updates if u.at <= ctx.anchor_at]
-    canceled = bool(base) and base[-1].kind == "CANCELED"
-    plan = plan_fn(replace(ctx, canceled=canceled or ctx.canceled))
-    limit = min(ctx.horizon_end, until)
-    for u in updates:
-        if ctx.anchor_at < u.at <= limit and u.kind == "CANCELED" and plan.env.speed_mps > 0.0:
-            env = plan.env
-            cut = max(env.progress_m_at_reference, min(env.max_progress_m, env.progress_at(u.at)))
-            new_env = replace(env, max_progress_m=cut)
-            plan = replace(plan, env=new_env, cap_kind="trip_canceled", cap_stop_id=None,
-                           cap_reached_at=ceil_ms(u.at) if cut < env.max_progress_m else plan.cap_reached_at)
-            return plan, u.at
-    return plan, None
+    seen = [u for u in updates if u.visible_at <= query_at]
+    if policy == "observed":
+        base = [u for u in seen if u.observed_at <= ctx.anchor_at]
+        canceled = bool(base) and max(base, key=lambda u: u.observed_at).kind == "CANCELED"
+        plan = plan_fn(replace(ctx, canceled=canceled or ctx.canceled))
+        for u in sorted(seen, key=lambda u: u.observed_at):
+            if ctx.anchor_at < u.observed_at <= min(ctx.horizon_end, query_at) and u.kind == "CANCELED" \
+                    and plan.env.speed_mps > 0.0:
+                env = plan.env
+                cut = max(env.progress_m_at_reference, min(env.max_progress_m, env.progress_at(u.observed_at)))
+                return replace(plan, env=replace(env, max_progress_m=cut), cap_kind="trip_canceled"), "recorte"
+        return plan, "sin_recorte"
+    base = sorted((u for u in seen if u.run <= ctx.anchor_run), key=lambda u: (u.run, u.observed_at))
+    last = base[-1] if base else None
+    fresh = last is not None and (ctx.anchor_at - last.observed_at).total_seconds() <= CANCEL_MAX_AGE_S
+    canceled = last is not None and last.kind == "CANCELED" and fresh
+    why = ("cancelada" if canceled else "cancelacion_caducada" if last is not None and last.kind == "CANCELED"
+           else "sin_cancelacion")
+    return plan_fn(replace(ctx, canceled=canceled or ctx.canceled)), why
 
 
 def present(ctx: Ctx, plan_fn: Callable[[Ctx], Plan], display_at: datetime, *, rule: str = "F1",
-            updates: Iterable[Update] = (), versions_match: bool = True) -> dict:
-    """Coordenada publicada (progreso) en `display_at` para un ancla con corredor."""
+            updates: Iterable[Update] = (), versions_match: bool = True, policy: str = "inmutable") -> dict:
+    """Coordenada publicada (progreso) en `display_at`; el reloj de disponibilidad es `display_at`."""
+    plan, why = authorized_plan(ctx, plan_fn, updates, display_at, policy)
     if display_at <= ctx.horizon_end:
-        plan, cut = authorized_plan(ctx, plan_fn, updates, display_at)
         p = plan.env.progress_at(display_at)
         method = "extrapolated_from_last_anchor" if p > ctx.anchor_progress_m else "anchor"
-        return {"method": method, "progress_m": p, "cut_at": cut}
+        return {"method": method, "progress_m": p, "base": why}
     if not versions_match:
         return {"method": "stale_frozen", "progress_m": ctx.anchor_progress_m, "frozen_basis": "anchor_version_changed"}
-    plan, cut = authorized_plan(ctx, plan_fn, updates, ctx.horizon_end)
     end = plan.env.progress_at(ctx.horizon_end)
     if rule == "F1":
         return {"method": "stale_frozen", "progress_m": end, "frozen_basis": "authorized_envelope_end",
-                "last_confirmed_progress_m": ctx.anchor_progress_m, "cut_at": cut}
+                "last_confirmed_progress_m": ctx.anchor_progress_m, "base": why}
     return {"method": "stale_frozen", "progress_m": ctx.anchor_progress_m, "frozen_basis": "anchor",
-            "rewound_from_progress_m": end, "rewind_m": end - ctx.anchor_progress_m, "cut_at": cut}
+            "rewound_from_progress_m": end, "rewind_m": end - ctx.anchor_progress_m, "base": why}
 
 
 def stale_tests(cases: list[RealCase]) -> dict:
+    """Camino stale con disponibilidad que VARÍA entre consultas (cada consulta ve solo las
+    filas con `visible_at <= display_at`), 25 en ventana, muestreo cada 0,5 s de 0 a 400 s."""
     plan_a = make_plan_a(TAU_STOP_M)
     win = [c for c in cases if c.cohort == "en_ventana"]
     assert len(win) == 25
-    scenarios = {
+
+    def up(a: datetime, obs: float, run: int, vis: float, kind: str = "CANCELED", rec: float | None = None) -> Update:
+        return Update(a + timedelta(seconds=obs), a + timedelta(seconds=obs if rec is None else rec), run,
+                      a + timedelta(seconds=vis), kind)
+    scenarios: dict[str, Callable[[datetime], list[Update]]] = {
         "sin_cambio": lambda a: [],
-        "CANCELED_en_+20s": lambda a: [Update(a + timedelta(seconds=20), "CANCELED")],
-        "CANCELED_en_+120s": lambda a: [Update(a + timedelta(seconds=120), "CANCELED")],
-        "CANCELED_+60s_y_anulado_+150s": lambda a: [Update(a + timedelta(seconds=60), "CANCELED"),
-                                                    Update(a + timedelta(seconds=150), "SCHEDULED")],
-        "CANCELED_en_+180.5s(inadmisible)": lambda a: [Update(a + timedelta(seconds=180.5), "CANCELED")],
+        "posterior_obs+20_visible+20": lambda a: [up(a, 20, 101, 20)],
+        "posterior_obs+20_visible+181(contraejemplo)": lambda a: [up(a, 20, 101, 181, rec=181)],
+        "posterior_obs+60_y_anulada+150": lambda a: [up(a, 60, 101, 60), up(a, 150, 102, 150, "SCHEDULED")],
+        "base_obs−300(reciente)": lambda a: [up(a, -300, 99, -300)],
+        "base_obs−86400(ayer)": lambda a: [up(a, -86400, 50, -86400)],
+        "base_obs−700_recibida−5(edad>umbral)": lambda a: [up(a, -700, 99, -5, rec=-5)],
+        "CONDICION_VIOLADA_base_run99_visible+100": lambda a: [up(a, -10, 99, 100)],
     }
     out: dict = {}
     for sname, mk in scenarios.items():
-        worst_back_f1, worst_f2_mismatch, moving, restart_mismatch, frozen_vs_expected = 0.0, 0.0, 0, 0, 0.0
-        effective_cuts = 0
+        back_f1, f2_mismatch, rewind_pos, restart, base_counts = 0.0, 0.0, 0, 0, {}
         for c in win:
             ups = mk(c.ctx.anchor_at)
-            uncut, _ = authorized_plan(c.ctx, plan_a, [], c.ctx.horizon_end)
-            cut_plan, _ = authorized_plan(c.ctx, plan_a, ups, c.ctx.horizon_end)
-            effective_cuts += cut_plan.env.max_progress_m < uncut.env.max_progress_m
-            series_f1, series_f2 = [], []
-            for k in range(801):  # 0..400 s cada 0,5 s
+            series = []
+            for k in range(801):
                 t = c.ctx.anchor_at + timedelta(seconds=k * 0.5)
-                series_f1.append(present(c.ctx, plan_a, t, rule="F1", updates=ups)["progress_m"])
-                series_f2.append(present(c.ctx, plan_a, t, rule="F2", updates=ups))
-            for a, b in pairwise(series_f1):
-                worst_back_f1 = max(worst_back_f1, a - b)
+                series.append(present(c.ctx, plan_a, t, rule="F1", updates=ups)["progress_m"])
+            back_f1 = max([back_f1] + [a - b for a, b in pairwise(series)])
             before = present(c.ctx, plan_a, c.ctx.horizon_end, rule="F2", updates=ups)["progress_m"]
             after = present(c.ctx, plan_a, c.ctx.horizon_end + timedelta(milliseconds=1), rule="F2", updates=ups)
-            worst_f2_mismatch = max(worst_f2_mismatch, abs((before - after["progress_m"]) - after["rewind_m"]))
-            moving += after["rewind_m"] > 0.0
+            f2_mismatch = max(f2_mismatch, abs((before - after["progress_m"]) - after["rewind_m"]))
+            rewind_pos += after["rewind_m"] > 0.0
             fresh = present(c.ctx, plan_a, c.ctx.horizon_end + timedelta(seconds=1), rule="F1", updates=ups)
-            restart_mismatch += fresh["progress_m"] != series_f1[362]  # 181 s, sin estado previo
-            base_end, _ = authorized_plan(c.ctx, plan_a, [u for u in ups if u.at <= c.ctx.horizon_end],
-                                          c.ctx.horizon_end)
-            frozen_vs_expected = max(frozen_vs_expected,
-                                     abs(fresh["progress_m"] - base_end.env.progress_at(c.ctx.horizon_end)))
-        out[sname] = {"n": len(win), "recortes_efectivos": effective_cuts, "F1_max_retroceso_m": worst_back_f1,
-                      "F2_|salto−rewind_m|_max": worst_f2_mismatch, "F2_con_rewind>0": moving,
-                      "reinicio_distinto": restart_mismatch, "F1_|congelado−esperado|_max": frozen_vs_expected}
-    # cambio de versión: congela en el ancla y lo declara
+            restart += fresh["progress_m"] != series[362]
+            why = fresh["base"]
+            base_counts[why] = base_counts.get(why, 0) + 1
+        out[sname] = {"n": len(win), "base": base_counts, "F1_max_retroceso_m": back_f1,
+                      "F2_|salto−rewind_m|_max": f2_mismatch, "F2_con_rewind>0": rewind_pos,
+                      "reinicio_distinto": restart}
     c = win[0]
     v = present(c.ctx, plan_a, c.ctx.horizon_end + timedelta(seconds=1), versions_match=False)
-    out["cambio_de_version"] = {"frozen_basis": v["frozen_basis"],
-                                "en_ancla": v["progress_m"] == c.ctx.anchor_progress_m}
-    # CANCELED a +20 s sobre un caso EN MARCHA: el tope queda en el progreso publicado en ese instante
-    mv_case = next(c for c in win if plan_a(c.ctx).env.speed_mps > 0.0)
-    t_cut = mv_case.ctx.anchor_at + timedelta(seconds=20)
-    ups = [Update(t_cut, "CANCELED")]
-    p_at = present(mv_case.ctx, plan_a, t_cut, updates=ups)["progress_m"]
-    p_later = present(mv_case.ctx, plan_a, t_cut + timedelta(seconds=30), updates=ups)["progress_m"]
-    p_frozen = present(mv_case.ctx, plan_a, mv_case.ctx.horizon_end + timedelta(seconds=1), updates=ups)["progress_m"]
-    no_cut = present(mv_case.ctx, plan_a, t_cut + timedelta(seconds=30))["progress_m"]
-    out["CANCELED_+20s_caso_en_marcha"] = {
-        "trip": mv_case.ctx.trip_id, "avance_en_corte_m": p_at - mv_case.ctx.anchor_progress_m,
-        "igual_a_+50s": p_at == p_later, "igual_congelado_F1": p_at == p_frozen,
-        "sin_corte_a_+50s_m": no_cut - mv_case.ctx.anchor_progress_m}
+    out["cambio_de_version"] = {"frozen_basis": v["frozen_basis"], "en_ancla": v["progress_m"] == c.ctx.anchor_progress_m}
+    # Contraejemplo del revisor en 19667: la cancelación (observed_at = +20 s) no estaba disponible
+    # a +179 s y sí a +181 s. Se consulta con la lista de filas que cada consulta VE realmente.
+    x = next(c for c in win if c.ctx.trip_id == "1023V19667C5").ctx
+    late = [up(x.anchor_at, 20, 101, 181, rec=181)]
+    res = {}
+    for policy in ("observed", "inmutable"):
+        p179 = present(x, plan_a, x.anchor_at + timedelta(seconds=179), updates=late, policy=policy)["progress_m"]
+        p181 = present(x, plan_a, x.anchor_at + timedelta(seconds=181), updates=late, policy=policy)["progress_m"]
+        res[policy] = {"+179_m": p179 - x.anchor_progress_m, "+181_m": p181 - x.anchor_progress_m,
+                       "retroceso_m": p179 - p181}
+    out["contraejemplo_19667"] = res
     return out
 
 
@@ -1048,7 +1101,9 @@ def synthetic_cases(real: list[RealCase]) -> list[tuple[str, Ctx, str, Callable[
         def check(p: Plan, c: Ctx, expected=expected) -> tuple[bool | None, str]:
             a = advance(p.env, c.horizon_end)
             return abs(a - expected) <= 1e-6, f"avance {a!r} m (esperado {expected!r})"
-        out.append((label, ctx, f"avance = {expected:.4f} ± 1e-6 m en 180 s reales", check))
+        crit = ("avance = 1000/3 m (333,333 333…) ± 1e-6 m en 180 s reales" if "2027-10-31" in label
+                else f"avance = {expected:.6f} ± 1e-6 m en 180 s reales")
+        out.append((label, ctx, crit, check))
     # S15: espera en la degradación R8 que cruza el atraso de hora (01:30→03:30 de pared = 10 800 s reales).
     d15 = date(2027, 10, 31)
     arr1 = service_day_instant(d15, parse_gtfs_time("01:30:00"))
@@ -1060,20 +1115,46 @@ def synthetic_cases(real: list[RealCase]) -> list[tuple[str, Ctx, str, Callable[
         dwell = (ctx.instant(ctx.stops[1].departure_s) - ctx.instant(ctx.stops[1].arrival_s)).total_seconds()
         ok = (dwell == 10800.0 and p.env.dwell_until == anchor15 + timedelta(seconds=100)
               and advance(p.env, anchor15 + timedelta(seconds=90)) == 0.0
-              and advance(p.env, anchor15 + timedelta(seconds=180)) > 0.0 and p.dwell_basis == "conservada")
+              and advance(p.env, anchor15 + timedelta(seconds=180)) > 0.0 and p.dwell_basis == "muestras")
         return ok, (f"espera real={dwell} s (pared 7200), dwell_until=+{(p.env.dwell_until - anchor15).total_seconds() if p.env.dwell_until else None} s, "
                     f"+90 s={advance(p.env, anchor15 + timedelta(seconds=90))!r} m, "
                     f"+180 s={advance(p.env, anchor15 + timedelta(seconds=180)):.3f} m, base={p.dwell_basis}")
-    out.append(("S15 DST en la ESPERA del fallback: W1 01:30→03:30 del 2027-10-31, estado ausente, entrada conservada",
-                synth(d15, pts15, None, None, anchor15, 10003.0, "S15", zone_entry_at=arr1),
+    entry15, n15 = zone_entry_from_history(
+        tuple(StopInfo(sid, pr, parse_gtfs_time(a), parse_gtfs_time(b), i) for i, (sid, pr, a, b) in enumerate(pts15)),
+        TAU_STOP_M, [(arr1, 10001.0), (anchor15, 10003.0)])
+    assert entry15 == arr1 and n15 == 2
+    out.append(("S15 DST en la ESPERA del fallback: W1 01:30→03:30 del 2027-10-31, estado ausente, entrada por muestras",
+                synth(d15, pts15, None, None, anchor15, 10003.0, "S15", zone_entry_at=entry15),
                 "espera 10 800 s reales; sin avance a +90 s; avanza a +180 s", s15_check))
 
     def s15b_check(p: Plan, ctx: Ctx) -> tuple[bool | None, str]:
         a = advance(p.env, ctx.horizon_end)
-        return (a == 0.0 and p.dwell_basis == "reiniciada"), f"avance={a!r} m, base={p.dwell_basis}"
-    out.append(("S15b igual que S15 sin historia de entrada (reinicio): la espera se reinicia y se DECLARA",
+        return (a == 0.0 and p.dwell_basis == "ancla"), f"avance={a!r} m, base={p.dwell_basis}"
+    out.append(("S15b igual que S15 sin muestra previa en la zona (reinicio): la espera empieza en el ancla y se DECLARA",
                 synth(d15, pts15, None, None, anchor15, 10003.0, "S15b"),
-                "retención con dwell_basis=reiniciada", s15b_check))
+                "retención con dwell_basis=ancla", s15b_check))
+    # S16: tres observaciones consecutivas en la misma zona (entrada real e0, luego e0+20 y e0+40).
+    pts16 = [("V0", 0.0, "10:00:00", "10:00:00"), ("V1", 5000.0, "10:05:00", "10:07:00"),
+             ("V2", 9000.0, "10:10:00", "10:10:00")]
+    st16 = tuple(StopInfo(sid, pr, parse_gtfs_time(a), parse_gtfs_time(b), i) for i, (sid, pr, a, b) in enumerate(pts16))
+    e0 = service_day_instant(d0, parse_gtfs_time("10:05:30"))
+    obs16 = [(e0, 5002.0), (e0 + timedelta(seconds=20), 5001.0), (e0 + timedelta(seconds=40), 5003.0)]
+    entry_pair, n_pair = zone_entry_from_history(st16, TAU_STOP_M, obs16[1:])
+    entry_all, n_all = zone_entry_from_history(st16, TAU_STOP_M, obs16)
+
+    def s16_check(p: Plan, ctx: Ctx) -> tuple[bool | None, str]:
+        full = make_plan_c(TAU_STOP_M, MIN_DWELL_S)(replace(ctx, zone_entry_at=entry_all))
+        ok = (entry_pair == obs16[1][0] and n_pair == 2 and entry_all == e0 and n_all == 3
+              and p.env.dwell_until == entry_pair + timedelta(seconds=120)
+              and full.env.dwell_until == e0 + timedelta(seconds=120)
+              and p.env.dwell_until > full.env.dwell_until)
+        return ok, (f"par latest+previous → entrada e0+{(entry_pair - e0).total_seconds():g} s, dwell_until "
+                    f"e0+{(p.env.dwell_until - e0).total_seconds():g} s; con 3 muestras → entrada e0, dwell_until "
+                    f"e0+{(full.env.dwell_until - e0).total_seconds():g} s (el par retiene 20 s MÁS, nunca menos)")
+    out.append(("S16 tres observaciones consecutivas en zona (e0, +20, +40), espera programada 120 s, estado ausente",
+                synth(d0, pts16, None, None, obs16[2][0], obs16[2][1], "S16", zone_entry_at=entry_pair),
+                "el par (latest+previous) prueba la entrada e0+20; la espera nunca termina antes de lo probado",
+                s16_check))
     return out
 
 
@@ -1159,6 +1240,11 @@ def main(argv: Iterable[str] | None = None) -> None:
     reproj = facts.pop("reproj_m")
     facts["reproyeccion_n_max_m"] = (len(reproj), max(reproj))
     facts["estructura_gtfs_44_viajes"] = gtfs_structure(cases, TAU_STOP_M)
+    for d_min in (MIN_DWELL_S, 180.0):
+        pc = make_plan_c(TAU_STOP_M, d_min)
+        changed = [c.ctx.trip_id for c in cases
+                   if c.ctx.zone_entry_at is not None and pc(c.ctx).env != pc(replace(c.ctx, zone_entry_at=None)).env]
+        facts[f"C(Dmin={d_min:g})_envolventes_que_cambian_con_entrada_por_muestras"] = (len(changed), changed)
     out["facts"] = facts
     print("\n== 1) hechos del corte 1533 ==")
     for k, val in facts.items():
@@ -1193,6 +1279,9 @@ def main(argv: Iterable[str] | None = None) -> None:
     for d_min in D_MIN_SWEEP:
         m = real_metrics(f"C(Dmin={d_min:g})", make_plan_c(TAU_STOP_M, d_min), cases, pairs)
         row = {"alternative": m["alternative"], "grupo_M": sum(m["GROUP_M_pass"].values()),
+               "grupo_M_con_M2b": m["GROUP_M_si_M2b_sustituye_a_M2a"],
+               "M1": m["M1_stopped_same_gps_speed_gt0"], "M2a": m["M2a_R1_pre_salida_STOPPED_AT_speed_gt0"],
+               "M2b": m["M2b_R2_avance_hasta_min(salida,horizonte)_gt0"],
                "M3": m["M3_delayed_origin_speed_gt0"], "M4": m["M4_intermediate_stopped_speed_gt0"],
                "guarda": m["M7_guard_transit_incoming_moved_pred_eq0"]}
         out["sensitivity"].append(row)
@@ -1207,7 +1296,7 @@ def main(argv: Iterable[str] | None = None) -> None:
         key = label.split(" ")[0]
         if key in ("S1", "S2", "S3", "S4", "S5", "S6", "S6b", "S8", "S9"):
             names = list(ALTERNATIVES)
-        elif key in ("S5b", "S7", "S10", "S15", "S15b"):
+        elif key in ("S5b", "S7", "S10", "S15", "S15b", "S16"):
             names = [C_NAME, A_NAME]
         else:
             names = [A_NAME]

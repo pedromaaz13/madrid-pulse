@@ -1,13 +1,17 @@
-# MP-024 · Evidencia del modelo de estado de parada (ronda 2)
+# MP-024 · Evidencia del modelo de estado de parada (cierre de la 2ª ronda)
 
 Evidencia offline y reproducible de la enmienda [`docs/adr/0014-amendment-stop-state.md`](../../adr/0014-amendment-stop-state.md), en estado `Propuesto`.
 
-La ronda 2 responde al dictamen `CHANGES_REQUESTED` de Codex `gpt-6.2-astra` · high sobre `f0f8224` (B1–B7, A1–A4). La tabla de correcciones está en el anexo del ADR.
+Historia de revisión:
+- **Ronda 2:** respondió al dictamen `CHANGES_REQUESTED` de Codex `gpt-6.2-astra` · high sobre `f0f8224` (B1–B7, A1–A4).
+- **Cierre de la 2ª ronda ordinaria:** corrige los cuatro puntos que Codex dejó parciales sobre `559a5c2`: B2, B5, B6 y A3. La tabla de correcciones está en el anexo del ADR.
+
+> **Sin tercera ronda automática** (ORCHESTRATION_POLICY §3.3). Las correcciones de este cierre **no las re-verifica Codex** salvo que el propietario lo decida. Lo que aquí se afirma está respaldado por `output.txt` y por las comprobaciones del propio arnés, no por una revisión independiente posterior.
 
 **Qué es y qué no es:**
 - Las alternativas del guion son **prototipos de diseño**. No son MP-025a.
 - El guion importa `packages/` y `apps/` en solo lectura y no los modifica.
-- τ = 50 m y `min_dwell_s` = 30 s forman el **perfil de ensayo P-024**: valores provisionales, no de diseño. Los calibra MP-028.
+- τ = 50 m, `min_dwell_s` = 30 s y `cancel_max_age_s` = 600 s forman el **perfil de ensayo P-024**: valores provisionales, no de diseño. Los calibra MP-028.
 
 ## Ficheros
 
@@ -37,15 +41,15 @@ node $E/ts_equivalence.cjs /tmp/mp024-ts/movement.js $E/ac15_fixture.json > $E/t
 **Entorno de la ejecución registrada (2026-11-25):**
 - `python3` 3.12.3, pydantic 2.13.4, Node v20.20.0, tsc 6.0.3.
 - **Sin base de datos:** no se abrió ninguna conexión. Para validar los valores por defecto de `ApiConfig.from_env()`, que por defecto apunta a 5433, se sustituye la DSN por `postgresql://mp024-no-connect.invalid:1/none` y no se conecta.
-- **HEAD de ejecución:** `f0f8224f7b5d098eb1f2b043efaa933c00b6111e` (ronda 1), con los cambios de la ronda 2 aún sin commitear. El guion comprueba que `packages/`, `apps/`, `services/` e `infra/` son idénticos a `beb9434`.
+- **HEAD de ejecución:** `559a5c2e98a3be088713ccdcd0d1bcbd8ea17c4f` (ronda 2), con los cambios del cierre aún sin commitear. El guion comprueba que `packages/`, `apps/`, `services/` e `infra/` son idénticos a `beb9434`.
 
 **Determinismo:** dos ejecuciones en directorios independientes producen `output.txt`, `results.json` y `ac15_fixture.json` idénticos byte a byte (`cmp`).
 
 | Fichero | SHA-256 |
 |---|---|
-| `output.txt` | `010469bfbdb2a9b3c980e52726510e98e944ecf32e2b742661250c949130feb0` |
-| `results.json` | `c4298bb3f1b0f36e8b4bd11ed3f20234b494302b879d1fbe1e2e86b19211f749` |
-| `ac15_fixture.json` | `a82e4fbd1a50666d69a3f51055a410aead625be14f12dda68c80076320571945` |
+| `output.txt` | `2ba8713743472ed88be562e5b588308db9fecebef30a1a97962bb466d32ed75a` |
+| `results.json` | `6073b942e86021ee4498ebb9b895bc170f2c0b13e58e15ca0f829d5023b9f860` |
+| `ac15_fixture.json` | `dda61ba411b418ffa0c8c01cea8d146df401ba2f23981e7463ace2bac83a7869` |
 
 Las salidas de los comandos registrados:
 
@@ -117,6 +121,9 @@ Fuera de Git y citadas por hash: `/Users/matu/orca/workspaces/madrid-pulse/h4-pl
   - 0 tramos con duración real ≤ 0.
 
   Esos casos límite solo se prueban con sintéticos.
+- **Entrada en zona por muestras (B5):**
+  - 31/44 anclas tienen 2 observaciones consecutivas (`1532`, `1533`) en la zona de la misma parada.
+  - Aplicar esa entrada cambia **14** envolventes de C, la misma lista con Dmin = 30 y con Dmin = 180 (`output.txt` §1).
 - **`19656`:** 75,0 km/h es la **media del arco en los 77 s previos** a `1533` (`scratch/aud04_cohorte_19656.py`). No es una velocidad instantánea ni dice qué hizo después.
 - **Cruces residuales de A con margen de 1 m:** `19667` (a +2,47 m de `35605`) y `20281` (a +6,91 m de `37002`; el operador declara `37011`). Lo **probado** es que hay cero cruces *fuera de zona*. Atribuirlos a ruido de proyección es `UNVERIFIED`.
 
@@ -125,17 +132,21 @@ Fuera de Git y citadas por hash: `/Users/matu/orca/workspaces/madrid-pulse/h4-pl
 | Criterio | BASE | D tol 50 | B1 | B2 | C | **A** |
 |---|---|---|---|---|---|---|
 | M1 `STOPPED_AT` con GPS idéntico y `speed_mps > 0` | 25/25 | 25/25 | 21/25 | 10/25 | 10/25 | **0/25** |
-| M2 pre-salida con `speed_mps > 0` | 17/17 | 17/17 | 13/17 | 2/17 | 2/17 | **0/17** |
+| M2a (R1) pre-salida, las 17 declaradas `STOPPED_AT`, con `speed_mps > 0` | 17/17 | 17/17 | 13/17 | 2/17 | 2/17 | **0/17** |
 | M3 salida retrasada con `speed_mps > 0` | 4/4 | 4/4 | 4/4 | 4/4 | 4/4 | **0/4** |
 | M4 intermedias con `speed_mps > 0` | 7/7 | 7/7 | 7/7 | 7/7 | 7/7 | **0/7** |
 | M5 cruces a más de τ | 20/44 | 20/44 | 22/44 | 20/44 | 0/44 | **0/44** |
 | M6 `19656` a 30 s `== 0` | 661,12 m | 661,12 m | 661,12 m | 661,12 m | 0 | **0** |
 | M7 guarda (predicción `== 0` con ≥ 100 m observados) | 0/9 | 0/9 | 0/9 | 0/9 | 0/9 | 0/9 |
-| **PASS** | **1/7** | 1/7 | 1/7 | 1/7 | 3/7 | **7/7** |
+| **PASS** (con M2a) | **1/7** | 1/7 | 1/7 | 1/7 | 3/7 | **7/7** |
+| M2b (R2), aparte: avance hasta min(salida programada, horizonte) `> 0` | 17/17 | 17/17 | 13/17 | 0/17 | 0/17 | 0/17 |
+| PASS si M2b sustituyera a M2a | 1/7 | 1/7 | 1/7 | 2/7 | 4/7 | 7/7 |
 | Coste: `STOPPED_AT` en `1532` que salieron, predicción `== 0` | 0/27 | 0/27 | 0/27 | 0/27 | 0/27 | **3/27** |
 | Error a 77 s, p50 / p90 / máx (m) | 1 229,15 / 1 731,54 / 3 274,23 | = BASE | 950,49 / 2 216,27 / 3 422,22 | 875,97 / 1 921,01 / 3 422,22 | 570,10 / 1 338,31 / 3 669,40 | 0,00 / 1 523,78 / 3 274,23 |
 
 - Los criterios M1–M4 se solapan.
+- **M2a frente a M2b (B6).** M2a mide R1: no debe moverse un tren pre-salida declarado `STOPPED_AT` aunque su salida programada caiga dentro del horizonte. M2b mide R2: el avance antes de la salida programada. B2 y C solo avanzan después de la salida, así que pasan M2b y fallan M2a en 2/17. Las 17 son `STOPPED_AT` (comprobado con `assert`). R2 sin `STOPPED_AT` lo prueba S2b.
+- **C con la entrada por muestras:** la tabla de grupo M de C no cambia con Dmin = 30. El máximo de M8 pasa de 3 310,99 a 3 973,18 m.
 - El coste de A son `19671` (2 204,0 m), `20284` (2 424,5 m) y `20836` (1 860,2 m). El instante real de salida es desconocido.
 
 ## 3. Sensibilidad (barrido discreto: no prueba invariancia en el continuo)
@@ -151,11 +162,13 @@ Fuera de Git y citadas por hash: `/Users/matu/orca/workspaces/madrid-pulse/h4-pl
 | Variante de C | M3 | M4 | Guarda |
 |---|---|---|---|
 | Dmin = 0 / 30 / 60 | 4/4 | 7/7 | 0/9 |
-| Dmin = 180 | 0/4 | 0/7 | **7/9 perdidos** |
+| Dmin = 180 | **4/4** | **4/7** | **7/9 perdidos** |
+
+Las cifras se calculan con la entrada en zona por muestras aplicada a los cortes. La ronda 2 publicaba 0/4 y 0/7 con Dmin = 180 porque omitía la historia y la espera empezaba en el ancla: es la discrepancia que señaló el revisor (B5), ya reconciliada.
 
 ## 4. Grupo S: pruebas sintéticas de reglas (predicados exactos)
 
-Sobre el horario real de `1023V19656C5`, salvo S8, S9 y S12–S15, que usan horarios sintéticos de geometría controlada.
+Sobre el horario real de `1023V19656C5`, salvo S8, S9 y S12–S16, que usan horarios sintéticos de geometría controlada.
 
 | Caso | Criterio | BASE | A | Otros |
 |---|---|---|---|---|
@@ -175,22 +188,35 @@ Sobre el horario real de `1023V19656C5`, salvo S8, S9 y S12–S15, que usan hora
 | S13 tramo de duración real 0 | v = 3 000/180 m/s, tope T1 | — | PASS | — |
 | S14 `stop_id` repetido | ocurrencia más cercana, R1 | — | PASS | — |
 | S8 DST 2027-03-28 | 3 000 ± 1e-6 m | FAIL 8 000,00 m | PASS | B1/B2/D FAIL, C PASS |
-| S9 DST 2027-10-31 | 333,333 ± 1e-6 m | FAIL 0,00 m | PASS | ídem |
-| S15 espera DST de R8 (01:30→03:30, 2027-10-31) | 10 800 s reales; `== 0` a +90 s; > 0 a +180 s; `conservada` | — | PASS | C PASS |
-| S15b sin historia de entrada | retención declarada `reiniciada` | — | PASS | C PASS |
+| S9 DST 2027-10-31 | **1000/3 m** ± 1e-6 m (medido: 333,33333333333394 m) | FAIL 0,00 m | PASS | ídem |
+| S15 espera DST de R8 (01:30→03:30, 2027-10-31) | 10 800 s reales; `== 0` a +90 s; > 0 a +180 s; base `muestras` (entrada calculada desde 2 observaciones) | — | PASS | C PASS |
+| S15b sin muestra previa en la zona | retención declarada con base `ancla` | — | PASS | C PASS |
+| S16 tres observaciones consecutivas en zona (e0, +20, +40 s), espera de 120 s | el par prueba la entrada e0+20 s (`dwell_until` e0+140 s); con 3 muestras, e0 (e0+120 s); el par retiene **más**, nunca menos | — | PASS | C PASS |
 
-## 5. Grupo T: camino stale real (prototipo A, 25 en ventana, muestreo cada 0,5 s de 0 a 400 s)
+## 5. Grupo T: camino stale real con disponibilidad variable (B2)
 
-| Escenario de `trip_update` | Recortes efectivos | Retroceso F1 máx | F2: \|salto − `rewind_m`\| máx | F2 con `rewind_m > 0` | Discrepancias tras reinicio |
+Prototipo A sobre las 25 en ventana, consultando cada 0,5 s de 0 a 400 s. **Cada consulta solo ve las filas visibles en su instante** (`visible_at ≤ display_at`), así que la disponibilidad varía entre consultas. Política: envolvente inmutable por run (ADR §4.4).
+
+| Escenario (ocurrió · visible) | Base | Retroceso F1 máx | F2: \|salto − `rewind_m`\| | F2 con `rewind_m > 0` | Discrepancias tras reinicio |
 |---|---|---|---|---|---|
-| Sin cambio | 0 | 0,0 m | 0,0 m | 7 | 0 |
-| `CANCELED` en +20 s | 7 | 0,0 | 0,0 | 7 | 0 |
-| `CANCELED` en +120 s | 4 | 0,0 | 0,0 | 7 | 0 |
-| `CANCELED` en +60 s y anulación en +150 s | 5 | 0,0 | 0,0 | 7 | 0 |
-| `CANCELED` en +180,5 s (inadmisible) | 0 | 0,0 | 0,0 | 7 | 0 |
+| Sin cambio | 25 sin cancelación | 0,0 m | 0,0 | 7 | 0 |
+| `CANCELED` posterior · +20 s · +20 s | 25 sin cancelación | 0,0 | 0,0 | 7 | 0 |
+| `CANCELED` posterior · +20 s · **+181 s** (contraejemplo) | 25 sin cancelación | **0,0** | 0,0 | 7 | 0 |
+| `CANCELED` +60 s y anulación +150 s | 25 sin cancelación | 0,0 | 0,0 | 7 | 0 |
+| `CANCELED` base −300 s | 25 canceladas | 0,0 | 0,0 | 0 | 0 |
+| `CANCELED` base de ayer (−86 400 s) | 25 caducadas por edad | 0,0 | 0,0 | 7 | 0 |
+| `CANCELED` base ocurrido −700 s, recibido −5 s | 25 caducadas por edad | 0,0 | 0,0 | 7 | 0 |
+| **Condición violada:** fila del run base visible a +100 s | 25 canceladas | **1 310,66 m** | 0,0 | 0 | 0 |
 
+- **Contraejemplo del revisor en `19667`**, con la cancelación no visible a +179 s y visible a +181 s:
+
+  | Política | +179 s | +181 s | Retroceso |
+  |---|---|---|---|
+  | Ronda 2 (recorte por `observed_at`) | 1 284,89 m | 213,74 m | **1 071,15 m** (reproduce el dictamen) |
+  | Envolvente inmutable | 1 284,89 m | 1 284,89 m | **0,0 m** |
+
+- **Condición violada.** El retroceso se produce si una fila de un run anterior o igual al del ancla se hace visible después del ancla (varios escritores o carga retroactiva). Queda **fuera de la garantía**: el ADR la condiciona a un único colector con un commit por ciclo.
 - **Cambio de versión:** congela en el ancla con `frozen_basis = anchor_version_changed`.
-- **`CANCELED` en +20 s sobre un tren en marcha (`19667`):** queda en 213,74 m (en el corte, a +50 s y congelado: el mismo valor), frente a 534,34 m sin recorte.
 - **Línea base de producción:** 25/25 retroceden (§0).
 
 ## 6. Ramas de presentación (motor real) y AC-15
@@ -203,8 +229,8 @@ Sobre el horario real de `1023V19656C5`, salvo S8, S9 y S12–S15, que usan hora
 - **P3:** solo `raw`, sin envolvente. `CANCELED` solo rotula.
 - **P4:** interpolación con `display_at` 30 s antes de `1533` → `interpolated_between_known_anchors`, |prototipo − producción| = 0 m, tramo entre anclas de 77 s.
 - **AC-15 (`ts_equivalence.txt`):**
-  - 63 envolventes y 367 muestras con instantes en ms → |Δ| máx **0 m**, 0 fases distintas.
-  - 18 envolventes con un desfase de 0,7 ms en µs → |Δ| máx **0,0117 m** (`Date.parse` trunca).
+  - 64 envolventes y 377 muestras con instantes en ms → |Δ| máx **0 m**, 0 fases distintas.
+  - 19 envolventes con un desfase de 0,7 ms en µs → |Δ| máx **0,0117 m** (`Date.parse` trunca).
   - De ahí la regla de serializar en ms (§4.3 c).
 
 ## Límites y no verificado
@@ -213,7 +239,10 @@ Sobre el horario real de `1023V19656C5`, salvo S8, S9 y S12–S15, que usan hora
   - la semántica en vivo de `IN_TRANSIT_TO`/`INCOMING_AT`;
   - el instante real de salida de los 3 trenes retenidos;
   - la latencia en vivo si hay retraso o pérdida del feed;
-  - la causa de los dos cruces dentro de la zona.
+  - la causa de los dos cruces dentro de la zona;
+  - que en producción se cumpla la condición de la garantía de §4.4 (un único colector, runs visibles en orden de `id`, sin cargas retroactivas en la base del directo); el arnés solo mide qué pasa si se viola;
+  - el valor calibrado de `cancel_max_age_s` (600 s es provisional);
+  - cuánto se acerca a la entrada real la entrada en zona por muestras con la cadencia en vivo.
 
   Requieren MP-028 y MP-025b.
 - **AC-T6 / FR-07: NO EJECUTADO.** Requiere PostgreSQL con dos conexiones y es trabajo de MP-026b.
@@ -221,3 +250,4 @@ Sobre el horario real de `1023V19656C5`, salvo S8, S9 y S12–S15, que usan hora
 - **`CANCELED`:** sin casos de Madrid en el kit; solo se prueba con sintéticos.
 - **DST:** solo con horarios sintéticos, porque el `calendar.txt` del kit no tiene viajes esas fechas.
 - **Muestra:** un único par de cortes (15:32–15:33 locales). No representa el día.
+- **Revisión:** ver el aviso del principio: sin tercera ronda automática.

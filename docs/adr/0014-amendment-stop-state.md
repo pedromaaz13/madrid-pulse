@@ -1,7 +1,7 @@
 # ADR-0014 · Enmienda 1: modelo de estado de parada, horizonte por tramo y revisión coherente
 
 - **Estado:** `Propuesto`. No lo promueven ni el ejecutor ni el revisor: lo decide el propietario del repositorio (`AGENTS.md`, regla 8). Su aprobación es el **gate humano antes de cualquier código de MP-025a** (`docs/H4_MP_MAPPING.md`).
-- **Fecha:** 2026-11-25. Ronda 2 el mismo día, tras el dictamen `CHANGES_REQUESTED` (7 B, 4 A) de Codex `gpt-6.2-astra` · high sobre `f0f8224`; la tabla de correcciones está en el Anexo.
+- **Fecha:** 2026-11-25. Ronda 2 el mismo día, tras el dictamen `CHANGES_REQUESTED` (7 B, 4 A) de Codex `gpt-6.2-astra` · high sobre `f0f8224`; la tabla de correcciones está en el Anexo. Cierre de la 2ª ronda ordinaria (B2, B5, B6 y A3 parciales) el mismo día; **no hay tercera ronda automática** (ORCHESTRATION_POLICY §3.3): las correcciones de ese cierre no las re-verifica Codex salvo decisión del propietario.
 - **Tarea:** MP-024 (H4-00).
 - **Ejecutor:** Claude `claude-opus-5-5` · high.
 - **Revisor:** Codex `gpt-6.2-astra` · high, proveedor contrario.
@@ -54,18 +54,28 @@ Corte `1533`: 44 circulaciones con cadena completa, más 44 pares `1532→1533` 
 
 Las comparaciones se hacen con el horizonte de producción: 180 s desde el ancla (`rendering.py:279,346`). El perfil de ensayo es P-024 (τ = 50 m, Dmin = 30 s; §6).
 
-**Grupo M — hechos de movimiento sobre cortes reales.** Son los únicos criterios que discriminan entre alternativas. Se solapan: M1 ⊂ M2 ∪ M3 ∪ M4 = los 28 `STOPPED_AT`.
+**Grupo M — hechos de movimiento sobre cortes reales.** Son los únicos criterios que discriminan entre alternativas. Se solapan: M1 ⊂ M2a ∪ M3 ∪ M4 = los 28 `STOPPED_AT`.
+
+M2 se mide de dos formas (B6), porque responden a reglas distintas:
+- **M2a mide R1:** que no se mueva un tren pre-salida que el operador declara `STOPPED_AT`, aunque su salida programada caiga dentro del horizonte. Es la que entra en el total.
+- **M2b mide R2:** el avance acumulado hasta la salida programada, el único que R2 prohíbe a un tren no declarado parado.
+
+En el corte, las 17 pre-salidas son `STOPPED_AT` (comprobado con `assert`). B2 y C pasan M2b, porque solo avanzan después de la salida programada, y fallan M2a en 2/17. R2 sin `STOPPED_AT` lo prueba el sintético S2b.
+
+C se mide con la entrada en zona por muestras de §4.6 aplicada a los cortes: 31 anclas tienen dos muestras consecutivas en la zona y cambian 14 envolventes de C, la misma lista con Dmin = 30 y con Dmin = 180.
 
 | Criterio (predicado exacto) | BASE | **A** | B1 ±600 s | B2 B1 + pre-salida | C (Dmin 30) | D tolerancia 50 |
 |---|---|---|---|---|---|---|
 | M1 `STOPPED_AT` con GPS idéntico y `speed_mps > 0` | 25/25 | **0/25** | 21/25 | 10/25 | 10/25 | 25/25 |
-| M2 pre-salida con `speed_mps > 0` | 17/17 | **0/17** | 13/17 | 2/17 | 2/17 | 17/17 |
+| M2a (R1) pre-salida, las 17 declaradas `STOPPED_AT`, con `speed_mps > 0` en el horizonte | 17/17 | **0/17** | 13/17 | 2/17 | 2/17 | 17/17 |
 | M3 salida retrasada en origen con `speed_mps > 0` | 4/4 | **0/4** | 4/4 | 4/4 | 4/4 | 4/4 |
 | M4 `STOPPED_AT` intermedia con `speed_mps > 0` | 7/7 | **0/7** | 7/7 | 7/7 | 7/7 | 7/7 |
 | M5 cruzan una parada a más de τ antes de `valid_until` | 20/44 | **0/44** | 22/44 | 20/44 | 0/44 | 20/44 |
 | M6 `19656`: avance a 30 s `== 0` | 661,12 m | **0 m** | 661,12 m | 661,12 m | 0 m | 661,12 m |
 | M7 guarda: `IN_TRANSIT_TO`/`INCOMING_AT` que avanzaron ≥ 100 m con predicción `== 0` | 0/9 | 0/9 | 0/9 | 0/9 | 0/9 | 0/9 |
-| **Grupo M PASS** | **1/7** | **7/7** | 1/7 | 1/7 | 3/7 | 1/7 |
+| **Grupo M PASS** (con M2a) | **1/7** | **7/7** | 1/7 | 1/7 | 3/7 | 1/7 |
+| M2b (R2), aparte: avance acumulado hasta min(salida programada, horizonte) `> 0` en las 17 | 17/17 | 0/17 | 13/17 | 0/17 | 0/17 | 17/17 |
+| Grupo M si M2b sustituyera a M2a | 1/7 | 7/7 | 1/7 | 2/7 | 4/7 | 1/7 |
 | Coste: `STOPPED_AT` en `1532` que salieron, con predicción `== 0` | 0/27 | **3/27** | 0/27 | 0/27 | 0/27 | 0/27 |
 | Error a 77 s, p50 / p90 / máx (m) | 1 229,15 / 1 731,54 / 3 274,23 | 0,00 / 1 523,78 / 3 274,23 | 950,49 / 2 216,27 / 3 422,22 | 875,97 / 1 921,01 / 3 422,22 | 570,10 / 1 338,31 / 3 669,40 | = BASE |
 | Sobreavance > 100 m a 77 s | 32/44 | **2/44** | 24/44 | 18/44 | 15/44 | 32/44 |
@@ -74,7 +84,9 @@ Las comparaciones se hacen con el horizonte de producción: 180 s desde el ancla
 - **B — descartada.**
   - B1 apenas corrige y empeora el peor caso: 8 000 m de avance al caducar y 3 422,22 m de error.
   - B2 deja las 4 salidas retrasadas y las 7 intermedias.
-- **C — descartada como modelo y conservada como degradación R8.** Sin el estado del operador no retiene las 4 + 7. Con Dmin = 180 s las retiene, pero pierde 7/9 avances legítimos.
+- **C — descartada como modelo y conservada como degradación R8.** Sin el estado del operador no retiene las 4 + 7.
+  - Con Dmin = 180 s y la entrada por muestras sigue publicando avance en 4/4 salidas retrasadas y en 4/7 intermedias, y además pierde 7/9 avances legítimos (grupo M 2/7).
+  - La ronda 2 publicaba 0/4 y 0/7 porque, sin historia, la espera arrancaba en el ancla.
 - **D — descartada.** Con tolerancia de 50 m es idéntica a BASE en todo: la guarda `rendering.py:192` descarta la espera.
 
 **Grupo S (reglas, sintéticos) y grupo T (reglas transversales)** se informan aparte (§8). No discriminan: A y C incorporan R-CANCEL, R-DST y R-STALE por diseño; B y D conservan la aritmética de producción por definición, y podrían adoptarlas igual. Por eso **no** se suman al total del grupo M.
@@ -150,7 +162,7 @@ progress_envelope = { reference_at, progress_m_at_reference, speed_mps, max_prog
                       dwell_until,      -- NULL | instante ≥ reference_at hasta el que no hay avance
                       hold_reason,      -- causa de la retención inicial (§4.2); NULL si no la hay
                       cap_stop_id,      -- parada que fija max_progress_m (NULL si no hay tope de parada)
-                      cap_kind,         -- stop | horizon | trip_canceled | NULL (sin avance)
+                      cap_kind,         -- stop | horizon | NULL (sin avance)
                       cap_reached_at,   -- instante (redondeo HACIA ARRIBA a ms) en que se alcanza max_progress_m
                       envelope_id }     -- hash de las entradas de §4.4 (identidad de la envolvente)
 t0 = dwell_until if dwell_until is not None else reference_at
@@ -181,24 +193,45 @@ phase(t) = "hold:<hold_reason>"  si speed_mps == 0 o t < t0
 
 ### 4.4 Identidad de la envolvente y congelación (R-STALE F1; B2)
 
+- **Tres relojes de una `trip_update`.**
+  - `observed_at`: cuándo **ocurrió** según la fuente;
+  - `received_at`: cuándo la **recibió** el colector (`0001_init.up.sql:109-110`);
+  - visibilidad para una consulta: el commit de su ciclo (run).
+- **Ejemplo del problema.** Una cancelación ocurrida a +20 s y visible por primera vez a +181 s era un retroceso F1 de **1 071,15 m** en `19667` con la política de la ronda 2, que recortaba en `observed_at` (`contraejemplo_19667.observed` en la salida). Recortar en `received_at` tampoco basta: si una fila se hace visible después de su `received_at`, vuelve a haber retroceso.
+- **Política adoptada: envolvente inmutable por run** (B2). La envolvente de un ancla se calcula **una vez, con el estado disponible cuando el ancla lo estuvo**:
+  - **Estado base:** la última `trip_update` del viaje, por (`ingestion_run_id`, `observed_at`), con `ingestion_run_id ≤` el del ancla. Es la misma regla en producción, en el arnés (`authorized_plan`, `run <= anchor_run`) y en replay.
+  - **Predicado de edad:** un `CANCELED` base solo aplica si `anchor.observed_at − trip_update.observed_at ≤ cancel_max_age_s`. El valor del umbral se difiere a MP-028; el perfil P-024 usa 600 s.
+  - **Ninguna fila posterior modifica** la envolvente vigente ni su congelación F1: ni un `CANCELED` ni una anulación, aunque haya ocurrido antes y llegue tarde. Se aplica a la **siguiente ancla**. Entretanto, el tren se rotula por `schedule_relationship` y el aviso de interfaz, sin mover la coordenada.
+  - **Coste:** un tren cancelado puede seguir extrapolando hasta su siguiente observación o hasta `valid_until`, como máximo 180 s.
+- **Reloj de vigencia y replay.**
+  - `valid_until = reference_at + stale_after_s`, evaluado en `display_at`.
+  - Una consulta (en vivo o `?at=`) solo ve las filas confirmadas y visibles en ese instante. En replay: runs con `started_at ≤ at` (MP-026a) e `ingestion_run_id` del ancla visible.
+  - Como la envolvente solo depende de filas con `run ≤ run(ancla)`, el replay reproduce lo que se publicó en vivo.
+- **Condición de la garantía** (declarada y verificable por configuración): las filas con `run ≤ run(ancla)` son visibles antes que el ancla. Se cumple con un único colector y un commit por ciclo (`collector.py:115-118`), porque los runs se confirman en orden de `id`. Si se viola (varios escritores, carga retroactiva), la garantía de no retroceso deja de valer:
+  - escenario `CONDICION_VIOLADA_base_run99_visible+100` → retroceso F1 de **1 310,66 m**;
+  - MP-025a debe excluir de la base del directo las filas de cargas retroactivas;
+  - MP-032 debe operar un único colector.
+- **Descartadas.**
+  - **Recorte en `observed_at`** (ronda 2): produce el contraejemplo.
+  - **Recorte en `received_at`:** su garantía depende de que visibilidad == `received_at`, y no es más robusta que la inmutabilidad, que es más simple.
 - **Entradas de la envolvente** (`envelope_id`):
   - ancla (vehículo, viaje, `observed_at`, `ingestion_run_id`, progreso, estado efectivo);
-  - **estado base** de la `trip_update`: la última con `ingestion_run_id ≤` el del ancla;
-  - recortes admitidos;
-  - `gtfs_version`, `geometry_version` y la versión de `MovementThresholds`/`StopStateThresholds`.
-- **Reloj de vigencia.** `valid_until = reference_at + stale_after_s`, evaluado en `display_at`. Ningún dato con `observed_at > display_at` es admisible; esto cubre replay y datos futuros, coherente con MP-026a.
-- **Actualización admisible.** Una `trip_update` con `reference_at < observed_at ≤ min(valid_until, display_at)` **solo puede recortar**: un `CANCELED` fija `max_progress_m = progress(t_u)`, con `cap_kind = trip_canceled` y `cap_reached_at = t_u`. Una actualización no restrictiva (p. ej. anular la cancelación) no amplía la autorización hasta la siguiente ancla. Medido sobre las 25 en ventana, muestreando cada 0,5 s de 0 a 400 s:
+  - estado base (`ingestion_run_id` de la `trip_update` usada o `null`);
+  - `gtfs_version`, `geometry_version` y la versión de los umbrales.
+- **Medido.** 25 en ventana, consultando cada 0,5 s de 0 a 400 s; **cada consulta ve solo las filas visibles en su instante**, así que la disponibilidad varía entre consultas:
 
-  | Escenario | Recortes efectivos | Retroceso F1 máximo |
+  | Escenario (ocurrió · visible) | Base | Retroceso F1 máximo |
   |---|---|---|
-  | Sin cambio | 0 | 0,0 m |
-  | `CANCELED` en +20 s | 7 | 0,0 m |
-  | `CANCELED` en +120 s | 4 | 0,0 m |
-  | `CANCELED` en +60 s y anulación en +150 s | 5 | 0,0 m |
-  | `CANCELED` en +180,5 s (inadmisible) | 0 | 0,0 m |
+  | Sin cambio | 25 sin cancelación | 0,0 m |
+  | `CANCELED` posterior · ocurrió +20 s, visible +20 s | 25 sin cancelación (aplica en la siguiente ancla) | 0,0 m |
+  | `CANCELED` posterior · ocurrió +20 s, visible +181 s (**contraejemplo**) | 25 sin cancelación | **0,0 m** (ronda 2: 1 071,15 m en `19667`) |
+  | `CANCELED` +60 s y anulación +150 s | 25 sin cancelación | 0,0 m |
+  | `CANCELED` base, ocurrido hace 300 s | 25 canceladas | 0,0 m |
+  | `CANCELED` base de ayer (−86 400 s) | 25 caducadas (ignoradas por edad) | 0,0 m |
+  | `CANCELED` base ocurrido hace 700 s y recibido hace 5 s | 25 caducadas (la edad se mide en `observed_at`) | 0,0 m |
+  | Condición violada: fila base visible a +100 s | 25 canceladas | 1 310,66 m (fuera de la garantía) |
 
-  Caso en marcha `19667`, con `CANCELED` en +20 s: se congela en 213,74 m, frente a 534,34 m sin recorte a +50 s.
-- **Congelación F1 (recomendada).** Si `display_at > valid_until`, `rendering_method = stale_frozen` y la coordenada es `progress(valid_until)` de la envolvente **reconstruida con las entradas admisibles hasta `valid_until`**. Es una función pura de datos persistidos: tras un reinicio o en una primera consulta ya caducada da el mismo valor (medido: 0 discrepancias en 5 × 25). Se publican `frozen_basis = authorized_envelope_end` y `last_confirmed_progress_m` = ancla.
+- **Congelación F1 (recomendada).** Si `display_at > valid_until`, `rendering_method = stale_frozen` y la coordenada es `progress(valid_until)` de la envolvente **reconstruida con las entradas admisibles hasta `valid_until`**. Es una función pura de datos persistidos: tras un reinicio o en una primera consulta ya caducada da el mismo valor (medido: 0 discrepancias en 8 × 25). Se publican `frozen_basis = authorized_envelope_end` y `last_confirmed_progress_m` = ancla.
   - **Sin envolvente posible**, o con `gtfs_version`/`geometry_version`/umbrales distintos de los del ancla: se congela **en el ancla** con `frozen_basis = anchor_version_changed` (medido).
   - El aviso de congelación de la interfaz no depende de `valid_until` (MP-030).
   - **AC-T1:** retroceso al expirar `== 0` m.
@@ -227,9 +260,14 @@ Las ramas se aplican en este orden, sobre el instante `display_at`:
 ### 4.6 Zona de parada en la degradación R8 y DST (B5)
 
 - **Duración real.** La espera programada en una parada es `instant(salida) − instant(llegada)` en segundos reales UTC, nunca la diferencia de reloj de pared. Sintético S15: W1 01:30→03:30 del 2027-10-31 dura **10 800 s reales** (7 200 de pared). `dwell_until` = entrada + 10 800 s; avance `== 0` a +90 s y 444,44 m a +180 s.
-- **Retención:** `dwell_until = zone_entry_at + max(min_dwell_s, espera_real)`. `zone_entry_at` es el `observed_at` de la **primera observación consecutiva** del mismo viaje en la zona de la misma parada, con la historia disponible (`latest` + `previous`).
-  - **La espera consumida se conserva** (`dwell_basis = conservada`).
-  - Sin historia (reinicio, primera observación) se reinicia y se **declara** (`dwell_basis = reiniciada`; S15b).
+- **Retención:** `dwell_until = zone_entry_at + max(min_dwell_s, espera_real)`.
+- **Se conserva solo el tiempo que prueban las muestras, no la espera completa** (B5).
+  - **Qué es `zone_entry_at`:** el `observed_at` de la observación más antigua de la **racha consecutiva final** de observaciones del mismo viaje cuya zona es la de la misma parada, dentro de la historia que lee la API: hoy `latest` + `previous`, un máximo de 2 muestras.
+  - **Es una cota superior de la entrada real**, nunca anterior a ella. La espera puede durar más de lo debido (el tren se retiene de más), nunca menos de lo probado.
+  - **Base:** `dwell_basis = muestras` con al menos 2 muestras en la zona; `ancla` si solo está el ancla (reinicio, primera observación; S15b).
+  - **Con 3 o más observaciones consecutivas** el par ya no contiene la entrada original. Sintético S16 (entrada real e0, muestras en e0, +20 s y +40 s, espera de 120 s): el par prueba e0+20 s y la retención dura hasta e0+140 s; con las 3 muestras, hasta e0+120 s. El par retiene 20 s **más**.
+  - **Si MP-025a amplía la historia leída,** la entrada se acerca a la real sin cambiar la regla.
+  - **Aplicado a los cortes reales:** 31/44 anclas tienen 2 muestras consecutivas en la zona, y cambian 14 envolventes de C (§3).
 - **R-DST, regla general:** toda conversión horario↔instante usa `service_day_instant` por punto, y toda duración se mide entre instantes UTC. Afecta a la velocidad de tramo (S8, S9) y a la espera (S15).
 
 ### 4.7 Revisión coherente (sustituye ADR-0014 §5; B7; implementación en MP-026b)
@@ -271,7 +309,7 @@ Las ramas se aplican en este orden, sobre el instante `display_at`:
 
 ## 6. Parámetros y perfil de ensayo (A4)
 
-**Perfil de ensayo P-024:** τ = 50 m y `min_dwell_s` = 30 s.
+**Perfil de ensayo P-024:** τ = 50 m, `min_dwell_s` = 30 s y `cancel_max_age_s` = 600 s.
 - Son los **valores por defecto provisionales** de MP-025a y los que usan sus pruebas (AC-M5 y AC-M6 dependen de τ).
 - MP-028 los sustituye por valores calibrados. Al hacerlo se reejecutan este arnés y las AC con los valores nuevos y se registra el diff.
 - No son valores de diseño.
@@ -279,9 +317,9 @@ Las ramas se aplican en este orden, sobre el instante `display_at`:
 | Parámetro | P-024 | Evidencia (barrido discreto: no demuestra invariancia en el continuo) |
 |---|---|---|
 | `stop_zone_radius_m` (τ) | 50 m | `19656` exige τ ≥ 5,5 (con 5,3 avanza 662,02 m). Grupo M 7/7 desde τ = 20,8 (con 5 degradaciones R7/R8). Ninguna degradación desde 38,1 (2 con 37,9). Cota superior: separación mínima entre paradas consecutivas; en estos 44 viajes ninguna ≤ 100 m. Si en MP-028 aparecen tramos ≤ 2τ, rige la regla de zonas solapadas de §4.1 |
-| `min_dwell_s` | 30 s | Solo R8. Con 180 s, C pierde 7/9 avances legítimos |
+| `min_dwell_s` | 30 s | Solo R8. Con la entrada por muestras, C con 180 s sigue avanzando en 4/4 salidas retrasadas y 4/7 intermedias, y pierde 7/9 avances legítimos |
 | `stale_after_s` | 180 s (`model.py:40`) | Sin cambio (DEC-010) |
-| `cancel_max_age_s` | pendiente | Propuesta: `operator_delay_max_age_s` = 600 s (`config.py:59`). No hay casos de Madrid en el kit |
+| `cancel_max_age_s` | 600 s (provisional) | Reloj y predicado fijados en §4.4 (`anchor.observed_at − trip_update.observed_at`); el valor se calibra en MP-028. Referencia: `operator_delay_max_age_s` = 600 s (`config.py:59`). No hay casos de Madrid en el kit |
 
 ## 7. Consecuencias
 
@@ -325,7 +363,8 @@ Tipo:
 | ID | Prueba (predicado) | `beb9434` | Tipo |
 |---|---|---|---|
 | AC-M1 | `STOPPED_AT` con GPS idéntico con `speed_mps > 0`: `== 0/25` | 25/25 | R |
-| AC-M2 | Pre-salida con `speed_mps > 0`: `== 0/17` | 17/17 | R |
+| AC-M2 | (R1) Pre-salida declarada `STOPPED_AT` con `speed_mps > 0`: `== 0/17` | 17/17 | R |
+| AC-M2b | (R2) Pre-salida con avance acumulado hasta min(salida programada, horizonte) `> 0`: `== 0/17`; R2 sin `STOPPED_AT`, en S2b | 17/17 | R |
 | AC-M3 | Salidas retrasadas en origen con `speed_mps > 0`: `== 0/4` | 4/4 | R |
 | AC-M4 | Intermedias `STOPPED_AT` con `speed_mps > 0`: `== 0/7` | 7/7 | R |
 | AC-M5 | Cruzan una parada a más de τ: `== 0/44` | 20/44 | R |
@@ -334,9 +373,10 @@ Tipo:
 | AC-S1 | S1–S5 y S2b (pre-salida, salida retrasada, intermedias, R2 sin `STOPPED_AT`): avance `== 0` donde se exige y fases de §4.3 b | S1–S5 FAIL | R / N (S2b) |
 | AC-S2 | S5b, S7, S10: R7 → R8 idéntica a C campo a campo y `coherent = false` | — | N |
 | AC-S3 | S11–S14 (casos límite de §4.2) | — | N |
-| AC-T1 | Retroceso al expirar `== 0`, en 5 escenarios de `trip_update` × 25, con reinicio y cambio de versión; aviso visible (vitest) | 25/25 retroceden | R |
-| AC-T2 | DST: S8 = 3 000 ± 1e-6 m, S9 = 333,333 ± 1e-6 m; S15 (espera de 10 800 s reales) | 8 000 / 0 m | R (S8, S9) / N (S15) |
-| AC-T3 | `CANCELED`: avance `== 0` y `hold_reason = trip_canceled`; recorte en `t_u` (§4.4) | 2 143,81 m | R |
+| AC-S4 | S15b y S16: base de la espera (`muestras`/`ancla`) y entrada probada como cota superior | — | N |
+| AC-T1 | Retroceso al expirar `== 0` con disponibilidad que **varía entre consultas**, en los 7 escenarios dentro de la garantía de §4.4 (incluido el contraejemplo ocurrió +20 s · visible +181 s) × 25, con reinicio y cambio de versión; aviso visible (vitest) | 25/25 retroceden | R |
+| AC-T2 | DST: S8 = 3 000 ± 1e-6 m, S9 = **1000/3 m** (333,333 333…) ± 1e-6 m; S15 (espera de 10 800 s reales) | 8 000 / 0 m | R (S8, S9) / N (S15) |
+| AC-T3 | `CANCELED` base (`run ≤` el del ancla, edad ≤ `cancel_max_age_s`): avance `== 0` y `hold_reason = trip_canceled`; un `CANCELED` caducado no se aplica; uno posterior no modifica la envolvente vigente (§4.4) | 2 143,81 m | R |
 | AC-T4 | Distancia lat/lon entre `position` y `rendered` serializadas ≤ 0,01 m (`estimated`/`stale`, `display_lag_s = 0`) | 429,39 m | R |
 | AC-T5 | Fixture Python↔TS con instantes en ms: |Δ| ≤ 1e-6 m y fases iguales | — | N |
 | AC-T6 | (MP-026b) Escrituras intercaladas tras leer el marcador, entre la lectura de vehículos y la de `trip_update`, y dos escritores n/n+1 confirmando en orden inverso. Toda fila con `run_id ≤ sequence`; la respuesta es igual a una lectura de referencia con la **misma** instantánea (`pg_export_snapshot`); se documenta que dos respuestas con igual `sequence` pueden diferir | mezcla reproducida por AUD-06 | H, **no reejecutado** |
@@ -350,10 +390,10 @@ MP-025b (en vivo, sin cambios): salto al llegar el ancla p50 ≤ 200 m con ≥ 5
 1. **Aprobar A** (§4.2, orden total), con C como degradación R8, y las reglas R-CANCEL, R-STALE, R-DST, R-REPROJ, R-ONECOORD, R-SPACE y R-SKIP.
 2. **Aprobar** §4.3 (sustituye ADR-0014 §2), §4.4–§4.6 y §4.7 (sustituye §5; se implementa en MP-026b).
 3. **Elegir la congelación al caducar:**
-   - **F1 (recomendada):** congelar en el final autorizado; criterio AC-T1, retroceso `== 0`.
+   - **F1 (recomendada):** congelar en el final autorizado; criterio AC-T1, retroceso `== 0` con envolvente inmutable por run, bajo la condición de un único colector (§4.4).
    - **F2:** congelar en el ancla y declararlo; criterio AC-T1′, salto `== rewind_m`, hasta 2 371 m.
-4. **Aceptar** el perfil P-024 (τ = 50 m, `min_dwell_s` = 30 s) como valores provisionales de MP-025a.
-5. **Diferido:** calibración (MP-028), validación en vivo (MP-025b), `cancel_max_age_s`, persistencia de `stop_time_update` (R-SKIP), segmentos OSM (MP-029) e interfaz (MP-030).
+4. **Aceptar** el perfil P-024 (τ = 50 m, `min_dwell_s` = 30 s, `cancel_max_age_s` = 600 s) como valores provisionales de MP-025a.
+5. **Diferido:** calibración (MP-028; incluye el valor de `cancel_max_age_s`), validación en vivo (MP-025b), persistencia de `stop_time_update` (R-SKIP), segmentos OSM (MP-029) e interfaz (MP-030).
 6. **Abierto `UNVERIFIED`:** semántica real de `IN_TRANSIT_TO`/`INCOMING_AT` en vivo, y latencia de las salidas retenidas.
 
 ## 10. Reproducción
@@ -375,3 +415,12 @@ Ver [`docs/evidence/mp-024/README.md`](../evidence/mp-024/README.md): comandos, 
 | A2 integridad del arnés | igualdad completa 44/44, `assert` de denominadores, defaults de `ApiConfig` en ejecución, manifiesto con identidad y conjunto esperado |
 | A3 cierre verificable y §9 compacto | §8 (tipos, AC-T7 por equivalencia), §5 (AC-S2 → R7), §9 |
 | A4 perfil de ensayo | §6 (P-024, revalidación), §4.1 (ocurrencias, ausente frente a contradictorio, zonas solapadas) |
+
+### Cierre de la 2ª ronda ordinaria (B2, B5, B6 y A3 parciales; sin tercera ronda automática)
+
+| Punto | Dónde |
+|---|---|
+| B2 cancelación conocida tarde | §4.4: tres relojes, envolvente inmutable por run, predicado de edad, replay, condición de la garantía y alternativas descartadas. Arnés `Update`/`authorized_plan`/`present`/`stale_tests`: 8 escenarios con visibilidad variable entre consultas; contraejemplo `19667` 1 071,15 m → 0,0 m; condición violada medida (1 310,66 m). Alineación con la base por run |
+| B5 espera conservada | §4.6: solo el tiempo probado por las muestras, como cota superior. Arnés `zone_entry_from_history` aplicado a `build_real` (31 anclas con 2 muestras, 14 envolventes de C cambian) y sintético S16 con tres observaciones. §3 y §6 reconciliados (C con Dmin 180: 4/4 y 4/7) |
+| B6 M2 | §3: M2a (R1) en el total y M2b (R2) aparte, con denominadores y con el total si M2b sustituyera a M2a (B2 2/7, C 4/7). §8: AC-M2 y AC-M2b. DEC-047 |
+| A3 AC-T2 | §8: S9 = 1000/3 m ± 1e-6 m; el arnés usa el mismo criterio |

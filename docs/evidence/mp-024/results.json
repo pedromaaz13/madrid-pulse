@@ -72,7 +72,7 @@
       "fomento_transit.zip": "c5b40823c5cacbec6d9a21d88ec0530d9604a6d4331df98c330e608f0bacb11e"
     },
     "manifest_sha256": "40e0b99af024f67e7e4015c6830f8ee5fad7e062f48d874e962e6e1eba81f9b1",
-    "head": "f0f8224f7b5d098eb1f2b043efaa933c00b6111e",
+    "head": "559a5c2e98a3be088713ccdcd0d1bcbd8ea17c4f",
     "product_equals_baseline": true
   },
   "equivalence_full_fields": [
@@ -102,6 +102,7 @@
         1848.87
       ]
     ],
+    "zona_con_2_muestras_consecutivas": 31,
     "reproyeccion_n_max_m": [
       44,
       0.0016052595365907284
@@ -113,7 +114,45 @@
       "tramos_sep<=τ(50)": 0,
       "tramos_sep<=2τ(100)": 0,
       "tramos_duracion_real<=0": 0
-    }
+    },
+    "C(Dmin=30)_envolventes_que_cambian_con_entrada_por_muestras": [
+      14,
+      [
+        "1023V19661C5",
+        "1023V19667C5",
+        "1023V19668C5",
+        "1023V19675C5",
+        "1023V19677C5",
+        "1023V19681C5",
+        "1023V20279C4a",
+        "1023V20280C4a",
+        "1023V20281C4a",
+        "1023V20282C4a",
+        "1023V20470C4b",
+        "1023V20472C4b",
+        "1023V20842C5",
+        "1023V20849C5"
+      ]
+    ],
+    "C(Dmin=180)_envolventes_que_cambian_con_entrada_por_muestras": [
+      14,
+      [
+        "1023V19661C5",
+        "1023V19667C5",
+        "1023V19668C5",
+        "1023V19675C5",
+        "1023V19677C5",
+        "1023V19681C5",
+        "1023V20279C4a",
+        "1023V20280C4a",
+        "1023V20281C4a",
+        "1023V20282C4a",
+        "1023V20470C4b",
+        "1023V20472C4b",
+        "1023V20842C5",
+        "1023V20849C5"
+      ]
+    ]
   },
   "baseline_fr05_fr27": {
     "FR05_retroceso_179_181_n_gt0": [
@@ -139,7 +178,11 @@
         25,
         25
       ],
-      "M2_predeparture_speed_gt0": [
+      "M2a_R1_pre_salida_STOPPED_AT_speed_gt0": [
+        17,
+        17
+      ],
+      "M2b_R2_avance_hasta_min(salida,horizonte)_gt0": [
         17,
         17
       ],
@@ -302,13 +345,14 @@
       },
       "GROUP_M_pass": {
         "AC-M1 0/25 STOPPED_AT GPS idéntico con speed_mps>0": false,
-        "AC-M2 0/17 pre-salida con speed_mps>0": false,
+        "AC-M2 (R1) 0/17 pre-salida STOPPED_AT con speed_mps>0": false,
         "AC-M3 0/4 salida retrasada con speed_mps>0": false,
         "AC-M4 0/7 intermedias con speed_mps>0": false,
         "AC-M5 0/44 cruzan parada > τ": false,
         "AC-M6 19656 avance a 30 s == 0": false,
         "AC-M7 guarda 0/9 IN_TRANSIT_TO/INCOMING_AT que avanzaron con predicción == 0": true
-      }
+      },
+      "GROUP_M_si_M2b_sustituye_a_M2a": 1
     },
     {
       "alternative": "D(tolerancia=50)",
@@ -320,7 +364,11 @@
         25,
         25
       ],
-      "M2_predeparture_speed_gt0": [
+      "M2a_R1_pre_salida_STOPPED_AT_speed_gt0": [
+        17,
+        17
+      ],
+      "M2b_R2_avance_hasta_min(salida,horizonte)_gt0": [
         17,
         17
       ],
@@ -483,13 +531,14 @@
       },
       "GROUP_M_pass": {
         "AC-M1 0/25 STOPPED_AT GPS idéntico con speed_mps>0": false,
-        "AC-M2 0/17 pre-salida con speed_mps>0": false,
+        "AC-M2 (R1) 0/17 pre-salida STOPPED_AT con speed_mps>0": false,
         "AC-M3 0/4 salida retrasada con speed_mps>0": false,
         "AC-M4 0/7 intermedias con speed_mps>0": false,
         "AC-M5 0/44 cruzan parada > τ": false,
         "AC-M6 19656 avance a 30 s == 0": false,
         "AC-M7 guarda 0/9 IN_TRANSIT_TO/INCOMING_AT que avanzaron con predicción == 0": true
-      }
+      },
+      "GROUP_M_si_M2b_sustituye_a_M2a": 1
     },
     {
       "alternative": "B1(offset±600)",
@@ -501,7 +550,11 @@
         21,
         25
       ],
-      "M2_predeparture_speed_gt0": [
+      "M2a_R1_pre_salida_STOPPED_AT_speed_gt0": [
+        13,
+        17
+      ],
+      "M2b_R2_avance_hasta_min(salida,horizonte)_gt0": [
         13,
         17
       ],
@@ -634,13 +687,14 @@
       },
       "GROUP_M_pass": {
         "AC-M1 0/25 STOPPED_AT GPS idéntico con speed_mps>0": false,
-        "AC-M2 0/17 pre-salida con speed_mps>0": false,
+        "AC-M2 (R1) 0/17 pre-salida STOPPED_AT con speed_mps>0": false,
         "AC-M3 0/4 salida retrasada con speed_mps>0": false,
         "AC-M4 0/7 intermedias con speed_mps>0": false,
         "AC-M5 0/44 cruzan parada > τ": false,
         "AC-M6 19656 avance a 30 s == 0": false,
         "AC-M7 guarda 0/9 IN_TRANSIT_TO/INCOMING_AT que avanzaron con predicción == 0": true
-      }
+      },
+      "GROUP_M_si_M2b_sustituye_a_M2a": 1
     },
     {
       "alternative": "B2(offset+ventana)",
@@ -652,8 +706,12 @@
         10,
         25
       ],
-      "M2_predeparture_speed_gt0": [
+      "M2a_R1_pre_salida_STOPPED_AT_speed_gt0": [
         2,
+        17
+      ],
+      "M2b_R2_avance_hasta_min(salida,horizonte)_gt0": [
+        0,
         17
       ],
       "M3_delayed_origin_speed_gt0": [
@@ -771,13 +829,14 @@
       },
       "GROUP_M_pass": {
         "AC-M1 0/25 STOPPED_AT GPS idéntico con speed_mps>0": false,
-        "AC-M2 0/17 pre-salida con speed_mps>0": false,
+        "AC-M2 (R1) 0/17 pre-salida STOPPED_AT con speed_mps>0": false,
         "AC-M3 0/4 salida retrasada con speed_mps>0": false,
         "AC-M4 0/7 intermedias con speed_mps>0": false,
         "AC-M5 0/44 cruzan parada > τ": false,
         "AC-M6 19656 avance a 30 s == 0": false,
         "AC-M7 guarda 0/9 IN_TRANSIT_TO/INCOMING_AT que avanzaron con predicción == 0": true
-      }
+      },
+      "GROUP_M_si_M2b_sustituye_a_M2a": 2
     },
     {
       "alternative": "C(τ=50,Dmin=30)",
@@ -789,8 +848,12 @@
         10,
         25
       ],
-      "M2_predeparture_speed_gt0": [
+      "M2a_R1_pre_salida_STOPPED_AT_speed_gt0": [
         2,
+        17
+      ],
+      "M2b_R2_avance_hasta_min(salida,horizonte)_gt0": [
+        0,
         17
       ],
       "M3_delayed_origin_speed_gt0": [
@@ -900,23 +963,25 @@
       ],
       "M8_rewind_if_frozen_at_anchor_p50_max": [
         1588.0967503295365,
-        3310.9873117890224
+        3973.184774146827
       ],
       "rules": {
         "R8:R2": 15,
         "R8:R2+R5": 2,
         "R8:R5": 3,
-        "R8:R8-zona": 24
+        "R8:R8-zona": 10,
+        "R8:R8-zona-consumida": 14
       },
       "GROUP_M_pass": {
         "AC-M1 0/25 STOPPED_AT GPS idéntico con speed_mps>0": false,
-        "AC-M2 0/17 pre-salida con speed_mps>0": false,
+        "AC-M2 (R1) 0/17 pre-salida STOPPED_AT con speed_mps>0": false,
         "AC-M3 0/4 salida retrasada con speed_mps>0": false,
         "AC-M4 0/7 intermedias con speed_mps>0": false,
         "AC-M5 0/44 cruzan parada > τ": true,
         "AC-M6 19656 avance a 30 s == 0": true,
         "AC-M7 guarda 0/9 IN_TRANSIT_TO/INCOMING_AT que avanzaron con predicción == 0": true
-      }
+      },
+      "GROUP_M_si_M2b_sustituye_a_M2a": 4
     },
     {
       "alternative": "A(τ=50)",
@@ -928,7 +993,11 @@
         0,
         25
       ],
-      "M2_predeparture_speed_gt0": [
+      "M2a_R1_pre_salida_STOPPED_AT_speed_gt0": [
+        0,
+        17
+      ],
+      "M2b_R2_avance_hasta_min(salida,horizonte)_gt0": [
         0,
         17
       ],
@@ -1006,13 +1075,14 @@
       },
       "GROUP_M_pass": {
         "AC-M1 0/25 STOPPED_AT GPS idéntico con speed_mps>0": true,
-        "AC-M2 0/17 pre-salida con speed_mps>0": true,
+        "AC-M2 (R1) 0/17 pre-salida STOPPED_AT con speed_mps>0": true,
         "AC-M3 0/4 salida retrasada con speed_mps>0": true,
         "AC-M4 0/7 intermedias con speed_mps>0": true,
         "AC-M5 0/44 cruzan parada > τ": true,
         "AC-M6 19656 avance a 30 s == 0": true,
         "AC-M7 guarda 0/9 IN_TRANSIT_TO/INCOMING_AT que avanzaron con predicción == 0": true
-      }
+      },
+      "GROUP_M_si_M2b_sustituye_a_M2a": 7
     }
   ],
   "sensitivity": [
@@ -1253,6 +1323,19 @@
     {
       "alternative": "C(Dmin=0)",
       "grupo_M": 3,
+      "grupo_M_con_M2b": 4,
+      "M1": [
+        10,
+        25
+      ],
+      "M2a": [
+        2,
+        17
+      ],
+      "M2b": [
+        0,
+        17
+      ],
       "M3": [
         4,
         4
@@ -1269,6 +1352,19 @@
     {
       "alternative": "C(Dmin=30)",
       "grupo_M": 3,
+      "grupo_M_con_M2b": 4,
+      "M1": [
+        10,
+        25
+      ],
+      "M2a": [
+        2,
+        17
+      ],
+      "M2b": [
+        0,
+        17
+      ],
       "M3": [
         4,
         4
@@ -1285,6 +1381,19 @@
     {
       "alternative": "C(Dmin=60)",
       "grupo_M": 3,
+      "grupo_M_con_M2b": 4,
+      "M1": [
+        10,
+        25
+      ],
+      "M2a": [
+        2,
+        17
+      ],
+      "M2b": [
+        0,
+        17
+      ],
       "M3": [
         4,
         4
@@ -1300,13 +1409,26 @@
     },
     {
       "alternative": "C(Dmin=180)",
-      "grupo_M": 4,
-      "M3": [
+      "grupo_M": 2,
+      "grupo_M_con_M2b": 3,
+      "M1": [
+        10,
+        25
+      ],
+      "M2a": [
+        2,
+        17
+      ],
+      "M2b": [
         0,
+        17
+      ],
+      "M3": [
+        4,
         4
       ],
       "M4": [
-        0,
+        4,
         7
       ],
       "guarda": [
@@ -1620,7 +1742,7 @@
     },
     {
       "case": "S8 DST adelanto 2027-03-28, tramo 01:50→02:10",
-      "criterion": "avance = 3000.0000 ± 1e-6 m en 180 s reales",
+      "criterion": "avance = 3000.000000 ± 1e-6 m en 180 s reales",
       "results": {
         "BASE(beb9434)": {
           "pass": false,
@@ -1650,7 +1772,7 @@
     },
     {
       "case": "S9 DST atraso 2027-10-31, tramo 01:30→03:30",
-      "criterion": "avance = 333.3333 ± 1e-6 m en 180 s reales",
+      "criterion": "avance = 1000/3 m (333,333 333…) ± 1e-6 m en 180 s reales",
       "results": {
         "BASE(beb9434)": {
           "pass": false,
@@ -1679,30 +1801,44 @@
       }
     },
     {
-      "case": "S15 DST en la ESPERA del fallback: W1 01:30→03:30 del 2027-10-31, estado ausente, entrada conservada",
+      "case": "S15 DST en la ESPERA del fallback: W1 01:30→03:30 del 2027-10-31, estado ausente, entrada por muestras",
       "criterion": "espera 10 800 s reales; sin avance a +90 s; avanza a +180 s",
       "results": {
         "C(τ=50,Dmin=30)": {
           "pass": true,
-          "detail": "espera real=10800.0 s (pared 7200), dwell_until=+100.0 s, +90 s=0.0 m, +180 s=444.444 m, base=conservada"
+          "detail": "espera real=10800.0 s (pared 7200), dwell_until=+100.0 s, +90 s=0.0 m, +180 s=444.444 m, base=muestras"
         },
         "A(τ=50)": {
           "pass": true,
-          "detail": "espera real=10800.0 s (pared 7200), dwell_until=+100.0 s, +90 s=0.0 m, +180 s=444.444 m, base=conservada"
+          "detail": "espera real=10800.0 s (pared 7200), dwell_until=+100.0 s, +90 s=0.0 m, +180 s=444.444 m, base=muestras"
         }
       }
     },
     {
-      "case": "S15b igual que S15 sin historia de entrada (reinicio): la espera se reinicia y se DECLARA",
-      "criterion": "retención con dwell_basis=reiniciada",
+      "case": "S15b igual que S15 sin muestra previa en la zona (reinicio): la espera empieza en el ancla y se DECLARA",
+      "criterion": "retención con dwell_basis=ancla",
       "results": {
         "C(τ=50,Dmin=30)": {
           "pass": true,
-          "detail": "avance=0.0 m, base=reiniciada"
+          "detail": "avance=0.0 m, base=ancla"
         },
         "A(τ=50)": {
           "pass": true,
-          "detail": "avance=0.0 m, base=reiniciada"
+          "detail": "avance=0.0 m, base=ancla"
+        }
+      }
+    },
+    {
+      "case": "S16 tres observaciones consecutivas en zona (e0, +20, +40), espera programada 120 s, estado ausente",
+      "criterion": "el par (latest+previous) prueba la entrada e0+20; la espera nunca termina antes de lo probado",
+      "results": {
+        "C(τ=50,Dmin=30)": {
+          "pass": true,
+          "detail": "par latest+previous → entrada e0+20 s, dwell_until e0+140 s; con 3 muestras → entrada e0, dwell_until e0+120 s (el par retiene 20 s MÁS, nunca menos)"
+        },
+        "A(τ=50)": {
+          "pass": true,
+          "detail": "par latest+previous → entrada e0+20 s, dwell_until e0+140 s; con 3 muestras → entrada e0, dwell_until e0+120 s (el par retiene 20 s MÁS, nunca menos)"
         }
       }
     }
@@ -1710,59 +1846,99 @@
   "stale": {
     "sin_cambio": {
       "n": 25,
-      "recortes_efectivos": 0,
+      "base": {
+        "sin_cancelacion": 25
+      },
       "F1_max_retroceso_m": 0.0,
       "F2_|salto−rewind_m|_max": 0.0,
       "F2_con_rewind>0": 7,
-      "reinicio_distinto": 0,
-      "F1_|congelado−esperado|_max": 0.0
+      "reinicio_distinto": 0
     },
-    "CANCELED_en_+20s": {
+    "posterior_obs+20_visible+20": {
       "n": 25,
-      "recortes_efectivos": 7,
+      "base": {
+        "sin_cancelacion": 25
+      },
       "F1_max_retroceso_m": 0.0,
       "F2_|salto−rewind_m|_max": 0.0,
       "F2_con_rewind>0": 7,
-      "reinicio_distinto": 0,
-      "F1_|congelado−esperado|_max": 0.0
+      "reinicio_distinto": 0
     },
-    "CANCELED_en_+120s": {
+    "posterior_obs+20_visible+181(contraejemplo)": {
       "n": 25,
-      "recortes_efectivos": 4,
+      "base": {
+        "sin_cancelacion": 25
+      },
       "F1_max_retroceso_m": 0.0,
       "F2_|salto−rewind_m|_max": 0.0,
       "F2_con_rewind>0": 7,
-      "reinicio_distinto": 0,
-      "F1_|congelado−esperado|_max": 0.0
+      "reinicio_distinto": 0
     },
-    "CANCELED_+60s_y_anulado_+150s": {
+    "posterior_obs+60_y_anulada+150": {
       "n": 25,
-      "recortes_efectivos": 5,
+      "base": {
+        "sin_cancelacion": 25
+      },
       "F1_max_retroceso_m": 0.0,
       "F2_|salto−rewind_m|_max": 0.0,
       "F2_con_rewind>0": 7,
-      "reinicio_distinto": 0,
-      "F1_|congelado−esperado|_max": 0.0
+      "reinicio_distinto": 0
     },
-    "CANCELED_en_+180.5s(inadmisible)": {
+    "base_obs−300(reciente)": {
       "n": 25,
-      "recortes_efectivos": 0,
+      "base": {
+        "cancelada": 25
+      },
+      "F1_max_retroceso_m": 0.0,
+      "F2_|salto−rewind_m|_max": 0.0,
+      "F2_con_rewind>0": 0,
+      "reinicio_distinto": 0
+    },
+    "base_obs−86400(ayer)": {
+      "n": 25,
+      "base": {
+        "cancelacion_caducada": 25
+      },
       "F1_max_retroceso_m": 0.0,
       "F2_|salto−rewind_m|_max": 0.0,
       "F2_con_rewind>0": 7,
-      "reinicio_distinto": 0,
-      "F1_|congelado−esperado|_max": 0.0
+      "reinicio_distinto": 0
+    },
+    "base_obs−700_recibida−5(edad>umbral)": {
+      "n": 25,
+      "base": {
+        "cancelacion_caducada": 25
+      },
+      "F1_max_retroceso_m": 0.0,
+      "F2_|salto−rewind_m|_max": 0.0,
+      "F2_con_rewind>0": 7,
+      "reinicio_distinto": 0
+    },
+    "CONDICION_VIOLADA_base_run99_visible+100": {
+      "n": 25,
+      "base": {
+        "cancelada": 25
+      },
+      "F1_max_retroceso_m": 1310.6580078721745,
+      "F2_|salto−rewind_m|_max": 0.0,
+      "F2_con_rewind>0": 0,
+      "reinicio_distinto": 0
     },
     "cambio_de_version": {
       "frozen_basis": "anchor_version_changed",
       "en_ancla": true
     },
-    "CANCELED_+20s_caso_en_marcha": {
-      "trip": "1023V19667C5",
-      "avance_en_corte_m": 213.73697317413462,
-      "igual_a_+50s": true,
-      "igual_congelado_F1": true,
-      "sin_corte_a_+50s_m": 534.3424329353293
+    "contraejemplo_19667": {
+      "observed": {
+        "+179_m": 1284.8910846632498,
+        "+181_m": 213.73697317413462,
+        "retroceso_m": 1071.1541114891152
+      },
+      "inmutable": {
+        "+179_m": 1284.8910846632498,
+        "+181_m": 1284.8910846632498,
+        "retroceso_m": 0.0
+      }
     }
   },
   "presentation": {
