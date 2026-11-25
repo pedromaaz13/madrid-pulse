@@ -27,6 +27,7 @@ jobs:
           --health-retries 20
     env:
       MADRID_PULSE_ENV: test
+      MADRID_PULSE_REQUIRE_DB: "1"
       MADRID_PULSE_DATABASE_URL: postgresql://madrid_pulse:madrid_pulse_local@127.0.0.1:5442/madrid_pulse
     steps:
       - uses: actions/checkout@v4

@@ -11,8 +11,10 @@ duplicar filas para una entidad sin cambios reales entre polls.
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-# Prepara una base y exporta MADRID_PULSE_DATABASE_URL según la guía enlazada.
-MADRID_PULSE_ENV=dev python3 -m services.collector
+# Prepara la base del ejemplo según la guía enlazada.
+MADRID_PULSE_ENV=dev \
+MADRID_PULSE_DATABASE_URL=postgresql://mp_test:mp_local@127.0.0.1:5442/madrid_pulse \
+  python3 -m services.collector
 ```
 
 `MADRID_PULSE_DATABASE_URL` y `MADRID_PULSE_ENV` son obligatorias. Consulta
@@ -60,7 +62,9 @@ las adendas de ADR-0008/ADR-0009:
 
 ```bash
 python3 -m unittest services.collector.tests.test_http_client      # sin red, sin BD
-MADRID_PULSE_ENV=test python3 -m unittest services.collector.tests.test_collector_cycle
+MADRID_PULSE_ENV=test \
+MADRID_PULSE_DATABASE_URL=postgresql://mp_test:mp_local@127.0.0.1:5442/madrid_pulse \
+  python3 -m unittest services.collector.tests.test_collector_cycle
 ```
 
 `test_collector_cycle` requiere que la base de `MADRID_PULSE_DATABASE_URL`

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import unittest
 
 import psycopg
@@ -12,6 +13,12 @@ from packages.database import (
     database_settings_from_env,
     require_disposable_database,
 )
+
+
+def _database_test_error(message: str) -> AssertionError | unittest.SkipTest:
+    if os.environ.get("MADRID_PULSE_REQUIRE_DB") == "1":
+        return AssertionError(message)
+    return unittest.SkipTest(message)
 
 
 def connect_disposable_or_skip() -> psycopg.Connection:
@@ -27,7 +34,7 @@ def connect_disposable_or_skip() -> psycopg.Connection:
             conn.close()
             raise
     except DatabaseConfigurationError as exc:
-        raise unittest.SkipTest(str(exc)) from None
+        raise _database_test_error(str(exc)) from None
     except psycopg.OperationalError:
-        raise unittest.SkipTest("PostgreSQL de integración no disponible.") from None
+        raise _database_test_error("PostgreSQL de integración no disponible.") from None
     return conn

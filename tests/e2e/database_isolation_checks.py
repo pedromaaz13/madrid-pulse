@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import socket
 import subprocess
 import sys
 import tempfile
@@ -29,7 +30,7 @@ from services.snapshotter.config import SnapshotterConfig
 URL_ENV = "MADRID_PULSE_DATABASE_URL"
 MODE_ENV = "MADRID_PULSE_ENV"
 ISOLATED_PORT = 5451
-PROTECTED_PORT = 0x1539
+SHARED_DEV_PORT = 5433
 
 
 def _isolated_url() -> str:
@@ -77,9 +78,9 @@ class SafeConfigurationRegressionTests(unittest.TestCase):
 
     def test_shared_target_is_rejected_before_connection(self) -> None:
         targets = (
-            f"postgresql://test@127.0.0.1:{PROTECTED_PORT}/sandbox",
-            f"postgresql://test@localhost:0{PROTECTED_PORT}/sandbox",
-            f"postgresql://test@some-host:{PROTECTED_PORT}/sandbox?hostaddr=127.0.0.1",
+            f"postgresql://test@127.0.0.1:{SHARED_DEV_PORT}/sandbox",
+            f"postgresql://test@localhost:0{SHARED_DEV_PORT}/sandbox",
+            f"postgresql://test@some-host:{SHARED_DEV_PORT}/sandbox?hostaddr=127.0.0.1",
         )
         for config in (CollectorConfig, ApiConfig, SnapshotterConfig):
             for url in targets:
@@ -114,12 +115,86 @@ class SafeConfigurationTests(unittest.TestCase):
     def test_confirmation_is_only_valid_for_dev_or_live(self) -> None:
         from packages.database import validate_database_url
 
-        url = f"postgresql://test@127.0.0.1:{PROTECTED_PORT}/sandbox"
+        url = f"postgresql://test@127.0.0.1:{SHARED_DEV_PORT}/sandbox"
         for environment in ("test", "replay"):
             with self.assertRaisesRegex(ValueError, "compartido"):
                 validate_database_url(url, environment, allow_shared_dev=True)
         for environment in ("dev", "live"):
             validate_database_url(url, environment, allow_shared_dev=True)
+
+    def test_reserved_port_is_rejected_for_every_host_without_connecting(self) -> None:
+        from packages.database import validate_database_url
+
+        hosts = (
+            "host.docker.internal", "foo.localhost", "localhost.localdomain", "ip6-localhost",
+            socket.gethostname(), "db.example.invalid", "192.0.2.1", "[2001:db8::1]",
+        )
+        for host in hosts:
+            url = f"postgresql://test@{host}:{SHARED_DEV_PORT}/sandbox"
+            for environment in ("dev", "live", "test", "replay"):
+                with (
+                    self.subTest(host=host, environment=environment),
+                    self.assertRaisesRegex(ValueError, r"docs/operations/DATABASE_ISOLATION\.md"),
+                ):
+                    validate_database_url(url, environment)
+            for environment in ("dev", "live"):
+                validate_database_url(url, environment, allow_shared_dev=True)
+            validate_database_url(f"postgresql://test@{host}:{ISOLATED_PORT}/sandbox", "test")
+
+    def test_replay_tools_report_missing_config_and_mark_without_traceback(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            matrix = (
+                "apps.api.tools.build_closure_matrix",
+                "--captured-at", "2026-11-19T15:00:00Z", "--service-date", "2026-11-19",
+                "--csv", str(Path(directory) / "matrix.csv"),
+                "--markdown", str(Path(directory) / "matrix.md"),
+            )
+            replay = ("apps.api.tools.replay_three_snapshots",)
+            for command in (matrix, replay):
+                unavailable_db = _isolated_url().rsplit("/", 1)[0] + "/mp023_missing"
+                for env, message in (
+                    ({}, URL_ENV),
+                    ({URL_ENV: _isolated_url(), MODE_ENV: "dev"}, "sin marca desechable"),
+                    ({URL_ENV: unavailable_db, MODE_ENV: "replay"}, "PostgreSQL no disponible"),
+                ):
+                    with self.subTest(tool=command[0], diagnostic=message):
+                        result = subprocess.run(
+                            [sys.executable, "-m", *command], env=env,
+                            capture_output=True, text=True, timeout=15, check=False,
+                        )
+                        self.assertEqual(result.returncode, 1, result.stderr)
+                        self.assertIn(message, result.stderr)
+                        self.assertNotIn("Traceback", result.stderr)
+                        print(f"{command[0]}: salida {result.returncode}, {result.stderr.strip()}")
+            self.assertEqual(list(Path(directory).iterdir()), [])
+
+    def test_required_database_errors_are_failures(self) -> None:
+        from tests.postgres import connect_disposable_or_skip
+
+        for settings, message in (
+            ({}, URL_ENV),
+            ({URL_ENV: _isolated_url(), MODE_ENV: "invalid"}, MODE_ENV),
+            ({URL_ENV: _isolated_url(), MODE_ENV: "test"}, "sin marca desechable"),
+        ):
+            for strict, expected in (("0", unittest.SkipTest), ("1", AssertionError)):
+                with (
+                    self.subTest(strict=strict, diagnostic=message),
+                    mock.patch.dict(os.environ, {**settings, "MADRID_PULSE_REQUIRE_DB": strict}, clear=True),
+                    self.assertRaisesRegex(expected, message),
+                ):
+                    connect_disposable_or_skip()
+
+    def test_required_database_unavailable_is_a_failure(self) -> None:
+        from tests.postgres import connect_disposable_or_skip
+
+        with (
+            mock.patch.dict(os.environ, {
+                URL_ENV: _isolated_url(), MODE_ENV: "test", "MADRID_PULSE_REQUIRE_DB": "1",
+            }, clear=True),
+            mock.patch("psycopg.connect", side_effect=psycopg.OperationalError),
+            self.assertRaisesRegex(AssertionError, "PostgreSQL de integración no disponible"),
+        ):
+            connect_disposable_or_skip()
 
     def test_unmarked_database_stops_writers(self) -> None:
         with tempfile.TemporaryDirectory() as directory:

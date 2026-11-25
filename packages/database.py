@@ -3,9 +3,7 @@
 from __future__ import annotations
 
 import os
-import socket
 from collections.abc import Mapping
-from ipaddress import ip_address
 
 import psycopg
 from psycopg.conninfo import conninfo_to_dict
@@ -15,8 +13,8 @@ DATABASE_ENV = "MADRID_PULSE_ENV"
 DISPOSABLE_ENVIRONMENTS = {"test", "replay"}
 ENVIRONMENTS = DISPOSABLE_ENVIRONMENTS | {"dev", "live"}
 ALLOW_SHARED_DEV_ENV = "MADRID_PULSE_ALLOW_SHARED_DEV_DB"
-# Puerto reservado por infra/docker para el PostgreSQL de desarrollo compartido.
-SHARED_DEV_PORT = 0x1539
+# Puerto del PostgreSQL de desarrollo compartido (infra/docker/docker-compose.yml).
+SHARED_DEV_PORT = 5433
 DISPOSABLE_MARKER = "madrid-pulse:disposable"
 
 MARKER_QUERY = """
@@ -28,22 +26,6 @@ MARKER_QUERY = """
 
 class DatabaseConfigurationError(ValueError):
     """La configuración no satisface las reglas de conexión o aislamiento."""
-
-
-def _is_local(host: str) -> bool:
-    host = host.lower().rstrip(".")
-    if host == "localhost" or host.startswith("/"):
-        return True
-    try:
-        address = ip_address(host)
-    except ValueError:
-        try:
-            # libpq también admite IPv4 abreviadas como 127.1.
-            address = ip_address(socket.inet_aton(host))
-        except OSError:
-            return False
-    address = getattr(address, "ipv4_mapped", None) or address
-    return address.is_loopback or address.is_unspecified
 
 
 def validate_database_url(
@@ -79,12 +61,12 @@ def validate_database_url(
         raise DatabaseConfigurationError(f"El puerto de {DATABASE_URL_ENV} no es válido.")
     if (
         int(port) == SHARED_DEV_PORT
-        and _is_local(hostaddr or host)
-        and (environment in DISPOSABLE_ENVIRONMENTS or not allow_shared_dev)
+        and not (allow_shared_dev and environment in {"dev", "live"})
     ):
         raise DatabaseConfigurationError(
-            f"Destino PostgreSQL local compartido (puerto {SHARED_DEV_PORT}) rechazado. "
-            f"Usa otra base o consulta {ALLOW_SHARED_DEV_ENV} para dev/live."
+            f"Puerto PostgreSQL compartido ({SHARED_DEV_PORT}) rechazado en cualquier host. "
+            f"Usa otro puerto o consulta {ALLOW_SHARED_DEV_ENV} para dev/live en "
+            "docs/operations/DATABASE_ISOLATION.md."
         )
 
 

@@ -28,7 +28,7 @@ import psycopg
 from apps.api import snapshot
 from apps.api.config import ApiConfig
 from apps.api.gtfs_source import load_network
-from packages.database import require_disposable_database
+from packages.database import DatabaseConfigurationError, require_disposable_database
 from packages.gtfs import scheduled_trip_instances_for_date
 
 
@@ -296,12 +296,17 @@ def main() -> None:
 
     captured_at = datetime.fromisoformat(args.captured_at.replace("Z", "+00:00"))
     service_date = date.fromisoformat(args.service_date)
-    config = ApiConfig.from_env()
-    with psycopg.connect(config.database_dsn) as conn:
-        require_disposable_database(conn)
-        rows = build_rows(
-            conn, config=config, captured_at=captured_at, service_date=service_date
-        )
+    try:
+        config = ApiConfig.from_env()
+        with psycopg.connect(config.database_dsn) as conn:
+            require_disposable_database(conn)
+            rows = build_rows(
+                conn, config=config, captured_at=captured_at, service_date=service_date
+            )
+    except DatabaseConfigurationError as exc:
+        raise SystemExit(str(exc)) from None
+    except psycopg.OperationalError:
+        raise SystemExit("PostgreSQL no disponible para calcular la matriz de cobertura.") from None
     write_csv(args.csv, rows)
     write_markdown(args.markdown, rows)
     print(f"{len(rows)} líneas escritas en {args.csv} y {args.markdown}")

@@ -77,12 +77,14 @@ Define `MADRID_PULSE_DATABASE_URL` y `MADRID_PULSE_ENV` según la
 ```sh
 # Replay reproducible (fixture reducida, valor por defecto)
 MADRID_PULSE_ENV=replay MADRID_PULSE_MODE=replay \
+MADRID_PULSE_DATABASE_URL=postgresql://mp_test:mp_local@127.0.0.1:5442/madrid_pulse \
 MADRID_PULSE_GTFS_SOURCE="$PWD/tests/fixtures/gtfs_c5_real" \
 .venv/bin/uvicorn apps.api.main:app --port 8000
 
 # Live: descargar primero el ZIP oficial y comprobar que sigue vigente
 .venv/bin/python -m apps.api.tools.fetch_gtfs_static
 MADRID_PULSE_ENV=live MADRID_PULSE_MODE=live \
+MADRID_PULSE_DATABASE_URL='postgresql://rol:contraseña@db.interna:5432/madrid_pulse' \
 MADRID_PULSE_GTFS_SOURCE="$PWD/data/gtfs_static/fomento_transit.zip" \
 .venv/bin/uvicorn apps.api.main:app --port 8000
 ```
@@ -153,6 +155,7 @@ configuración, nunca un literal en la lógica (ADR-0011).
 
 ```sh
 MADRID_PULSE_ENV=replay MADRID_PULSE_MODE=replay MADRID_PULSE_SHORT_NAME= \
+MADRID_PULSE_DATABASE_URL=postgresql://mp_test:mp_local@127.0.0.1:5442/madrid_pulse \
 MADRID_PULSE_GTFS_SOURCE="$PWD/data/gtfs_static/fomento_transit.zip" \
   .venv/bin/uvicorn apps.api.main:app --port 8000
 ```
@@ -189,6 +192,8 @@ dentro de la anticipación.
 ### Medición y evidencia reproducibles
 
 ```sh
+export MADRID_PULSE_ENV=replay
+export MADRID_PULSE_DATABASE_URL=postgresql://mp_test:mp_local@127.0.0.1:5442/madrid_pulse
 .venv/bin/python -m apps.api.tools.bench_snapshot --iterations 60 --at 2026-11-19T05:20:00Z
 .venv/bin/python -m apps.api.tools.bench_snapshot --iterations 60 --reuse-connection
 ```
@@ -208,7 +213,9 @@ PostgreSQL desechable; resultado en
 ## Pruebas
 
 ```sh
-MADRID_PULSE_ENV=test .venv/bin/python -m unittest apps.api.tests.test_api_contract -v
+MADRID_PULSE_ENV=test \
+MADRID_PULSE_DATABASE_URL=postgresql://mp_test:mp_local@127.0.0.1:5442/madrid_pulse \
+  .venv/bin/python -m unittest apps.api.tests.test_api_contract -v
 ```
 
 Usa la fixture reducida (sin red) más PostgreSQL real para
@@ -221,7 +228,9 @@ motor de movimiento) sin depender del GTFS completo.
 ## Ejecución local
 
 ```sh
-MADRID_PULSE_ENV=dev .venv/bin/uvicorn apps.api.main:app --reload --port 8000
+MADRID_PULSE_ENV=dev \
+MADRID_PULSE_DATABASE_URL=postgresql://mp_test:mp_local@127.0.0.1:5442/madrid_pulse \
+  .venv/bin/uvicorn apps.api.main:app --reload --port 8000
 ```
 
 Requiere una `MADRID_PULSE_DATABASE_URL` explícita y, para vehículos C5 reales,

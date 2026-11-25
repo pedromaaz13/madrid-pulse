@@ -15,8 +15,12 @@ No se admiten servicios libpq ni un destino heredado de `PGHOSTADDR` o
 |---|---|---|
 | `test` | Integración y CI | Marca obligatoria para las suites PostgreSQL, el colector y el snapshotter |
 | `replay` | Reprocesar capturas congeladas | Misma marca para herramientas de replay, colector, snapshotter y suites PostgreSQL |
-| `dev` | Desarrollo local en una base explícita | Puede usar una base propia persistente |
-| `live` | Operación con fuentes en vivo | Puede usar una base persistente autorizada |
+| `dev` | Desarrollo local en una base explícita | Los servicios pueden usar una base propia persistente sin marca |
+| `live` | Operación con fuentes en vivo | Los servicios pueden usar una base persistente autorizada sin marca |
+
+Las herramientas `apps.api.tools.replay_three_snapshots` y
+`apps.api.tools.build_closure_matrix` requieren la marca en todos los
+entornos porque reproducen capturas sobre una base desechable.
 
 `MADRID_PULSE_MODE=replay|live` controla el catálogo y el reloj de la API.
 Configúralo por separado. `MADRID_PULSE_ENV` controla el aislamiento y no
@@ -44,7 +48,8 @@ docker exec mp-sandbox pg_isready -h 127.0.0.1 -U mp_test -d madrid_pulse
 (
   set -e
   for migration in infra/migrations/*.up.sql; do
-    psql -X -v ON_ERROR_STOP=1 "$MADRID_PULSE_DATABASE_URL" -f "$migration"
+    docker exec -i mp-sandbox psql -X -v ON_ERROR_STOP=1 \
+      -U mp_test -d madrid_pulse < "$migration"
   done
   python -m infra.operate.mark_disposable_db
 )
@@ -55,8 +60,11 @@ El script requiere el rol propietario de la base y pone el comentario exacto
 una base recién creada y desechable. La marca es un control operativo contra
 errores de destino. El colector la consulta en la conexión que usará para
 ingestar. El snapshotter la comprueba antes de tocar el archivo Parquet. Los
-tests PostgreSQL la comprueban antes de ejecutar el caso y se saltan con un
-diagnóstico explícito si falta. El comentario se consulta sin modificar datos.
+tests PostgreSQL la comprueban antes de ejecutar el caso. Si falta la marca,
+la configuración es inválida o la base no está disponible, el caso se salta
+con un diagnóstico explícito. CI fija `MADRID_PULSE_REQUIRE_DB=1` para que
+esos casos fallen. Los skips por ausencia de datos de pruebas se mantienen.
+El comentario se consulta sin modificar datos.
 
 Para terminar, elimina únicamente el contenedor y el volumen anónimo que
 creaste en el ejemplo:
@@ -68,7 +76,14 @@ docker rm -fv mp-sandbox
 ## Base compartida en 127.0.0.1:5433
 
 Consérvala tal como está. Queda fuera de pruebas, replay, migraciones y limpieza.
-`test` y `replay` rechazan el destino antes de conectar. En `dev` o `live`
-también se rechaza, salvo confirmación expresa del operador mediante
-`MADRID_PULSE_ALLOW_SHARED_DEV_DB=1`. Déjala sin definir en los entornos de
-pruebas y en las plantillas de operación.
+La validación rechaza el puerto 5433 en cualquier host antes de conectar, ya
+sea un nombre, un alias o una dirección IPv4 o IPv6. El mensaje de rechazo
+remite a esta guía. La única excepción es una confirmación expresa del
+operador mediante `MADRID_PULSE_ALLOW_SHARED_DEV_DB=1` en `dev` o `live`.
+Deja la variable sin definir en las plantillas de operación.
+
+El criterio de cero literales `5433` fuera de la base compartida excluye
+`docs/`, `infra/docker/`, `tests/fixtures/` y
+`apps/web/src/__fixtures__/`. Los dos literales de código autorizados son
+las constantes explícitas de `packages/database.py` y del arnés
+`tests/e2e/database_isolation_checks.py`.

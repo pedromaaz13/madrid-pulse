@@ -52,7 +52,8 @@ Diseño coherente con el código: frontend y API **bajo el mismo origen** (comen
 | `VITE_API_ROOT` | frontend (build) | sí | por defecto `/api/v1` |
 | `VITE_DATA_MODE` | frontend (build) | sí | `static` (MVP 0) — **por crear** |
 | `VITE_TILE_URL` | frontend (build) | sí | URL de teselas; claves de proveedor restringidas por dominio — **por crear** |
-| `MADRID_PULSE_DATABASE_DSN` / `MADRID_PULSE_DATABASE_URL` | API / colector | **no** | secreto del entorno; sin default tras MP-023 |
+| `MADRID_PULSE_DATABASE_URL` | API / colector / snapshotter | **no** | URL obligatoria, secreto del entorno |
+| `MADRID_PULSE_ENV` | API / colector / snapshotter | no | entorno obligatorio: `dev`, `test`, `replay` o `live` |
 | `MADRID_PULSE_MODE` | API | no | `replay` o `live` |
 | `MADRID_PULSE_GTFS_SOURCE` | API / colector | no | ruta al ZIP GTFS completo |
 | `MADRID_PULSE_NETWORK_ID`, `MADRID_PULSE_SHORT_NAME` | API | no | configuración de red |

@@ -33,7 +33,7 @@ import psycopg
 from apps.api import snapshot
 from apps.api.config import ApiConfig
 from apps.api.gtfs_source import load_network
-from packages.database import require_disposable_database
+from packages.database import DatabaseConfigurationError, require_disposable_database
 from services.collector.collector import run_cycle
 from services.collector.config import FeedConfig
 from services.collector.http_client import RetryPolicy
@@ -43,12 +43,21 @@ POLICY = RetryPolicy(max_retries=0, backoff_base_seconds=0.1, timeout_seconds=5.
 CAP_1532 = datetime(2026, 11, 20, 14, 32, 4, tzinfo=timezone.utc)
 CAP_1533 = datetime(2026, 11, 20, 14, 33, 21, tzinfo=timezone.utc)
 
-config = ApiConfig.from_env()
+try:
+    config = ApiConfig.from_env()
+except DatabaseConfigurationError as exc:
+    raise SystemExit(str(exc)) from None
 network = load_network(config)
-conn = psycopg.connect(config.database_dsn, autocommit=False)
+try:
+    conn = psycopg.connect(config.database_dsn, autocommit=False)
+except psycopg.OperationalError:
+    raise SystemExit("PostgreSQL no disponible para reproducir las capturas.") from None
 try:
     require_disposable_database(conn)
     conn.rollback()
+except DatabaseConfigurationError as exc:
+    conn.close()
+    raise SystemExit(str(exc)) from None
 except Exception:
     conn.close()
     raise

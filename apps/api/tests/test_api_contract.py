@@ -68,9 +68,16 @@ class FeedClockTests(unittest.TestCase):
 
 class RuntimeModeTests(unittest.TestCase):
     def test_live_mode_rejects_replay_fixture(self) -> None:
-        config = replace(ApiConfig.from_env(), mode="live")
-        with self.assertRaisesRegex(ValueError, "live no admite fixtures"):
-            load_network(config)
+        with (
+            patch.dict(os.environ, {
+                "MADRID_PULSE_ENV": "test",
+                "MADRID_PULSE_DATABASE_URL": "postgresql://unused@127.0.0.1:1/unused",
+            }),
+            patch("psycopg.connect", side_effect=AssertionError("El test no usa PostgreSQL")),
+        ):
+            config = replace(ApiConfig.from_env(), mode="live")
+            with self.assertRaisesRegex(ValueError, "live no admite fixtures"):
+                load_network(config)
 
 
 class FrozenOpenApiContractTests(unittest.TestCase):

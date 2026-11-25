@@ -9,8 +9,10 @@ resumen gold inicial.
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-# Prepara una base y exporta MADRID_PULSE_DATABASE_URL según la guía enlazada.
-MADRID_PULSE_ENV=replay python3 -m services.snapshotter 2026-11-19
+# Prepara la base del ejemplo según la guía enlazada.
+MADRID_PULSE_ENV=replay \
+MADRID_PULSE_DATABASE_URL=postgresql://mp_test:mp_local@127.0.0.1:5442/madrid_pulse \
+  python3 -m services.snapshotter 2026-11-19
 ```
 
 `MADRID_PULSE_DATABASE_URL` y `MADRID_PULSE_ENV` son obligatorias.
@@ -63,5 +65,7 @@ pérdida. Limpia sus propias filas al terminar (`try/finally`), nunca
 ```bash
 python3 -m unittest services.snapshotter.tests.test_export         # puro, sin BD
 python3 -m unittest services.snapshotter.tests.test_gold           # puro, sin BD (fixture GTFS real)
-MADRID_PULSE_ENV=test python3 -m unittest services.snapshotter.tests.test_export_replay  # requiere base desechable
+MADRID_PULSE_ENV=test \
+MADRID_PULSE_DATABASE_URL=postgresql://mp_test:mp_local@127.0.0.1:5442/madrid_pulse \
+  python3 -m unittest services.snapshotter.tests.test_export_replay
 ```
