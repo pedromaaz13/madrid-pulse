@@ -29,8 +29,10 @@ class TemporalApiTests(unittest.TestCase):
     def setUp(self) -> None:
         self.conn = connect_disposable_or_skip()
         self.addCleanup(self.conn.close)
-        # Leer las escrituras de la prueba mediante la misma transacción.
         self.addCleanup(self.conn.rollback)
+        # run_cycle usa transacciones propias. Una ya abierta las convierte
+        # en savepoints y permite revertir todos los cortes después de probar.
+        self.conn.execute("SELECT 1")
         main.app.dependency_overrides[main.get_connection] = lambda: self.conn
         self.addCleanup(main.app.dependency_overrides.clear)
         self.enterContext(patch.dict(os.environ, {
