@@ -28,6 +28,13 @@ Implementada por Codex `gpt-6.2-sol` · medium (recibo de Orca); revisada por Cl
 #### Verified
 - RED contra `beb9434` y GREEN; 283 tests con 18 skipped en 28 módulos contra PostgreSQL desechable propio; arranques sin variables con 0 filas y 0 conexiones; el contenedor compartido de desarrollo no se tocó. Evidencia: `docs/evidence/mp-023/`. Pendiente: ejecución real en GitHub Actions.
 
+### MP-024 — Propuesta de enmienda de ADR-0014 (rama `pedromaaz13/mp-024-adr-estado-parada`, sin fusionar)
+
+Solo documentación y evidencia offline; **ningún cambio de código de producto**. ADR en estado `Propuesto`: no está aprobado ni implementado. Ejecutor Claude Opus 5.5 · high; revisor Codex `gpt-6.2-astra` · high: **sin dictamen APPROVED** (2 rondas con CHANGES_REQUESTED parcial; las correcciones finales no se re-verificaron).
+
+#### Added
+- `docs/adr/0014-amendment-stop-state.md` (alternativas A/B/C/D comparadas por pruebas, reglas, criterios de aceptación, decisión del propietario) y `docs/evidence/mp-024/` (arnés offline determinista, equivalencia Python↔TypeScript y resultados).
+
 ### Gobernanza documental y roadmap maestro (2026-11-25, rama `docs/governance-roadmap`, sin fusionar)
 
 Solo documentación y mecanismo de seguimiento; **ningún cambio funcional**. La rama incorpora además dos commits de documentos de despliegue (`docs/deployment/*`, propuestas, procedentes de `docs/mvp-web-deployment`).
