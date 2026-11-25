@@ -4,6 +4,8 @@ Fecha: 2026-11-24. **Propuesta; no autoriza implementar ni contratar.** Polític
 
 ## MVP 0 — URL pública con demo congelada
 
+> **SUPERADO (2026-11-25):** las tareas D-01…D-07 de esta tabla las sustituye `MVP0_IMPLEMENTATION_PLAN.md` (D-01…D-06, contrato de demo propio). Se conserva como histórico. D-10…D-19 siguen vigentes.
+
 | ID | Tarea | Tipo | Ejecutor (modelo · esf.) | Revisor contrario | Aceptación |
 |---|---|---|---|---|---|
 | D-01 | Captura local de 30–60 min (colector + BD desechable puerto propio, nunca 5433) y GTFS | config | propietario/coordinador (`sonnet-5-5` · medium) | `gpt-6.2-sol` · medium | `manifest.json` con rango, SHA-256 y nº de ciclos; sin escritura en 5433 |

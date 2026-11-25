@@ -4,6 +4,18 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 
 ## [Unreleased]
 
+### Gobernanza documental y roadmap maestro (2026-11-25, rama `docs/governance-roadmap`, sin fusionar)
+
+Solo documentación y mecanismo de seguimiento; **ningún cambio funcional**.
+
+#### Added
+- Fuentes recibidas incorporadas íntegras (cabecera de procedencia, cuerpo intacto verificado con `cmp`): `docs/plans/MVP_LIVE_END_TO_END.md` (propuesta), `docs/research/COMPARATIVE_ARCHITECTURE_2026-11-24.md`, `docs/design/DESIGN_DISCOVERY_A_B_C.md`, más `docs/design/DESIGN_DISCOVERY_EXECUTION_OVERRIDES.md`.
+- `docs/README.md`, `docs/roadmap/{MILESTONES,RELEASE_ROADMAP,CROSSWALK}.md`, `docs/governance/{PROJECT_STATE.json,UPDATE_PROTOCOL.md}`.
+- `scripts/governance/sync_docs.py` y `check_docs.py` con tests en `tests/governance/` y job `governance` en CI (detalle de resultados en la entrada de cierre de la rama).
+
+#### Changed
+- `README.md`, `docs/PLAN.md`, `docs/ARCHITECTURE.md`, `docs/TASKS.md`, `docs/STATUS.md`, `docs/DEVELOPMENT.md` y `docs/deployment/MVP_RELEASE_CHECKLIST.md`: afirmaciones obsoletas corregidas con notas de vigencia; el texto histórico se conserva.
+
 ### MP-022 — Validación integral de cierre (`DONE`)
 
 Worktree `mp-022-validacion-integrada`, ramificado desde `mp-021-historico` (`1ecbc8f`). `DONE`: aprobada por Claude el `2026-11-23` tras dos rondas de revisión independiente. **Cierra la cadena completa `MP-016`→`MP-022` del Hito 3** — pendiente únicamente de la decisión del propietario sobre integración a `main` y promoción de ADR-0014/ADR-0015. Auditoría final sobre un entorno desechable propio. No añade features ni cambia arquitectura.

@@ -4,7 +4,84 @@
 
 > Punto de entrada del estado actual. El detalle por tarea vive en `docs/TASKS.md`; el historial de cambios, en `docs/CHANGELOG.md`.
 
+## Estado canónico (generado)
+
+> Esta sección se regenera desde `docs/governance/PROJECT_STATE.json` con `python scripts/governance/sync_docs.py`. No se edita a mano. El resto del documento es bitácora histórica.
+
+<!-- BEGIN GENERATED: state-summary -->
+
+**Estado al 2026-11-25.** Despliegue público **NO-GO** · código integrado local **CONDITIONAL GO**. Fuente: [docs/audits/hito-03/AUDIT_EXECUTIVE_DECISION.md](audits/hito-03/AUDIT_EXECUTIVE_DECISION.md).
+
+Main: `7583ca5f4450aa70e5b6b05b7394aef4cc28f3a4` · línea base: `h3-local-audited` (`beb9434`).
+
+**DONE ≠ MERGED ≠ LIVE. CI verde ≠ cero P0.**
+
+### Recuentos de tareas por estado
+
+| Dimensión | Estado | Tareas |
+| --- | --- | --- |
+| implementation_status | NOT_STARTED | 0 |
+| implementation_status | PLANNED | 41 |
+| implementation_status | IN_PROGRESS | 0 |
+| implementation_status | IMPLEMENTED | 30 |
+| implementation_status | IMPLEMENTED_WITH_OPEN_GATE | 2 |
+| implementation_status | BLOCKED | 0 |
+| implementation_status | DROPPED | 0 |
+| review_status | NOT_REVIEWED | 41 |
+| review_status | IN_REVIEW | 0 |
+| review_status | CHANGES_REQUESTED | 0 |
+| review_status | APPROVED | 32 |
+| integration_status | NOT_INTEGRATED | 41 |
+| integration_status | MERGED | 32 |
+| deployment_status | NOT_DEPLOYED | 53 |
+| deployment_status | NOT_APPLICABLE | 20 |
+| deployment_status | STAGING | 0 |
+| deployment_status | PUBLIC | 0 |
+
+### Hitos
+
+| ID | Hito | implementation_status | review_status | integration_status | deployment_status | closure | Merge (PR · SHA · fecha) | Gate | Evidencia |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| H0 | Hito 0 — Fundación y gobernanza (MP-001) | IMPLEMENTED | APPROVED | MERGED | NOT_APPLICABLE | CLOSED | 5b45227 · 2026-11-18 | MP-001 aprobado por Codex; Hito 1 autorizado por el propietario | [docs/TASKS.md#mp-001](TASKS.md#mp-001) |
+| H1 | Hito 1 — Datos, colector, calidad e histórico (MP-002→MP-009) | IMPLEMENTED_WITH_OPEN_GATE | APPROVED | MERGED | NOT_DEPLOYED | CLOSED | #1 · f567d3c · 2026-11-19 | Revisión cruzada aprobada 2026-11-19; PR #1 fusionado por el propietario | [docs/STATUS.md](STATUS.md) |
+| H2 | Hito 2 — Live Railway MVP local C5 (MP-010→MP-015) | IMPLEMENTED | APPROVED | MERGED | NOT_DEPLOYED | CLOSED | #2 · 990c95d · 2026-11-20 | MVP_READINESS aceptado; PR #2 fusionado por el propietario | [docs/MVP_READINESS.md](MVP_READINESS.md) |
+| H3 | Hito 3 — Cercanías Madrid completo, solo local (MP-016→MP-022) | IMPLEMENTED_WITH_OPEN_GATE | APPROVED | MERGED | NOT_DEPLOYED | OPEN | #3 · 7583ca5 · 2026-11-24 | Cierre técnico revisado; cierre de producto abierto: FR-01 y FR-02 (P0) sin corregir; NO-GO para despliegue público | [docs/audits/hito-03/AUDIT_EXECUTIVE_DECISION.md](audits/hito-03/AUDIT_EXECUTIVE_DECISION.md) |
+| AUD | Auditoría adversarial H3 (AUD-00→AUD-09) | IMPLEMENTED | APPROVED | MERGED | NOT_APPLICABLE | CLOSED | #3 · 7583ca5 · 2026-11-24 | AUD-09 aprobado por revisor de proveedor contrario; decisión final del propietario: ver human_gates | [docs/audits/hito-03/AUDIT_EXECUTIVE_DECISION.md](audits/hito-03/AUDIT_EXECUTIVE_DECISION.md); [docs/audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md](audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md) |
+| H4 | Hito 4 — Corrección de P0 y base operativa (MP-023→MP-035) | PLANNED | NOT_REVIEWED | NOT_INTEGRATED | NOT_DEPLOYED | OPEN | — | Autorización del propietario del alcance y la matriz; ADR-0014 enmendado aprobado antes de MP-025 | [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md); [docs/H4_TASK_MATRIX.md](H4_TASK_MATRIX.md) |
+| MVP0 | MVP 0 — Primera URL de demostración estática (D-01→D-06) | PLANNED | NOT_REVIEWED | NOT_INTEGRATED | NOT_DEPLOYED | OPEN | — | Gate 0 + aprobación del propietario antes de publicar | [docs/deployment/MVP0_IMPLEMENTATION_PLAN.md](deployment/MVP0_IMPLEMENTATION_PLAN.md); [docs/plans/MVP_LIVE_END_TO_END.md](plans/MVP_LIVE_END_TO_END.md) |
+| DESIGN | Design Discovery A/B/C (DES-00→DES-09) | PLANNED | NOT_REVIEWED | NOT_INTEGRATED | NOT_APPLICABLE | OPEN | — | Elección humana de concepto; no hay rediseño productivo antes | [docs/design/DESIGN_DISCOVERY_A_B_C.md](design/DESIGN_DISCOVERY_A_B_C.md); [docs/design/DESIGN_DISCOVERY_EXECUTION_OVERRIDES.md](design/DESIGN_DISCOVERY_EXECUTION_OVERRIDES.md) |
+| LIVE_STAGING | Live técnico supervisado en staging (D-10→D-19) | PLANNED | NOT_REVIEWED | NOT_INTEGRATED | NOT_DEPLOYED | OPEN | — | Gate 1; hosting y coste son decisión del propietario | [docs/deployment/MVP_RELEASE_CHECKLIST.md](deployment/MVP_RELEASE_CHECKLIST.md); [docs/plans/MVP_LIVE_END_TO_END.md](plans/MVP_LIVE_END_TO_END.md) |
+| BETA_PUBLIC | Beta pública funcional | PLANNED | NOT_REVIEWED | NOT_INTEGRATED | NOT_DEPLOYED | OPEN | — | Gate 2 + MP-035 GO + aprobación del propietario | [docs/plans/MVP_LIVE_END_TO_END.md](plans/MVP_LIVE_END_TO_END.md) |
+| EXPANSION | Ampliación de cobertura Cercanías y multimodal | NOT_STARTED | NOT_REVIEWED | NOT_INTEGRATED | NOT_DEPLOYED | OPEN | — | Posterior a beta; sin tareas ni autorización | [docs/roadmap/RELEASE_ROADMAP.md](roadmap/RELEASE_ROADMAP.md) |
+
+### Hallazgos abiertos
+
+| ID | Severidad | Hallazgo | Estado | Corrección prevista | Evidencia |
+| --- | --- | --- | --- | --- | --- |
+| FR-01 | P0 | El mapa pone en marcha trenes que el operador declara detenidos o que no han salido | OPEN | MP-024, MP-025a, MP-025b | [docs/audits/hito-03/AUDIT_EXECUTIVE_DECISION.md](audits/hito-03/AUDIT_EXECUTIVE_DECISION.md) |
+| FR-02 | P0 | En replay, /api/v1/snapshot?at= publica unknown con edades negativas | OPEN | MP-026a | [docs/audits/hito-03/AUDIT_EXECUTIVE_DECISION.md](audits/hito-03/AUDIT_EXECUTIVE_DECISION.md) |
+
+### Decisiones del propietario
+
+| ID | Decisión del propietario | Estado | Nota |
+| --- | --- | --- | --- |
+| HG-AUDIT-DECISION | Aceptación del dictamen de auditoría H3 (NO-GO público / CONDITIONAL GO local) | OPEN | El propietario ordenó conservar NO-GO/CONDITIONAL GO y fusionó el PR #3; no hay un registro de aceptación formal del dictamen en el repositorio. |
+| HG-H4-SCOPE | Autorización del alcance y matriz de H4 | OPEN | El propietario confirmó MP-023..MP-035 solo como mapa provisional. |
+| HG-ADR-0014 | Aprobación del ADR-0014 enmendado (MP-024) | OPEN | — |
+| HG-ADR-0015 | Promoción de ADR-0015 (archivo frío) | OPEN | — |
+| HG-DESIGN-CHOICE | Elección del concepto A/B/C | OPEN | — |
+| HG-MVP0-PUBLISH | Publicar la URL de demostración (MVP 0) | OPEN | — |
+| HG-HOSTING | Elección y contratación de hosting Live (VPS vs Railway) | OPEN | — |
+| HG-TILES | Proveedor de teselas y condiciones | OPEN | — |
+| HG-DEC-004 | Retención del histórico detallado (DEC-004) | OPEN | — |
+| HG-LIVE-PUBLIC | Autorización de despliegue Live público (MP-035) | OPEN | — |
+
+<!-- END GENERATED: state-summary -->
+
+
 ## Hito autorizado actualmente
+
+> **Nota de vigencia (2026-11-25).** Los bloques «Hito 1», «Hito 2» y «Hito 3» de esta sección y las bitácoras siguientes son **histórico conservado**. A esta fecha **no hay ningún hito autorizado en curso**: H4 (MP-023…MP-035), MVP 0 y Design Discovery están planificados y requieren autorización explícita del propietario. El estado vigente es la sección generada «Estado canónico» de arriba.
 
 **Hito 1 — `MP-002` → `MP-009`: completado, aprobado por revisión cruzada el `2026-11-19`, y fusionado a `main` por el propietario (`pedromaaz13`) el `2026-11-19`.** PR #1 (`mp-009-historical-export` → `main`), commit de merge `f567d3c`. Confirmado: `git merge-base --is-ancestor 8be1272 f567d3c` → `0` (el último commit de la cadena MP-009 es ancestro de `main`; nada quedó sin integrar).
 

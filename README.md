@@ -21,21 +21,21 @@ Via Península ha resuelto brillantemente el problema de movimiento visual sobre
 
 Ver `docs/research/deep-research-report.md` y `docs/research/MADRID_PULSE_BRIEF_INICIAL.md` para el análisis completo que fundamenta estas decisiones.
 
-## Estado actual
+## Estado actual (2026-11-25)
 
-El proyecto está en **MP-001 — Fundación del repositorio**: estructura, gobernanza, documentación y backlog. Todavía **no hay código de producto**. Ver `docs/STATUS.md` para el tablero vivo y `docs/TASKS.md` para el backlog completo MP-001 a MP-015.
+**Hay código de producto implementado, solo en local.** Los Hitos 1–3 (`MP-001`→`MP-022`) y la auditoría adversarial (`AUD-00`→`AUD-09`) están integrados en `main` (merge `7583ca5`, etiqueta `h3-local-audited`): colector GTFS-RT idempotente, esquema PostgreSQL/PostGIS, motor de calidad, histórico Parquet, API FastAPI `/api/v1`, frontend React/MapLibre (Live/History/Explore) sobre toda Cercanías Madrid. **No hay servicio desplegado ni URL pública.** Veredicto de la auditoría: **NO-GO para despliegue público; CONDITIONAL GO para el código local**, con dos defectos P0 abiertos (FR-01, FR-02). El Hito 4, la demo estática (MVP 0) y el Design Discovery están **planificados, no iniciados**. Índice completo: [`docs/README.md`](docs/README.md); estado vivo: [`docs/STATUS.md`](docs/STATUS.md).
 
 ## Estructura del repositorio
 
 ```text
 madrid-pulse/
 ├── docs/            Gobernanza, arquitectura, contratos, calidad, legal, ADRs, investigación
-├── apps/            web (React/TS/MapLibre), api (FastAPI) — vacíos hasta sus tareas
-├── services/        collector, normalizer, snapshotter — vacíos hasta sus tareas
-├── packages/        contracts, gtfs, geo, quality — paquetes compartidos, vacíos hasta sus tareas
-├── analytics/       dbt, duckdb — capa analítica, vacía hasta sus tareas
-├── infra/           docker, cloudflare, migrations — infraestructura, vacía hasta sus tareas
-└── tests/           fixtures, integration, e2e — vacíos hasta sus tareas
+├── apps/            web (React/TS/MapLibre), api (FastAPI)
+├── services/        collector, normalizer, snapshotter
+├── packages/        contracts, gtfs, geo, quality, movement — paquetes compartidos
+├── analytics/       capa analítica (DuckDB, ADR-0013)
+├── infra/           docker, migrations, operate (cloudflare: vacío por decisión)
+└── tests/           fixtures, integration, e2e (+ tests/governance)
 ```
 
 ## Documentación clave
@@ -43,7 +43,10 @@ madrid-pulse/
 | Documento | Contenido |
 |---|---|
 | [`docs/PLAN.md`](docs/PLAN.md) | Roadmap por fases, dependencias, entregables, gates de calidad |
-| [`docs/TASKS.md`](docs/TASKS.md) | Backlog MP-001 a MP-015 con dependencias y criterios de aceptación |
+| [`docs/README.md`](docs/README.md) | Índice canónico: qué leer primero, qué es vigente, propuesta o histórico |
+| [`docs/TASKS.md`](docs/TASKS.md) | Fichas MP-001 a MP-022 e índice generado del backlog planificado |
+| [`docs/roadmap/`](docs/roadmap/) | Hitos, hoja de ruta de releases y equivalencias de IDs |
+| [`docs/governance/`](docs/governance/) | Estado estructurado canónico y protocolo de actualización |
 | [`docs/STATUS.md`](docs/STATUS.md) | Tablero vivo: tarea actual, bloqueos, siguiente tarea autorizable |
 | [`docs/DECISIONS.md`](docs/DECISIONS.md) | Decisiones aceptadas, propuestas y pendientes |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Componentes, flujo de datos, justificación tecnológica |

@@ -50,7 +50,7 @@ Dominio propio
 Monitorización
 ```
 
-Ninguno de estos se contrata durante el backlog MP-001 a MP-015. La estimación de coste orientativa de la investigación (no un presupuesto garantizado) es de **25–40 USD/mes** en operación 24/7 de producción: ~25 USD de Postgres gestionado, ~7 USD de un servicio Python pequeño, potencialmente 0 USD de R2 mientras se mantenga en el free tier.
+Ninguno de estos se ha contratado a 2026-11-25 (backlog MP-001 a MP-022); la elección de hosting es gate humano (`HG-HOSTING`, ver `docs/deployment/`). La estimación de coste orientativa de la investigación (no un presupuesto garantizado) es de **25–40 USD/mes** en operación 24/7 de producción: ~25 USD de Postgres gestionado, ~7 USD de un servicio Python pequeño, potencialmente 0 USD de R2 mientras se mantenga en el free tier.
 
 ## Principio de activación de servicios
 
