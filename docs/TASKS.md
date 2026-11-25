@@ -1,4 +1,6 @@
-# TASKS.md — Backlog Madrid Pulse (MP-001 a MP-022)
+# TASKS.md — Backlog Madrid Pulse (MP-001 a MP-022 implementados; MP-023+ planificados)
+
+> **Estado a 2026-11-25:** MP-001…MP-022 implementadas y revisadas; integradas en `main` (`7583ca5`); **ninguna desplegada**. El índice de lo planificado (MP-023+, tracks MVP 0, Live staging y Design) está al final, generado desde [`governance/PROJECT_STATE.json`](governance/PROJECT_STATE.json). `DONE` en las fichas = implementación revisada, no integración ni despliegue (ver [`governance/UPDATE_PROTOCOL.md`](governance/UPDATE_PROTOCOL.md)).
 
 Numeración y dependencias conservadas de `docs/research/deep-research-report.md`. Cualquier desviación de la numeración original debe justificarse aquí y registrarse en `docs/DECISIONS.md`.
 
@@ -603,3 +605,79 @@ Esta tabla refleja **exactamente** el campo "Depende de" de cada ficha anterior 
 | MP-022 | MP-021 |
 
 Dos ramas pueden avanzar en paralelo en worktrees independientes una vez resuelto su ancestro común: `MP-005` y `MP-010` corren en paralelo tras `MP-004` (no dependen entre sí); `MP-006`/`MP-007` corren en la rama de `MP-005`, mientras `MP-011` corre en la rama de `MP-010`, hasta que ambas convergen en `MP-012`. Hito 3 (`MP-016`→`MP-022`) es estrictamente secuencial, un worktree por tarea heredando de la anterior ya `DONE`, conforme a `docs/hitos/hito-03/PLAN-Y-ACEPTACION.md`.
+
+---
+
+## Backlog planificado y tracks (generado)
+
+> **Excepción del gate MP-035:** la columna «Dependencias» enumera lo que debe cerrarse **o quedar `BLOCKED` documentado** (`docs/H4_MP_MAPPING.md`, `docs/H4_TASK_MATRIX.md`): una tarea bloqueada no impide convocar el gate ni emitir NO-GO.
+
+> Índice generado desde `docs/governance/PROJECT_STATE.json` con `python scripts/governance/sync_docs.py`; no se edita a mano. Las fichas completas de MP-023+ viven en `docs/H4_MP_MAPPING.md` y `docs/H4_TASK_MATRIX.md`; D-xx y DES-xx son subtareas con correspondencia a MP existentes (`docs/roadmap/CROSSWALK.md`), **no** backlog adicional.
+
+<!-- BEGIN GENERATED: backlog-index -->
+
+| ID | Título | Track | implementation_status | Dependencias | Ejecutor | Revisor | Alias y relaciones | Integración | Fuente | Evidencia |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| AUD-00 | Baseline real del Hito 3 y verificación de entorno | AUDIT | IMPLEMENTED | — | claude | codex | — | PR #3 | [docs/audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md](audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md) | [docs/audits/hito-03/BASELINE.md](audits/hito-03/BASELINE.md); [docs/audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md](audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md) |
+| AUD-01 | Tesis de producto, arquitectura y pruebas refutables | AUDIT | IMPLEMENTED | AUD-00 | claude | codex | — | PR #3 | [docs/audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md](audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md) | [docs/audits/hito-03/PRODUCT_AUDIT.md](audits/hito-03/PRODUCT_AUDIT.md); [docs/audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md](audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md) |
+| AUD-02 | Catálogo ferroviario del Hito 3 | AUDIT | IMPLEMENTED | AUD-00 | codex | claude | — | PR #3 | [docs/audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md](audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md) | [docs/audits/hito-03/RAILWAY_GEOMETRY_AUDIT.md](audits/hito-03/RAILWAY_GEOMETRY_AUDIT.md); [docs/audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md](audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md) |
+| AUD-03 | Geometría ferroviaria del Hito 3 | AUDIT | IMPLEMENTED | AUD-00 | codex | claude | — | PR #3 | [docs/audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md](audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md) | [docs/audits/hito-03/RAILWAY_GEOMETRY_AUDIT.md](audits/hito-03/RAILWAY_GEOMETRY_AUDIT.md); [docs/audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md](audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md) |
+| AUD-04 | Raw / matched / rendered y contratos temporales | AUDIT | IMPLEMENTED | AUD-00 | claude | codex | — | PR #3 | [docs/audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md](audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md) | [docs/audits/hito-03/POSITION_MOVEMENT_AUDIT.md](audits/hito-03/POSITION_MOVEMENT_AUDIT.md); [docs/audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md](audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md) |
+| AUD-05 | Frontend en navegador real | AUDIT | IMPLEMENTED | AUD-00 | claude | codex | — | PR #3 | [docs/audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md](audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md) | [docs/audits/hito-03/FRONTEND_UX_AUDIT.md](audits/hito-03/FRONTEND_UX_AUDIT.md); [docs/audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md](audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md) |
+| AUD-06 | Backend, API, datos y operación | AUDIT | IMPLEMENTED | AUD-00 | codex | claude | — | PR #3 | [docs/audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md](audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md) | [docs/audits/hito-03/BACKEND_OPERATIONS_AUDIT.md](audits/hito-03/BACKEND_OPERATIONS_AUDIT.md); [docs/audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md](audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md) |
+| AUD-07 | Revisión adversarial equivalente (EGM) | AUDIT | IMPLEMENTED | AUD-00 | claude | codex | — | PR #3 | [docs/audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md](audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md) | [docs/audits/hito-03/EGM_REVIEW.md](audits/hito-03/EGM_REVIEW.md); [docs/audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md](audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md) |
+| AUD-08 | Reproducción y reconciliación | AUDIT | IMPLEMENTED | AUD-01, AUD-02, AUD-03, AUD-04, AUD-05, AUD-06, AUD-07 | codex | claude | — | PR #3 | [docs/audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md](audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md) | [docs/audits/hito-03/AUD08_REPRODUCTION.md](audits/hito-03/AUD08_REPRODUCTION.md); [docs/audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md](audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md) |
+| AUD-09 | Registro de hallazgos, decisión ejecutiva y propuesta H4 | AUDIT | IMPLEMENTED | AUD-08 | claude | codex | — | PR #3 | [docs/audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md](audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md) | [docs/audits/hito-03/AUDIT_EXECUTIVE_DECISION.md](audits/hito-03/AUDIT_EXECUTIVE_DECISION.md); [docs/audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md](audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md) |
+| MP-023 | Eliminar defaults peligrosos de PostgreSQL (H4-11) | PRODUCT | PLANNED | — | codex | claude | Alias H4-11 | — | [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md) | — |
+| MP-024 | Enmienda de ADR-0014 (estado de parada) (H4-00) | PRODUCT | PLANNED | — | claude | codex | Alias H4-00 | — | [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md) | — |
+| MP-025a | Modelo de estado de parada: cierre determinista (H4-04) | PRODUCT | PLANNED | MP-024 | codex | claude | Alias H4-04 | — | [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md) | — |
+| MP-025b | Validación Live del modelo de parada (H4-04) | PRODUCT | PLANNED | MP-025a, MP-028 | codex | claude | Alias H4-04 | — | [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md) | — |
+| MP-026a | FR-02 replay ?at= y FR-19 vigencia GTFS (H4-01) | PRODUCT | PLANNED | — | codex | claude | Alias H4-01 | — | [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md) | — |
+| MP-026b | FR-07 snapshot consistente (H4-01) | PRODUCT | PLANNED | MP-024 | codex | claude | Alias H4-01 | — | [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md) | — |
+| MP-027 | Portada, legal y puertas falsables (H4-10) | PRODUCT | PLANNED | — | claude | codex | Alias H4-10 | — | [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md) | — |
+| MP-028 | Captura en vivo (≥2 h, ≥3 días) (H4-12) | PRODUCT | PLANNED | MP-023 | codex | claude | Alias H4-12 | — | [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md) | — |
+| MP-029 | Corredores, ramales y catálogo honesto (H4-03) | PRODUCT | PLANNED | MP-024 | codex | claude | Alias H4-03 | — | [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md) | — |
+| MP-030 | Interfaz: procedencia y rótulos veraces (H4-05) | PRODUCT | PLANNED | MP-024 | codex | claude | Alias H4-05 | — | [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md) | — |
+| MP-031 | Métricas de cierre honestas (H4-06) | PRODUCT | PLANNED | MP-028 | claude | codex | Alias H4-06 | — | [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md) | — |
+| MP-032 | Operación supervisada local medida (H4-07) | PRODUCT | PLANNED | MP-023 | codex | claude | Alias H4-07 | — | [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md) | — |
+| MP-033 | Rendimiento y coste (H4-08) | PRODUCT | PLANNED | MP-026a, MP-026b, MP-032 | codex | claude | Alias H4-08 | — | [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md) | — |
+| MP-034 | Registro estructurado de hallazgos (H4-13) | PRODUCT | PLANNED | — | codex | claude | Alias H4-13 | — | [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md) | — |
+| MP-035 | Gate de publicación (H4-09) | PRODUCT | PLANNED | MP-023, MP-024, MP-025a, MP-025b, MP-026a, MP-026b, MP-027, MP-028, MP-029, MP-030, MP-031, MP-032, MP-033, MP-034 | codex | claude | Alias H4-09 | — | [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md) | — |
+| D-01 | Captura local de 90 min con BD desechable y manifest | MVP0 | PLANNED | MP-023 | claude | codex | Relacionadas MP-028 | — | [docs/deployment/MVP0_IMPLEMENTATION_PLAN.md](deployment/MVP0_IMPLEMENTATION_PLAN.md) | — |
+| D-02 | Contrato de demo estática y exportador determinista | MVP0 | PLANNED | — | codex | claude | — | — | [docs/deployment/MVP0_IMPLEMENTATION_PLAN.md](deployment/MVP0_IMPLEMENTATION_PLAN.md) | — |
+| D-03 | Adaptador estático, reloj en bucle, banner y pie | MVP0 | PLANNED | D-02 | claude | codex | — | — | [docs/deployment/MVP0_IMPLEMENTATION_PLAN.md](deployment/MVP0_IMPLEMENTATION_PLAN.md) | — |
+| D-04 | Teselas configurables y estilo OpenFreeMap | MVP0 | PLANNED | — | claude | codex | Relacionadas MP-027 | — | [docs/deployment/MVP0_IMPLEMENTATION_PLAN.md](deployment/MVP0_IMPLEMENTATION_PLAN.md) | — |
+| D-05 | vite base, verify-build demo y pages.yml | MVP0 | PLANNED | D-03, D-04 | codex | claude | — | — | [docs/deployment/MVP0_IMPLEMENTATION_PLAN.md](deployment/MVP0_IMPLEMENTATION_PLAN.md) | — |
+| D-06 | Validación integrada de la demo y aprobación del propietario | MVP0 | PLANNED | D-01, D-02, D-03, D-04, D-05 | claude | codex | — | — | [docs/deployment/MVP0_IMPLEMENTATION_PLAN.md](deployment/MVP0_IMPLEMENTATION_PLAN.md) | — |
+| D-11 | Dockerfiles, compose de producción y Caddy mismo origen | LIVE_STAGING | PLANNED | MP-023 | codex | claude | Relacionadas MP-032 | — | [docs/deployment/MVP_RELEASE_CHECKLIST.md](deployment/MVP_RELEASE_CHECKLIST.md) | — |
+| D-12 | Migraciones idempotentes en arranque | LIVE_STAGING | PLANNED | D-11 | codex | claude | Relacionadas MP-032 | — | [docs/deployment/MVP_RELEASE_CHECKLIST.md](deployment/MVP_RELEASE_CHECKLIST.md) | — |
+| D-14 | Purga y retención de BD caliente | LIVE_STAGING | PLANNED | D-11 | codex | claude | Relacionadas MP-032 | — | [docs/deployment/MVP_RELEASE_CHECKLIST.md](deployment/MVP_RELEASE_CHECKLIST.md) | — |
+| D-15 | Rate limit, /healthz y cabeceras de seguridad | LIVE_STAGING | PLANNED | D-11 | codex | claude | Relacionadas MP-032 | — | [docs/deployment/MVP_RELEASE_CHECKLIST.md](deployment/MVP_RELEASE_CHECKLIST.md) | — |
+| D-16 | Backups con restauración probada | LIVE_STAGING | PLANNED | D-11 | codex | claude | Relacionadas MP-032 | — | [docs/deployment/MVP_RELEASE_CHECKLIST.md](deployment/MVP_RELEASE_CHECKLIST.md) | — |
+| D-17 | CD por SSH con aprobación manual | LIVE_STAGING | PLANNED | D-11 | codex | claude | Relacionadas MP-032 | — | [docs/deployment/MVP_RELEASE_CHECKLIST.md](deployment/MVP_RELEASE_CHECKLIST.md) | — |
+| D-18 | Operación supervisada ≥24 h (ideal 72 h) | LIVE_STAGING | PLANNED | D-11, D-12, D-14, D-15, D-16 | claude | codex | Relacionadas MP-032 | — | [docs/deployment/MVP_RELEASE_CHECKLIST.md](deployment/MVP_RELEASE_CHECKLIST.md) | — |
+| DES-00 | Baseline y verificación de restricciones | DESIGN | PLANNED | — | claude | codex | — | — | [docs/design/DESIGN_DISCOVERY_A_B_C.md](design/DESIGN_DISCOVERY_A_B_C.md) | — |
+| DES-01 | Inspección real y capturas del frontend existente (Claude + preflight de DevTools/Playwright) | DESIGN | PLANNED | DES-00 | claude | codex | — | — | [docs/design/DESIGN_DISCOVERY_A_B_C.md](design/DESIGN_DISCOVERY_A_B_C.md) | — |
+| DES-02 | Comparación de fuentes de diseño (frontend-design, Hallmark, Impeccable) | DESIGN | PLANNED | DES-00 | claude | codex | — | — | [docs/design/DESIGN_DISCOVERY_A_B_C.md](design/DESIGN_DISCOVERY_A_B_C.md) | — |
+| DES-03 | Brief y tres conceptos A/B/C | DESIGN | PLANNED | DES-01, DES-02 | claude | codex | — | — | [docs/design/DESIGN_DISCOVERY_A_B_C.md](design/DESIGN_DISCOVERY_A_B_C.md) | — |
+| DES-04 | Prototipo A Titanium Control | DESIGN | PLANNED | DES-03 | claude | codex | — | — | [docs/design/DESIGN_DISCOVERY_A_B_C.md](design/DESIGN_DISCOVERY_A_B_C.md) | — |
+| DES-05 | Prototipo B Immersive Rail Map | DESIGN | PLANNED | DES-03 | claude | codex | — | — | [docs/design/DESIGN_DISCOVERY_A_B_C.md](design/DESIGN_DISCOVERY_A_B_C.md) | — |
+| DES-06 | Prototipo C Contemporary Signal | DESIGN | PLANNED | DES-03 | claude | codex | — | — | [docs/design/DESIGN_DISCOVERY_A_B_C.md](design/DESIGN_DISCOVERY_A_B_C.md) | — |
+| DES-07 | Comparativa de iconografía ferroviaria | DESIGN | PLANNED | DES-03 | codex | claude | — | — | [docs/design/DESIGN_DISCOVERY_A_B_C.md](design/DESIGN_DISCOVERY_A_B_C.md) | — |
+| DES-08 | Verificación comparativa A/B/C en navegador real (Claude + preflight; Codex audita código y artefactos) | DESIGN | PLANNED | DES-04, DES-05, DES-06, DES-07 | claude | codex | — | — | [docs/design/DESIGN_DISCOVERY_A_B_C.md](design/DESIGN_DISCOVERY_A_B_C.md) | — |
+| DES-09 | Índice comparativo y gate humano de elección | DESIGN | PLANNED | DES-08 | claude | codex | — | — | [docs/design/DESIGN_DISCOVERY_A_B_C.md](design/DESIGN_DISCOVERY_A_B_C.md) | — |
+
+### Alias (mismo trabajo, otro identificador)
+
+| ID | alias_of | Título |
+| --- | --- | --- |
+| D-10 | MP-023 | Defaults seguros de BD (= MP-023) |
+| D-13 | MP-026a | Descarga/validación GTFS con aviso de vigencia (FR-19) |
+
+### Extensiones propuestas
+
+- **PROPUESTA sin ID asignado** · Staging Live en VPS (Docker, Caddy, backups) como tarea propia. El plan lo llama subalcance de MP-032; si MP-032 (operación medida) se desborda, separar evita mezclar medición con despliegue. Sin ID asignado hasta decisión del propietario. Origen: OPS-01, OPS-02, D-11, D-17.
+- **PROPUESTA sin ID asignado** · PoC de snapshot publisher y manifest versionado. SRV-01/SRV-02 no tienen tarea MP; el plan los difiere hasta que haya beta Live y métricas que lo justifiquen. Origen: SRV-01, SRV-02.
+- **PROPUESTA sin ID asignado** · Build geográfico reproducible (grafo OSM/Geofabrik). GEO-03 excede el alcance de MP-029 si el PoC de grafo (GEO-02) tiene éxito. Origen: GEO-02, GEO-03.
+
+<!-- END GENERATED: backlog-index -->

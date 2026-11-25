@@ -22,7 +22,7 @@
 | **H4-08** Rendimiento y coste | P1 · M | `gpt-6.2-sol` · high | `claude-sonnet-5-5` · high | H4-01; H4-07 para retención | p50/p95 con 1/10/50/100 clientes; H7a/H7b; benchmark del pool | **DEC-038 y DEC-004 son del propietario** |
 | **H4-09** Gate de publicación | P0 · M | `gpt-6.2-astra` · high | `claude-opus-5-5` · high | todos cerrados o `BLOCKED` documentados | cada FR re-evaluado en el nuevo HEAD con su prueba; GO/CONDITIONAL/NO-GO para despliegue público | decisión de publicar; push/PR/merge |
 
-Cambios respecto a `NEXT_STEPS_PROPOSAL.md`: modelos nuevos; **H4-13 nueva** (precondición de la regla de fuente única de verdad); H4-01 y H4-09 pasan a revisor Opus por ser P0; H4-05 sin ejecutor `gpt-6.1-terra` porque **no hay navegador confirmado** para él; H4-02 sigue descartado; ampliaciones (AVE/LD/MD) fuera del H4.
+Cambios respecto a `NEXT_STEPS_PROPOSAL.md`: modelos nuevos; **H4-13 nueva** (precondición de la regla de fuente única de verdad); H4-01 y H4-09 pasan a revisor Opus por ser P0; H4-05: la versión inicial excluyó a `gpt-6.1-terra` por no tener navegador; **vigente (decisión del propietario, 2026-11-24):** Terra puede ejecutar React/TS sin validación visual, y la validación visual la hace el revisor Claude; H4-02 sigue descartado; ampliaciones (AVE/LD/MD) fuera del H4.
 
 ## Orden y concurrencia (≤2 pesados por proveedor)
 ```text

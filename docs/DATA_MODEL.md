@@ -1,5 +1,7 @@
 # DATA_MODEL.md
 
+> **Nota de vigencia (2026-11-25).** El estado «propuesta, no implementada» y los pendientes de MP-005/MP-006 de abajo son **históricos**: el esquema existe (migraciones `infra/migrations/0001`–`0002`, `packages/contracts`, MP-005/006 `DONE`) y la limitación de calendario de la gold fue resuelta en MP-021 (`docs/TASKS.md`, MP-021). Ante discrepancia, mandan las migraciones y los ADR sobre este texto. `docs/README.md` lo cuenta como diseño técnico de referencia, no como especificación cerrada.
+
 Estado: **propuesta candidata, no implementada**. Existen dos formulaciones del modelo en la investigación original que no son idénticas; este documento las presenta ambas explícitamente y señala la reconciliación pendiente para MP-005/MP-006, en lugar de fabricar una versión "definitiva" no verificada.
 
 ## Dos modelos candidatos

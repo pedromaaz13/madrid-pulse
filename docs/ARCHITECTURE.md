@@ -1,6 +1,8 @@
 # ARCHITECTURE.md
 
-Estado de este documento: **propuesta validada por investigación, pendiente de validación empírica en MP-002 a MP-007**. Ningún componente aquí descrito está implementado todavía (ver `docs/STATUS.md`).
+> **Actualización de estado (2026-11-25).** El texto original de este documento fue una propuesta previa al código. Hoy, **implementado y en `main` (solo local, sin despliegue)**: collector idempotente, normalización y quality layer, PostgreSQL/PostGIS (migraciones 0001–0002), exportación Parquet diaria con DuckDB, API FastAPI `/api/v1`, motor de movimiento y frontend React/MapLibre (Live/History/Explore). **Sigue siendo propuesta o no implementado:** snapshot en CDN, Cloudflare R2, hosting gestionado, VPS, MVP 0 y Live público (ver [`roadmap/RELEASE_ROADMAP.md`](roadmap/RELEASE_ROADMAP.md) y [`plans/MVP_LIVE_END_TO_END.md`](plans/MVP_LIVE_END_TO_END.md), que es PROPUESTA). ADR-0014 y ADR-0015 siguen `Propuesto`. La auditoría H3 halló defectos P0 en movimiento (FR-01) y API de replay (FR-02): la arquitectura descrita no garantiza por sí sola la veracidad ferroviaria. Estado de cada pieza: [`governance/PROJECT_STATE.json`](governance/PROJECT_STATE.json).
+
+*(Texto histórico, anterior al código:)* Estado de este documento: **propuesta validada por investigación, pendiente de validación empírica en MP-002 a MP-007**. Ningún componente aquí descrito estaba implementado todavía (ver `docs/STATUS.md`).
 
 ## Visión general
 
@@ -42,7 +44,7 @@ Renfe GTFS-Realtime (vehicle_positions,              │
 ## Componentes y responsabilidades
 
 ### `services/collector`
-Hace polling de los feeds GTFS-RT de Renfe. Responsabilidades: idempotencia (hash canónico de payload), reintentos con backoff, timeout, registro de `feed_run` (metadatos de cada ejecución: éxito, latencia, nº de entidades). No normaliza ni interpreta — solo captura y persiste el crudo con su metadata.
+Hace polling de los feeds GTFS-RT de Renfe. Responsabilidades: idempotencia (hash canónico de payload), reintentos con backoff, timeout, registro de la ejecución del feed (`source_ingestion_run`, MP-006; `feed_run` es el nombre de diseño original) (metadatos de cada ejecución: éxito, latencia, nº de entidades). *(Texto original; hoy el colector sí aplica la normalización canónica y el filtrado por núcleo antes de persistir —`services/collector/collector.py`, MP-007/MP-016—; el dato crudo se conserva aparte del normalizado.)* Originalmente: no normaliza ni interpreta, solo captura y persiste el crudo con su metadata.
 
 ### Normalizer + Quality Layer (`packages/contracts`, `packages/quality`)
 Transforma el payload crudo al contrato canónico interno (ver `docs/DATA_CONTRACTS.md`) y aplica las reglas de `docs/DATA_QUALITY.md`: detección de staleness, anomalías geográficas, duplicados, continuidad temporal. Produce los `quality_flags` que acompañan cada observación.
@@ -57,7 +59,7 @@ Almacena el estado operativo actual y el histórico "caliente" de corto plazo. S
 Histórico frío, particionado diariamente (`date=YYYY-MM-DD/hour=HH` para `raw`, `date=YYYY-MM-DD` para `silver`/`gold`). Se eligió Parquet columnar porque el análisis histórico (Explore) es predominantemente agregado y por línea/estación/fecha, no por fila individual — el formato columnar y la partición diaria permiten escanear solo lo necesario. Cloudflare R2 se señala como candidato por no cobrar egress y por el tamaño estimado del histórico (ver `docs/DECISIONS.md`, DEC-011), pero no se contrata durante MP-001 a MP-006.
 
 ### DuckDB (`analytics/` + `services/snapshotter/gold.py`)
-Motor analítico local sobre los Parquet para transformar silver → gold (métricas diarias por núcleo/línea/estación) con disciplina dbt (staging/intermediate/marts, tests, documentación, lineage), implementada directamente en `services/snapshotter/gold.py` sin el motor `dbt-core`/`dbt-duckdb` literal — decisión de MP-015 documentada en [ADR-0013](adr/0013-no-literal-dbt-engine.md) (`Propuesto`; no modifica el texto de [ADR-0003](adr/0003-storage-strategy.md), que sigue `Aceptado` sin cambios) y resumida en DEC-034 (ver `analytics/dbt/README.md` para el detalle de implementación).
+Motor analítico local sobre los Parquet para transformar silver → gold (métricas diarias por núcleo/línea/estación) con disciplina dbt (staging/intermediate/marts, tests, documentación, lineage), implementada directamente en `services/snapshotter/gold.py` sin el motor `dbt-core`/`dbt-duckdb` literal — decisión de MP-015 documentada en [ADR-0013](adr/0013-no-literal-dbt-engine.md) (`Aceptado`, promovido por el propietario el 2026-11-20; no modifica el texto de [ADR-0003](adr/0003-storage-strategy.md), que sigue `Aceptado` sin cambios) y resumida en DEC-034 (ver `analytics/dbt/README.md` para el detalle de implementación).
 
 ### FastAPI (`apps/api`)
 API propia versionada (`/api/v1/*`), nunca un passthrough de la API de Renfe ni de proyectos de terceros. Expone vehículos en vivo, salud de feed, líneas, estaciones e histórico, siempre con metadatos de frescura/calidad (ver `docs/DATA_CONTRACTS.md`). FastAPI se eligió por tipado con Pydantic (coherente con el contrato canónico interno), generación automática de OpenAPI y ecosistema async maduro para I/O concurrente (polling + servir peticiones).

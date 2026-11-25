@@ -1,5 +1,7 @@
 # PREPUBLICATION_H3.md — Controles previos a publicar la integración H3
 
+> **Nota de vigencia (2026-11-25).** Documento **anterior al merge** del Hito 3; se conserva como evidencia sin reescribir. Estado actual: H3 y auditoría están en `main` (merge `7583ca5`, PR #3, etiqueta `h3-local-audited`); licencia MIT añadida en `d32c3da`; CI del PR #3 verde (run 45367091508 sobre `d32c3da`) y CI de `main` tras el merge verde (run 45368478459). Lo que aquí figura como pendiente de push, PR, licencia o merge **ya ocurrió** salvo lo indicado en `docs/STATUS.md`.
+
 **Fecha:** 2026-11-24 · **Rama:** `integration/h3-audited` (HEAD tras este documento: ver `git rev-parse`) · **Estado:** propuesta; nada se ha empujado, abierto como PR ni fusionado. El repositorio es **público** (decisión del propietario).
 **Veredicto de producto sin cambios:** NO-GO para despliegue público; CONDITIONAL GO para el código local integrado; FR-01 y FR-02 abiertos.
 
