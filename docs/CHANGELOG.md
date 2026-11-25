@@ -18,6 +18,8 @@ Solo documentación y mecanismo de seguimiento; **ningún cambio funcional**. La
 
 ### MP-022 — Validación integral de cierre (`DONE`)
 
+> *Histórico: entrada redactada antes del merge; MP-022 está integrada en `main` desde `7583ca5` (2026-11-24).*
+
 Worktree `mp-022-validacion-integrada`, ramificado desde `mp-021-historico` (`1ecbc8f`). `DONE`: aprobada por Claude el `2026-11-23` tras dos rondas de revisión independiente. **Cierra la cadena completa `MP-016`→`MP-022` del Hito 3** — pendiente únicamente de la decisión del propietario sobre integración a `main` y promoción de ADR-0014/ADR-0015. Auditoría final sobre un entorno desechable propio. No añade features ni cambia arquitectura.
 
 #### Added

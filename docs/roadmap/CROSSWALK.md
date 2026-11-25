@@ -64,7 +64,7 @@ Subtareas internas de discovery; **no** son tareas MP ni autorización de H4. Co
 | UX-04 benchmarks Playwright/MapLibre | MP-033 + DES-08 |
 | SRV-01 / SRV-02 snapshot publisher y manifest | **sin MP**: propuesta de extensión (opcional, tras beta) |
 | ANA-01 métricas y denominadores | MP-031 |
-| OPS-01 / OPS-02 compose, staging, CI/CD, backups | MP-032 (subalcance; propuesta de MP-036 si se separa) |
+| OPS-01 / OPS-02 compose, staging, CI/CD, backups | staging **propuesto** (`PROPOSAL-STAGING-LIVE`); MP-032 queda como operación local medida |
 | OPS-03 soak 72 h y carga | MP-032 / MP-033 |
 | REL-01 release-readiness | MP-035 |
 

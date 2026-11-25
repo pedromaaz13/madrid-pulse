@@ -226,14 +226,14 @@
         "MP-015"
       ],
       "exit_gate": "Checklist de MVP superado y aceptado por el propietario; sin deuda de documentación pendiente.",
-      "implementation_status": "IMPLEMENTED",
-      "closure": "CLOSED",
+      "implementation_status": "IMPLEMENTED_WITH_OPEN_GATE",
+      "closure": "OPEN",
       "open_findings": [],
       "gate_evidence": [
         "docs/TASKS.md#mp-015--e2e-y-readiness-mvp",
         "docs/MVP_READINESS.md"
       ],
-      "gate_note": "MP-015 DONE; PR #2 fusionado por el propietario el 2026-11-20 (990c95d)",
+      "gate_note": "MP-015 DONE y PR #2 fusionado por el propietario (990c95d), pero el gate exige aceptación del checklist y no consta una aceptación expresa: el gate queda abierto hasta acreditarla (no afecta al DONE de MP-015 ni al MERGED de H2)",
       "evidence_limit": "Constan la fusión del PR #2 y la promoción de ADR por el propietario; no se localizó una aceptación expresa del checklist de MVP_READINESS: ese es el límite de la evidencia.",
       "source": "docs/PLAN.md"
     },
@@ -329,12 +329,15 @@
         "MP-014",
         "MP-015"
       ],
-      "implementation_status": "IMPLEMENTED",
+      "implementation_status": "IMPLEMENTED_WITH_OPEN_GATE",
       "review_status": "APPROVED",
       "integration_status": "MERGED",
       "deployment_status": "NOT_DEPLOYED",
       "closure": "CLOSED",
-      "gate": "PR #2 fusionado por el propietario; checklist MVP_READINESS presentado",
+      "open_gates_inherited": [
+        "F9"
+      ],
+      "gate": "Cierre histórico: PR #2 fusionado por el propietario; checklist MVP_READINESS presentado; el gate F9 (aceptación expresa del checklist) sigue abierto",
       "gate_evidence": [
         "docs/MVP_READINESS.md"
       ],
@@ -1315,7 +1318,7 @@
       "gate": "Cierre formal técnico: revisor de proveedor contrario APPROVED (registro de despachos). La aceptación humana del dictamen sigue OPEN (HG-AUDIT-DECISION).",
       "pr": 3,
       "merge_sha": "7583ca5",
-      "notes": "head = punta compartida de la rama de auditoría; los commits revisados de cada AUD constan en el registro de despachos.",
+      "notes": "Aprobada documentalmente tras corrección; la revisión de Codex reprodujo vía API pura, sin navegador (registro de despachos).",
       "source": "docs/audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md"
     },
     {
@@ -1343,7 +1346,7 @@
       "gate": "Cierre formal técnico: revisor de proveedor contrario APPROVED (registro de despachos). La aceptación humana del dictamen sigue OPEN (HG-AUDIT-DECISION).",
       "pr": 3,
       "merge_sha": "7583ca5",
-      "notes": "head = punta compartida de la rama de auditoría; los commits revisados de cada AUD constan en el registro de despachos.",
+      "notes": "Aprobada por Claude; el incidente de escritura en la BD 5433 se divulgó después en docs/audits/hito-03/INCIDENT_5433.md (decisión CONSERVAR).",
       "source": "docs/audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md"
     },
     {
@@ -1566,7 +1569,7 @@
       "merge_sha": null,
       "review_date": null,
       "gate": "Aprobación humana donde indica docs/H4_MP_MAPPING.md; prueba RED en beb9434 y GREEN tras el fix",
-      "notes": "Planificada; implementación H4 no autorizada.",
+      "notes": "Modelos: docs/H4_TASK_MATRIX.md (aprobada por el propietario) fija ejecutor y revisor; el plan importado propone otra asignación opcional; precedencia: la matriz H4 hasta nueva decisión del propietario.",
       "head_kind": "none",
       "id": "MP-026a",
       "title": "FR-02 replay ?at= y FR-19 vigencia GTFS (H4-01)",

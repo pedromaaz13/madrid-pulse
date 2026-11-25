@@ -56,6 +56,8 @@ Las decisiones arquitectónicas con detalle completo de alternativas viven como 
 | DEC-046 | Gobernanza documental (2026-11-25): `docs/governance/PROJECT_STATE.json` es la fuente estructurada canónica; las secciones generadas de `STATUS.md`, `MILESTONES.md` y `TASKS.md` se derivan con `scripts/governance/sync_docs.py` y `check_docs.py` valida en CI; las cuatro nociones de estado (implementación, revisión, integración, despliegue) no se confunden; las aprobaciones humanas solo se registran cuando existen | — | Propuesto en la rama `docs/governance-roadmap`; la fusión requiere aprobación del propietario. Ver `docs/governance/UPDATE_PROTOCOL.md`. |
 ## Pendientes (requieren decisión del propietario, no bloquean MP-001)
 
+> Nota 2026-11-25 sobre filas históricas de esta tabla: DEC-027 (métricas gold «vacías») quedó superado por MP-021/MP-015 (la gold se calcula); DEC-036 y DEC-039 conservan su texto de revisión pendiente, ya completada en las revisiones de MP-019 (`docs/TASKS.md`); la frase de DEC-045 sobre push/PR/merge pendientes es histórica (PR #3 fusionado en `7583ca5`).
+
 > Nota 2026-11-25: DEC-002 (licencia) está **decidida: MIT** y DEC-003 (visibilidad) **resuelta: repositorio público** (`gh repo view`, 2026-11-24); sus filas siguen aquí por historial. Los gates humanos vigentes están en `docs/governance/PROJECT_STATE.json` → `human_gates`.
 
 | ID | Pregunta | Opciones | Cuándo decidir |

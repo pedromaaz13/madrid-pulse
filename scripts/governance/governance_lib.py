@@ -247,8 +247,8 @@ def _check_deployment(
 ) -> Iterator[str]:
     """Aplica el NO-GO a la publicación Live y exime la demo estática MVP0.
 
-    MVP0 conserva la obligación de contar con evidencia y una puerta propia
-    aprobada por el propietario.
+    MVP0 exige evidencia, la aprobación de su puerta propia y la aprobación
+    de HG-MVP0-PUBLISH por el propietario.
     """
     deployment = record.get("deployment_status")
     if has_text(deployment) and deployment not in ("NOT_DEPLOYED", "NOT_APPLICABLE"):
@@ -263,11 +263,11 @@ def _check_deployment(
         yield f"{location}: PUBLIC exige deployment_gate {gate_id} en APPROVED_BY_OWNER con aprobación válida"
 
     mvp0 = record.get("track") == "MVP0" or record.get("milestone") == "MVP0"
-    if mvp0 or (collection == "milestones" and location == "MVP0"):
-        return
-    if not _owner_approved(gates.get("HG-LIVE-PUBLIC", {})):
-        yield f"{location}: PUBLIC exige HG-LIVE-PUBLIC en APPROVED_BY_OWNER con aprobación válida"
-    if no_go:
+    mvp0 = mvp0 or (collection == "milestones" and location == "MVP0")
+    publication_gate = "HG-MVP0-PUBLISH" if mvp0 else "HG-LIVE-PUBLIC"
+    if not _owner_approved(gates.get(publication_gate, {})):
+        yield f"{location}: PUBLIC exige {publication_gate} en APPROVED_BY_OWNER con aprobación válida"
+    if no_go and not mvp0:
         yield f"{location}: PUBLIC es incompatible con el veredicto NO-GO"
 
 

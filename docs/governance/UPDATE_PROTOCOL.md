@@ -21,7 +21,7 @@ Ningún documento nuevo puede crear una segunda verdad. El texto histórico de S
 ```text
 implementation: NOT_STARTED → PLANNED → IN_PROGRESS → IMPLEMENTED | IMPLEMENTED_WITH_OPEN_GATE | BLOCKED ; DROPPED
 review:         NOT_REVIEWED → IN_REVIEW → CHANGES_REQUESTED ↔ IN_REVIEW → APPROVED   (APPROVED sobre un HEAD; un cambio posterior lo invalida)
-integration:    NOT_INTEGRATED → MERGED                                                (solo tras merge real: SHA y fecha)
+integration:    NOT_INTEGRATED → MERGED                                                (solo tras merge real o incorporación a main verificada: SHA y fecha; `integration_kind` distingue `merge_commit` de `content_in_main`, p. ej. el commit inicial)
 deployment:     NOT_DEPLOYED → STAGING → PUBLIC                                        (PUBLIC exige el gate humano propio del track —p. ej. HG-MVP0-PUBLISH para la demo— y, fuera de MVP 0, también HG-LIVE-PUBLIC)
 closure (fase/hito): OPEN → CLOSED                                                     (exige gate y evidencia; CLOSED es inmutable salvo corrección documentada)
   Un hito puede estar CLOSED (cierre histórico revisado) y a la vez IMPLEMENTED_WITH_OPEN_GATE solo si lista en `open_gates_inherited` las fases cuyo gate sigue OPEN (p. ej. H1 → F3, F4). Una fase nunca.
@@ -42,7 +42,7 @@ Un hallazgo nuevo entra como `PROPOSED` (`open_findings` o `proposed_extensions`
 1. Cada fase/hito declara su exit gate literal. 2. Se contrasta con evidencia real; si falta, queda `IMPLEMENTED_WITH_OPEN_GATE` y `OPEN`. 3. Solo con gate evidenciado pasa a `CLOSED`. 4. Si más tarde aparece un defecto, **no se reescribe el cierre**: se enlaza como `open_findings` y se abre trabajo nuevo.
 
 ## 8. Flujo por tarea
-preflight → rama propia → implementación → pruebas y artefactos → revisión de proveedor contrario → actualizar `PROJECT_STATE.json` y fichas → `python scripts/governance/sync_docs.py` → `python scripts/governance/check_docs.py` → commit de iteración en el worktree (permitido a los agentes) → **[acciones exclusivas del propietario, `AGENTS.md` y `CLAUDE.md`: `git push`, abrir/fusionar PR, merge a `main`]** → CI → commit documental posterior que registra SHA e integración (lo prepara el agente y lo comitea/empuja el propietario). Ningún workflow aprueba, fusiona ni despliega por deducción.
+preflight → rama propia → implementación → pruebas y artefactos → revisión de proveedor contrario → actualizar `PROJECT_STATE.json` y fichas → `python scripts/governance/sync_docs.py` → `python scripts/governance/check_docs.py` → commit de iteración en el worktree (permitido a los agentes) → **[acciones exclusivas del propietario, `AGENTS.md` y `CLAUDE.md`: `git push`, abrir el PR]** → CI del PR en verde → revisión del propietario → **[merge a `main`, exclusivo del propietario]** → commit documental posterior que registra SHA e integración (lo prepara el agente y lo comitea/empuja el propietario). Ningún workflow aprueba, fusiona ni despliega por deducción.
 **Prevalencia:** `AGENTS.md` (modelo de autonomía por hito, un worktree por tarea, regla de autoría) y `CLAUDE.md` mandan sobre este flujo. En particular, una tarea queda `DONE` (revisión aprobada) y sus dependientes pueden ramificar desde ella **antes** del merge a `main`; `integration_status` solo pasa a `MERGED` cuando el merge es real.
 
 ## 9. Mecanismo y límites

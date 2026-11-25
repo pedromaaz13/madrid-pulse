@@ -44,6 +44,6 @@ Puertas humanas: aprobar publicar con FR-01/FR-02 rotulados; elegir proveedor de
 
 ## Secuencia de publicación recomendada
 1. ~~Merge del PR #3~~ **Hecho** (2026-11-24, `7583ca5`).
-2. D-01…D-07 → **URL pública del demo** (MVP 0).
+2. ~~D-01…D-07~~ (sustituidas) → D-01…D-06 del `MVP0_IMPLEMENTATION_PLAN.md`: verificación en entorno previo y, tras `HG-MVP0-PUBLISH`, **URL pública del demo** (MVP 0).
 3. Decidir VPS/Railway y presupuesto; D-11…D-17 tras MP-023 (D-10 es alias de MP-023, no una tarea aparte) y en paralelo al resto de H4.
 4. D-18 y gate H4-09 → decisión de abrir Live.

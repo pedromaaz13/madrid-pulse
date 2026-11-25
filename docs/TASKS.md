@@ -610,6 +610,8 @@ Dos ramas pueden avanzar en paralelo en worktrees independientes una vez resuelt
 
 ## Backlog planificado y tracks (generado)
 
+> **Excepción del gate MP-035:** la columna «Dependencias» enumera lo que debe cerrarse **o quedar `BLOCKED` documentado** (`docs/H4_MP_MAPPING.md`, `docs/H4_TASK_MATRIX.md`): una tarea bloqueada no impide convocar el gate ni emitir NO-GO.
+
 > Índice generado desde `docs/governance/PROJECT_STATE.json` con `python scripts/governance/sync_docs.py`; no se edita a mano. Las fichas completas de MP-023+ viven en `docs/H4_MP_MAPPING.md` y `docs/H4_TASK_MATRIX.md`; D-xx y DES-xx son subtareas con correspondencia a MP existentes (`docs/roadmap/CROSSWALK.md`), **no** backlog adicional.
 
 <!-- BEGIN GENERATED: backlog-index -->

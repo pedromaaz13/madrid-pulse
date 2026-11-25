@@ -200,21 +200,38 @@ class StateTests(unittest.TestCase):
         self.state["product_verdict"]["public_deployment"] = "GO"
         self.assertEqual(validate_state(self.state), [])
 
+    def test_mvp0_public_rejects_approved_tiles_gate_without_publish_approval(self) -> None:
+        """Una aprobación de teselas no autoriza publicar MVP0."""
+        self.state["human_gates"].extend([
+            {"id": "HG-MVP0-PUBLISH", "status": "OPEN"},
+            {"id": "HG-TILES", "status": "APPROVED_BY_OWNER", "approved_by": "owner",
+             "date": "2026-11-25", "evidence": ["docs/STATUS.md"]},
+        ])
+        self.task.update(milestone="MVP0", deployment_status="PUBLIC", deployment_evidence=["docs/STATUS.md"],
+                         deployment_gate="HG-TILES")
+        self.milestone.update(id="MVP0", deployment_status="PUBLIC", deployment_evidence=["docs/STATUS.md"],
+                              deployment_gate="HG-TILES")
+        self.assertEqual(validate_state(self.state), [
+            "MP-023: PUBLIC exige HG-MVP0-PUBLISH en APPROVED_BY_OWNER con aprobación válida",
+            "MVP0: PUBLIC exige HG-MVP0-PUBLISH en APPROVED_BY_OWNER con aprobación válida",
+        ])
+
     def test_mvp0_public_uses_its_own_gate_under_no_go(self) -> None:
         """La demo requiere aprobación propia aunque siga vigente el NO-GO Live."""
-        self.state["human_gates"].append({
+        gate = {
             "id": "HG-DEMO", "status": "APPROVED_BY_OWNER", "approved_by": "owner",
             "date": "2026-11-25", "evidence": ["docs/STATUS.md"],
-        })
+        }
+        self.state["human_gates"].extend([gate, dict(gate, id="HG-MVP0-PUBLISH")])
         self.task.update(track="MVP0", deployment_status="PUBLIC", deployment_evidence=["docs/STATUS.md"],
                          deployment_gate="HG-DEMO")
         self.milestone.update(id="MVP0", deployment_status="PUBLIC", deployment_evidence=["docs/STATUS.md"],
                               deployment_gate="HG-DEMO")
         self.assertEqual(validate_state(self.state), [])
-        self.state["human_gates"][-1]["approved_by"] = "reviewer"
+        gate["approved_by"] = "reviewer"
         self._assert_errors("MP-023: PUBLIC exige deployment_gate HG-DEMO en APPROVED_BY_OWNER",
                             "MVP0: PUBLIC exige deployment_gate HG-DEMO en APPROVED_BY_OWNER")
-        self.state["human_gates"][-1]["approved_by"] = "owner"
+        gate["approved_by"] = "owner"
         self.task["track"] = "PRODUCT"
         self.milestone["id"] = "H4"
         self._assert_errors("MP-023: PUBLIC exige HG-LIVE-PUBLIC", "H4: PUBLIC exige HG-LIVE-PUBLIC",

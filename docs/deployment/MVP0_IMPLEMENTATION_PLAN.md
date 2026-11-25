@@ -68,7 +68,7 @@ Dependencias: D-01 ∥ D-02 → D-03 (necesita el contrato) ∥ D-04 → D-05 �
 **La demo no condiciona ni retrasa los P0 de Live, y los P0 no esperan a la demo.** Ambos avanzan en paralelo cuando no comparten archivos (`docs/roadmap/RELEASE_ROADMAP.md`).
 - **Aislamiento previo de la captura:** D-01 depende de MP-023 (la captura en vivo usa BD desechable y la auditoría exige no usar defaults hacia 5433) y de la autorización humana `HG-CAPTURE`. D-02 y D-04 pueden empezar sin captura (con las dos muestras).
 - **Paralelizable sin solaparse:** MP-023 (`apps/api/config.py`, `services/collector/config.py`, tests), MP-024 (ADR) y MP-026a (`apps/api`, `packages`) no tocan `apps/web`.
-- **Secuenciar:** MP-030 (`apps/web/src/ui/*`, `App.tsx`) después de D-06 porque comparte archivos con D-03/D-04.
+- **Secuenciar solo si hay solape efectivo:** si D-03/D-04 y MP-030 (`apps/web/src/ui/*`, `App.tsx`, `MapView.tsx`) están activas a la vez, MP-030 espera a D-06; si la demo no se ejecuta, MP-030 no se retrasa.
 - **MP-025a/b y MP-026b siguen su ruta propia** (tras la aprobación del ADR de MP-024); no se posponen por la demo.
 - Límite de concurrencia: ≤2 workers pesados por proveedor.
 

@@ -1,6 +1,6 @@
 # Propuesta de integración del Hito 3 en `main` (versión verificada, 2026-11-24)
 
-> **Nota de vigencia (2026-11-25).** Documento **anterior al merge** del Hito 3; se conserva como evidencia sin reescribir. Estado actual: H3 y auditoría están en `main` (merge `7583ca5`, PR #3, etiqueta `h3-local-audited`); licencia MIT añadida en `d32c3da`; CI del PR verde (run 45368478459 en `main` tras el merge). Lo que aquí figura como pendiente de push, PR, licencia o merge **ya ocurrió** salvo lo indicado en `docs/STATUS.md`.
+> **Nota de vigencia (2026-11-25).** Documento **anterior al merge** del Hito 3; se conserva como evidencia sin reescribir. Estado actual: H3 y auditoría están en `main` (merge `7583ca5`, PR #3, etiqueta `h3-local-audited`); licencia MIT añadida en `d32c3da`; CI del PR #3 verde (run 45367091508 sobre `d32c3da`) y CI de `main` tras el merge verde (run 45368478459). Lo que aquí figura como pendiente de push, PR, licencia o merge **ya ocurrió** salvo lo indicado en `docs/STATUS.md`.
 
 **Complementa** `docs/audits/hito-03/INTEGRATION_PROPOSAL.md` (versión del coordinador del 2026-11-23, que se conserva intacta porque AUD-09 la citó; sus HEAD y notas quedaron desactualizados). **Ningún agente ha hecho ni hará `git push`, PR ni merge.** Todo lo de abajo son comprobaciones de solo lectura o locales y una secuencia propuesta para tu autorización.
 
