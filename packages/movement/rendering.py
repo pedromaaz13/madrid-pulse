@@ -547,6 +547,7 @@ def render_raw_anchor(
             RenderingMethod.STALE_FROZEN if frozen else RenderingMethod.ANCHOR
         ),
         coordinate_space=CoordinateSpace.RAW,
+        frozen_basis="anchor_version_changed" if frozen else None,
         latitude=raw_lat,
         longitude=raw_lon,
         progress_m=None,

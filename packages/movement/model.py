@@ -108,6 +108,9 @@ class MovementPosition:
     ancla para construir una envolvente de progreso sin recalcular el
     map-matching ni reimplementar el motor."""
 
+    anchor_payload_hash: str | None = None
+    """Desempata observaciones del operador con el mismo observed_at."""
+
     def __post_init__(self) -> None:
         if not 0.0 <= self.confidence <= 1.0:
             raise ValueError("confidence debe estar entre 0 y 1")

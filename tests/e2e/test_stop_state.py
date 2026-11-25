@@ -175,6 +175,12 @@ class RealStops(unittest.TestCase):
         self.assertEqual(rendered.anchor_observed_at, prev.observed_at)
         self.assertEqual(rendered.stop_state.operator_status, prev.current_status)
         self.assertGreater(rendered.progress_envelope.speed_mps, 0)
+        # Con el mismo reloj de origen el motor puede aceptar latest si previous
+        # no tiene coordenadas. El estado se desempata por el payload efectivo.
+        no_fix = prev.model_copy(update=dict(observed_at=pos.observed_at, latitude=None,
+                                             longitude=None, current_status="STOPPED_AT"))
+        tied = self.entry(pos, no_fix)
+        self.assertEqual(tied.rendered.stop_state.operator_status, pos.current_status)
         pos = self.second["20849"]
         cancel = TripUpdateObservation(
             source_trip_id=pos.source_trip_id,

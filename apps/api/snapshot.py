@@ -389,6 +389,7 @@ def _render_vehicle(
         previous_anchor: AnchorSample | None = None
         if (
             history.previous is not None
+            and movement.anchor_payload_hash == latest.payload_hash
             and movement.observed_at == latest.observed_at
             and history.previous.position.source_trip_id == latest.source_trip_id
         ):
@@ -405,6 +406,7 @@ def _render_vehicle(
         if (
             history.previous
             and history.previous.position.source_trip_id == latest.source_trip_id
+            and movement.anchor_payload_hash == history.previous.position.payload_hash
             and movement.observed_at == history.previous.position.observed_at
         ):
             effective = history.previous

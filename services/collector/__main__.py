@@ -27,6 +27,7 @@ correcto: no se observó, y eso se ve.
 
 from __future__ import annotations
 
+from dataclasses import replace
 import logging
 import time
 
@@ -59,7 +60,9 @@ modo que el supervisor y las bitácoras puedan diferenciar "la base se fue" de
 
 def _load_madrid_stop_ids(gtfs_source: str, conn: psycopg.Connection) -> frozenset[str] | None:
     config = ApiConfig.from_env()
-    network = load_network(config)
+    # La huella depende del contenido. La vigencia para servir tráfico live
+    # pertenece a la API y no debe impedir archivar observaciones brutas.
+    network = load_network(replace(config, mode="replay"))
     with conn.transaction():
         conn.execute("SELECT set_config('madrid_pulse.anchor_profile', %s, false)",
                      (network.anchor_profile(network.engine.thresholds),))
