@@ -1,5 +1,8 @@
 # MP-023 — Evidencia de ejecución
 
+La [ronda de correcciones](ROUND2.md) contiene la verificación más reciente y
+el criterio acordado para la búsqueda de literales del puerto reservado.
+
 ## Aislamiento registrado antes de las pruebas
 
 - Base: `madrid_pulse`, esquema `public`, rol propietario temporal `mp023` (superusuario creado por la imagen para aplicar PostGIS y las migraciones).

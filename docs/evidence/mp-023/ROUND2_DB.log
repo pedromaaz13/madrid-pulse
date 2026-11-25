@@ -1,0 +1,801 @@
++ root=/Users/matu/orca/workspaces/madrid-pulse/mp-023-db-segura
++ mp023_python=/Users/matu/orca/workspaces/madrid-pulse/mp-023-db-segura/../audit-hito-03/.venv/bin/python
++ export MADRID_PULSE_DATABASE_URL=postgresql://mp023:mp023_local@127.0.0.1:5451/madrid_pulse
++ MADRID_PULSE_DATABASE_URL=postgresql://mp023:mp023_local@127.0.0.1:5451/madrid_pulse
++ export MADRID_PULSE_ENV=test
++ MADRID_PULSE_ENV=test
++ unset MADRID_PULSE_DATABASE_DSN MADRID_PULSE_ALLOW_SHARED_DEV_DB MADRID_PULSE_REQUIRE_DB
++ git rev-parse HEAD
+6d1d3600bde4f82e20a3b82ac48a3020208d16db
++ shasum -a 256 tests/e2e/database_isolation_checks.py
+d5041f5747a0fd1b886c8cc5f6dafb180591cd2fed77311cc8fecdb022a7f104  tests/e2e/database_isolation_checks.py
++ test '!' -e data
+++ docker port mp023-round2 5432/tcp
++ test 127.0.0.1:5451 = 127.0.0.1:5451
++ for attempt in {1..20}
++ docker exec mp023-round2 pg_isready -h 127.0.0.1 -U mp023 -d madrid_pulse
+127.0.0.1:5432 - accepting connections
++ break
++ for migration in infra/migrations/*.up.sql
++ printf 'Migración %s\n' infra/migrations/0001_init.up.sql
+Migración infra/migrations/0001_init.up.sql
++ docker exec -i mp023-round2 psql -X -v ON_ERROR_STOP=1 -U mp023 -d madrid_pulse
+BEGIN
+NOTICE:  extension "postgis" already exists, skipping
+CREATE EXTENSION
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+COMMIT
++ for migration in infra/migrations/*.up.sql
++ printf 'Migración %s\n' infra/migrations/0002_api_batch_indexes.up.sql
+Migración infra/migrations/0002_api_batch_indexes.up.sql
++ docker exec -i mp023-round2 psql -X -v ON_ERROR_STOP=1 -U mp023 -d madrid_pulse
+BEGIN
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+COMMIT
++ docker exec mp023-round2 psql -X -v ON_ERROR_STOP=1 -U mp023 -d madrid_pulse -c 'SELECT current_database(), current_user, postgis_lib_version(), shobj_description(oid, '\''pg_database'\'') AS marker FROM pg_database WHERE datname = current_database();'
+ current_database | current_user | postgis_lib_version | marker
+------------------+--------------+---------------------+--------
+ madrid_pulse     | mp023        | 3.5.2               |
+(1 row)
+
++ env -i /Users/matu/orca/workspaces/madrid-pulse/mp-023-db-segura/../audit-hito-03/.venv/bin/python -m unittest -v apps.api.tests.test_history_contract apps.api.tests.test_api_contract.RuntimeModeTests
+test_a_day_that_is_not_archived_is_a_404_not_a_day_with_zero_metrics (apps.api.tests.test_history_contract.HistoryContractTests.test_a_day_that_is_not_archived_is_a_404_not_a_day_with_zero_metrics) ... ok
+test_a_malformed_service_date_is_rejected (apps.api.tests.test_history_contract.HistoryContractTests.test_a_malformed_service_date_is_rejected) ... ok
+test_an_unknown_identity_is_a_404_not_an_empty_circulation (apps.api.tests.test_history_contract.HistoryContractTests.test_an_unknown_identity_is_a_404_not_an_empty_circulation) ... ok
+test_canceled_filter_separates_operator_cancellations_from_coverage_gaps (apps.api.tests.test_history_contract.HistoryContractTests.test_canceled_filter_separates_operator_cancellations_from_coverage_gaps)
+Regresión directa del hallazgo: un servicio anulado por el operador ... ok
+test_day_index_publishes_the_denominators_of_each_archived_day (apps.api.tests.test_history_contract.HistoryContractTests.test_day_index_publishes_the_denominators_of_each_archived_day) ... ok
+test_detail_is_addressed_by_the_same_identity_live_uses (apps.api.tests.test_history_contract.HistoryContractTests.test_detail_is_addressed_by_the_same_identity_live_uses) ... ok
+test_detail_of_an_unobserved_scheduled_trip_has_no_fabricated_positions (apps.api.tests.test_history_contract.HistoryContractTests.test_detail_of_an_unobserved_scheduled_trip_has_no_fabricated_positions) ... ok
+test_line_metrics_always_carry_the_denominators_of_their_percentages (apps.api.tests.test_history_contract.HistoryContractTests.test_line_metrics_always_carry_the_denominators_of_their_percentages) ... ok
+test_observed_filter_returns_the_real_circulation_with_its_identity (apps.api.tests.test_history_contract.HistoryContractTests.test_observed_filter_returns_the_real_circulation_with_its_identity) ... ok
+test_station_metrics_are_ordered_by_observations (apps.api.tests.test_history_contract.HistoryContractTests.test_station_metrics_are_ordered_by_observations) ... ok
+test_the_mp019_contract_is_untouched_and_history_is_purely_additive (apps.api.tests.test_history_contract.HistoryContractTests.test_the_mp019_contract_is_untouched_and_history_is_purely_additive) ... ok
+test_truncated_is_declared_when_the_limit_is_reached (apps.api.tests.test_history_contract.HistoryContractTests.test_truncated_is_declared_when_the_limit_is_reached) ... ok
+test_unobserved_filter_returns_the_coverage_gap_with_nulls (apps.api.tests.test_history_contract.HistoryContractTests.test_unobserved_filter_returns_the_coverage_gap_with_nulls) ... ok
+test_live_mode_rejects_replay_fixture (apps.api.tests.test_api_contract.RuntimeModeTests.test_live_mode_rejects_replay_fixture) ... ok
+
+----------------------------------------------------------------------
+Ran 14 tests in 2.968s
+
+OK
+++ mktemp -d /tmp/mp023-round2-red.XXXXXX
++ red=/tmp/mp023-round2-red.CP5vW0
++ git worktree add --detach /tmp/mp023-round2-red.CP5vW0 beb9434
+Preparing worktree (detached HEAD beb9434)
+HEAD is now at beb9434 docs(mp-022): aprobar revisión independiente — cierra el Hito 3 [MP-022]
++ trap 'git -C "$root" worktree remove --force "$red"' EXIT
++ cp tests/e2e/database_isolation_checks.py /tmp/mp023-round2-red.CP5vW0/tests/e2e/
++ cd /tmp/mp023-round2-red.CP5vW0
++ git rev-parse HEAD
+beb94341ed0945cea084216caac3cf090d091a6e
++ shasum -a 256 tests/e2e/database_isolation_checks.py
+d5041f5747a0fd1b886c8cc5f6dafb180591cd2fed77311cc8fecdb022a7f104  tests/e2e/database_isolation_checks.py
++ status=0
++ env -i MADRID_PULSE_DATABASE_URL=postgresql://mp023:mp023_local@127.0.0.1:5451/madrid_pulse /Users/matu/orca/workspaces/madrid-pulse/mp-023-db-segura/../audit-hito-03/.venv/bin/python -m unittest -v tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests
+test_missing_url_stops_each_service_before_io (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_missing_url_stops_each_service_before_io) ... 2026-11-25 13:57:46,909 WARNING MADRID_PULSE_GTFS_SOURCE no definido: avisos por estación (sin routeId) se descartarán como fuera de alcance en vez de resolverse por stop_id (limitación documentada, no un fallo).
+2026-11-25 13:57:46,910 INFO Colector iniciado: 3 feeds, poll=30s, timeout=10s, max_retries=3, estaciones Madrid=sin catálogo
+
+  test_missing_url_stops_each_service_before_io (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_missing_url_stops_each_service_before_io) (service='services.collector.__main__', env={}) ... FAIL
+2026-11-25 13:57:46,911 WARNING MADRID_PULSE_GTFS_SOURCE no definido: avisos por estación (sin routeId) se descartarán como fuera de alcance en vez de resolverse por stop_id (limitación documentada, no un fallo).
+2026-11-25 13:57:46,911 INFO Colector iniciado: 3 feeds, poll=30s, timeout=10s, max_retries=3, estaciones Madrid=sin catálogo
+  test_missing_url_stops_each_service_before_io (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_missing_url_stops_each_service_before_io) (service='services.collector.__main__', env={'MADRID_PULSE_DATABASE_URL': '  ', 'MADRID_PULSE_ENV': 'test'}) ... FAIL
+2026-11-25 13:57:47,093 INFO API mode=replay GTFS=sha256:c31190232573fc17fe43f62c1e3b22e345bb2c4daf84611a636ea23044ce0810 vigencia=2026-11-19..2026-12-06
+  test_missing_url_stops_each_service_before_io (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_missing_url_stops_each_service_before_io) (service='tests.e2e.database_isolation_checks', env={}) ... FAIL
+2026-11-25 13:57:47,276 INFO API mode=replay GTFS=sha256:c31190232573fc17fe43f62c1e3b22e345bb2c4daf84611a636ea23044ce0810 vigencia=2026-11-19..2026-12-06
+  test_missing_url_stops_each_service_before_io (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_missing_url_stops_each_service_before_io) (service='tests.e2e.database_isolation_checks', env={'MADRID_PULSE_DATABASE_URL': '  ', 'MADRID_PULSE_ENV': 'test'}) ... FAIL
+  test_missing_url_stops_each_service_before_io (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_missing_url_stops_each_service_before_io) (service='services.snapshotter.__main__', env={}) ... FAIL
+  test_missing_url_stops_each_service_before_io (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_missing_url_stops_each_service_before_io) (service='services.snapshotter.__main__', env={'MADRID_PULSE_DATABASE_URL': '  ', 'MADRID_PULSE_ENV': 'test'}) ... FAIL
+test_shared_target_is_rejected_before_connection (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_shared_target_is_rejected_before_connection) ...
+  test_shared_target_is_rejected_before_connection (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_shared_target_is_rejected_before_connection) (config='CollectorConfig', url='postgresql://test@127.0.0.1:5433/sandbox') ... FAIL
+  test_shared_target_is_rejected_before_connection (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_shared_target_is_rejected_before_connection) (config='CollectorConfig', url='postgresql://test@localhost:05433/sandbox') ... FAIL
+  test_shared_target_is_rejected_before_connection (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_shared_target_is_rejected_before_connection) (config='CollectorConfig', url='postgresql://test@some-host:5433/sandbox?hostaddr=127.0.0.1') ... FAIL
+  test_shared_target_is_rejected_before_connection (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_shared_target_is_rejected_before_connection) (config='ApiConfig', url='postgresql://test@127.0.0.1:5433/sandbox') ... FAIL
+  test_shared_target_is_rejected_before_connection (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_shared_target_is_rejected_before_connection) (config='ApiConfig', url='postgresql://test@localhost:05433/sandbox') ... FAIL
+  test_shared_target_is_rejected_before_connection (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_shared_target_is_rejected_before_connection) (config='ApiConfig', url='postgresql://test@some-host:5433/sandbox?hostaddr=127.0.0.1') ... FAIL
+  test_shared_target_is_rejected_before_connection (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_shared_target_is_rejected_before_connection) (config='SnapshotterConfig', url='postgresql://test@127.0.0.1:5433/sandbox') ... FAIL
+  test_shared_target_is_rejected_before_connection (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_shared_target_is_rejected_before_connection) (config='SnapshotterConfig', url='postgresql://test@localhost:05433/sandbox') ... FAIL
+  test_shared_target_is_rejected_before_connection (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_shared_target_is_rejected_before_connection) (config='SnapshotterConfig', url='postgresql://test@some-host:5433/sandbox?hostaddr=127.0.0.1') ... FAIL
+test_suite_refuses_an_unmarked_database (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_suite_refuses_an_unmarked_database) ... 2026-11-25 13:57:47,451 INFO API mode=replay GTFS=sha256:c31190232573fc17fe43f62c1e3b22e345bb2c4daf84611a636ea23044ce0810 vigencia=2026-11-19..2026-12-06
+2026-11-25 13:57:47,550 INFO HTTP Request: GET http://testserver/api/v1/live/vehicles "HTTP/1.1 200 OK"
+2026-11-25 13:57:47,552 INFO HTTP Request: GET http://testserver/api/v1/stations "HTTP/1.1 200 OK"
+FAIL
+
+======================================================================
+FAIL: test_missing_url_stops_each_service_before_io (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_missing_url_stops_each_service_before_io) (service='services.collector.__main__', env={})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp023-round2-red.CP5vW0/tests/e2e/database_isolation_checks.py", line 64, in test_missing_url_stops_each_service_before_io
+    service()
+  File "/private/tmp/mp023-round2-red.CP5vW0/services/collector/__main__.py", line 89, in main
+    with psycopg.connect(config.database_url, autocommit=False) as conn:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/matu/.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py", line 1134, in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/matu/.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py", line 1138, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/matu/.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py", line 1193, in _execute_mock_call
+    raise effect
+AssertionError: intentó conectar
+
+======================================================================
+FAIL: test_missing_url_stops_each_service_before_io (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_missing_url_stops_each_service_before_io) (service='services.collector.__main__', env={'MADRID_PULSE_DATABASE_URL': '  ', 'MADRID_PULSE_ENV': 'test'})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp023-round2-red.CP5vW0/tests/e2e/database_isolation_checks.py", line 64, in test_missing_url_stops_each_service_before_io
+    service()
+  File "/private/tmp/mp023-round2-red.CP5vW0/services/collector/__main__.py", line 89, in main
+    with psycopg.connect(config.database_url, autocommit=False) as conn:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/matu/.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py", line 1134, in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/matu/.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py", line 1138, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/matu/.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py", line 1193, in _execute_mock_call
+    raise effect
+AssertionError: intentó conectar
+
+======================================================================
+FAIL: test_missing_url_stops_each_service_before_io (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_missing_url_stops_each_service_before_io) (service='tests.e2e.database_isolation_checks', env={})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp023-round2-red.CP5vW0/tests/e2e/database_isolation_checks.py", line 53, in test_missing_url_stops_each_service_before_io
+    with (
+AssertionError: (<class 'SystemExit'>, <class 'ValueError'>) not raised
+
+======================================================================
+FAIL: test_missing_url_stops_each_service_before_io (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_missing_url_stops_each_service_before_io) (service='tests.e2e.database_isolation_checks', env={'MADRID_PULSE_DATABASE_URL': '  ', 'MADRID_PULSE_ENV': 'test'})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp023-round2-red.CP5vW0/tests/e2e/database_isolation_checks.py", line 53, in test_missing_url_stops_each_service_before_io
+    with (
+AssertionError: (<class 'SystemExit'>, <class 'ValueError'>) not raised
+
+======================================================================
+FAIL: test_missing_url_stops_each_service_before_io (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_missing_url_stops_each_service_before_io) (service='services.snapshotter.__main__', env={})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp023-round2-red.CP5vW0/tests/e2e/database_isolation_checks.py", line 64, in test_missing_url_stops_each_service_before_io
+    service()
+  File "/private/tmp/mp023-round2-red.CP5vW0/services/snapshotter/__main__.py", line 47, in main
+    results = export_service_date(config.database_url, service_date, output_dir)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/matu/.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py", line 1134, in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/matu/.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py", line 1138, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/matu/.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py", line 1193, in _execute_mock_call
+    raise effect
+AssertionError: intentó exportar
+
+======================================================================
+FAIL: test_missing_url_stops_each_service_before_io (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_missing_url_stops_each_service_before_io) (service='services.snapshotter.__main__', env={'MADRID_PULSE_DATABASE_URL': '  ', 'MADRID_PULSE_ENV': 'test'})
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp023-round2-red.CP5vW0/tests/e2e/database_isolation_checks.py", line 64, in test_missing_url_stops_each_service_before_io
+    service()
+  File "/private/tmp/mp023-round2-red.CP5vW0/services/snapshotter/__main__.py", line 47, in main
+    results = export_service_date(config.database_url, service_date, output_dir)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/matu/.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py", line 1134, in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/matu/.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py", line 1138, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/matu/.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py", line 1193, in _execute_mock_call
+    raise effect
+AssertionError: intentó exportar
+
+======================================================================
+FAIL: test_shared_target_is_rejected_before_connection (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_shared_target_is_rejected_before_connection) (config='CollectorConfig', url='postgresql://test@127.0.0.1:5433/sandbox')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp023-round2-red.CP5vW0/tests/e2e/database_isolation_checks.py", line 87, in test_shared_target_is_rejected_before_connection
+    with (
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_shared_target_is_rejected_before_connection (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_shared_target_is_rejected_before_connection) (config='CollectorConfig', url='postgresql://test@localhost:05433/sandbox')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp023-round2-red.CP5vW0/tests/e2e/database_isolation_checks.py", line 87, in test_shared_target_is_rejected_before_connection
+    with (
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_shared_target_is_rejected_before_connection (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_shared_target_is_rejected_before_connection) (config='CollectorConfig', url='postgresql://test@some-host:5433/sandbox?hostaddr=127.0.0.1')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp023-round2-red.CP5vW0/tests/e2e/database_isolation_checks.py", line 87, in test_shared_target_is_rejected_before_connection
+    with (
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_shared_target_is_rejected_before_connection (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_shared_target_is_rejected_before_connection) (config='ApiConfig', url='postgresql://test@127.0.0.1:5433/sandbox')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp023-round2-red.CP5vW0/tests/e2e/database_isolation_checks.py", line 87, in test_shared_target_is_rejected_before_connection
+    with (
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_shared_target_is_rejected_before_connection (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_shared_target_is_rejected_before_connection) (config='ApiConfig', url='postgresql://test@localhost:05433/sandbox')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp023-round2-red.CP5vW0/tests/e2e/database_isolation_checks.py", line 87, in test_shared_target_is_rejected_before_connection
+    with (
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_shared_target_is_rejected_before_connection (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_shared_target_is_rejected_before_connection) (config='ApiConfig', url='postgresql://test@some-host:5433/sandbox?hostaddr=127.0.0.1')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp023-round2-red.CP5vW0/tests/e2e/database_isolation_checks.py", line 87, in test_shared_target_is_rejected_before_connection
+    with (
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_shared_target_is_rejected_before_connection (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_shared_target_is_rejected_before_connection) (config='SnapshotterConfig', url='postgresql://test@127.0.0.1:5433/sandbox')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp023-round2-red.CP5vW0/tests/e2e/database_isolation_checks.py", line 87, in test_shared_target_is_rejected_before_connection
+    with (
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_shared_target_is_rejected_before_connection (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_shared_target_is_rejected_before_connection) (config='SnapshotterConfig', url='postgresql://test@localhost:05433/sandbox')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp023-round2-red.CP5vW0/tests/e2e/database_isolation_checks.py", line 87, in test_shared_target_is_rejected_before_connection
+    with (
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_shared_target_is_rejected_before_connection (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_shared_target_is_rejected_before_connection) (config='SnapshotterConfig', url='postgresql://test@some-host:5433/sandbox?hostaddr=127.0.0.1')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp023-round2-red.CP5vW0/tests/e2e/database_isolation_checks.py", line 87, in test_shared_target_is_rejected_before_connection
+    with (
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_suite_refuses_an_unmarked_database (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_suite_refuses_an_unmarked_database)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/private/tmp/mp023-round2-red.CP5vW0/tests/e2e/database_isolation_checks.py", line 76, in test_suite_refuses_an_unmarked_database
+    self.assertEqual(len(result.skipped), 1)
+AssertionError: 0 != 1
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.645s
+
+FAILED (failures=16)
++ status=1
++ printf 'Código RED: %s\n' 1
+Código RED: 1
++ test 1 = 1
+++ git -C /Users/matu/orca/workspaces/madrid-pulse/mp-023-db-segura worktree remove --force /tmp/mp023-round2-red.CP5vW0
++ /Users/matu/orca/workspaces/madrid-pulse/mp-023-db-segura/../audit-hito-03/.venv/bin/python -m unittest -v tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests tests.e2e.database_isolation_checks.SafeConfigurationTests
+test_missing_url_stops_each_service_before_io (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_missing_url_stops_each_service_before_io) ... ok
+test_shared_target_is_rejected_before_connection (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_shared_target_is_rejected_before_connection) ... ok
+test_suite_refuses_an_unmarked_database (tests.e2e.database_isolation_checks.SafeConfigurationRegressionTests.test_suite_refuses_an_unmarked_database) ... ok
+test_confirmation_is_only_valid_for_dev_or_live (tests.e2e.database_isolation_checks.SafeConfigurationTests.test_confirmation_is_only_valid_for_dev_or_live) ... ok
+test_environment_is_required_and_valid (tests.e2e.database_isolation_checks.SafeConfigurationTests.test_environment_is_required_and_valid) ... ok
+test_legacy_url_mentions_the_replacement (tests.e2e.database_isolation_checks.SafeConfigurationTests.test_legacy_url_mentions_the_replacement) ... ok
+test_real_startups_fail_with_no_variables_and_leave_zero_rows (tests.e2e.database_isolation_checks.SafeConfigurationTests.test_real_startups_fail_with_no_variables_and_leave_zero_rows) ... ok
+test_replay_tools_report_missing_config_and_mark_without_traceback (tests.e2e.database_isolation_checks.SafeConfigurationTests.test_replay_tools_report_missing_config_and_mark_without_traceback) ... ok
+test_required_database_errors_are_failures (tests.e2e.database_isolation_checks.SafeConfigurationTests.test_required_database_errors_are_failures) ... ok
+test_required_database_unavailable_is_a_failure (tests.e2e.database_isolation_checks.SafeConfigurationTests.test_required_database_unavailable_is_a_failure) ... ok
+test_reserved_port_is_rejected_for_every_host_without_connecting (tests.e2e.database_isolation_checks.SafeConfigurationTests.test_reserved_port_is_rejected_for_every_host_without_connecting) ... ok
+test_unmarked_database_stops_writers (tests.e2e.database_isolation_checks.SafeConfigurationTests.test_unmarked_database_stops_writers) ... 2026-11-25 13:57:51,890 WARNING MADRID_PULSE_GTFS_SOURCE no definido: avisos por estación (sin routeId) se descartarán como fuera de alcance en vez de resolverse por stop_id (limitación documentada, no un fallo).
+2026-11-25 13:57:51,890 INFO Colector iniciado: 3 feeds, poll=30s, timeout=10s, max_retries=3, estaciones Madrid=sin catálogo
+ok
+
+----------------------------------------------------------------------
+Ran 12 tests in 3.819s
+
+OK
+services.collector: salida 1, diagnóstico MADRID_PULSE_DATABASE_URL
+uvicorn apps.api.main:app --lifespan on --port 0: salida 3, diagnóstico MADRID_PULSE_DATABASE_URL
+services.snapshotter 2026-11-19: salida 1, diagnóstico MADRID_PULSE_DATABASE_URL
+Recuentos finales de las cinco tablas hot: (0, 0, 0, 0, 0)
+apps.api.tools.build_closure_matrix: salida 1, Define MADRID_PULSE_DATABASE_URL con una URL PostgreSQL explícita.
+apps.api.tools.build_closure_matrix: salida 1, Base PostgreSQL sin marca desechable (madrid-pulse:disposable). Consulta docs/operations/DATABASE_ISOLATION.md.
+apps.api.tools.build_closure_matrix: salida 1, PostgreSQL no disponible para calcular la matriz de cobertura.
+apps.api.tools.replay_three_snapshots: salida 1, Define MADRID_PULSE_DATABASE_URL con una URL PostgreSQL explícita.
+apps.api.tools.replay_three_snapshots: salida 1, Base PostgreSQL sin marca desechable (madrid-pulse:disposable). Consulta docs/operations/DATABASE_ISOLATION.md.
+apps.api.tools.replay_three_snapshots: salida 1, PostgreSQL no disponible para reproducir las capturas.
+++ mktemp -d /tmp/mp023-round2-archive.XXXXXX
++ archive_root=/tmp/mp023-round2-archive.7KuuZo
++ trap 'rm -rf "$archive_root"' EXIT
++ for environment in dev live
++ MADRID_PULSE_ENV=dev
++ SNAPSHOTTER_OUTPUT_DIR=/tmp/mp023-round2-archive.7KuuZo/dev
++ /Users/matu/orca/workspaces/madrid-pulse/mp-023-db-segura/../audit-hito-03/.venv/bin/python -m services.snapshotter 2026-11-19
+2026-11-25 13:57:52,546 INFO exportado vehicle_position_observation: 0 filas (absent) -> /tmp/mp023-round2-archive.7KuuZo/dev/raw/vehicle_position_observation
+2026-11-25 13:57:52,546 INFO exportado trip_update_observation: 0 filas (absent) -> /tmp/mp023-round2-archive.7KuuZo/dev/raw/trip_update_observation
+2026-11-25 13:57:52,546 INFO exportado service_alert: 0 filas (absent) -> /tmp/mp023-round2-archive.7KuuZo/dev/raw/service_alert
+2026-11-25 13:57:52,546 INFO exportado source_ingestion_run: 0 filas (absent) -> /tmp/mp023-round2-archive.7KuuZo/dev/raw/source_ingestion_run
+2026-11-25 13:57:52,546 INFO exportado data_quality_event: 0 filas (absent) -> /tmp/mp023-round2-archive.7KuuZo/dev/raw/data_quality_event
+2026-11-25 13:57:52,562 INFO resumen gold por núcleo: 0 filas -> /tmp/mp023-round2-archive.7KuuZo/dev/gold/nucleo_daily_summary/date=2026-11-19
+2026-11-25 13:57:52,566 INFO topología GTFS: 5 rutas, 15 viajes (filtro de línea=C5)
+2026-11-25 13:57:52,586 INFO daily_line_metrics: 3 filas -> /tmp/mp023-round2-archive.7KuuZo/dev/gold/daily_line_metrics/date=2026-11-19
+2026-11-25 13:57:52,603 INFO station_daily_metrics: 0 filas -> /tmp/mp023-round2-archive.7KuuZo/dev/gold/station_daily_metrics/date=2026-11-19
+2026-11-25 13:57:52,622 INFO circulation_daily_history: 6 filas -> /tmp/mp023-round2-archive.7KuuZo/dev/gold/circulation_daily_history/date=2026-11-19
++ test -f /tmp/mp023-round2-archive.7KuuZo/dev/gold/circulation_daily_history/date=2026-11-19/part.parquet
++ for environment in dev live
++ MADRID_PULSE_ENV=live
++ SNAPSHOTTER_OUTPUT_DIR=/tmp/mp023-round2-archive.7KuuZo/live
++ /Users/matu/orca/workspaces/madrid-pulse/mp-023-db-segura/../audit-hito-03/.venv/bin/python -m services.snapshotter 2026-11-19
+2026-11-25 13:57:53,063 INFO exportado vehicle_position_observation: 0 filas (absent) -> /tmp/mp023-round2-archive.7KuuZo/live/raw/vehicle_position_observation
+2026-11-25 13:57:53,063 INFO exportado trip_update_observation: 0 filas (absent) -> /tmp/mp023-round2-archive.7KuuZo/live/raw/trip_update_observation
+2026-11-25 13:57:53,063 INFO exportado service_alert: 0 filas (absent) -> /tmp/mp023-round2-archive.7KuuZo/live/raw/service_alert
+2026-11-25 13:57:53,063 INFO exportado source_ingestion_run: 0 filas (absent) -> /tmp/mp023-round2-archive.7KuuZo/live/raw/source_ingestion_run
+2026-11-25 13:57:53,063 INFO exportado data_quality_event: 0 filas (absent) -> /tmp/mp023-round2-archive.7KuuZo/live/raw/data_quality_event
+2026-11-25 13:57:53,078 INFO resumen gold por núcleo: 0 filas -> /tmp/mp023-round2-archive.7KuuZo/live/gold/nucleo_daily_summary/date=2026-11-19
+2026-11-25 13:57:53,082 INFO topología GTFS: 5 rutas, 15 viajes (filtro de línea=C5)
+2026-11-25 13:57:53,103 INFO daily_line_metrics: 3 filas -> /tmp/mp023-round2-archive.7KuuZo/live/gold/daily_line_metrics/date=2026-11-19
+2026-11-25 13:57:53,123 INFO station_daily_metrics: 0 filas -> /tmp/mp023-round2-archive.7KuuZo/live/gold/station_daily_metrics/date=2026-11-19
+2026-11-25 13:57:53,144 INFO circulation_daily_history: 6 filas -> /tmp/mp023-round2-archive.7KuuZo/live/gold/circulation_daily_history/date=2026-11-19
++ test -f /tmp/mp023-round2-archive.7KuuZo/live/gold/circulation_daily_history/date=2026-11-19/part.parquet
+++ rm -rf /tmp/mp023-round2-archive.7KuuZo
++ /Users/matu/orca/workspaces/madrid-pulse/mp-023-db-segura/../audit-hito-03/.venv/bin/python -m infra.operate.mark_disposable_db
+Base PostgreSQL marcada como desechable.
++ docker exec mp023-round2 psql -X -v ON_ERROR_STOP=1 -U mp023 -d madrid_pulse -c 'SELECT current_database(), shobj_description(oid, '\''pg_database'\'') AS marker FROM pg_database WHERE datname = current_database();'
+ current_database |         marker
+------------------+-------------------------
+ madrid_pulse     | madrid-pulse:disposable
+(1 row)
+
++ export MADRID_PULSE_REQUIRE_DB=1
++ MADRID_PULSE_REQUIRE_DB=1
+++ awk '/^            [a-z][a-z._0-9]* \\$/ {print $1}' .github/workflows/ci.yml
++ mp023_modules=$'apps.api.tests.test_api_contract\napps.api.tests.test_closure_matrix\napps.api.tests.test_history_contract\napps.api.tests.test_snapshot_contract\npackages.contracts.tests.test_canonical_normalization\npackages.contracts.tests.test_nucleo\npackages.contracts.tests.test_raw_parsing\npackages.contracts.tests.test_synthetic_schema\npackages.geo.tests.test_catalog\npackages.geo.tests.test_real_feed\npackages.gtfs.tests.test_catalog\npackages.gtfs.tests.test_real_feed\npackages.movement.tests.test_engine\npackages.movement.tests.test_rendering\npackages.movement.tests.test_real_soak_postgres\npackages.quality.tests.test_engine\npackages.quality.tests.test_persistence\nservices.collector.tests.test_collector_cycle\nservices.collector.tests.test_http_client\nservices.collector.tests.test_supervised_loop\nservices.snapshotter.tests.test_export\nservices.snapshotter.tests.test_export_replay\nservices.snapshotter.tests.test_gold\nservices.snapshotter.tests.test_history\nservices.snapshotter.tests.test_idempotency\ntests.fixtures.test_parse_fixtures\ntests.e2e.test_mp022_synthetic_derived\ntests.e2e.test_replay'
+++ printf '%s\n' $'apps.api.tests.test_api_contract\napps.api.tests.test_closure_matrix\napps.api.tests.test_history_contract\napps.api.tests.test_snapshot_contract\npackages.contracts.tests.test_canonical_normalization\npackages.contracts.tests.test_nucleo\npackages.contracts.tests.test_raw_parsing\npackages.contracts.tests.test_synthetic_schema\npackages.geo.tests.test_catalog\npackages.geo.tests.test_real_feed\npackages.gtfs.tests.test_catalog\npackages.gtfs.tests.test_real_feed\npackages.movement.tests.test_engine\npackages.movement.tests.test_rendering\npackages.movement.tests.test_real_soak_postgres\npackages.quality.tests.test_engine\npackages.quality.tests.test_persistence\nservices.collector.tests.test_collector_cycle\nservices.collector.tests.test_http_client\nservices.collector.tests.test_supervised_loop\nservices.snapshotter.tests.test_export\nservices.snapshotter.tests.test_export_replay\nservices.snapshotter.tests.test_gold\nservices.snapshotter.tests.test_history\nservices.snapshotter.tests.test_idempotency\ntests.fixtures.test_parse_fixtures\ntests.e2e.test_mp022_synthetic_derived\ntests.e2e.test_replay'
+++ wc -l
+++ tr -d ' '
++ test 28 = 28
++ /Users/matu/orca/workspaces/madrid-pulse/mp-023-db-segura/../audit-hito-03/.venv/bin/python -m unittest -v apps.api.tests.test_api_contract apps.api.tests.test_closure_matrix apps.api.tests.test_history_contract apps.api.tests.test_snapshot_contract packages.contracts.tests.test_canonical_normalization packages.contracts.tests.test_nucleo packages.contracts.tests.test_raw_parsing packages.contracts.tests.test_synthetic_schema packages.geo.tests.test_catalog packages.geo.tests.test_real_feed packages.gtfs.tests.test_catalog packages.gtfs.tests.test_real_feed packages.movement.tests.test_engine packages.movement.tests.test_rendering packages.movement.tests.test_real_soak_postgres packages.quality.tests.test_engine packages.quality.tests.test_persistence services.collector.tests.test_collector_cycle services.collector.tests.test_http_client services.collector.tests.test_supervised_loop services.snapshotter.tests.test_export services.snapshotter.tests.test_export_replay services.snapshotter.tests.test_gold services.snapshotter.tests.test_history services.snapshotter.tests.test_idempotency tests.fixtures.test_parse_fixtures tests.e2e.test_mp022_synthetic_derived tests.e2e.test_replay
+test_health_endpoint_reports_real_feed_runs (apps.api.tests.test_api_contract.ApiContractTests.test_health_endpoint_reports_real_feed_runs) ... skipped 'soak real de MP-007 (24 vehículos, DEC-029) no presente en esta base -- normal en una base fresca sin el histórico local de desarrollo'
+test_line_detail_404_for_unknown_id (apps.api.tests.test_api_contract.ApiContractTests.test_line_detail_404_for_unknown_id) ... ok
+test_line_exposes_real_segmented_corridor_and_projected_station_order (apps.api.tests.test_api_contract.ApiContractTests.test_line_exposes_real_segmented_corridor_and_projected_station_order) ... ok
+test_lines_endpoint_groups_five_c5_route_variants (apps.api.tests.test_api_contract.ApiContractTests.test_lines_endpoint_groups_five_c5_route_variants) ... ok
+test_live_vehicle_detail_404_for_unknown_vehicle_id (apps.api.tests.test_api_contract.ApiContractTests.test_live_vehicle_detail_404_for_unknown_vehicle_id) ... ok
+test_live_vehicle_detail_matches_list_entry (apps.api.tests.test_api_contract.ApiContractTests.test_live_vehicle_detail_matches_list_entry) ... skipped 'soak real de MP-007 (24 vehículos, DEC-029) no presente en esta base -- normal en una base fresca sin el histórico local de desarrollo'
+test_live_vehicles_always_report_raw_observation_age (apps.api.tests.test_api_contract.ApiContractTests.test_live_vehicles_always_report_raw_observation_age)
+Hallazgo bloqueante de la revisión de Codex: antes `age_s` solo se ... skipped 'soak real de MP-007 (24 vehículos, DEC-029) no presente en esta base -- normal en una base fresca sin el histórico local de desarrollo'
+test_live_vehicles_never_fabricates_route_for_unresolvable_trip (apps.api.tests.test_api_contract.ApiContractTests.test_live_vehicles_never_fabricates_route_for_unresolvable_trip)
+Hallazgo real: la mayoría de los vehículos del soak de MP-007 ... skipped 'soak real de MP-007 (24 vehículos, DEC-029) no presente en esta base -- normal en una base fresca sin el histórico local de desarrollo'
+test_station_detail_404_for_unknown_id (apps.api.tests.test_api_contract.ApiContractTests.test_station_detail_404_for_unknown_id) ... ok
+test_stations_endpoint_matches_real_gtfs_fixture (apps.api.tests.test_api_contract.ApiContractTests.test_stations_endpoint_matches_real_gtfs_fixture) ... ok
+test_collector_stopped_is_visible_even_with_current_source_timestamp (apps.api.tests.test_api_contract.FeedClockTests.test_collector_stopped_is_visible_even_with_current_source_timestamp) ... ok
+test_new_poll_of_old_payload_is_stale (apps.api.tests.test_api_contract.FeedClockTests.test_new_poll_of_old_payload_is_stale) ... ok
+test_committed_openapi_json_matches_the_live_schema (apps.api.tests.test_api_contract.FrozenOpenApiContractTests.test_committed_openapi_json_matches_the_live_schema) ... ok
+test_a_delay_from_within_the_recency_window_is_returned (apps.api.tests.test_api_contract.OldTripUpdateCannotCompleteTodayTests.test_a_delay_from_within_the_recency_window_is_returned) ... ok
+test_a_delay_from_yesterdays_run_of_the_same_recurring_trip_id_is_not_returned_today (apps.api.tests.test_api_contract.OldTripUpdateCannotCompleteTodayTests.test_a_delay_from_yesterdays_run_of_the_same_recurring_trip_id_is_not_returned_today) ... ok
+test_circulation_status_is_expired_for_a_service_not_scheduled_today (apps.api.tests.test_api_contract.ResolvedTripEndToEndTests.test_circulation_status_is_expired_for_a_service_not_scheduled_today)
+Hallazgo real de MP-017: sin esto, un vehículo con GPS reciente pero ... ok
+test_circulation_status_is_unresolved_when_route_does_not_resolve (apps.api.tests.test_api_contract.ResolvedTripEndToEndTests.test_circulation_status_is_unresolved_when_route_does_not_resolve) ... ok
+test_known_trip_resolves_to_real_line_and_position (apps.api.tests.test_api_contract.ResolvedTripEndToEndTests.test_known_trip_resolves_to_real_line_and_position) ... ok
+test_live_mode_rejects_replay_fixture (apps.api.tests.test_api_contract.RuntimeModeTests.test_live_mode_rejects_replay_fixture) ... ok
+test_service_date_uses_europe_madrid_calendar_not_utc (apps.api.tests.test_api_contract.ServiceDateTimezoneTests.test_service_date_uses_europe_madrid_calendar_not_utc) ... ok
+test_previous_observation_from_another_trip_is_not_passed_to_engine (apps.api.tests.test_api_contract.VehicleTripChangeTests.test_previous_observation_from_another_trip_is_not_passed_to_engine) ... ok
+test_columns_match_the_binding_acceptance_schema_exactly (apps.api.tests.test_closure_matrix.ClosureMatrixContractTests.test_columns_match_the_binding_acceptance_schema_exactly) ... ok
+test_position_age_percentiles_are_null_without_observations (apps.api.tests.test_closure_matrix.ClosureMatrixContractTests.test_position_age_percentiles_are_null_without_observations) ... ok
+test_zero_denominator_is_null_never_fabricated_zero_percent (apps.api.tests.test_closure_matrix.ClosureMatrixContractTests.test_zero_denominator_is_null_never_fabricated_zero_percent) ... ok
+test_a_day_that_is_not_archived_is_a_404_not_a_day_with_zero_metrics (apps.api.tests.test_history_contract.HistoryContractTests.test_a_day_that_is_not_archived_is_a_404_not_a_day_with_zero_metrics) ... ok
+test_a_malformed_service_date_is_rejected (apps.api.tests.test_history_contract.HistoryContractTests.test_a_malformed_service_date_is_rejected) ... ok
+test_an_unknown_identity_is_a_404_not_an_empty_circulation (apps.api.tests.test_history_contract.HistoryContractTests.test_an_unknown_identity_is_a_404_not_an_empty_circulation) ... ok
+test_canceled_filter_separates_operator_cancellations_from_coverage_gaps (apps.api.tests.test_history_contract.HistoryContractTests.test_canceled_filter_separates_operator_cancellations_from_coverage_gaps)
+Regresión directa del hallazgo: un servicio anulado por el operador ... ok
+test_day_index_publishes_the_denominators_of_each_archived_day (apps.api.tests.test_history_contract.HistoryContractTests.test_day_index_publishes_the_denominators_of_each_archived_day) ... ok
+test_detail_is_addressed_by_the_same_identity_live_uses (apps.api.tests.test_history_contract.HistoryContractTests.test_detail_is_addressed_by_the_same_identity_live_uses) ... ok
+test_detail_of_an_unobserved_scheduled_trip_has_no_fabricated_positions (apps.api.tests.test_history_contract.HistoryContractTests.test_detail_of_an_unobserved_scheduled_trip_has_no_fabricated_positions) ... ok
+test_line_metrics_always_carry_the_denominators_of_their_percentages (apps.api.tests.test_history_contract.HistoryContractTests.test_line_metrics_always_carry_the_denominators_of_their_percentages) ... ok
+test_observed_filter_returns_the_real_circulation_with_its_identity (apps.api.tests.test_history_contract.HistoryContractTests.test_observed_filter_returns_the_real_circulation_with_its_identity) ... ok
+test_station_metrics_are_ordered_by_observations (apps.api.tests.test_history_contract.HistoryContractTests.test_station_metrics_are_ordered_by_observations) ... ok
+test_the_mp019_contract_is_untouched_and_history_is_purely_additive (apps.api.tests.test_history_contract.HistoryContractTests.test_the_mp019_contract_is_untouched_and_history_is_purely_additive) ... ok
+test_truncated_is_declared_when_the_limit_is_reached (apps.api.tests.test_history_contract.HistoryContractTests.test_truncated_is_declared_when_the_limit_is_reached) ... ok
+test_unobserved_filter_returns_the_coverage_gap_with_nulls (apps.api.tests.test_history_contract.HistoryContractTests.test_unobserved_filter_returns_the_coverage_gap_with_nulls) ... ok
+test_a_shorter_lookback_drops_it_earlier_as_requested (apps.api.tests.test_snapshot_contract.BoardWindowCoversItsCandidateServiceDaysTests.test_a_shorter_lookback_drops_it_earlier_as_requested)
+La ventana manda: con `lookback_s=60` la misma llamada solo sobrevive ... ok
+test_calls_of_two_service_days_are_ordered_by_absolute_instant (apps.api.tests.test_snapshot_contract.BoardWindowCoversItsCandidateServiceDaysTests.test_calls_of_two_service_days_are_ordered_by_absolute_instant) ... ok
+test_the_call_survives_exactly_as_long_as_the_requested_lookback (apps.api.tests.test_snapshot_contract.BoardWindowCoversItsCandidateServiceDaysTests.test_the_call_survives_exactly_as_long_as_the_requested_lookback)
+Minuto a minuto: la llamada de las `00:32` con `lookback_s=600` debe ... ok
+test_the_exact_minute_where_the_call_used_to_disappear (apps.api.tests.test_snapshot_contract.BoardWindowCoversItsCandidateServiceDaysTests.test_the_exact_minute_where_the_call_used_to_disappear)
+`00:33` con `lookback_s=600`: el minuto exacto del hallazgo. ... ok
+test_the_forward_window_also_reaches_the_next_service_day (apps.api.tests.test_snapshot_contract.BoardWindowCoversItsCandidateServiceDaysTests.test_the_forward_window_also_reaches_the_next_service_day)
+Lado simétrico: a las `23:55` del 19, con anticipación suficiente, el ... ok
+test_catalog_carries_no_operational_state (apps.api.tests.test_snapshot_contract.CatalogContractTests.test_catalog_carries_no_operational_state) ... ok
+test_catalog_is_cacheable_by_version_and_answers_304 (apps.api.tests.test_snapshot_contract.CatalogContractTests.test_catalog_is_cacheable_by_version_and_answers_304) ... ok
+test_catalog_version_covers_gtfs_and_geometry (apps.api.tests.test_snapshot_contract.CatalogContractTests.test_catalog_version_covers_gtfs_and_geometry) ... ok
+test_coverage_is_honest_and_distance_is_null_without_a_corridor (apps.api.tests.test_snapshot_contract.CatalogContractTests.test_coverage_is_honest_and_distance_is_null_without_a_corridor) ... ok
+test_physical_geometry_is_published_once_and_referenced (apps.api.tests.test_snapshot_contract.CatalogContractTests.test_physical_geometry_is_published_once_and_referenced) ... ok
+test_a_stop_before_the_operator_next_stop_has_no_eta (apps.api.tests.test_snapshot_contract.EtaProvenanceTests.test_a_stop_before_the_operator_next_stop_has_no_eta) ... ok
+test_cancellation_removes_the_eta_and_keeps_the_schedule (apps.api.tests.test_snapshot_contract.EtaProvenanceTests.test_cancellation_removes_the_eta_and_keeps_the_schedule) ... ok
+test_missing_delay_falls_back_to_schedule_with_explicit_reason (apps.api.tests.test_snapshot_contract.EtaProvenanceTests.test_missing_delay_falls_back_to_schedule_with_explicit_reason) ... ok
+test_missing_schedule_time_never_invents_an_eta (apps.api.tests.test_snapshot_contract.EtaProvenanceTests.test_missing_schedule_time_never_invents_an_eta) ... ok
+test_operator_delay_is_applied_on_schedule_and_declared (apps.api.tests.test_snapshot_contract.EtaProvenanceTests.test_operator_delay_is_applied_on_schedule_and_declared) ... ok
+test_outdated_eta_is_not_applied_and_says_why (apps.api.tests.test_snapshot_contract.EtaProvenanceTests.test_outdated_eta_is_not_applied_and_says_why) ... ok
+test_a_24xx_trip_still_belongs_to_the_previous_service_day (apps.api.tests.test_snapshot_contract.ExtendedHoursAfterMidnightTests.test_a_24xx_trip_still_belongs_to_the_previous_service_day) ... ok
+test_a_daytime_trip_of_the_new_civil_day_does_not_migrate_backwards (apps.api.tests.test_snapshot_contract.ExtendedHoursAfterMidnightTests.test_a_daytime_trip_of_the_new_civil_day_does_not_migrate_backwards)
+La ventana no arrastra al día anterior cualquier circulación: solo ... ok
+test_outside_the_window_there_is_no_ambiguity_left (apps.api.tests.test_snapshot_contract.ExtendedHoursAfterMidnightTests.test_outside_the_window_there_is_no_ambiguity_left)
+A las 02:00 locales el horizonte del feed (24:32) ya no alcanza: ... ok
+test_position_of_a_24xx_trip_is_right_and_the_civil_date_is_wrong (apps.api.tests.test_snapshot_contract.ExtendedHoursAfterMidnightTests.test_position_of_a_24xx_trip_is_right_and_the_civil_date_is_wrong) ... ok
+test_service_date_is_never_fabricated_for_an_unscheduled_day (apps.api.tests.test_snapshot_contract.ExtendedHoursAfterMidnightTests.test_service_date_is_never_fabricated_for_an_unscheduled_day)
+`1023V` solo está programado el 2026-11-20. A las 00:02 del 22 de ... ok
+test_snapshot_entry_publishes_the_resolved_service_day_and_stays_active (apps.api.tests.test_snapshot_contract.ExtendedHoursAfterMidnightTests.test_snapshot_entry_publishes_the_resolved_service_day_and_stays_active) ... ok
+test_the_horizon_comes_from_the_feed_not_from_a_magic_number (apps.api.tests.test_snapshot_contract.ExtendedHoursAfterMidnightTests.test_the_horizon_comes_from_the_feed_not_from_a_magic_number) ... ok
+test_a_24xx_call_appears_with_its_own_service_date (apps.api.tests.test_snapshot_contract.ExtendedHoursBoardTests.test_a_24xx_call_appears_with_its_own_service_date) ... ok
+test_extended_calls_are_not_duplicated_across_candidate_days (apps.api.tests.test_snapshot_contract.ExtendedHoursBoardTests.test_extended_calls_are_not_duplicated_across_candidate_days) ... ok
+test_outside_the_window_the_board_considers_only_the_civil_day (apps.api.tests.test_snapshot_contract.ExtendedHoursBoardTests.test_outside_the_window_the_board_considers_only_the_civil_day) ... ok
+test_the_second_extended_call_is_also_kept (apps.api.tests.test_snapshot_contract.ExtendedHoursBoardTests.test_the_second_extended_call_is_also_kept) ... ok
+test_absent_raw_position_never_becomes_zero_zero (apps.api.tests.test_snapshot_contract.RawMatchedRenderedTests.test_absent_raw_position_never_becomes_zero_zero)
+Observación sin posición pero con horario resoluble: `schedule_only` ... ok
+test_delay_absent_is_null_and_declared_missing (apps.api.tests.test_snapshot_contract.RawMatchedRenderedTests.test_delay_absent_is_null_and_declared_missing) ... ok
+test_expired_operator_delay_is_published_with_its_age_not_applied (apps.api.tests.test_snapshot_contract.RawMatchedRenderedTests.test_expired_operator_delay_is_published_with_its_age_not_applied) ... ok
+test_five_timestamps_are_published_separately (apps.api.tests.test_snapshot_contract.RawMatchedRenderedTests.test_five_timestamps_are_published_separately) ... ok
+test_three_coordinates_are_distinct_blocks_with_their_own_provenance (apps.api.tests.test_snapshot_contract.RawMatchedRenderedTests.test_three_coordinates_are_distinct_blocks_with_their_own_provenance) ... ok
+test_trip_level_delay_declares_its_approximation (apps.api.tests.test_snapshot_contract.RawMatchedRenderedTests.test_trip_level_delay_declares_its_approximation) ... ok
+test_unlocated_when_there_is_neither_position_nor_resolvable_schedule (apps.api.tests.test_snapshot_contract.RawMatchedRenderedTests.test_unlocated_when_there_is_neither_position_nor_resolvable_schedule) ... ok
+test_unresolvable_trip_keeps_raw_and_never_fabricates_a_pattern (apps.api.tests.test_snapshot_contract.RawMatchedRenderedTests.test_unresolvable_trip_keeps_raw_and_never_fabricates_a_pattern) ... ok
+test_explicit_clock_is_accepted_in_replay (apps.api.tests.test_snapshot_contract.ReplayClockTests.test_explicit_clock_is_accepted_in_replay) ... ok
+test_explicit_clock_is_rejected_outside_replay (apps.api.tests.test_snapshot_contract.ReplayClockTests.test_explicit_clock_is_rejected_outside_replay) ... ok
+test_naive_clock_is_rejected (apps.api.tests.test_snapshot_contract.ReplayClockTests.test_naive_clock_is_rejected) ... ok
+test_a_degenerate_window_matches_the_per_trip_resolver (apps.api.tests.test_snapshot_contract.ServiceDatesCoveringTests.test_a_degenerate_window_matches_the_per_trip_resolver)
+Con `start == end` la cobertura es exactamente la del resolver de una ... ok
+test_a_feed_without_extended_hours_has_no_overlap (apps.api.tests.test_snapshot_contract.ServiceDatesCoveringTests.test_a_feed_without_extended_hours_has_no_overlap)
+Sin horas `24:xx` el horizonte es `0.0` y cada día de servicio ... ok
+test_coverage_is_computed_with_real_offsets_on_both_dst_dates (apps.api.tests.test_snapshot_contract.ServiceDatesCoveringTests.test_coverage_is_computed_with_real_offsets_on_both_dst_dates)
+Los límites de cada día de servicio se calculan con ... ok
+test_inverted_windows_are_tolerated (apps.api.tests.test_snapshot_contract.ServiceDatesCoveringTests.test_inverted_windows_are_tolerated) ... ok
+test_the_lookahead_edge_extends_the_coverage_forwards (apps.api.tests.test_snapshot_contract.ServiceDatesCoveringTests.test_the_lookahead_edge_extends_the_coverage_forwards) ... ok
+test_the_lookback_edge_extends_the_coverage_backwards (apps.api.tests.test_snapshot_contract.ServiceDatesCoveringTests.test_the_lookback_edge_extends_the_coverage_backwards) ... ok
+test_a_lower_revision_is_detectable_as_out_of_order (apps.api.tests.test_snapshot_contract.SnapshotPostgresTests.test_a_lower_revision_is_detectable_as_out_of_order)
+El cliente de MP-020 debe poder descartar una respuesta antigua: la ... ok
+test_batch_trip_updates_return_the_same_row_as_the_single_query (apps.api.tests.test_snapshot_contract.SnapshotPostgresTests.test_batch_trip_updates_return_the_same_row_as_the_single_query) ... ok
+test_live_vehicles_endpoint_also_lost_its_n_plus_one (apps.api.tests.test_snapshot_contract.SnapshotPostgresTests.test_live_vehicles_endpoint_also_lost_its_n_plus_one) ... ok
+test_revision_is_monotonic_in_scope_and_snapshot_id_is_content_identity (apps.api.tests.test_snapshot_contract.SnapshotPostgresTests.test_revision_is_monotonic_in_scope_and_snapshot_id_is_content_identity) ... ok
+test_snapshot_does_not_query_once_per_vehicle (apps.api.tests.test_snapshot_contract.SnapshotPostgresTests.test_snapshot_does_not_query_once_per_vehicle) ... ok
+test_three_snapshots_are_distinguished_and_none_rejuvenates_data (apps.api.tests.test_snapshot_contract.SnapshotPostgresTests.test_three_snapshots_are_distinguished_and_none_rejuvenates_data) ... ok
+test_board_coverage_is_null_when_the_denominator_is_zero (apps.api.tests.test_snapshot_contract.StationBoardPostgresTests.test_board_coverage_is_null_when_the_denominator_is_zero) ... ok
+test_board_declares_the_skipped_limitation_instead_of_inventing_it (apps.api.tests.test_snapshot_contract.StationBoardPostgresTests.test_board_declares_the_skipped_limitation_instead_of_inventing_it) ... ok
+test_board_does_not_query_once_per_entry (apps.api.tests.test_snapshot_contract.StationBoardPostgresTests.test_board_does_not_query_once_per_entry) ... ok
+test_board_entries_appear_even_without_any_gps (apps.api.tests.test_snapshot_contract.StationBoardPostgresTests.test_board_entries_appear_even_without_any_gps) ... ok
+test_board_is_built_from_calendar_and_services_not_from_nearby_trains (apps.api.tests.test_snapshot_contract.StationBoardPostgresTests.test_board_is_built_from_calendar_and_services_not_from_nearby_trains) ... ok
+test_cancellation_and_operator_next_stop_reach_the_board (apps.api.tests.test_snapshot_contract.StationBoardPostgresTests.test_cancellation_and_operator_next_stop_reach_the_board) ... ok
+test_observed_circulation_is_distinguished_from_scheduled_only (apps.api.tests.test_snapshot_contract.StationBoardPostgresTests.test_observed_circulation_is_distinguished_from_scheduled_only) ... ok
+test_unknown_station_is_not_invented (apps.api.tests.test_snapshot_contract.StationBoardPostgresTests.test_unknown_station_is_not_invented) ... ok
+test_madrid_c5_alert_covers_exactly_the_five_known_route_variants (packages.contracts.tests.test_canonical_normalization.AlertNormalizationTests.test_madrid_c5_alert_covers_exactly_the_five_known_route_variants) ... ok
+test_feed_health_reports_real_entity_count (packages.contracts.tests.test_canonical_normalization.FeedHealthTests.test_feed_health_reports_real_entity_count) ... ok
+test_skipped_stops_without_arrival_are_not_next_calls (packages.contracts.tests.test_canonical_normalization.SkippedStopTests.test_skipped_stops_without_arrival_are_not_next_calls) ... ok
+test_all_observations_share_feed_header_timestamp (packages.contracts.tests.test_canonical_normalization.TripUpdateNormalizationTests.test_all_observations_share_feed_header_timestamp) ... ok
+test_delay_coverage_reflects_absence_not_zero (packages.contracts.tests.test_canonical_normalization.TripUpdateNormalizationTests.test_delay_coverage_reflects_absence_not_zero) ... ok
+test_every_observation_has_utc_timestamp (packages.contracts.tests.test_canonical_normalization.VehiclePositionNormalizationTests.test_every_observation_has_utc_timestamp) ... ok
+test_missing_position_is_none_not_zero (packages.contracts.tests.test_canonical_normalization.VehiclePositionNormalizationTests.test_missing_position_is_none_not_zero)
+Si una entidad no trae `position`, el canónico debe guardar None, nunca 0.0. ... ok
+test_nucleo_disambiguation_is_not_fooled_by_c5_label (packages.contracts.tests.test_canonical_normalization.VehiclePositionNormalizationTests.test_nucleo_disambiguation_is_not_fooled_by_c5_label)
+Equivalente, a nivel de contrato canónico, al test de colisión de MP-004: ... ok
+test_payload_hash_is_deterministic_and_sensitive_to_content (packages.contracts.tests.test_canonical_normalization.VehiclePositionNormalizationTests.test_payload_hash_is_deterministic_and_sensitive_to_content) ... ok
+test_speed_and_bearing_are_none_when_absent_from_source (packages.contracts.tests.test_canonical_normalization.VehiclePositionNormalizationTests.test_speed_and_bearing_are_none_when_absent_from_source) ... ok
+test_naive_slice_would_have_failed (packages.contracts.tests.test_nucleo.SpecialReinforcementTripIdTests.test_naive_slice_would_have_failed)
+Documenta el bug corregido: tomar los 2 primeros caracteres literales ... ok
+test_special_prefixed_trip_id_extracts_embedded_nucleo (packages.contracts.tests.test_nucleo.SpecialReinforcementTripIdTests.test_special_prefixed_trip_id_extracts_embedded_nucleo) ... ok
+test_special_prefixed_trip_id_is_madrid (packages.contracts.tests.test_nucleo.SpecialReinforcementTripIdTests.test_special_prefixed_trip_id_is_madrid) ... ok
+test_special_prefixed_trip_id_non_madrid_nucleo (packages.contracts.tests.test_nucleo.SpecialReinforcementTripIdTests.test_special_prefixed_trip_id_non_madrid_nucleo) ... ok
+test_special_prefixed_trip_id_resolves_nucleo_name (packages.contracts.tests.test_nucleo.SpecialReinforcementTripIdTests.test_special_prefixed_trip_id_resolves_nucleo_name) ... ok
+test_route_id_prefix (packages.contracts.tests.test_nucleo.StandardFormatTests.test_route_id_prefix) ... ok
+test_trip_id_prefix (packages.contracts.tests.test_nucleo.StandardFormatTests.test_trip_id_prefix) ... ok
+test_alerts_fixture_parses (packages.contracts.tests.test_raw_parsing.RawParsingTests.test_alerts_fixture_parses) ... ok
+test_feed_with_missing_entity_key_parses_as_empty_list (packages.contracts.tests.test_raw_parsing.RawParsingTests.test_feed_with_missing_entity_key_parses_as_empty_list)
+Regresión (soak test de MP-007 contra el feed en vivo): una respuesta ... ok
+test_raw_active_period_has_no_unobserved_end_field (packages.contracts.tests.test_raw_parsing.RawParsingTests.test_raw_active_period_has_no_unobserved_end_field)
+Regresión (2ª revisión de Codex en MP-005): `end` de GTFS-RT Alert.ActivePeriod ... ok
+test_raw_model_ignores_unknown_fields_without_failing (packages.contracts.tests.test_raw_parsing.RawParsingTests.test_raw_model_ignores_unknown_fields_without_failing)
+Un campo nuevo no verificado no debe romper el parseo (ver raw.py). ... ok
+test_trip_updates_fixture_parses (packages.contracts.tests.test_raw_parsing.RawParsingTests.test_trip_updates_fixture_parses) ... ok
+test_vehicle_positions_fixture_parses (packages.contracts.tests.test_raw_parsing.RawParsingTests.test_vehicle_positions_fixture_parses) ... ok
+test_latitude_as_non_numeric_string_is_rejected (packages.contracts.tests.test_synthetic_schema.InvalidInputRejectionTests.test_latitude_as_non_numeric_string_is_rejected) ... ok
+test_vehicle_position_observation_rejects_missing_required_field (packages.contracts.tests.test_synthetic_schema.InvalidInputRejectionTests.test_vehicle_position_observation_rejects_missing_required_field) ... ok
+test_vehicle_position_observation_exports_json_schema (packages.contracts.tests.test_synthetic_schema.JsonSchemaExportTests.test_vehicle_position_observation_exports_json_schema) ... ok
+test_alert_spanning_two_nuclei_reports_both_prefixes (packages.contracts.tests.test_synthetic_schema.SyntheticMultiNucleoAlertTests.test_alert_spanning_two_nuclei_reports_both_prefixes) ... ok
+test_feed_health_rejects_naive_source_timestamp (packages.contracts.tests.test_synthetic_schema.UtcEnforcementTests.test_feed_health_rejects_naive_source_timestamp) ... ok
+test_naive_datetime_is_rejected (packages.contracts.tests.test_synthetic_schema.UtcEnforcementTests.test_naive_datetime_is_rejected) ... ok
+test_non_utc_offset_is_rejected (packages.contracts.tests.test_synthetic_schema.UtcEnforcementTests.test_non_utc_offset_is_rejected) ... ok
+test_service_alert_end_accepts_none_but_rejects_naive (packages.contracts.tests.test_synthetic_schema.UtcEnforcementTests.test_service_alert_end_accepts_none_but_rejects_naive) ... ok
+test_utc_datetime_is_accepted (packages.contracts.tests.test_synthetic_schema.UtcEnforcementTests.test_utc_datetime_is_accepted) ... ok
+test_c4_branch_relations_are_real_continuous_and_cover_both_directions (packages.geo.tests.test_catalog.MadridCorridorCatalogRealTests.test_c4_branch_relations_are_real_continuous_and_cover_both_directions) ... skipped 'ZIP GTFS oficial completo no presente localmente'
+test_csv_export_is_complete_and_carries_provenance (packages.geo.tests.test_catalog.MadridCorridorCatalogRealTests.test_csv_export_is_complete_and_carries_provenance) ... skipped 'ZIP GTFS oficial completo no presente localmente'
+test_known_problematic_patterns_are_partial_not_silently_validated (packages.geo.tests.test_catalog.MadridCorridorCatalogRealTests.test_known_problematic_patterns_are_partial_not_silently_validated) ... skipped 'ZIP GTFS oficial completo no presente localmente'
+test_matrix_covers_every_pattern_and_all_twelve_lines (packages.geo.tests.test_catalog.MadridCorridorCatalogRealTests.test_matrix_covers_every_pattern_and_all_twelve_lines) ... skipped 'ZIP GTFS oficial completo no presente localmente'
+test_partial_pending_and_missing_raw_have_honest_fallbacks (packages.geo.tests.test_catalog.MadridCorridorCatalogRealTests.test_partial_pending_and_missing_raw_have_honest_fallbacks) ... skipped 'ZIP GTFS oficial completo no presente localmente'
+test_projection_exposes_distance_from_raw_and_geometry_version (packages.geo.tests.test_catalog.MadridCorridorCatalogRealTests.test_projection_exposes_distance_from_raw_and_geometry_version) ... skipped 'ZIP GTFS oficial completo no presente localmente'
+test_real_but_unusable_geometry_is_partial_not_pending (packages.geo.tests.test_catalog.MadridCorridorCatalogRealTests.test_real_but_unusable_geometry_is_partial_not_pending) ... skipped 'ZIP GTFS oficial completo no presente localmente'
+test_shared_c4a_c4b_trunk_is_confirmed_by_literal_osm_way_ids (packages.geo.tests.test_catalog.MadridCorridorCatalogRealTests.test_shared_c4a_c4b_trunk_is_confirmed_by_literal_osm_way_ids) ... skipped 'ZIP GTFS oficial completo no presente localmente'
+test_c4_relations_chain_without_gaps_and_match_manifest_checksums (packages.geo.tests.test_catalog.MadridGeometryFixtureTests.test_c4_relations_chain_without_gaps_and_match_manifest_checksums) ... ok
+test_ordered_stop_sequence_is_the_direction_identity (packages.geo.tests.test_catalog.MadridGeometryFixtureTests.test_ordered_stop_sequence_is_the_direction_identity) ... ok
+test_shared_track_is_literal_not_only_shared_station_names (packages.geo.tests.test_catalog.MadridGeometryFixtureTests.test_shared_track_is_literal_not_only_shared_station_names) ... ok
+test_all_four_relations_chain_without_gaps (packages.geo.tests.test_real_feed.RealCorridorTests.test_all_four_relations_chain_without_gaps) ... ok
+test_forward_and_reverse_relations_have_similar_length (packages.geo.tests.test_real_feed.RealCorridorTests.test_forward_and_reverse_relations_have_similar_length) ... ok
+test_gap_between_disconnected_ways_is_not_fabricated_as_track (packages.geo.tests.test_real_feed.RealCorridorTests.test_gap_between_disconnected_ways_is_not_fabricated_as_track)
+Regresión del hallazgo bloqueante de la revisión de Codex en MP-011. ... ok
+test_geometry_logic_does_not_embed_pilot_line_identifier (packages.geo.tests.test_real_feed.RealCorridorTests.test_geometry_logic_does_not_embed_pilot_line_identifier) ... ok
+test_long_forward_route_matches_real_track_order (packages.geo.tests.test_real_feed.RealCorridorTests.test_long_forward_route_matches_real_track_order) ... ok
+test_long_reverse_route_matches_real_track_order (packages.geo.tests.test_real_feed.RealCorridorTests.test_long_reverse_route_matches_real_track_order) ... ok
+test_short_route_atocha_variant_is_monotonic_but_not_contiguous (packages.geo.tests.test_real_feed.RealCorridorTests.test_short_route_atocha_variant_is_monotonic_but_not_contiguous)
+Hallazgo real de la revisión de Codex en MP-011: la variante de 7 ... ok
+test_short_route_base_pattern_is_contiguous_subsegment_of_long_corridor (packages.geo.tests.test_real_feed.RealCorridorTests.test_short_route_base_pattern_is_contiguous_subsegment_of_long_corridor)
+La variante de 6 estaciones de 10T0047C5 (Villaverde Alto↔Fuenlabrada, ... ok
+test_42_route_ids_group_into_12_line_names (packages.gtfs.tests.test_catalog.FullMadridCatalogRealFeedTests.test_42_route_ids_group_into_12_line_names) ... skipped 'ZIP GTFS oficial completo no presente localmente'
+test_catalog_carries_real_provenance_and_instance_identity (packages.gtfs.tests.test_catalog.FullMadridCatalogRealFeedTests.test_catalog_carries_real_provenance_and_instance_identity)
+Hallazgo de la revisión de Codex en MP-017: el catálogo y las ... skipped 'ZIP GTFS oficial completo no presente localmente'
+test_real_24xx_trip_crosses_midnight_without_shifting_service_date (packages.gtfs.tests.test_catalog.FullMadridCatalogRealFeedTests.test_real_24xx_trip_crosses_midnight_without_shifting_service_date)
+`1023V19788C5` tiene paradas reales a las `24:02`/`24:05`/`24:08` ... skipped 'ZIP GTFS oficial completo no presente localmente'
+test_special_reinforcement_trip_never_appears_as_scheduled (packages.gtfs.tests.test_catalog.FullMadridCatalogRealFeedTests.test_special_reinforcement_trip_never_appears_as_scheduled)
+Un refuerzo `SPECIAL_` no existe en `trips.txt` (ver `nucleo.py`) -- ... skipped 'ZIP GTFS oficial completo no presente localmente'
+test_station_60104_valdemoro_belongs_to_madrid_network (packages.gtfs.tests.test_catalog.FullMadridCatalogRealFeedTests.test_station_60104_valdemoro_belongs_to_madrid_network)
+`stopId=60104` es la estación real (Valdemoro) del hallazgo P1 de ... skipped 'ZIP GTFS oficial completo no presente localmente'
+test_absent_calendar_dates_behaves_exactly_like_calendar_only (packages.gtfs.tests.test_catalog.ScheduledServiceIdsSyntheticTests.test_absent_calendar_dates_behaves_exactly_like_calendar_only) ... ok
+test_build_catalog_keeps_a_line_with_zero_valid_patterns (packages.gtfs.tests.test_catalog.ScheduledServiceIdsSyntheticTests.test_build_catalog_keeps_a_line_with_zero_valid_patterns) ... ok
+test_calendar_dates_exception_type_1_adds_a_service_outside_its_weekday (packages.gtfs.tests.test_catalog.ScheduledServiceIdsSyntheticTests.test_calendar_dates_exception_type_1_adds_a_service_outside_its_weekday) ... ok
+test_calendar_dates_exception_type_2_removes_a_service_within_its_weekday (packages.gtfs.tests.test_catalog.ScheduledServiceIdsSyntheticTests.test_calendar_dates_exception_type_2_removes_a_service_within_its_weekday) ... ok
+test_scheduled_trip_instances_never_fabricates_an_orphan_trip (packages.gtfs.tests.test_catalog.ScheduledServiceIdsSyntheticTests.test_scheduled_trip_instances_never_fabricates_an_orphan_trip) ... ok
+test_weekday_service_is_not_active_on_saturday (packages.gtfs.tests.test_catalog.ScheduledServiceIdsSyntheticTests.test_weekday_service_is_not_active_on_saturday) ... ok
+test_groups_five_source_routes_without_collapsing_identity (packages.gtfs.tests.test_real_feed.RealRenfeFeedTests.test_groups_five_source_routes_without_collapsing_identity) ... ok
+test_live_trip_and_stop_resolution_are_literal (packages.gtfs.tests.test_real_feed.RealRenfeFeedTests.test_live_trip_and_stop_resolution_are_literal) ... ok
+test_parser_logic_does_not_embed_pilot_line_identifier (packages.gtfs.tests.test_real_feed.RealRenfeFeedTests.test_parser_logic_does_not_embed_pilot_line_identifier) ... ok
+test_parses_all_six_real_tables (packages.gtfs.tests.test_real_feed.RealRenfeFeedTests.test_parses_all_six_real_tables) ... ok
+test_real_short_route_orders_are_reverse_pairs (packages.gtfs.tests.test_real_feed.RealRenfeFeedTests.test_real_short_route_orders_are_reverse_pairs) ... ok
+test_real_station_orders_include_forward_and_reverse_full_route (packages.gtfs.tests.test_real_feed.RealRenfeFeedTests.test_real_station_orders_include_forward_and_reverse_full_route) ... ok
+test_reports_source_orphan_instead_of_inventing_stops (packages.gtfs.tests.test_real_feed.RealRenfeFeedTests.test_reports_source_orphan_instead_of_inventing_stops) ... ok
+test_calculation_timestamp_must_be_utc (packages.movement.tests.test_engine.MovementEngineTests.test_calculation_timestamp_must_be_utc) ... ok
+test_empirically_observed_feed_jump_range_is_not_rejected_as_impossible (packages.movement.tests.test_engine.MovementEngineTests.test_empirically_observed_feed_jump_range_is_not_rejected_as_impossible) ... ok
+test_estimate_uses_schedule_offset_and_limits_speed_and_acceleration (packages.movement.tests.test_engine.MovementEngineTests.test_estimate_uses_schedule_offset_and_limits_speed_and_acceleration) ... ok
+test_large_backward_jump_is_flagged_and_not_used (packages.movement.tests.test_engine.MovementEngineTests.test_large_backward_jump_is_flagged_and_not_used) ... ok
+test_off_track_observation_is_flagged_and_not_presented_as_observed (packages.movement.tests.test_engine.MovementEngineTests.test_off_track_observation_is_flagged_and_not_presented_as_observed) ... ok
+test_physically_impossible_jump_falls_back_to_last_plausible_with_flag (packages.movement.tests.test_engine.MovementEngineTests.test_physically_impossible_jump_falls_back_to_last_plausible_with_flag) ... ok
+test_service_day_survives_local_midnight_and_gtfs_hours_over_24 (packages.movement.tests.test_engine.MovementEngineTests.test_service_day_survives_local_midnight_and_gtfs_hours_over_24) ... ok
+test_station_skip_is_exposed_not_silently_corrected (packages.movement.tests.test_engine.MovementEngineTests.test_station_skip_is_exposed_not_silently_corrected) ... ok
+test_thresholds_are_parameterized_and_line_identifier_is_not_in_engine (packages.movement.tests.test_engine.MovementEngineTests.test_thresholds_are_parameterized_and_line_identifier_is_not_in_engine) ... ok
+test_transitions_between_all_four_modes_and_confidence_decays (packages.movement.tests.test_engine.MovementEngineTests.test_transitions_between_all_four_modes_and_confidence_decays) ... ok
+test_anchor_progress_requires_an_observation (packages.movement.tests.test_rendering.RenderedPositionTests.test_anchor_progress_requires_an_observation) ... ok
+test_anchor_when_display_instant_equals_the_anchor (packages.movement.tests.test_rendering.RenderedPositionTests.test_anchor_when_display_instant_equals_the_anchor) ... ok
+test_envelope_is_monotone_and_bounded_by_its_own_ceiling (packages.movement.tests.test_rendering.RenderedPositionTests.test_envelope_is_monotone_and_bounded_by_its_own_ceiling) ... ok
+test_envelope_rejects_a_backward_rule (packages.movement.tests.test_rendering.RenderedPositionTests.test_envelope_rejects_a_backward_rule) ... ok
+test_envelope_speed_never_exceeds_the_physical_threshold (packages.movement.tests.test_rendering.RenderedPositionTests.test_envelope_speed_never_exceeds_the_physical_threshold) ... ok
+test_geometry_version_is_rejected_outside_map_matched_space (packages.movement.tests.test_rendering.RenderedPositionTests.test_geometry_version_is_rejected_outside_map_matched_space) ... ok
+test_horizon_exhausted_freezes_even_with_a_fresh_anchor (packages.movement.tests.test_rendering.RenderedPositionTests.test_horizon_exhausted_freezes_even_with_a_fresh_anchor) ... ok
+test_interpolated_only_between_two_real_anchors (packages.movement.tests.test_rendering.RenderedPositionTests.test_interpolated_only_between_two_real_anchors)
+`interpolated_between_known_anchors` exige ancla futura: solo con ... ok
+test_presentation_advances_inside_the_observed_window (packages.movement.tests.test_rendering.RenderedPositionTests.test_presentation_advances_inside_the_observed_window)
+El motor mantiene fija la observación hasta `observed_max_age_s=60`; ... ok
+test_raw_anchor_freezes_when_it_outlives_the_staleness_threshold (packages.movement.tests.test_rendering.RenderedPositionTests.test_raw_anchor_freezes_when_it_outlives_the_staleness_threshold) ... ok
+test_raw_anchor_never_claims_a_projection (packages.movement.tests.test_rendering.RenderedPositionTests.test_raw_anchor_never_claims_a_projection)
+Patrón sin corredor validado: GPS bruto etiquetado, sin envolvente ... ok
+test_rendered_and_legacy_position_share_the_same_anchor (packages.movement.tests.test_rendering.RenderedPositionTests.test_rendered_and_legacy_position_share_the_same_anchor)
+El anexo exige conservar `position.mode` por compatibilidad; esta ... ok
+test_schedule_only_has_no_anchor_and_says_so (packages.movement.tests.test_rendering.RenderedPositionTests.test_schedule_only_has_no_anchor_and_says_so) ... ok
+test_scheduled_dwell_holds_the_train_at_the_anchor (packages.movement.tests.test_rendering.RenderedPositionTests.test_scheduled_dwell_holds_the_train_at_the_anchor)
+Una espera real del horario (60 s en Madrid-Atocha) retiene el ... ok
+test_stale_frozen_freezes_at_the_anchor_without_envelope (packages.movement.tests.test_rendering.RenderedPositionTests.test_stale_frozen_freezes_at_the_anchor_without_envelope) ... ok
+test_unlocated_publishes_no_coordinate (packages.movement.tests.test_rendering.RenderedPositionTests.test_unlocated_publishes_no_coordinate) ... ok
+test_unlocated_with_a_coordinate_is_rejected (packages.movement.tests.test_rendering.RenderedPositionTests.test_unlocated_with_a_coordinate_is_rejected) ... ok
+test_ambiguous_hour_of_the_fall_back_takes_the_first_occurrence (packages.movement.tests.test_rendering.ServiceDayArithmeticTests.test_ambiguous_hour_of_the_fall_back_takes_the_first_occurrence)
+El 2026-10-25 las 02:30 locales ocurren dos veces. Se elige la ... ok
+test_extended_hours_land_on_the_next_civil_day (packages.movement.tests.test_rendering.ServiceDayArithmeticTests.test_extended_hours_land_on_the_next_civil_day) ... ok
+test_naive_instants_are_still_rejected (packages.movement.tests.test_rendering.ServiceDayArithmeticTests.test_naive_instants_are_still_rejected) ... ok
+test_round_trip_is_exact_across_both_dst_dates_and_their_neighbours (packages.movement.tests.test_rendering.ServiceDayArithmeticTests.test_round_trip_is_exact_across_both_dst_dates_and_their_neighbours)
+Barrido minuto a minuto de 00:00 a 28:00 en las dos fechas de cambio ... ok
+test_the_two_cases_reported_by_the_review (packages.movement.tests.test_rendering.ServiceDayArithmeticTests.test_the_two_cases_reported_by_the_review) ... ok
+test_real_soak_rows_are_map_matched_read_only_without_changing_counts (packages.movement.tests.test_real_soak_postgres.RealSoakMovementIntegrationTests.test_real_soak_rows_are_map_matched_read_only_without_changing_counts) ... skipped 'soak real de MP-007 no presente en esta base (0 filas, se esperaban 668) -- normal en una base fresca sin el histórico local de desarrollo'
+test_normal_utc_midnight_rollover_does_not_trigger (packages.quality.tests.test_engine.ClockAnomalyRuleTests.test_normal_utc_midnight_rollover_does_not_trigger) ... ok
+test_small_forward_clock_difference_does_not_trigger (packages.quality.tests.test_engine.ClockAnomalyRuleTests.test_small_forward_clock_difference_does_not_trigger) ... ok
+test_synthetic_source_clock_regression_triggers (packages.quality.tests.test_engine.ClockAnomalyRuleTests.test_synthetic_source_clock_regression_triggers) ... ok
+test_synthetic_feed_frozen_beyond_window_triggers (packages.quality.tests.test_engine.DuplicateSnapshotRuleTests.test_synthetic_feed_frozen_beyond_window_triggers) ... ok
+test_two_normal_consecutive_equal_polls_do_not_trigger (packages.quality.tests.test_engine.DuplicateSnapshotRuleTests.test_two_normal_consecutive_equal_polls_do_not_trigger) ... ok
+test_plausible_movement_does_not_trigger (packages.quality.tests.test_engine.ImplausibleSpeedRuleTests.test_plausible_movement_does_not_trigger) ... ok
+test_synthetic_jump_triggers (packages.quality.tests.test_engine.ImplausibleSpeedRuleTests.test_synthetic_jump_triggers) ... ok
+test_present_id_does_not_trigger (packages.quality.tests.test_engine.MissingIdRuleTests.test_present_id_does_not_trigger) ... ok
+test_synthetic_whitespace_id_triggers (packages.quality.tests.test_engine.MissingIdRuleTests.test_synthetic_whitespace_id_triggers) ... ok
+test_recent_observation_does_not_trigger (packages.quality.tests.test_engine.StaleRuleTests.test_recent_observation_does_not_trigger) ... ok
+test_synthetic_old_observation_triggers (packages.quality.tests.test_engine.StaleRuleTests.test_synthetic_old_observation_triggers) ... ok
+test_collector_marks_feed_only_after_long_identical_window (packages.quality.tests.test_persistence.QualityPersistenceTests.test_collector_marks_feed_only_after_long_identical_window)
+La deduplicación normal del primer intervalo no es una anomalía. ... ok
+test_event_and_vehicle_flags_are_persisted_atomically (packages.quality.tests.test_persistence.QualityPersistenceTests.test_event_and_vehicle_flags_are_persisted_atomically) ... ok
+test_persistent_network_failure_is_recorded_without_raising (services.collector.tests.test_collector_cycle.FetchFailureHandlingTests.test_persistent_network_failure_is_recorded_without_raising) ... fetch_with_retry: intento 1/1 falló para https://example.invalid/vehicle_positions.json: simulated network outage
+run_cycle: vehicle_positions falló en la descarga o validación: agotados 1 intentos contra https://example.invalid/vehicle_positions.json
+ok
+test_station_alert_for_a_stop_outside_the_given_catalog_is_still_skipped (services.collector.tests.test_collector_cycle.StationAlertPersistenceTests.test_station_alert_for_a_stop_outside_the_given_catalog_is_still_skipped)
+No se "adivina" Madrid por tener cualquier `stopId`: solo se acepta ... ok
+test_station_alert_without_route_id_is_persisted_with_madrid_stop_catalog (services.collector.tests.test_collector_cycle.StationAlertPersistenceTests.test_station_alert_without_route_id_is_persisted_with_madrid_stop_catalog) ... ok
+test_station_alert_without_route_id_is_skipped_when_no_catalog_given (services.collector.tests.test_collector_cycle.StationAlertPersistenceTests.test_station_alert_without_route_id_is_skipped_when_no_catalog_given)
+Comportamiento anterior conservado por defecto: sin `madrid_stop_ids`, ... ok
+test_broken_json_is_an_error_but_does_not_delete_existing_observations (services.collector.tests.test_collector_cycle.VehiclePositionIdempotencyTests.test_broken_json_is_an_error_but_does_not_delete_existing_observations) ... run_cycle: vehicle_positions falló en la descarga o validación: 1 validation error for RawVehiclePositionsFeed
+  Invalid JSON: EOF while parsing a value at line 1 column 10 [type=json_invalid, input_value=b'{"header":', input_type=bytes]
+    For further information visit https://errors.pydantic.dev/2.13/v/json_invalid
+ok
+test_changed_entity_inserts_exactly_one_new_row (services.collector.tests.test_collector_cycle.VehiclePositionIdempotencyTests.test_changed_entity_inserts_exactly_one_new_row) ... ok
+test_out_of_scope_nucleos_are_skipped_not_stored (services.collector.tests.test_collector_cycle.VehiclePositionIdempotencyTests.test_out_of_scope_nucleos_are_skipped_not_stored)
+La fixture de MP-004 mezcla deliberadamente 7 entidades de Madrid ... ok
+test_repeated_identical_payload_stores_a_single_row_per_entity (services.collector.tests.test_collector_cycle.VehiclePositionIdempotencyTests.test_repeated_identical_payload_stores_a_single_row_per_entity) ... ok
+test_schema_failure_records_payload_hash_and_no_source_time (services.collector.tests.test_collector_cycle.VehiclePositionIdempotencyTests.test_schema_failure_records_payload_hash_and_no_source_time) ... run_cycle: vehicle_positions falló en la descarga o validación: 2 validation errors for RawVehiclePositionsFeed
+header.gtfsRealtimeVersion
+  Field required [type=missing, input_value={'unexpected': 'schema'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+header.timestamp
+  Field required [type=missing, input_value={'unexpected': 'schema'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.13/v/missing
+ok
+test_tied_observed_at_does_not_break_dedup_on_third_cycle (services.collector.tests.test_collector_cycle.VehiclePositionIdempotencyTests.test_tied_observed_at_does_not_break_dedup_on_third_cycle)
+Regresión (hallazgo real de la revisión de Codex en MP-007, ... ok
+test_valid_empty_feed_is_success_not_network_failure (services.collector.tests.test_collector_cycle.VehiclePositionIdempotencyTests.test_valid_empty_feed_is_success_not_network_failure) ... ok
+test_does_not_retry_on_non_network_exception (services.collector.tests.test_http_client.RetryExhaustionTests.test_does_not_retry_on_non_network_exception) ... ok
+test_raises_fetch_error_after_exhausting_retries (services.collector.tests.test_http_client.RetryExhaustionTests.test_raises_fetch_error_after_exhausting_retries) ... fetch_with_retry: intento 1/3 falló para https://example.invalid/feed.json: <urlopen error simulated network error>
+fetch_with_retry: intento 2/3 falló para https://example.invalid/feed.json: <urlopen error simulated network error>
+fetch_with_retry: intento 3/3 falló para https://example.invalid/feed.json: <urlopen error simulated network error>
+ok
+test_succeeds_after_two_timeouts (services.collector.tests.test_http_client.RetrySuccessAfterFailuresTests.test_succeeds_after_two_timeouts) ... fetch_with_retry: intento 1/4 falló para https://example.invalid/feed.json: simulated timeout
+fetch_with_retry: intento 2/4 falló para https://example.invalid/feed.json: simulated timeout
+ok
+test_timeout_seconds_is_passed_to_fetcher (services.collector.tests.test_http_client.RetryTimeoutParameterTests.test_timeout_seconds_is_passed_to_fetcher) ... ok
+test_a_lost_database_connection_exits_with_ex_tempfail (services.collector.tests.test_supervised_loop.SupervisedLoopTests.test_a_lost_database_connection_exits_with_ex_tempfail) ... 2026-11-25 13:58:10,663 INFO Colector iniciado: 3 feeds, poll=30s, timeout=10s, max_retries=3, estaciones Madrid=sin catálogo
+2026-11-25 13:58:10,665 ERROR Conexión con PostgreSQL perdida durante vehicle_positions; terminando para que el supervisor reinicie el colector con una conexión nueva
+Traceback (most recent call last):
+  File "/Users/matu/orca/workspaces/madrid-pulse/mp-023-db-segura/services/collector/__main__.py", line 108, in _run
+    run_cycle(feed, conn, retry_policy, madrid_stop_ids=madrid_stop_ids)
+  File "/Users/matu/.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py", line 1134, in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/matu/.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py", line 1138, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/matu/.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py", line 1193, in _execute_mock_call
+    raise effect
+psycopg.OperationalError: the connection is lost
+ok
+test_a_single_feed_failure_does_not_stop_the_collector (services.collector.tests.test_supervised_loop.SupervisedLoopTests.test_a_single_feed_failure_does_not_stop_the_collector)
+Comportamiento de MP-006, que esta tarea NO cambia. ... 2026-11-25 13:58:10,671 INFO Colector iniciado: 3 feeds, poll=30s, timeout=10s, max_retries=3, estaciones Madrid=sin catálogo
+2026-11-25 13:58:10,673 ERROR Ciclo inesperadamente fallido para vehicle_positions
+Traceback (most recent call last):
+  File "/Users/matu/orca/workspaces/madrid-pulse/mp-023-db-segura/services/collector/__main__.py", line 108, in _run
+    run_cycle(feed, conn, retry_policy, madrid_stop_ids=madrid_stop_ids)
+  File "/Users/matu/.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py", line 1134, in __call__
+    return self._mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/matu/.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py", line 1138, in _mock_call
+    return self._execute_mock_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/matu/.pyenv/versions/3.12.3/lib/python3.12/unittest/mock.py", line 1199, in _execute_mock_call
+    result = effect(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/matu/orca/workspaces/madrid-pulse/mp-023-db-segura/services/collector/tests/test_supervised_loop.py", line 76, in flaky
+    raise RuntimeError("payload inesperado en el primer feed")
+RuntimeError: payload inesperado en el primer feed
+ok
+test_august_utc_offset_is_plus_two_hours_dst (services.snapshotter.tests.test_export.ServiceDateBoundsTests.test_august_utc_offset_is_plus_two_hours_dst)
+España está en CEST (UTC+2) en agosto -- confirma que no se asume ... ok
+test_november_utc_offset_is_plus_one_hour (services.snapshotter.tests.test_export.ServiceDateBoundsTests.test_november_utc_offset_is_plus_one_hour)
+España está en CET (UTC+1) en noviembre -- fuera del horario de verano. ... ok
+test_real_soak_test_timestamp_falls_in_the_following_madrid_day (services.snapshotter.tests.test_export.ServiceDateBoundsTests.test_real_soak_test_timestamp_falls_in_the_following_madrid_day)
+Regresión directa del hallazgo real: 23:31 UTC del 18-nov pertenece ... ok
+test_exported_day_reconstructs_the_same_rows_without_loss (services.snapshotter.tests.test_export_replay.ExportReplayTests.test_exported_day_reconstructs_the_same_rows_without_loss) ... ok
+test_gold_summary_matches_raw_export_without_touching_postgres_again (services.snapshotter.tests.test_export_replay.ExportReplayTests.test_gold_summary_matches_raw_export_without_touching_postgres_again) ... ok
+test_line_and_station_daily_metrics_resolve_against_real_export (services.snapshotter.tests.test_export_replay.ExportReplayTests.test_line_and_station_daily_metrics_resolve_against_real_export)
+Replay real de `build_line_daily_metrics`/`build_station_daily_metrics` ... ok
+test_exception_type_1_adds_the_trip_to_the_denominator (services.snapshotter.tests.test_gold.CalendarExceptionDenominatorTests.test_exception_type_1_adds_the_trip_to_the_denominator) ... ok
+test_exception_type_2_removes_the_trip_from_the_denominator (services.snapshotter.tests.test_gold.CalendarExceptionDenominatorTests.test_exception_type_2_removes_the_trip_from_the_denominator) ... ok
+test_scheduled_trip_ids_by_route_and_the_station_board_share_one_calendar (services.snapshotter.tests.test_gold.CalendarExceptionDenominatorTests.test_scheduled_trip_ids_by_route_and_the_station_board_share_one_calendar)
+Regresión de coherencia: el mart y el catálogo no pueden discrepar. ... ok
+test_line_metrics_are_byte_identical_and_ordered_by_route (services.snapshotter.tests.test_gold.GoldDeterminismTests.test_line_metrics_are_byte_identical_and_ordered_by_route) ... ok
+test_station_metrics_are_byte_identical_and_ordered_by_station (services.snapshotter.tests.test_gold.GoldDeterminismTests.test_station_metrics_are_byte_identical_and_ordered_by_station) ... ok
+test_latest_report_of_the_day_wins_over_an_earlier_one (services.snapshotter.tests.test_gold.LineDailyMetricsTests.test_latest_report_of_the_day_wins_over_an_earlier_one) ... ok
+test_percentages_match_the_real_0_100_schema_not_a_0_1_fraction (services.snapshotter.tests.test_gold.LineDailyMetricsTests.test_percentages_match_the_real_0_100_schema_not_a_0_1_fraction)
+Regresión directa del hallazgo de la revisión de Codex: la primera ... ok
+test_reported_delay_beyond_threshold_counts_as_not_on_time (services.snapshotter.tests.test_gold.LineDailyMetricsTests.test_reported_delay_beyond_threshold_counts_as_not_on_time) ... ok
+test_reported_delay_within_threshold_counts_as_on_time (services.snapshotter.tests.test_gold.LineDailyMetricsTests.test_reported_delay_within_threshold_counts_as_on_time) ... ok
+test_scheduled_trip_with_no_observation_has_zero_coverage_not_null_scheduled (services.snapshotter.tests.test_gold.LineDailyMetricsTests.test_scheduled_trip_with_no_observation_has_zero_coverage_not_null_scheduled) ... ok
+test_trip_absent_outside_its_single_day_service_window (services.snapshotter.tests.test_gold.ScheduledTripsByRouteTests.test_trip_absent_outside_its_single_day_service_window) ... ok
+test_trip_active_on_its_single_day_service_window (services.snapshotter.tests.test_gold.ScheduledTripsByRouteTests.test_trip_active_on_its_single_day_service_window) ... ok
+test_counts_observations_at_a_real_known_station (services.snapshotter.tests.test_gold.StationDailyMetricsTests.test_counts_observations_at_a_real_known_station) ... ok
+test_no_observations_produces_zero_rows_not_a_fabricated_zero_row (services.snapshotter.tests.test_gold.StationDailyMetricsTests.test_no_observations_produces_zero_rows_not_a_fabricated_zero_row) ... ok
+test_unknown_stop_id_outside_topology_is_not_fabricated_into_a_station (services.snapshotter.tests.test_gold.StationDailyMetricsTests.test_unknown_stop_id_outside_topology_is_not_fabricated_into_a_station) ... ok
+test_a_calendar_exception_changes_the_set_of_scheduled_circulations (services.snapshotter.tests.test_history.CirculationHistoryTests.test_a_calendar_exception_changes_the_set_of_scheduled_circulations) ... ok
+test_a_canceled_trip_is_not_counted_as_a_coverage_gap (services.snapshotter.tests.test_history.CirculationHistoryTests.test_a_canceled_trip_is_not_counted_as_a_coverage_gap)
+Hallazgo de la revisión de Codex, con el caso real reproducido. ... ok
+test_a_delay_beyond_the_threshold_is_not_on_time (services.snapshotter.tests.test_history.CirculationHistoryTests.test_a_delay_beyond_the_threshold_is_not_on_time) ... ok
+test_a_scheduled_trip_never_observed_is_a_row_with_nulls_not_zeros (services.snapshotter.tests.test_history.CirculationHistoryTests.test_a_scheduled_trip_never_observed_is_a_row_with_nulls_not_zeros) ... ok
+test_a_trip_update_without_position_and_without_cancellation_is_operator_only (services.snapshotter.tests.test_history.CirculationHistoryTests.test_a_trip_update_without_position_and_without_cancellation_is_operator_only)
+El otro caso de «sin posición pero con información»: el operador ... ok
+test_a_trip_without_stop_times_is_a_row_with_no_schedule_not_a_dropped_row (services.snapshotter.tests.test_history.CirculationHistoryTests.test_a_trip_without_stop_times_is_a_row_with_no_schedule_not_a_dropped_row)
+Un viaje huérfano (sin `stop_times`) se marca, no se descarta. ... ok
+test_an_observed_circulation_outside_the_calendar_is_kept_and_flagged (services.snapshotter.tests.test_history.CirculationHistoryTests.test_an_observed_circulation_outside_the_calendar_is_kept_and_flagged) ... ok
+test_every_row_classifies_into_exactly_one_coverage_category (services.snapshotter.tests.test_history.CirculationHistoryTests.test_every_row_classifies_into_exactly_one_coverage_category)
+Invariante estructural: `coverage` particiona el mart. ... ok
+test_no_row_ever_has_a_verdict_without_its_denominator (services.snapshotter.tests.test_history.CirculationHistoryTests.test_no_row_ever_has_a_verdict_without_its_denominator)
+Invariante del mart completo, no de una fila elegida a mano. ... ok
+test_on_time_is_null_when_no_delay_was_ever_reported (services.snapshotter.tests.test_history.CirculationHistoryTests.test_on_time_is_null_when_no_delay_was_ever_reported) ... ok
+test_on_time_uses_the_latest_reported_delay_against_the_threshold (services.snapshotter.tests.test_history.CirculationHistoryTests.test_on_time_uses_the_latest_reported_delay_against_the_threshold) ... ok
+test_rebuilding_the_mart_is_byte_identical_and_ordered (services.snapshotter.tests.test_history.CirculationHistoryTests.test_rebuilding_the_mart_is_byte_identical_and_ordered) ... ok
+test_the_day_denominator_matches_the_one_daily_line_metrics_uses (services.snapshotter.tests.test_history.CirculationHistoryTests.test_the_day_denominator_matches_the_one_daily_line_metrics_uses)
+Los dos marts del mismo día no pueden discrepar en el denominador. ... ok
+test_the_grain_is_vehicle_plus_trip_not_vehicle_alone (services.snapshotter.tests.test_history.CirculationHistoryTests.test_the_grain_is_vehicle_plus_trip_not_vehicle_alone) ... ok
+test_two_vehicles_on_the_same_trip_are_two_rows (services.snapshotter.tests.test_history.CirculationHistoryTests.test_two_vehicles_on_the_same_trip_are_two_rows) ... ok
+test_a_crash_after_installing_the_new_day_keeps_the_new_content (services.snapshotter.tests.test_idempotency.ArchiveIdempotencyTests.test_a_crash_after_installing_the_new_day_keeps_the_new_content)
+La otra mitad de la ventana: caerse **después** del segundo ... 2026-11-25 13:58:13,688 WARNING sustitución interrumpida detectada en vehicle_position_observation__date=2099-02-02: descartada la cuarentena sobrante de vehicle_position_observation/2099-02-02
+ok
+test_a_crash_between_the_two_renames_never_destroys_the_archived_day (services.snapshotter.tests.test_idempotency.ArchiveIdempotencyTests.test_a_crash_between_the_two_renames_never_destroys_the_archived_day)
+Inyección de fallo en la costura exacta que rompía la atomicidad. ... 2026-11-25 13:58:14,597 WARNING sustitución interrumpida detectada en vehicle_position_observation__date=2099-02-02: restaurado vehicle_position_observation/2099-02-02 desde la cuarentena
+ok
+test_a_day_absent_from_both_hot_and_archive_reports_absent_not_zero (services.snapshotter.tests.test_idempotency.ArchiveIdempotencyTests.test_a_day_absent_from_both_hot_and_archive_reports_absent_not_zero) ... ok
+test_an_empty_hot_table_never_erases_an_already_archived_day (services.snapshotter.tests.test_idempotency.ArchiveIdempotencyTests.test_an_empty_hot_table_never_erases_an_already_archived_day) ... 2026-11-25 13:58:15,544 WARNING vehicle_position_observation: 0 filas calientes para 2099-02-02 pero el archivo frío ya tiene datos de ese día; se conserva (dato ausente no es cero -- DEC-011)
+ok
+test_reprocessing_one_day_does_not_touch_another_archived_day (services.snapshotter.tests.test_idempotency.ArchiveIdempotencyTests.test_reprocessing_one_day_does_not_touch_another_archived_day) ... ok
+test_reprocessing_the_same_service_day_twice_is_byte_identical (services.snapshotter.tests.test_idempotency.ArchiveIdempotencyTests.test_reprocessing_the_same_service_day_twice_is_byte_identical) ... ok
+test_rerunning_after_a_crash_completes_the_pending_replacement (services.snapshotter.tests.test_idempotency.ArchiveIdempotencyTests.test_rerunning_after_a_crash_completes_the_pending_replacement)
+Un reintento tras la caída deja el día completo, no a medias. ... 2026-11-25 13:58:17,964 WARNING sustitución interrumpida detectada en vehicle_position_observation__date=2099-02-02: restaurado vehicle_position_observation/2099-02-02 desde la cuarentena
+ok
+test_rows_removed_from_the_hot_table_do_not_survive_in_the_archive (services.snapshotter.tests.test_idempotency.ArchiveIdempotencyTests.test_rows_removed_from_the_hot_table_do_not_survive_in_the_archive) ... ok
+test_alerts_schema_and_madrid_c5_routes (tests.fixtures.test_parse_fixtures.FrozenFixtureTests.test_alerts_schema_and_madrid_c5_routes) ... ok
+test_c5_label_alone_mixes_nuclei (tests.fixtures.test_parse_fixtures.FrozenFixtureTests.test_c5_label_alone_mixes_nuclei) ... ok
+test_common_gtfs_realtime_envelope (tests.fixtures.test_parse_fixtures.FrozenFixtureTests.test_common_gtfs_realtime_envelope) ... ok
+test_sha256_integrity (tests.fixtures.test_parse_fixtures.FrozenFixtureTests.test_sha256_integrity) ... ok
+test_trip_updates_schema_and_madrid_coverage (tests.fixtures.test_parse_fixtures.FrozenFixtureTests.test_trip_updates_schema_and_madrid_coverage) ... ok
+test_vehicle_positions_schema_and_madrid_coverage (tests.fixtures.test_parse_fixtures.FrozenFixtureTests.test_vehicle_positions_schema_and_madrid_coverage) ... ok
+test_removed_service_with_24xx_trip_never_leaks_into_the_wrong_day (tests.e2e.test_mp022_synthetic_derived.SyntheticCalendarBoundaryAcceptanceTests.test_removed_service_with_24xx_trip_never_leaks_into_the_wrong_day)
+Puerta 2 de MP-022 en una fixture sintética explícita. ... ok
+test_fixture_declares_that_it_is_neither_official_nor_live (tests.e2e.test_mp022_synthetic_derived.SyntheticDerivedRecoveryAcceptanceTests.test_fixture_declares_that_it_is_neither_official_nor_live) ... ok
+test_gps_recovery_after_estimation_keeps_raw_matched_and_rendered_distinct (tests.e2e.test_mp022_synthetic_derived.SyntheticDerivedRecoveryAcceptanceTests.test_gps_recovery_after_estimation_keeps_raw_matched_and_rendered_distinct) ... ok
+test_three_controlled_clocks_advance_then_freeze_at_the_horizon (tests.e2e.test_mp022_synthetic_derived.SyntheticDerivedRecoveryAcceptanceTests.test_three_controlled_clocks_advance_then_freeze_at_the_horizon) ... ok
+test_real_fixture_never_fabricates_a_resolution_end_to_end (tests.e2e.test_replay.FullPipelineReplayTests.test_real_fixture_never_fabricates_a_resolution_end_to_end)
+La fixture real de MP-004 (10 vehículos, 7 persistidos) no coincide con ningún ... 2026-11-25 13:58:19,431 INFO run_cycle: vehicle_positions ok (run_id=80, entidades=10, insertadas=7, dedup=0, fuera_de_alcance=3)
+ok
+test_synthetic_payload_with_real_shape_resolves_a_known_real_trip (tests.e2e.test_replay.FullPipelineReplayTests.test_synthetic_payload_with_real_shape_resolves_a_known_real_trip)
+Mismo esquema exacto observado en MP-003 (ver docstring del módulo), ... 2026-11-25 13:58:19,733 INFO run_cycle: vehicle_positions ok (run_id=81, entidades=1, insertadas=1, dedup=0, fuera_de_alcance=0)
+ok
+
+----------------------------------------------------------------------
+Ran 283 tests in 25.569s
+
+OK (skipped=18)
++ /Users/matu/orca/workspaces/madrid-pulse/mp-023-db-segura/../audit-hito-03/.venv/bin/python -m unittest -v tests.e2e.database_isolation_checks.CanonicalUrlIntegrationTest
+test_collector_writes_and_api_reads_via_the_same_url (tests.e2e.database_isolation_checks.CanonicalUrlIntegrationTest.test_collector_writes_and_api_reads_via_the_same_url) ... 2026-11-25 13:58:20,389 WARNING MADRID_PULSE_GTFS_SOURCE no definido: avisos por estación (sin routeId) se descartarán como fuera de alcance en vez de resolverse por stop_id (limitación documentada, no un fallo).
+2026-11-25 13:58:20,389 INFO Colector iniciado: 3 feeds, poll=30s, timeout=10s, max_retries=3, estaciones Madrid=sin catálogo
+2026-11-25 13:58:20,499 INFO run_cycle: vehicle_positions ok (run_id=82, entidades=1, insertadas=1, dedup=0, fuera_de_alcance=0)
+2026-11-25 13:58:20,663 INFO API mode=replay GTFS=sha256:c31190232573fc17fe43f62c1e3b22e345bb2c4daf84611a636ea23044ce0810 vigencia=2026-11-19..2026-12-06
+2026-11-25 13:58:20,777 INFO HTTP Request: GET http://testserver/api/v1/live/vehicles/mp023-isolation "HTTP/1.1 200 OK"
+ok
+
+----------------------------------------------------------------------
+Ran 1 test in 0.449s
+
+OK
++ printf 'Código GREEN: 0\n'
+Código GREEN: 0
