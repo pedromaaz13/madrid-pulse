@@ -59,12 +59,15 @@ def _row_to_observed(row: dict) -> ObservedRow:
     )
 
 
-def latest_vehicle_histories(conn: psycopg.Connection) -> list[VehicleHistory]:
+def latest_vehicle_histories(
+    conn: psycopg.Connection, *, as_of: datetime | None = None
+) -> list[VehicleHistory]:
     """Las dos observaciones más recientes de cada vehículo distinto visto.
 
     Sin corte de edad: un vehículo con último dato muy antiguo se devuelve
     igualmente -- es responsabilidad del motor de movimiento (MP-012)
     clasificarlo como `stale`/`scheduled`, no de esta capa ocultarlo.
+    Con `as_of` solo se consideran observaciones e ingestas hasta ese instante.
     """
     with conn.cursor(row_factory=dict_row) as cur:
         cur.execute(
@@ -80,10 +83,13 @@ def latest_vehicle_histories(conn: psycopg.Connection) -> list[VehicleHistory]:
                        ) AS rank
                 FROM vehicle_position_observation v
                 JOIN source_ingestion_run r ON r.id = v.ingestion_run_id
+                WHERE %(as_of)s::timestamptz IS NULL
+                   OR (r.started_at <= %(as_of)s AND v.observed_at <= %(as_of)s)
             )
             SELECT * FROM ranked WHERE rank <= 2
             ORDER BY source_vehicle_id, rank
-            """
+            """,
+            {"as_of": as_of},
         )
         by_vehicle: dict[str, list[dict]] = {}
         for row in cur.fetchall():
@@ -175,15 +181,17 @@ class FeedRunSample:
     payload_hash: str
 
 
-def recent_ingestion_runs(conn: psycopg.Connection, *, per_feed_limit: int = 50) -> list[FeedRunSample]:
-    """Las ejecuciones más recientes por feed, para calcular frescura y estabilidad del hash.
+def recent_ingestion_runs(
+    conn: psycopg.Connection, *, as_of: datetime, per_feed_limit: int = 50
+) -> list[FeedRunSample]:
+    """Ejecuciones por feed hasta el reloj de la petición, inclusive.
 
     Corrección de MP-019: la versión anterior rankeaba **toda** la tabla con una
     ventana y descartaba el exceso en Python, así que el coste crecía con el
     histórico completo de ingesta aunque solo se usaran 50 filas por feed. El
     `LATERAL` acotado usa el índice
     `source_ingestion_run_feed_started_at_idx` (migración 0002) y devuelve
-    exactamente las mismas filas.
+    como máximo `per_feed_limit` filas de cada feed.
     """
     with conn.cursor(row_factory=dict_row) as cur:
         cur.execute(
@@ -195,12 +203,12 @@ def recent_ingestion_runs(conn: psycopg.Connection, *, per_feed_limit: int = 50)
                 SELECT run.feed_name, run.source_timestamp, run.started_at, run.finished_at,
                        run.status, run.entity_count, run.payload_hash
                 FROM source_ingestion_run run
-                WHERE run.feed_name = feeds.feed_name
-                ORDER BY run.started_at DESC
+                WHERE run.feed_name = feeds.feed_name AND run.started_at <= %s
+                ORDER BY run.started_at DESC, run.id DESC
                 LIMIT %s
             ) AS recent
             """,
-            (per_feed_limit,),
+            (as_of, per_feed_limit),
         )
         rows = cur.fetchall()
     return [
@@ -228,6 +236,7 @@ def latest_trip_updates(
     source_trip_ids: Sequence[str],
     *,
     observed_after: datetime,
+    as_of: datetime | None = None,
 ) -> dict[str, TripUpdateObservation]:
     """Igual que ``latest_trip_update`` pero para muchos viajes en **una** consulta.
 
@@ -239,6 +248,7 @@ def latest_trip_updates(
 
     Un viaje sin fila dentro de la ventana simplemente no aparece en el
     diccionario: ausencia, no un retraso de cero.
+    Con `as_of` se exige que la observación y su ingesta ya hayan ocurrido.
     """
     if not source_trip_ids:
         return {}
@@ -249,11 +259,17 @@ def latest_trip_updates(
             SELECT DISTINCT ON (source_trip_id)
                    source_trip_id, observed_at, schedule_relationship, delay_seconds,
                    delay_coverage, next_stop_id, payload_hash
-            FROM trip_update_observation
-            WHERE source_trip_id = ANY(%s) AND observed_at >= %s
+            FROM trip_update_observation u
+            WHERE source_trip_id = ANY(%(trip_ids)s) AND observed_at >= %(observed_after)s
+              AND (%(as_of)s::timestamptz IS NULL OR (
+                  observed_at <= %(as_of)s AND EXISTS (
+                      SELECT 1 FROM source_ingestion_run r
+                      WHERE r.id = u.ingestion_run_id AND r.started_at <= %(as_of)s
+                  )
+              ))
             ORDER BY source_trip_id, observed_at DESC, id DESC
             """,
-            (unique_ids, observed_after),
+            {"trip_ids": unique_ids, "observed_after": observed_after, "as_of": as_of},
         )
         rows = cur.fetchall()
     return {
@@ -290,10 +306,10 @@ class RevisionMarker:
     sequence: int | None
 
 
-def revision_marker(conn: psycopg.Connection) -> RevisionMarker:
+def revision_marker(conn: psycopg.Connection, *, as_of: datetime) -> RevisionMarker:
     scope, scope_source = _revision_scope(conn)
     with conn.cursor() as cur:
-        cur.execute("SELECT max(id) FROM source_ingestion_run")
+        cur.execute("SELECT max(id) FROM source_ingestion_run WHERE started_at <= %s", (as_of,))
         row = cur.fetchone()
     sequence = row[0] if row is not None else None
     return RevisionMarker(scope=scope, scope_source=scope_source, sequence=sequence)
@@ -325,7 +341,7 @@ def _revision_scope(conn: psycopg.Connection) -> tuple[str, str]:
 
 
 def vehicles_for_trips(
-    conn: psycopg.Connection, source_trip_ids: Sequence[str]
+    conn: psycopg.Connection, source_trip_ids: Sequence[str], *, as_of: datetime
 ) -> dict[str, VehiclePositionObservation]:
     """Última observación de vehículo de cada viaje, en **una** consulta.
 
@@ -341,15 +357,16 @@ def vehicles_for_trips(
     with conn.cursor(row_factory=dict_row) as cur:
         cur.execute(
             """
-            SELECT DISTINCT ON (source_trip_id)
-                   source_vehicle_id, source_trip_id, observed_at, latitude, longitude,
-                   current_status, current_stop_id, speed_kmh, bearing,
-                   raw_vehicle_label, payload_hash
-            FROM vehicle_position_observation
-            WHERE source_trip_id = ANY(%s)
-            ORDER BY source_trip_id, observed_at DESC, id DESC
+            SELECT DISTINCT ON (v.source_trip_id)
+                   v.source_vehicle_id, v.source_trip_id, v.observed_at, v.latitude, v.longitude,
+                   v.current_status, v.current_stop_id, v.speed_kmh, v.bearing,
+                   v.raw_vehicle_label, v.payload_hash
+            FROM vehicle_position_observation v
+            JOIN source_ingestion_run r ON r.id = v.ingestion_run_id
+            WHERE v.source_trip_id = ANY(%s) AND r.started_at <= %s AND v.observed_at <= %s
+            ORDER BY v.source_trip_id, v.observed_at DESC, v.id DESC
             """,
-            (unique_ids,),
+            (unique_ids, as_of, as_of),
         )
         rows = cur.fetchall()
     return {

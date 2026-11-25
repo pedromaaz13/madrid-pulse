@@ -61,10 +61,22 @@ class FeedHealthOut(BaseModel):
     status: Literal["ok", "stale", "error", "unknown"]
     source_timestamp: datetime | None
     data_age_s: float | None
-    poll_age_s: float
+    poll_age_s: float | None
     unchanged_for_s: float | None
     entities: int | None
     rejected: int
+    reason: Literal["no_ingestion_at_or_before_clock", "source_timestamp_in_future"] | None = None
+
+
+GtfsStatus = Literal["valid", "expiring", "expired", "not_yet_valid"]
+GtfsStatusReason = Literal[
+    "gtfs_expiry_approaching", "gtfs_validity_ended", "gtfs_validity_not_started"
+]
+
+
+class GtfsValidityOut(BaseModel):
+    gtfs_status: GtfsStatus
+    gtfs_status_reason: GtfsStatusReason | None
 
 
 class HealthOut(BaseModel):
@@ -73,6 +85,8 @@ class HealthOut(BaseModel):
     gtfs_version: str | None = None
     gtfs_valid_from: str | None = None
     gtfs_valid_until: str | None = None
+    gtfs_status: GtfsStatus | None = None
+    gtfs_status_reason: GtfsStatusReason | None = None
 
 
 class CoordinateOut(BaseModel):
@@ -204,9 +218,9 @@ class CoverageSummaryOut(BaseModel):
     pending: int
 
 
-class CatalogOut(BaseModel):
-    """Catálogo cacheable: cambia solo con el GTFS o la geometría, nunca con un
-    sondeo. Se sirve con `ETag`/`304` y no incluye ningún dato operativo."""
+class CatalogOut(GtfsValidityOut):
+    """Catálogo cacheable con metadatos de vigencia GTFS. Se sirve con
+    `ETag`/`304` y no incluye ningún dato operativo del colector."""
 
     schema_version: str = CATALOG_SCHEMA_VERSION
     catalog_version: str
@@ -401,7 +415,7 @@ class SnapshotCountsOut(BaseModel):
     without_operator_delay: int
 
 
-class SnapshotOut(BaseModel):
+class SnapshotOut(GtfsValidityOut):
     schema_version: str = SNAPSHOT_SCHEMA_VERSION
     snapshot_id: str
     snapshot_id_is_sortable: Literal[False] = False

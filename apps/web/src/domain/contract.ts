@@ -18,6 +18,17 @@ export type CoordinateSpace = "map_matched" | "raw" | "schedule";
 
 export type CirculationStatus = "active" | "expired" | "unresolved";
 
+export type GtfsStatus = "valid" | "expiring" | "expired" | "not_yet_valid";
+export type GtfsStatusReason =
+  | "gtfs_expiry_approaching"
+  | "gtfs_validity_ended"
+  | "gtfs_validity_not_started";
+
+interface GtfsValidity {
+  gtfs_status?: GtfsStatus;
+  gtfs_status_reason?: GtfsStatusReason | null;
+}
+
 export type FeedStatus = "ok" | "stale" | "error" | "unknown";
 
 export type Mode = "live" | "replay";
@@ -94,7 +105,7 @@ export interface CoverageSummary {
   pending: number;
 }
 
-export interface Catalog {
+export interface Catalog extends GtfsValidity {
   schema_version: string;
   catalog_version: string;
   gtfs_version: string;
@@ -231,10 +242,11 @@ export interface FeedHealth {
   status: FeedStatus;
   source_timestamp: string | null;
   data_age_s: number | null;
-  poll_age_s: number;
+  poll_age_s: number | null;
   unchanged_for_s: number | null;
   entities: number | null;
   rejected: number;
+  reason?: "no_ingestion_at_or_before_clock" | "source_timestamp_in_future" | null;
 }
 
 export interface SnapshotCounts {
@@ -251,7 +263,7 @@ export interface CatalogRef {
   geometry_catalog_version: string;
 }
 
-export interface Snapshot {
+export interface Snapshot extends GtfsValidity {
   schema_version: string;
   /** Identidad de contenido. El propio contrato declara que no es ordenable. */
   snapshot_id: string;

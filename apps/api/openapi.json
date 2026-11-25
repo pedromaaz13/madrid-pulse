@@ -348,7 +348,7 @@
         "type": "object"
       },
       "CatalogOut": {
-        "description": "Cat\u00e1logo cacheable: cambia solo con el GTFS o la geometr\u00eda, nunca con un\nsondeo. Se sirve con `ETag`/`304` y no incluye ning\u00fan dato operativo.",
+        "description": "Cat\u00e1logo cacheable con metadatos de vigencia GTFS. Se sirve con\n`ETag`/`304` y no incluye ning\u00fan dato operativo del colector.",
         "properties": {
           "catalog_version": {
             "title": "Catalog Version",
@@ -367,6 +367,32 @@
           "geometry_catalog_version": {
             "title": "Geometry Catalog Version",
             "type": "string"
+          },
+          "gtfs_status": {
+            "enum": [
+              "valid",
+              "expiring",
+              "expired",
+              "not_yet_valid"
+            ],
+            "title": "Gtfs Status",
+            "type": "string"
+          },
+          "gtfs_status_reason": {
+            "anyOf": [
+              {
+                "enum": [
+                  "gtfs_expiry_approaching",
+                  "gtfs_validity_ended",
+                  "gtfs_validity_not_started"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gtfs Status Reason"
           },
           "gtfs_valid_from": {
             "title": "Gtfs Valid From",
@@ -413,6 +439,8 @@
           }
         },
         "required": [
+          "gtfs_status",
+          "gtfs_status_reason",
           "catalog_version",
           "gtfs_version",
           "geometry_catalog_version",
@@ -661,8 +689,30 @@
             "type": "string"
           },
           "poll_age_s": {
-            "title": "Poll Age S",
-            "type": "number"
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Poll Age S"
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "enum": [
+                  "no_ingestion_at_or_before_clock",
+                  "source_timestamp_in_future"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
           },
           "rejected": {
             "title": "Rejected",
@@ -736,6 +786,39 @@
             },
             "title": "Feeds",
             "type": "array"
+          },
+          "gtfs_status": {
+            "anyOf": [
+              {
+                "enum": [
+                  "valid",
+                  "expiring",
+                  "expired",
+                  "not_yet_valid"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gtfs Status"
+          },
+          "gtfs_status_reason": {
+            "anyOf": [
+              {
+                "enum": [
+                  "gtfs_expiry_approaching",
+                  "gtfs_validity_ended",
+                  "gtfs_validity_not_started"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gtfs Status Reason"
           },
           "gtfs_valid_from": {
             "anyOf": [
@@ -2512,6 +2595,32 @@
             "title": "Generated At",
             "type": "string"
           },
+          "gtfs_status": {
+            "enum": [
+              "valid",
+              "expiring",
+              "expired",
+              "not_yet_valid"
+            ],
+            "title": "Gtfs Status",
+            "type": "string"
+          },
+          "gtfs_status_reason": {
+            "anyOf": [
+              {
+                "enum": [
+                  "gtfs_expiry_approaching",
+                  "gtfs_validity_ended",
+                  "gtfs_validity_not_started"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gtfs Status Reason"
+          },
           "mode": {
             "enum": [
               "live",
@@ -2547,6 +2656,8 @@
           }
         },
         "required": [
+          "gtfs_status",
+          "gtfs_status_reason",
           "snapshot_id",
           "revision",
           "mode",
@@ -3014,8 +3125,29 @@
   "paths": {
     "/api/v1/catalog": {
       "get": {
-        "description": "Cat\u00e1logo cacheable, versionado por GTFS + geometr\u00eda.\n\nResponde `304` cuando el cliente ya tiene la versi\u00f3n vigente: el cat\u00e1logo\nsolo cambia si cambia el GTFS o la geometr\u00eda, nunca con un sondeo. Es\ndeliberadamente el **\u00fanico** recurso cacheable: `/snapshot` se sirve con\n`no-store` para que ning\u00fan dato viejo se rotule como nuevo.",
+        "description": "Cat\u00e1logo cacheable con la vigencia GTFS al reloj de la petici\u00f3n.\n\nResponde `304` cuando coinciden la versi\u00f3n est\u00e1tica, el modo y el estado de\nvigencia. El estado operativo de los sondeos se sirve en `/snapshot`.",
         "operationId": "catalog_api_v1_catalog_get",
+        "parameters": [
+          {
+            "description": "Reloj expl\u00edcito, solo en replay.",
+            "in": "query",
+            "name": "at",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Reloj expl\u00edcito, solo en replay.",
+              "title": "At"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -3026,6 +3158,16 @@
               }
             },
             "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
           }
         },
         "summary": "Catalog"
@@ -3034,6 +3176,27 @@
     "/api/v1/health": {
       "get": {
         "operationId": "health_api_v1_health_get",
+        "parameters": [
+          {
+            "description": "Reloj expl\u00edcito, solo en replay.",
+            "in": "query",
+            "name": "at",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date-time",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Reloj expl\u00edcito, solo en replay.",
+              "title": "At"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -3044,6 +3207,16 @@
               }
             },
             "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
           }
         },
         "summary": "Health"

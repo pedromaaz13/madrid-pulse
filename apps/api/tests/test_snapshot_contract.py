@@ -435,12 +435,14 @@ class CatalogContractTests(unittest.TestCase):
         self.client.__enter__()
         self.addCleanup(self.client.__exit__, None, None, None)
 
-    def test_catalog_is_cacheable_by_version_and_answers_304(self) -> None:
+    def test_catalog_is_cacheable_by_representation_and_answers_304(self) -> None:
         response = self.client.get("/api/v1/catalog")
         self.assertEqual(response.status_code, 200)
         etag = response.headers["etag"]
         payload = response.json()
-        self.assertEqual(etag, f'"{payload["catalog_version"]}"')
+        self.assertEqual(
+            etag, f'"{payload["catalog_version"]}.{payload["mode"]}.{payload["gtfs_status"]}"'
+        )
         again = self.client.get("/api/v1/catalog", headers={"If-None-Match": etag})
         self.assertEqual(again.status_code, 304)
 

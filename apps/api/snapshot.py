@@ -54,6 +54,8 @@ from .schemas import (
     CoordinateOut,
     CoverageSummaryOut,
     EtaOut,
+    GtfsStatus,
+    GtfsValidityOut,
     MapMatchedOut,
     PatternGeometryOut,
     PatternOut,
@@ -101,7 +103,9 @@ BOARD_LIMITATIONS = (
 # --------------------------------------------------------------------------
 
 
-def build_catalog_payload(network: LoadedNetwork) -> CatalogOut:
+def build_catalog_payload(
+    network: LoadedNetwork, validity: GtfsValidityOut
+) -> CatalogOut:
     geometries: dict[str, CatalogGeometryOut] = {}
     lines: list[CatalogLineOut] = []
     stops_by_id = {stop.stop_id: stop for stop in network.topology.stops}
@@ -186,6 +190,7 @@ def build_catalog_payload(network: LoadedNetwork) -> CatalogOut:
         )
 
     return CatalogOut(
+        **validity.model_dump(),
         catalog_version=network.catalog_version,
         gtfs_version=network.gtfs_version,
         geometry_catalog_version=network.geometry_catalog_version,
@@ -533,49 +538,32 @@ def _movement_for(
 # Snapshot operativo
 # --------------------------------------------------------------------------
 
-_DEGRADED_RESOURCE = {
-    "vehicle_positions": "vehicles",
-    "trip_updates": "delays_and_eta",
-    "alerts": "alerts",
-}
-
-
-def _degradations(health, *, now: datetime) -> list[SnapshotDegradationOut]:
+def _degradations(health) -> list[SnapshotDegradationOut]:
     result: list[SnapshotDegradationOut] = []
     for feed in health.feeds:
         if feed.status == "ok":
             continue
+        if feed.reason == "no_ingestion_at_or_before_clock":
+            reason = f"sin ingesta para {feed.feed_name} hasta el instante de la petición"
+        elif feed.reason == "source_timestamp_in_future":
+            reason = f"la marca de origen de {feed.feed_name} es posterior al reloj de la petición"
+        else:
+            reason = (
+                f"feed {feed.feed_name} en estado {feed.status}: se conserva el último "
+                "resultado válido con su edad real, no se vacía el recurso ni se "
+                "rejuvenece el dato"
+            )
         result.append(
             SnapshotDegradationOut(
-                resource=_DEGRADED_RESOURCE.get(feed.feed_name, feed.feed_name),
+                resource=service.FEED_RESOURCES.get(feed.feed_name, feed.feed_name),
                 feed_name=feed.feed_name,
                 status=feed.status,
-                reason=(
-                    f"feed {feed.feed_name} en estado {feed.status}: se conserva el último "
-                    "resultado válido con su edad real, no se vacía el recurso ni se "
-                    "rejuvenece el dato"
+                reason=reason,
+                last_valid_source_timestamp=(
+                    None if feed.reason == "source_timestamp_in_future" else feed.source_timestamp
                 ),
-                last_valid_source_timestamp=feed.source_timestamp,
                 data_age_s=feed.data_age_s,
                 poll_age_s=feed.poll_age_s,
-            )
-        )
-    present = {feed.feed_name for feed in health.feeds}
-    for feed_name, resource in _DEGRADED_RESOURCE.items():
-        if feed_name in present:
-            continue
-        result.append(
-            SnapshotDegradationOut(
-                resource=resource,
-                feed_name=feed_name,
-                status="unknown",
-                reason=(
-                    f"sin ninguna ejecución de ingesta registrada para {feed_name}: "
-                    "ausencia de dato, no cero"
-                ),
-                last_valid_source_timestamp=None,
-                data_age_s=None,
-                poll_age_s=None,
             )
         )
     return sorted(result, key=lambda item: (item.resource, item.feed_name or ""))
@@ -587,6 +575,8 @@ def _snapshot_identity(
     histories: list[db.VehicleHistory],
     trip_updates: dict[str, TripUpdateObservation],
     health,
+    *,
+    gtfs_status: GtfsStatus | None = None,
 ) -> str:
     """Identidad de **contenido**, no marca de tiempo.
 
@@ -596,6 +586,8 @@ def _snapshot_identity(
     """
     digest = hashlib.sha256()
     digest.update(network.catalog_version.encode())
+    if gtfs_status is not None:
+        digest.update(f"\0{gtfs_status}\0".encode())
     digest.update(f"\0{marker.scope}\0{marker.sequence}\0".encode())
     for history in sorted(histories, key=lambda item: item.source_vehicle_id):
         digest.update(
@@ -638,14 +630,16 @@ def build_snapshot(
     display_at = now - timedelta(seconds=lag)
     resolver = network.service_date_resolver(now)
 
-    histories = db.latest_vehicle_histories(conn)
+    validity = network.gtfs_validity(now, expiring_days=config.gtfs_expiring_days)
+    histories = db.latest_vehicle_histories(conn, as_of=now)
     trip_updates = db.latest_trip_updates(
         conn,
         [history.latest.position.source_trip_id for history in histories],
         observed_after=service._trip_update_cutoff(now),
+        as_of=now,
     )
     health = service.feed_health(conn, now, stale_after_s=config.feed_stale_after_s)
-    marker = db.revision_marker(conn)
+    marker = db.revision_marker(conn, as_of=now)
 
     vehicles = [
         build_vehicle_entry(
@@ -667,8 +661,11 @@ def build_snapshot(
         by_method[method] = by_method.get(method, 0) + 1
         space = vehicle.rendered.coordinate_space or "none"
         by_space[space] = by_space.get(space, 0) + 1
-    snapshot_id = _snapshot_identity(network, marker, histories, trip_updates, health)
+    snapshot_id = _snapshot_identity(
+        network, marker, histories, trip_updates, health, gtfs_status=validity.gtfs_status
+    )
     return SnapshotOut(
+        **validity.model_dump(),
         snapshot_id=snapshot_id,
         revision=SnapshotRevisionOut(
             scope=marker.scope,
@@ -682,7 +679,7 @@ def build_snapshot(
         generated_at=now,
         display_at=display_at,
         feeds=health.feeds,
-        degraded=_degradations(health, now=now),
+        degraded=_degradations(health),
         vehicles=vehicles,
         counts=SnapshotCountsOut(
             vehicles_total=len(vehicles),
@@ -939,10 +936,10 @@ def build_station_board(
 
     trip_ids = [call.trip_id for _, _, call in visible]
     trip_updates = db.latest_trip_updates(
-        conn, trip_ids, observed_after=service._trip_update_cutoff(now)
+        conn, trip_ids, observed_after=service._trip_update_cutoff(now), as_of=now
     )
-    observed = db.vehicles_for_trips(conn, trip_ids)
-    marker = db.revision_marker(conn)
+    observed = db.vehicles_for_trips(conn, trip_ids, as_of=now)
+    marker = db.revision_marker(conn, as_of=now)
     health = service.feed_health(conn, now, stale_after_s=config.feed_stale_after_s)
 
     entries: list[BoardEntryOut] = []

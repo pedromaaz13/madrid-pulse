@@ -90,7 +90,14 @@ MADRID_PULSE_GTFS_SOURCE="$PWD/data/gtfs_static/fomento_transit.zip" \
 ```
 
 Un arranque live con fixture, modo desconocido o catálogo vencido falla con
-un diagnóstico explícito. `data_age_s` mide la edad de la cabecera publicada;
+un diagnóstico explícito. Durante la ejecución, `/health`, `/catalog` y
+`/snapshot` publican `gtfs_status` y `gtfs_status_reason` al reloj de la
+petición. `MADRID_PULSE_GTFS_EXPIRING_DAYS` fija el aviso (7 días por defecto,
+incluido el último día de vigencia en Madrid). El catálogo sigue accesible
+cuando vence, con estado `expired`. Consulta el
+[procedimiento de refresco](../../docs/operations/GTFS_STATIC_REFRESH.md).
+
+`data_age_s` mide la edad de la cabecera publicada;
 `poll_age_s`, la edad del último intento del colector. Por ello un fichero viejo
 recién descargado y un colector detenido se distinguen, y los feeds
 `vehicle_positions`, `trip_updates` y `alerts` conservan estados separados.
@@ -123,11 +130,11 @@ silencio.
 
 El contrato completo está en `docs/DATA_CONTRACTS.md`; aquí solo lo operativo.
 
-`GET /api/v1/catalog` publica lo inmutable del proceso (líneas, patrones,
-estaciones, geometría y cobertura) versionado por `catalog_version` =
-`gtfs_version` + `geometry_catalog_version`, con `ETag`; `If-None-Match`
-devuelve `304`. El payload serializado se memoiza por versión: medido
-`122,67 ms → 0,40 ms` de p50 (ver `docs/evidence/mp-019-explain-y-bench.md`).
+`GET /api/v1/catalog` publica líneas, patrones, estaciones, geometría y
+cobertura. La versión estática `catalog_version` deriva de `gtfs_version` y
+`geometry_catalog_version`. El `ETag` incorpora también el modo y el estado
+de vigencia. La API memoiza el payload serializado por ETag y devuelve
+`304` si coincide el `If-None-Match` del cliente.
 
 `GET /api/v1/snapshot` publica lo operativo con `Cache-Control: no-store`:
 `raw`/`map_matched`/`rendered` separados, los cinco instantes del anexo,
@@ -138,7 +145,9 @@ devuelve `304`. El payload serializado se memoiza por versión: medido
 `scheduled_trip_instances_for_date` (calendario + excepciones + `stop_times`),
 nunca por proximidad geográfica.
 
-Ambos aceptan `?at=` **solo en modo replay** (en `live`, `400`):
+Snapshot, tablero, health y catálogo aceptan `?at=` **solo en modo replay**
+(en `live`, `400`). Sin `at` usan el reloj real. Snapshot y health
+declaran edades `null` cuando el feed aún carece de ingestas a ese instante.
 
 ```sh
 curl -s 'http://127.0.0.1:8000/api/v1/snapshot?at=2026-11-20T14:32:14Z' | jq '.counts, .revision'

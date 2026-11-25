@@ -89,16 +89,20 @@ def now_utc() -> datetime:
 
 @app.get("/api/v1/health", response_model=HealthOut)
 def health(
+    at: datetime | None = Query(default=None, description="Reloj explícito, solo en replay."),
     config: ApiConfig = Depends(get_config),
     network: LoadedNetwork = Depends(get_network),
     conn: psycopg.Connection = Depends(get_connection),
 ) -> HealthOut:
-    result = service.feed_health(conn, now_utc(), stale_after_s=config.feed_stale_after_s)
+    now = _replay_clock(config, network, at)
+    result = service.feed_health(conn, now, stale_after_s=config.feed_stale_after_s)
+    validity = network.gtfs_validity(now, expiring_days=config.gtfs_expiring_days)
     return result.model_copy(update={
         "mode": network.mode,
         "gtfs_version": network.gtfs_version,
         "gtfs_valid_from": network.gtfs_valid_from.isoformat(),
         "gtfs_valid_until": network.gtfs_valid_until.isoformat(),
+        **validity.model_dump(),
     })
 
 
@@ -156,6 +160,8 @@ def station_detail(station_id: str, network: LoadedNetwork = Depends(get_network
 def _replay_clock(
     config: ApiConfig, network: LoadedNetwork, at: datetime | None
 ) -> datetime:
+    if at is None:
+        return now_utc()
     try:
         return snapshot.resolve_clock(config, network, at)
     except ValueError as exc:
@@ -165,24 +171,25 @@ def _replay_clock(
 @app.get("/api/v1/catalog", response_model=CatalogOut)
 def catalog(
     request: Request,
-    response: Response,
+    at: datetime | None = Query(default=None, description="Reloj explícito, solo en replay."),
+    config: ApiConfig = Depends(get_config),
     network: LoadedNetwork = Depends(get_network),
 ) -> CatalogOut | Response:
-    """Catálogo cacheable, versionado por GTFS + geometría.
+    """Catálogo cacheable con la vigencia GTFS al reloj de la petición.
 
-    Responde `304` cuando el cliente ya tiene la versión vigente: el catálogo
-    solo cambia si cambia el GTFS o la geometría, nunca con un sondeo. Es
-    deliberadamente el **único** recurso cacheable: `/snapshot` se sirve con
-    `no-store` para que ningún dato viejo se rotule como nuevo.
+    Responde `304` cuando coinciden la versión estática, el modo y el estado de
+    vigencia. El estado operativo de los sondeos se sirve en `/snapshot`.
     """
-    etag = f'"{network.catalog_version}"'
+    now = _replay_clock(config, network, at)
+    validity = network.gtfs_validity(now, expiring_days=config.gtfs_expiring_days)
+    etag = f'"{network.catalog_version}.{network.mode}.{validity.gtfs_status}"'
     headers = {"ETag": etag, "Cache-Control": "no-cache"}
     if request.headers.get("if-none-match") == etag:
         return Response(status_code=304, headers=headers)
-    cached = network._catalog_json.get(network.catalog_version)
+    cached = network._catalog_json.get(etag)
     if cached is None:
-        cached = snapshot.build_catalog_payload(network).model_dump_json().encode()
-        network._catalog_json[network.catalog_version] = cached
+        cached = snapshot.build_catalog_payload(network, validity).model_dump_json().encode()
+        network._catalog_json[etag] = cached
     # Devolver una `Response` ya serializada evita revalidar y reserializar el
     # mismo payload inmutable en cada petición (ver la medición en
     # docs/evidence/mp-019-explain-y-bench.md). `response_model` sigue

@@ -53,6 +53,7 @@ jobs:
             apps.api.tests.test_closure_matrix \
             apps.api.tests.test_history_contract \
             apps.api.tests.test_snapshot_contract \
+            apps.api.tests.test_temporal_replay \
             packages.contracts.tests.test_canonical_normalization \
             packages.contracts.tests.test_nucleo \
             packages.contracts.tests.test_raw_parsing \

@@ -1,0 +1,18 @@
+{
+  "header": {
+    "gtfsRealtimeVersion": "2.0",
+    "timestamp": "1795060682"
+  },
+  "entity": [
+    {
+      "id": "mp026a-trip",
+      "tripUpdate": {
+        "trip": {
+          "tripId": "1022J19502C5",
+          "scheduleRelationship": "SCHEDULED"
+        },
+        "delay": 20
+      }
+    }
+  ]
+}
