@@ -426,7 +426,7 @@
             "type": "string"
           },
           "schema_version": {
-            "default": "1.0",
+            "default": "1.1",
             "title": "Schema Version",
             "type": "string"
           },
@@ -2633,7 +2633,7 @@
             "$ref": "#/components/schemas/SnapshotRevisionOut"
           },
           "schema_version": {
-            "default": "1.0",
+            "default": "1.1",
             "title": "Schema Version",
             "type": "string"
           },
@@ -3125,11 +3125,11 @@
   "paths": {
     "/api/v1/catalog": {
       "get": {
-        "description": "Cat\u00e1logo cacheable con la vigencia GTFS al reloj de la petici\u00f3n.\n\nResponde `304` cuando coinciden la versi\u00f3n est\u00e1tica, el modo y el estado de\nvigencia. El estado operativo de los sondeos se sirve en `/snapshot`.",
+        "description": "Cat\u00e1logo cacheable con la vigencia GTFS al reloj de la petici\u00f3n.\n\nResponde `304` cuando coinciden las versiones est\u00e1tica y del esquema,\nel modo y el estado de vigencia. El estado de los sondeos se sirve en `/snapshot`.",
         "operationId": "catalog_api_v1_catalog_get",
         "parameters": [
           {
-            "description": "Reloj expl\u00edcito, solo en replay.",
+            "description": "Reloj con zona horaria expl\u00edcita, solo en replay. Se admiten fechas UTC del 0001-01-04 al 9999-12-28 inclusive. En live o fuera de rango se rechaza con 400.",
             "in": "query",
             "name": "at",
             "required": false,
@@ -3143,7 +3143,7 @@
                   "type": "null"
                 }
               ],
-              "description": "Reloj expl\u00edcito, solo en replay.",
+              "description": "Reloj con zona horaria expl\u00edcita, solo en replay. Se admiten fechas UTC del 0001-01-04 al 9999-12-28 inclusive. En live o fuera de rango se rechaza con 400.",
               "title": "At"
             }
           }
@@ -3178,7 +3178,7 @@
         "operationId": "health_api_v1_health_get",
         "parameters": [
           {
-            "description": "Reloj expl\u00edcito, solo en replay.",
+            "description": "Reloj con zona horaria expl\u00edcita, solo en replay. Se admiten fechas UTC del 0001-01-04 al 9999-12-28 inclusive. En live o fuera de rango se rechaza con 400.",
             "in": "query",
             "name": "at",
             "required": false,
@@ -3192,7 +3192,7 @@
                   "type": "null"
                 }
               ],
-              "description": "Reloj expl\u00edcito, solo en replay.",
+              "description": "Reloj con zona horaria expl\u00edcita, solo en replay. Se admiten fechas UTC del 0001-01-04 al 9999-12-28 inclusive. En live o fuera de rango se rechaza con 400.",
               "title": "At"
             }
           }
@@ -3607,7 +3607,7 @@
         "operationId": "live_snapshot_api_v1_snapshot_get",
         "parameters": [
           {
-            "description": "Reloj expl\u00edcito, solo admitido en modo replay. En live se rechaza con 400: un instante arbitrario permitir\u00eda falsificar edades.",
+            "description": "Reloj con zona horaria expl\u00edcita, solo en replay. Se admiten fechas UTC del 0001-01-04 al 9999-12-28 inclusive. En live o fuera de rango se rechaza con 400.",
             "in": "query",
             "name": "at",
             "required": false,
@@ -3621,7 +3621,7 @@
                   "type": "null"
                 }
               ],
-              "description": "Reloj expl\u00edcito, solo admitido en modo replay. En live se rechaza con 400: un instante arbitrario permitir\u00eda falsificar edades.",
+              "description": "Reloj con zona horaria expl\u00edcita, solo en replay. Se admiten fechas UTC del 0001-01-04 al 9999-12-28 inclusive. En live o fuera de rango se rechaza con 400.",
               "title": "At"
             }
           },
@@ -3746,7 +3746,7 @@
             }
           },
           {
-            "description": "Reloj expl\u00edcito, solo en replay.",
+            "description": "Reloj con zona horaria expl\u00edcita, solo en replay. Se admiten fechas UTC del 0001-01-04 al 9999-12-28 inclusive. En live o fuera de rango se rechaza con 400.",
             "in": "query",
             "name": "at",
             "required": false,
@@ -3760,7 +3760,7 @@
                   "type": "null"
                 }
               ],
-              "description": "Reloj expl\u00edcito, solo en replay.",
+              "description": "Reloj con zona horaria expl\u00edcita, solo en replay. Se admiten fechas UTC del 0001-01-04 al 9999-12-28 inclusive. En live o fuera de rango se rechaza con 400.",
               "title": "At"
             }
           },

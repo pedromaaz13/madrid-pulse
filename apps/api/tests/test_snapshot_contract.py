@@ -441,7 +441,8 @@ class CatalogContractTests(unittest.TestCase):
         etag = response.headers["etag"]
         payload = response.json()
         self.assertEqual(
-            etag, f'"{payload["catalog_version"]}.{payload["mode"]}.{payload["gtfs_status"]}"'
+            etag,
+            f'"{payload["catalog_version"]}.{payload["mode"]}.{payload["gtfs_status"]}.{payload["schema_version"]}"',
         )
         again = self.client.get("/api/v1/catalog", headers={"If-None-Match": etag})
         self.assertEqual(again.status_code, 304)
@@ -580,6 +581,8 @@ class SnapshotPostgresTests(NetworkFixtureMixin, unittest.TestCase):
         )
 
     def test_three_snapshots_are_distinguished_and_none_rejuvenates_data(self) -> None:
+        # El caso aísla la degradación del colector con el GTFS en vigencia.
+        self.base = datetime(2026, 11, 25, 12, tzinfo=timezone.utc)
         observed_at = self.base - timedelta(seconds=10)
         self._ingest_vehicle(
             observed_at=observed_at,

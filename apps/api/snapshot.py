@@ -22,6 +22,7 @@ from __future__ import annotations
 import hashlib
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta, timezone
+from typing import Literal
 from zoneinfo import ZoneInfo
 
 import psycopg
@@ -56,6 +57,7 @@ from .schemas import (
     EtaOut,
     GtfsStatus,
     GtfsValidityOut,
+    HealthOut,
     MapMatchedOut,
     PatternGeometryOut,
     PatternOut,
@@ -538,7 +540,9 @@ def _movement_for(
 # Snapshot operativo
 # --------------------------------------------------------------------------
 
-def _degradations(health) -> list[SnapshotDegradationOut]:
+def _degradations(
+    health: HealthOut, validity: GtfsValidityOut, network: LoadedNetwork
+) -> list[SnapshotDegradationOut]:
     result: list[SnapshotDegradationOut] = []
     for feed in health.feeds:
         if feed.status == "ok":
@@ -564,6 +568,27 @@ def _degradations(health) -> list[SnapshotDegradationOut]:
                 ),
                 data_age_s=feed.data_age_s,
                 poll_age_s=feed.poll_age_s,
+            )
+        )
+    if validity.gtfs_status != "valid":
+        gtfs_degradations: dict[GtfsStatus, tuple[Literal["stale", "error", "unknown"], str]] = {
+            "not_yet_valid": (
+                "unknown",
+                f"El catálogo GTFS aún no ha entrado en vigencia. Empieza el {network.gtfs_valid_from}.",
+            ),
+            "expiring": ("stale", f"El catálogo GTFS vence el {network.gtfs_valid_until}."),
+            "expired": ("error", f"El catálogo GTFS venció el {network.gtfs_valid_until}."),
+        }
+        status, reason = gtfs_degradations[validity.gtfs_status]
+        result.append(
+            SnapshotDegradationOut(
+                resource="gtfs",
+                feed_name=None,
+                status=status,
+                reason=reason,
+                last_valid_source_timestamp=None,
+                data_age_s=None,
+                poll_age_s=None,
             )
         )
     return sorted(result, key=lambda item: (item.resource, item.feed_name or ""))
@@ -615,7 +640,18 @@ def resolve_clock(config: ApiConfig, network: LoadedNetwork, at: datetime | None
         raise ValueError("el parámetro 'at' solo se admite en modo replay")
     if at.tzinfo is None or at.utcoffset() is None:
         raise ValueError("'at' debe incluir zona horaria explícita (UTC recomendado)")
-    return at.astimezone(timezone.utc)
+    range_error = (
+        "'at' fuera del rango operativo en UTC (desde 0001-01-04 hasta 9999-12-28 inclusive)"
+    )
+    try:
+        now = at.astimezone(timezone.utc)
+    except OverflowError as exc:
+        raise ValueError(range_error) from exc
+    # Reservar margen para convertir a Madrid y recorrer la ventana del
+    # tablero y los días de servicio adyacentes sin desbordar datetime.
+    if not date(1, 1, 4) <= now.date() <= date(9999, 12, 28):
+        raise ValueError(range_error)
+    return now
 
 
 def build_snapshot(
@@ -631,12 +667,14 @@ def build_snapshot(
     resolver = network.service_date_resolver(now)
 
     validity = network.gtfs_validity(now, expiring_days=config.gtfs_expiring_days)
-    histories = db.latest_vehicle_histories(conn, as_of=now)
+    observed_through = now if network.mode == "replay" else None
+    histories = db.latest_vehicle_histories(conn, as_of=now, observed_through=observed_through)
     trip_updates = db.latest_trip_updates(
         conn,
         [history.latest.position.source_trip_id for history in histories],
         observed_after=service._trip_update_cutoff(now),
         as_of=now,
+        observed_through=observed_through,
     )
     health = service.feed_health(conn, now, stale_after_s=config.feed_stale_after_s)
     marker = db.revision_marker(conn, as_of=now)
@@ -679,7 +717,7 @@ def build_snapshot(
         generated_at=now,
         display_at=display_at,
         feeds=health.feeds,
-        degraded=_degradations(health),
+        degraded=_degradations(health, validity, network),
         vehicles=vehicles,
         counts=SnapshotCountsOut(
             vehicles_total=len(vehicles),
@@ -935,10 +973,12 @@ def build_station_board(
     visible = selected[:limit]
 
     trip_ids = [call.trip_id for _, _, call in visible]
+    observed_through = now if network.mode == "replay" else None
     trip_updates = db.latest_trip_updates(
-        conn, trip_ids, observed_after=service._trip_update_cutoff(now), as_of=now
+        conn, trip_ids, observed_after=service._trip_update_cutoff(now),
+        as_of=now, observed_through=observed_through,
     )
-    observed = db.vehicles_for_trips(conn, trip_ids, as_of=now)
+    observed = db.vehicles_for_trips(conn, trip_ids, as_of=now, observed_through=observed_through)
     marker = db.revision_marker(conn, as_of=now)
     health = service.feed_health(conn, now, stale_after_s=config.feed_stale_after_s)
 

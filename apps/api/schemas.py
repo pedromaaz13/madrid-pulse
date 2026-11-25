@@ -134,8 +134,8 @@ class StationOut(BaseModel):
 # falta `/api/v2` (ADR-0005).
 # --------------------------------------------------------------------------
 
-SNAPSHOT_SCHEMA_VERSION = "1.0"
-CATALOG_SCHEMA_VERSION = "1.0"
+SNAPSHOT_SCHEMA_VERSION = "1.1"
+CATALOG_SCHEMA_VERSION = "1.1"
 BOARD_SCHEMA_VERSION = "1.0"
 
 RenderingMethodLiteral = Literal[

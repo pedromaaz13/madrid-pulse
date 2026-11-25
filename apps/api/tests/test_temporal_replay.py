@@ -23,6 +23,7 @@ FIRST = "2026-11-19T03:58:04Z"
 SECOND = "2026-11-19T03:59:21Z"
 BETWEEN = "2026-11-19T03:58:10Z"
 BEFORE = "2026-11-19T03:58:03Z"
+CLOCK_ENDPOINTS = ("health", "catalog", "snapshot", "stations/35607/board")
 
 
 class TemporalApiTests(unittest.TestCase):
@@ -133,6 +134,92 @@ class TemporalApiTests(unittest.TestCase):
         entry = next(entry for entry in board["entries"] if entry["trip_id"] == "1022J19502C5")
         self.assertEqual(entry["departure"]["delay_seconds"], 20)
 
+    def test_extreme_replay_clocks_are_rejected_on_every_surface(self) -> None:
+        with TestClient(main.app, raise_server_exceptions=False) as client:
+            for at in (
+                "0001-01-01T00:00:00Z",
+                "0001-01-01T00:30:00+01:00",
+                "9999-12-31T23:59:59Z",
+                "9999-12-31T23:30:00-01:00",
+            ):
+                for endpoint in CLOCK_ENDPOINTS:
+                    with self.subTest(at=at, endpoint=endpoint):
+                        reply = client.get(f"/api/v1/{endpoint}", params={"at": at})
+                        self.assertEqual(reply.status_code, 400, reply.text)
+                        self.assertIn("'at' fuera del rango", reply.json()["detail"])
+            # En los bordes admitidos se puede calcular incluso la ventana
+            # máxima del tablero sin desbordar los días de servicio.
+            for at in ("0001-01-04T00:00:00Z", "9999-12-28T23:59:59Z"):
+                with self.subTest(at=at, endpoint="board"):
+                    reply = client.get(
+                        "/api/v1/stations/35607/board",
+                        params={"at": at, "lookback_s": 7200, "lookahead_s": 86400},
+                    )
+                    self.assertEqual(reply.status_code, 200, reply.text)
+
+    def test_vehicle_list_and_detail_exclude_future_ingestions(self) -> None:
+        self._both_cuts()
+        self._clock(BETWEEN)
+        with TestClient(main.app) as client:
+            listing = self._get(client, "live/vehicles")
+            detail = self._get(client, "live/vehicles/mp026a-existing")
+            future = client.get("/api/v1/live/vehicles/mp026a-second-only")
+        self.assertEqual(future.status_code, 404)
+        self.assertEqual(listing, [detail])
+        self.assertEqual(detail["observation"]["reported_at"], "2026-11-19T03:58:00Z")
+        self.assertEqual(detail["delay"]["seconds"], 20)
+
+    def test_snapshot_marks_each_nonvalid_gtfs_state_as_degraded(self) -> None:
+        with TestClient(main.app) as client:
+            for at, expected, reason in (
+                ("2026-11-18T12:00:00Z", "unknown", "aún no ha entrado en vigencia"),
+                ("2026-12-04T12:00:00Z", "stale", "vence el"),
+                ("2026-12-07T12:00:00Z", "error", "venció el"),
+                ("2026-11-19T12:00:00Z", None, None),
+            ):
+                with self.subTest(at=at):
+                    body = self._get(client, "snapshot", at)
+                    items = [item for item in body["degraded"] if item["resource"] == "gtfs"]
+                    if expected is None:
+                        self.assertEqual(items, [])
+                        continue
+                    self.assertEqual(len(items), 1)
+                    item = items[0]
+                    self.assertEqual(item["status"], expected)
+                    self.assertIn(reason, item["reason"])
+                    for absent in ("feed_name", "last_valid_source_timestamp", "data_age_s", "poll_age_s"):
+                        self.assertIsNone(item[absent])
+
+    def test_only_replay_filters_future_observation_timestamps(self) -> None:
+        # Estos payloads tienen GPS y retrasos posteriores al sondeo simulado.
+        self._ingest("vehicle_positions", "second-vehicles", FIRST)
+        self._ingest("trip_updates", "second-delays", FIRST)
+        clock = "2026-11-19T03:58:05Z"
+        self._clock(clock)
+        with TestClient(main.app) as client:
+            self.assertEqual(self._get(client, "snapshot", clock)["vehicles"], [])
+            board = self._get(client, "stations/35607/board", clock)
+            entry = next(row for row in board["entries"] if row["trip_id"] == "1022J19502C5")
+            self.assertEqual(entry["circulation_source"], "scheduled_only")
+            self.assertIsNone(entry["departure"]["delay_seconds"])
+        self._configure_live()
+        with TestClient(main.app) as client:
+            live = self._get(client, "snapshot")
+            board = self._get(client, "stations/35607/board")
+            detail = self._get(client, "live/vehicles/mp026a-existing")
+            listing = self._get(client, "live/vehicles")
+        vehicles = {row["vehicle_id"]: row for row in live["vehicles"]}
+        self.assertIn("mp026a-existing", vehicles)
+        vehicle = vehicles["mp026a-existing"]
+        self.assertEqual(vehicle["timestamps"]["gps_observed_at"], "2026-11-19T03:58:08Z")
+        self.assertEqual(vehicle["delay"]["seconds"], 80)
+        entry = next(row for row in board["entries"] if row["trip_id"] == "1022J19502C5")
+        self.assertEqual(entry["circulation_source"], "observed")
+        self.assertEqual(entry["departure"]["delay_seconds"], 80)
+        self.assertIn(detail, listing)
+        self.assertEqual(detail["observation"]["reported_at"], "2026-11-19T03:58:08Z")
+        self.assertEqual(detail["delay"]["seconds"], 80)
+
     def _configure_live(self) -> None:
         # El catálogo live rechaza fixtures dentro del repo. Copiar al sandbox
         # y extender el último servicio permite probar el límite del 19/12.
@@ -210,7 +297,7 @@ class TemporalApiTests(unittest.TestCase):
         self._configure_live()
         self._clock("2026-12-18T12:00:00Z")
         with TestClient(main.app) as client:
-            for endpoint in ("snapshot", "stations/35607/board"):
+            for endpoint in CLOCK_ENDPOINTS:
                 with self.subTest(endpoint=endpoint):
                     response = client.get(f"/api/v1/{endpoint}", params={"at": BETWEEN})
                     self.assertEqual(response.status_code, 400)

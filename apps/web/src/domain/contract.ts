@@ -105,6 +105,8 @@ export interface CoverageSummary {
   pending: number;
 }
 
+/** Para mostrar la vigencia actual, usa Snapshot. La caché de catálogo del
+ * cliente conserva el cuerpo mientras coincida `catalog_version`. */
 export interface Catalog extends GtfsValidity {
   schema_version: string;
   catalog_version: string;
@@ -263,6 +265,7 @@ export interface CatalogRef {
   geometry_catalog_version: string;
 }
 
+/** La vigencia GTFS corresponde al reloj de este snapshot. */
 export interface Snapshot extends GtfsValidity {
   schema_version: string;
   /** Identidad de contenido. El propio contrato declara que no es ordenable. */

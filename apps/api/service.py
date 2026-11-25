@@ -226,9 +226,8 @@ def _circulation_status(
     network: LoadedNetwork, source_trip_id: str, route_id: str | None, active_service_ids: frozenset[str]
 ) -> str:
     """Separa "existe un histórico" de "está programado hoy" (hallazgo MP-017:
-    `latest_vehicle_histories` no acota por tiempo -- un vehículo con último
-    dato de hace semanas se devolvía igual, sin distinguir alta/caducidad de
-    su circulación). No usa `quality.stale` (edad del GPS): un vehículo puede
+    `latest_vehicle_histories` conserva las observaciones antiguas elegibles,
+    incluso si la circulación ha caducado). No usa `quality.stale` (edad del GPS): un vehículo puede
     tener GPS reciente y aun así pertenecer a un `service_id` no programado
     para la fecha de servicio actual (dato residual de un día anterior que
     nunca se limpió), o viceversa, estar `stale` pero seguir `active` si su
@@ -323,11 +322,14 @@ def list_vehicles(conn: psycopg.Connection, network: LoadedNetwork, now: datetim
     devuelve la misma fila por viaje -- mismo orden y mismo desempate
     `id DESC` de ADR-0010 -- en una sola consulta por lote.
     """
-    histories = db.latest_vehicle_histories(conn)
+    observed_through = now if network.mode == "replay" else None
+    histories = db.latest_vehicle_histories(conn, as_of=now, observed_through=observed_through)
     trip_updates = db.latest_trip_updates(
         conn,
         [history.latest.position.source_trip_id for history in histories],
         observed_after=_trip_update_cutoff(now),
+        as_of=now,
+        observed_through=observed_through,
     )
     resolver = network.service_date_resolver(now)
     return [
@@ -345,11 +347,13 @@ def list_vehicles(conn: psycopg.Connection, network: LoadedNetwork, now: datetim
 def get_vehicle(
     conn: psycopg.Connection, network: LoadedNetwork, vehicle_id: str, now: datetime
 ) -> VehicleOut | None:
-    history = db.vehicle_history(conn, vehicle_id)
+    observed_through = now if network.mode == "replay" else None
+    history = db.vehicle_history(conn, vehicle_id, as_of=now, observed_through=observed_through)
     if history is None:
         return None
     trip_update = db.latest_trip_update(
-        conn, history.latest.position.source_trip_id, observed_after=_trip_update_cutoff(now)
+        conn, history.latest.position.source_trip_id, observed_after=_trip_update_cutoff(now),
+        as_of=now, observed_through=observed_through,
     )
     return vehicle_to_out(
         network, history, trip_update, now, network.service_date_resolver(now)

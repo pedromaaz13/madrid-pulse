@@ -94,6 +94,22 @@ GET /api/v1/stations/{station_id}/board -- tablero por servicios + calendario + 
 
 El esquema congelado de `/api/v1` está en `apps/api/openapi.json`.
 
+### Compatibilidad desde MP-026a
+
+La versión del esquema de snapshot y catálogo sube de `1.0` a `1.1`.
+La numeración distingue los cambios de compatibilidad bajo las mismas rutas
+`/api/v1`. Estos tres cambios son excepciones a la compatibilidad aditiva.
+
+- `feeds[].poll_age_s` pasa de `number` a `number|null`. La ausencia de
+  ingesta elegible se representa con `null`.
+- Health y snapshot incluyen siempre `vehicle_positions`, `trip_updates` y
+  `alerts` en `feeds`. Antes la lista solo contenía feeds con ingestas
+  registradas.
+- El ETag del catálogo pasa de `"catalog_version"` a
+  `"catalog_version.mode.gtfs_status.schema_version"`. Los clientes lo
+  reenvían íntegro como valor opaco en `If-None-Match`.
+  `catalog_version` conserva la identidad del GTFS y la geometría.
+
 ### Separación catálogo / snapshot
 
 `GET /api/v1/catalog` publica líneas, patrones
@@ -102,8 +118,9 @@ cobertura geométrica `validated`/`partial`/`pending` y la geometría física
 publicada **una sola vez** en `geometries[]` y referenciada por
 `geometry_version` desde cada patrón (dos líneas con tramo compartido no
 duplican la polilínea). La versión estática `catalog_version` deriva de
-`gtfs_version` y `geometry_catalog_version`. El `ETag` incluye también el modo
-y el estado de vigencia, y `If-None-Match` devuelve `304` si coincide.
+`gtfs_version` y `geometry_catalog_version`. El `ETag` incluye también el modo,
+el estado de vigencia y la versión de esquema. `If-None-Match` devuelve `304`
+si coincide.
 Un patrón sin corredor validado publica
 `distance_along_m: null` en sus estaciones — no se estima una longitud de arco
 que no existe.
@@ -293,13 +310,18 @@ evidencia.
 
 `/api/v1/snapshot`, el tablero, `/api/v1/health` y `/api/v1/catalog` aceptan
 `?at=<ISO-8601 con zona>` **solo en modo replay**. En `live` se rechaza con
-`400`. Sin ese parámetro se usa el reloj real. Snapshot y tablero devuelven
-`generated_at` y `display_at`.
+`400`. Tras convertir a UTC, se admiten fechas del `0001-01-04` al
+`9999-12-28` inclusive. Los instantes fuera de rango reciben `400`. Ese
+margen permite convertir a Madrid y recorrer los días de servicio del
+tablero. Sin el parámetro se usa el reloj real. Snapshot y tablero devuelven
+`generated_at` y `display_at`. La lista y el detalle de `/api/v1/live/vehicles`
+usan siempre el reloj real.
 
-Las lecturas operativas de snapshot y tablero y la salud de los feeds se acotan
-a las ejecuciones con `started_at <= generated_at` o, en health, al reloj de la
-petición. Las posiciones y retrasos también deben haberse observado hasta
-ese instante. La secuencia de revisión considera las ingestas elegibles.
+Health, snapshot, tablero y las rutas de vehículos consideran las
+ejecuciones con `started_at <= reloj`. En replay, las posiciones y los
+retrasos también se acotan por `observed_at <= reloj`. En live se conservan
+las observaciones de ingestas elegibles aunque su reloj de origen vaya
+adelantado. La secuencia de revisión considera las ingestas elegibles.
 
 En health y snapshot, los feeds esperados sin ingestas elegibles tienen
 `status: "unknown"`, `reason: "no_ingestion_at_or_before_clock"` y edades
@@ -316,6 +338,8 @@ la fecha de Madrid al reloj de la petición. Los límites del calendario
 (`gtfs_valid_from` y `gtfs_valid_until` en health y catálogo) son inclusivos.
 La vigencia describe la ventana del catálogo cargado. El servicio programado
 de cada viaje sigue dependiendo de su calendario.
+Para mostrar la vigencia actual en la web, se usa el snapshot. Los índices
+del catálogo se conservan mientras coincida `catalog_version`.
 
 | `gtfs_status` | `gtfs_status_reason` | Condición |
 |---|---|---|
@@ -323,6 +347,11 @@ de cada viaje sigue dependiendo de su calendario.
 | `expiring` | `gtfs_expiry_approaching` | Dentro de la ventana, quedan como máximo `MADRID_PULSE_GTFS_EXPIRING_DAYS` días (7 por defecto). |
 | `expired` | `gtfs_validity_ended` | La fecha de Madrid supera el último día de vigencia. |
 | `not_yet_valid` | `gtfs_validity_not_started` | La fecha de Madrid precede al primer día de vigencia. |
+
+Snapshot añade `resource: "gtfs"` a `degraded[]` en los estados
+`expiring`, `expired` y `not_yet_valid`. Usa respectivamente `stale`,
+`error` y `unknown`, con una causa que incluye la fecha de fin o de inicio.
+Los campos de feed y edad son `null`.
 
 Una API en ejecución sigue sirviendo el catálogo con su estado declarado.
 El arranque en live exige un GTFS que cubra la fecha actual de Madrid.

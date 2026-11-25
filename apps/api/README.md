@@ -132,9 +132,9 @@ El contrato completo está en `docs/DATA_CONTRACTS.md`; aquí solo lo operativo.
 
 `GET /api/v1/catalog` publica líneas, patrones, estaciones, geometría y
 cobertura. La versión estática `catalog_version` deriva de `gtfs_version` y
-`geometry_catalog_version`. El `ETag` incorpora también el modo y el estado
-de vigencia. La API memoiza el payload serializado por ETag y devuelve
-`304` si coincide el `If-None-Match` del cliente.
+`geometry_catalog_version`. El `ETag` incorpora también el modo, el estado
+de vigencia y la versión de esquema. La API memoiza el payload serializado
+por ETag y devuelve `304` si coincide el `If-None-Match` del cliente.
 
 `GET /api/v1/snapshot` publica lo operativo con `Cache-Control: no-store`:
 `raw`/`map_matched`/`rendered` separados, los cinco instantes del anexo,
@@ -146,7 +146,8 @@ de vigencia. La API memoiza el payload serializado por ETag y devuelve
 nunca por proximidad geográfica.
 
 Snapshot, tablero, health y catálogo aceptan `?at=` **solo en modo replay**
-(en `live`, `400`). Sin `at` usan el reloj real. Snapshot y health
+(en `live`, `400`). Se aceptan fechas UTC entre `0001-01-04` y
+`9999-12-28` inclusive. Sin `at` usan el reloj real. Snapshot y health
 declaran edades `null` cuando el feed aún carece de ingestas a ese instante.
 
 ```sh
