@@ -205,8 +205,13 @@ phase(t) = "hold:<hold_reason>"  si speed_mps == 0 o t < t0
   - **Coste:** un tren cancelado puede seguir extrapolando hasta su siguiente observación o hasta `valid_until`, como máximo 180 s.
 - **Reloj de vigencia y replay.**
   - `valid_until = reference_at + stale_after_s`, evaluado en `display_at`.
-  - Una consulta (en vivo o `?at=`) solo ve las filas confirmadas y visibles en ese instante. En replay: runs con `started_at ≤ at` (MP-026a) e `ingestion_run_id` del ancla visible.
-  - Como la envolvente solo depende de filas con `run ≤ run(ancla)`, el replay reproduce lo que se publicó en vivo.
+  - Una consulta en vivo solo ve las filas confirmadas y visibles en ese instante.
+  - **Garantía de replay, acotada:** **dado el identificador del ancla (su observación y su `ingestion_run_id`)**, la envolvente se reconstruye exactamente, porque solo depende de filas con `run ≤ run(ancla)` y de las versiones registradas en `envelope_id`.
+  - **Lo que no garantiza:** que un replay por **hora civil** (`?at=`, que selecciona runs con `started_at ≤ at`, MP-026a) elija la misma ancla que se publicó en vivo a esa hora.
+    - El esquema guarda `started_at` y `finished_at` por run (`0001_init.up.sql:64-75`), pero no cuándo se hizo visible: el colector fija `finished_at` antes del commit (`collector.py:118-125,144-154`).
+    - Con un solo escritor se conoce el **orden** de los commits, no su **hora**.
+    - Por eso, un run iniciado antes de `at` y aún sin confirmar en vivo puede salir seleccionado en el replay. Contraejemplo del revisor: run 100 con `started_at` = 10 y commit a 13 o a 18; consultando a la hora 15, el ancla en vivo es la del run 100 o la del 99, y la reconstrucción por `started_at` da siempre el 100.
+  - **Mantener la garantía por hora civil** exigiría una referencia histórica de publicación o visibilidad (p. ej. registrar `committed_at` por run, o el `revision.sequence` servido) y una prueba en el intervalo entre el inicio y el commit de un run. **Pendiente / `UNVERIFIED`**; la decisión se difiere a MP-026b (replay `?at=`) y MP-032 (operación).
 - **Condición de la garantía** (declarada y verificable por configuración): las filas con `run ≤ run(ancla)` son visibles antes que el ancla. Se cumple con un único colector y un commit por ciclo (`collector.py:115-118`), porque los runs se confirman en orden de `id`. Si se viola (varios escritores, carga retroactiva), la garantía de no retroceso deja de valer:
   - escenario `CONDICION_VIOLADA_base_run99_visible+100` → retroceso F1 de **1 310,66 m**;
   - MP-025a debe excluir de la base del directo las filas de cargas retroactivas;
@@ -424,3 +429,4 @@ Ver [`docs/evidence/mp-024/README.md`](../evidence/mp-024/README.md): comandos, 
 | B5 espera conservada | §4.6: solo el tiempo probado por las muestras, como cota superior. Arnés `zone_entry_from_history` aplicado a `build_real` (31 anclas con 2 muestras, 14 envolventes de C cambian) y sintético S16 con tres observaciones. §3 y §6 reconciliados (C con Dmin 180: 4/4 y 4/7) |
 | B6 M2 | §3: M2a (R1) en el total y M2b (R2) aparte, con denominadores y con el total si M2b sustituyera a M2a (B2 2/7, C 4/7). §8: AC-M2 y AC-M2b. DEC-047 |
 | A3 AC-T2 | §8: S9 = 1000/3 m ± 1e-6 m; el arnés usa el mismo criterio |
+| B2 replay por hora (verificación final, sin re-verificación posterior) | §4.4: garantía de replay acotada a la reconstrucción dado el identificador del ancla y su run; el replay por hora civil con `started_at ≤ at` puede seleccionar un ancla aún no confirmada en vivo; la referencia histórica de visibilidad queda pendiente (`UNVERIFIED`) para MP-026b/MP-032. Solo texto: el arnés y sus resultados no cambian |
