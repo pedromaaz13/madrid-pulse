@@ -1,0 +1,3238 @@
+{
+ "ms": [
+  {
+   "name": "1023V19656C5",
+   "envelope": {
+    "reference_at": "2026-11-20T14:33:21.000+00:00",
+    "progress_m_at_reference": 41198.72734986132,
+    "speed_mps": 0.0,
+    "max_progress_m": 41198.72734986132,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "hold_reason": "operator_incoming_at",
+   "cap_kind": null,
+   "cap_reached_at": null,
+   "samples": [
+    {
+     "at_ms": 1795185201000,
+     "progress_m": 41198.72734986132,
+     "phase": "hold:operator_incoming_at"
+    },
+    {
+     "at_ms": 1795185201001,
+     "progress_m": 41198.72734986132,
+     "phase": "hold:operator_incoming_at"
+    },
+    {
+     "at_ms": 1795185231000,
+     "progress_m": 41198.72734986132,
+     "phase": "hold:operator_incoming_at"
+    },
+    {
+     "at_ms": 1795185291000,
+     "progress_m": 41198.72734986132,
+     "phase": "hold:operator_incoming_at"
+    },
+    {
+     "at_ms": 1795185381000,
+     "progress_m": 41198.72734986132,
+     "phase": "hold:operator_incoming_at"
+    }
+   ]
+  },
+  {
+   "name": "1023V19660C5",
+   "envelope": {
+    "reference_at": "2026-11-20T14:33:21.000+00:00",
+    "progress_m_at_reference": 33092.811436057505,
+    "speed_mps": 0.0,
+    "max_progress_m": 33092.811436057505,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "hold_reason": "operator_incoming_at",
+   "cap_kind": null,
+   "cap_reached_at": null,
+   "samples": [
+    {
+     "at_ms": 1795185201000,
+     "progress_m": 33092.811436057505,
+     "phase": "hold:operator_incoming_at"
+    },
+    {
+     "at_ms": 1795185201001,
+     "progress_m": 33092.811436057505,
+     "phase": "hold:operator_incoming_at"
+    },
+    {
+     "at_ms": 1795185231000,
+     "progress_m": 33092.811436057505,
+     "phase": "hold:operator_incoming_at"
+    },
+    {
+     "at_ms": 1795185291000,
+     "progress_m": 33092.811436057505,
+     "phase": "hold:operator_incoming_at"
+    },
+    {
+     "at_ms": 1795185381000,
+     "progress_m": 33092.811436057505,
+     "phase": "hold:operator_incoming_at"
+    }
+   ]
+  },
+  {
+   "name": "1023V19661C5",
+   "envelope": {
+    "reference_at": "2026-11-20T14:33:21.000+00:00",
+    "progress_m_at_reference": 40835.269721368124,
+    "speed_mps": 13.131013822964128,
+    "max_progress_m": 43193.40455518064,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "hold_reason": null,
+   "cap_kind": "stop",
+   "cap_reached_at": "2026-11-20T14:36:20.586+00:00",
+   "samples": [
+    {
+     "at_ms": 1795185201000,
+     "progress_m": 40835.269721368124,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795185201001,
+     "progress_m": 40835.28285238195,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795185231000,
+     "progress_m": 41229.20013605705,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795185291000,
+     "progress_m": 42017.060965434895,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795185380585,
+     "progress_m": 43193.402838765134,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795185380586,
+     "progress_m": 43193.40455518064,
+     "phase": "cap:stop"
+    },
+    {
+     "at_ms": 1795185380587,
+     "progress_m": 43193.40455518064,
+     "phase": "cap:stop"
+    },
+    {
+     "at_ms": 1795185381000,
+     "progress_m": 43193.40455518064,
+     "phase": "cap:stop"
+    }
+   ]
+  },
+  {
+   "name": "1023V19664C5",
+   "envelope": {
+    "reference_at": "2026-11-20T14:33:21.000+00:00",
+    "progress_m_at_reference": 26272.06909058288,
+    "speed_mps": 0.0,
+    "max_progress_m": 26272.06909058288,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "hold_reason": "operator_stopped_at",
+   "cap_kind": null,
+   "cap_reached_at": null,
+   "samples": [
+    {
+     "at_ms": 1795185201000,
+     "progress_m": 26272.06909058288,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185201001,
+     "progress_m": 26272.06909058288,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185231000,
+     "progress_m": 26272.06909058288,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185291000,
+     "progress_m": 26272.06909058288,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185381000,
+     "progress_m": 26272.06909058288,
+     "phase": "hold:operator_stopped_at"
+    }
+   ]
+  },
+  {
+   "name": "1023V19667C5",
+   "envelope": {
+    "reference_at": "2026-11-20T14:33:21.000+00:00",
+    "progress_m_at_reference": 39544.93098238385,
+    "speed_mps": 10.68684865870661,
+    "max_progress_m": 40829.8220670471,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "hold_reason": null,
+   "cap_kind": "stop",
+   "cap_reached_at": "2026-11-20T14:35:21.232+00:00",
+   "samples": [
+    {
+     "at_ms": 1795185201000,
+     "progress_m": 39544.93098238385,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795185201001,
+     "progress_m": 39544.94166923251,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795185231000,
+     "progress_m": 39865.53644214505,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795185291000,
+     "progress_m": 40506.74736166745,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795185321231,
+     "progress_m": 40829.821483468804,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795185321232,
+     "progress_m": 40829.8220670471,
+     "phase": "cap:stop"
+    },
+    {
+     "at_ms": 1795185321233,
+     "progress_m": 40829.8220670471,
+     "phase": "cap:stop"
+    },
+    {
+     "at_ms": 1795185381000,
+     "progress_m": 40829.8220670471,
+     "phase": "cap:stop"
+    }
+   ]
+  },
+  {
+   "name": "1023V19668C5",
+   "envelope": {
+    "reference_at": "2026-11-20T14:33:21.000+00:00",
+    "progress_m_at_reference": 15534.928354648562,
+    "speed_mps": 0.0,
+    "max_progress_m": 15534.928354648562,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "hold_reason": "operator_stopped_at",
+   "cap_kind": null,
+   "cap_reached_at": null,
+   "samples": [
+    {
+     "at_ms": 1795185201000,
+     "progress_m": 15534.928354648562,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185201001,
+     "progress_m": 15534.928354648562,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185231000,
+     "progress_m": 15534.928354648562,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185291000,
+     "progress_m": 15534.928354648562,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185381000,
+     "progress_m": 15534.928354648562,
+     "phase": "hold:operator_stopped_at"
+    }
+   ]
+  },
+  {
+   "name": "1023V19670C5",
+   "envelope": {
+    "reference_at": "2026-11-20T14:33:21.000+00:00",
+    "progress_m_at_reference": 7371.066856244217,
+    "speed_mps": 0.0,
+    "max_progress_m": 7371.066856244217,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "hold_reason": "operator_stopped_at",
+   "cap_kind": null,
+   "cap_reached_at": null,
+   "samples": [
+    {
+     "at_ms": 1795185201000,
+     "progress_m": 7371.066856244217,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185201001,
+     "progress_m": 7371.066856244217,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185231000,
+     "progress_m": 7371.066856244217,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185291000,
+     "progress_m": 7371.066856244217,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185381000,
+     "progress_m": 7371.066856244217,
+     "phase": "hold:operator_stopped_at"
+    }
+   ]
+  },
+  {
+   "name": "1023V19671C5",
+   "envelope": {
+    "reference_at": "2026-11-20T14:33:21.000+00:00",
+    "progress_m_at_reference": 31950.766071779326,
+    "speed_mps": 0.0,
+    "max_progress_m": 31950.766071779326,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "hold_reason": "operator_incoming_at",
+   "cap_kind": null,
+   "cap_reached_at": null,
+   "samples": [
+    {
+     "at_ms": 1795185201000,
+     "progress_m": 31950.766071779326,
+     "phase": "hold:operator_incoming_at"
+    },
+    {
+     "at_ms": 1795185201001,
+     "progress_m": 31950.766071779326,
+     "phase": "hold:operator_incoming_at"
+    },
+    {
+     "at_ms": 1795185231000,
+     "progress_m": 31950.766071779326,
+     "phase": "hold:operator_incoming_at"
+    },
+    {
+     "at_ms": 1795185291000,
+     "progress_m": 31950.766071779326,
+     "phase": "hold:operator_incoming_at"
+    },
+    {
+     "at_ms": 1795185381000,
+     "progress_m": 31950.766071779326,
+     "phase": "hold:operator_incoming_at"
+    }
+   ]
+  },
+  {
+   "name": "1023V19674C5",
+   "envelope": {
+    "reference_at": "2026-11-20T14:33:21.000+00:00",
+    "progress_m_at_reference": 61.67329373455408,
+    "speed_mps": 0.0,
+    "max_progress_m": 61.67329373455408,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "hold_reason": "operator_stopped_at",
+   "cap_kind": null,
+   "cap_reached_at": null,
+   "samples": [
+    {
+     "at_ms": 1795185201000,
+     "progress_m": 61.67329373455408,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185201001,
+     "progress_m": 61.67329373455408,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185231000,
+     "progress_m": 61.67329373455408,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185291000,
+     "progress_m": 61.67329373455408,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185381000,
+     "progress_m": 61.67329373455408,
+     "phase": "hold:operator_stopped_at"
+    }
+   ]
+  },
+  {
+   "name": "1023V19675C5",
+   "envelope": {
+    "reference_at": "2026-11-20T14:33:21.000+00:00",
+    "progress_m_at_reference": 20463.327581158057,
+    "speed_mps": 0.0,
+    "max_progress_m": 20463.327581158057,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "hold_reason": "operator_stopped_at",
+   "cap_kind": null,
+   "cap_reached_at": null,
+   "samples": [
+    {
+     "at_ms": 1795185201000,
+     "progress_m": 20463.327581158057,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185201001,
+     "progress_m": 20463.327581158057,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185231000,
+     "progress_m": 20463.327581158057,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185291000,
+     "progress_m": 20463.327581158057,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185381000,
+     "progress_m": 20463.327581158057,
+     "phase": "hold:operator_stopped_at"
+    }
+   ]
+  },
+  {
+   "name": "1023V19677C5",
+   "envelope": {
+    "reference_at": "2026-11-20T14:33:21.000+00:00",
+    "progress_m_at_reference": 98.27634715381777,
+    "speed_mps": 0.0,
+    "max_progress_m": 98.27634715381777,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "hold_reason": "operator_stopped_at",
+   "cap_kind": null,
+   "cap_reached_at": null,
+   "samples": [
+    {
+     "at_ms": 1795185201000,
+     "progress_m": 98.27634715381777,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185201001,
+     "progress_m": 98.27634715381777,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185231000,
+     "progress_m": 98.27634715381777,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185291000,
+     "progress_m": 98.27634715381777,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185381000,
+     "progress_m": 98.27634715381777,
+     "phase": "hold:operator_stopped_at"
+    }
+   ]
+  },
+  {
+   "name": "1023V19678C5",
+   "envelope": {
+    "reference_at": "2026-11-20T14:33:21.000+00:00",
+    "progress_m_at_reference": 61.67329373455408,
+    "speed_mps": 0.0,
+    "max_progress_m": 61.67329373455408,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "hold_reason": "operator_stopped_at",
+   "cap_kind": null,
+   "cap_reached_at": null,
+   "samples": [
+    {
+     "at_ms": 1795185201000,
+     "progress_m": 61.67329373455408,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185201001,
+     "progress_m": 61.67329373455408,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185231000,
+     "progress_m": 61.67329373455408,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185291000,
+     "progress_m": 61.67329373455408,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185381000,
+     "progress_m": 61.67329373455408,
+     "phase": "hold:operator_stopped_at"
+    }
+   ]
+  },
+  {
+   "name": "1023V19681C5",
+   "envelope": {
+    "reference_at": "2026-11-20T14:33:21.000+00:00",
+    "progress_m_at_reference": 98.27634715381777,
+    "speed_mps": 0.0,
+    "max_progress_m": 98.27634715381777,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "hold_reason": "operator_stopped_at",
+   "cap_kind": null,
+   "cap_reached_at": null,
+   "samples": [
+    {
+     "at_ms": 1795185201000,
+     "progress_m": 98.27634715381777,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185201001,
+     "progress_m": 98.27634715381777,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185231000,
+     "progress_m": 98.27634715381777,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185291000,
+     "progress_m": 98.27634715381777,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185381000,
+     "progress_m": 98.27634715381777,
+     "phase": "hold:operator_stopped_at"
+    }
+   ]
+  },
+  {
+   "name": "1023V19682C5",
+   "envelope": {
+    "reference_at": "2026-11-20T14:33:21.000+00:00",
+    "progress_m_at_reference": 61.67329373455408,
+    "speed_mps": 0.0,
+    "max_progress_m": 61.67329373455408,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "hold_reason": "operator_stopped_at",
+   "cap_kind": null,
+   "cap_reached_at": null,
+   "samples": [
+    {
+     "at_ms": 1795185201000,
+     "progress_m": 61.67329373455408,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185201001,
+     "progress_m": 61.67329373455408,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185231000,
+     "progress_m": 61.67329373455408,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185291000,
+     "progress_m": 61.67329373455408,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185381000,
+     "progress_m": 61.67329373455408,
+     "phase": "hold:operator_stopped_at"
+    }
+   ]
+  },
+  {
+   "name": "1023V19685C5",
+   "envelope": {
+    "reference_at": "2026-11-20T14:33:21.000+00:00",
+    "progress_m_at_reference": 98.27634715381777,
+    "speed_mps": 0.0,
+    "max_progress_m": 98.27634715381777,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "hold_reason": "operator_stopped_at",
+   "cap_kind": null,
+   "cap_reached_at": null,
+   "samples": [
+    {
+     "at_ms": 1795185201000,
+     "progress_m": 98.27634715381777,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185201001,
+     "progress_m": 98.27634715381777,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185231000,
+     "progress_m": 98.27634715381777,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185291000,
+     "progress_m": 98.27634715381777,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185381000,
+     "progress_m": 98.27634715381777,
+     "phase": "hold:operator_stopped_at"
+    }
+   ]
+  },
+  {
+   "name": "1023V19687C5",
+   "envelope": {
+    "reference_at": "2026-11-20T14:33:21.000+00:00",
+    "progress_m_at_reference": 98.27634715381777,
+    "speed_mps": 0.0,
+    "max_progress_m": 98.27634715381777,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "hold_reason": "operator_stopped_at",
+   "cap_kind": null,
+   "cap_reached_at": null,
+   "samples": [
+    {
+     "at_ms": 1795185201000,
+     "progress_m": 98.27634715381777,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185201001,
+     "progress_m": 98.27634715381777,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185231000,
+     "progress_m": 98.27634715381777,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185291000,
+     "progress_m": 98.27634715381777,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185381000,
+     "progress_m": 98.27634715381777,
+     "phase": "hold:operator_stopped_at"
+    }
+   ]
+  },
+  {
+   "name": "1023V19689C5",
+   "envelope": {
+    "reference_at": "2026-11-20T14:33:21.000+00:00",
+    "progress_m_at_reference": 98.27634715381777,
+    "speed_mps": 0.0,
+    "max_progress_m": 98.27634715381777,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "hold_reason": "operator_stopped_at",
+   "cap_kind": null,
+   "cap_reached_at": null,
+   "samples": [
+    {
+     "at_ms": 1795185201000,
+     "progress_m": 98.27634715381777,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185201001,
+     "progress_m": 98.27634715381777,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185231000,
+     "progress_m": 98.27634715381777,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185291000,
+     "progress_m": 98.27634715381777,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185381000,
+     "progress_m": 98.27634715381777,
+     "phase": "hold:operator_stopped_at"
+    }
+   ]
+  },
+  {
+   "name": "1023V20277C4a",
+   "envelope": {
+    "reference_at": "2026-11-20T14:33:21.000+00:00",
+    "progress_m_at_reference": 21847.85848686428,
+    "speed_mps": 13.172442290172599,
+    "max_progress_m": 24218.898099095346,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "hold_reason": null,
+   "cap_kind": "horizon",
+   "cap_reached_at": "2026-11-20T14:36:21.000+00:00",
+   "samples": [
+    {
+     "at_ms": 1795185201000,
+     "progress_m": 21847.85848686428,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795185201001,
+     "progress_m": 21847.87165930657,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795185231000,
+     "progress_m": 22243.031755569456,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795185291000,
+     "progress_m": 23033.378292979814,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795185380999,
+     "progress_m": 24218.884926653056,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795185381000,
+     "progress_m": 24218.898099095346,
+     "phase": "cap:horizon"
+    },
+    {
+     "at_ms": 1795185381001,
+     "progress_m": 24218.898099095346,
+     "phase": "cap:horizon"
+    }
+   ]
+  },
+  {
+   "name": "1023V20279C4a",
+   "envelope": {
+    "reference_at": "2026-11-20T14:33:21.000+00:00",
+    "progress_m_at_reference": 14524.40813812095,
+    "speed_mps": 12.650612065187245,
+    "max_progress_m": 16801.518309854655,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "hold_reason": null,
+   "cap_kind": "horizon",
+   "cap_reached_at": "2026-11-20T14:36:21.000+00:00",
+   "samples": [
+    {
+     "at_ms": 1795185201000,
+     "progress_m": 14524.40813812095,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795185201001,
+     "progress_m": 14524.420788733016,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795185231000,
+     "progress_m": 14903.926500076568,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795185291000,
+     "progress_m": 15662.963223987803,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795185380999,
+     "progress_m": 16801.50565924259,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795185381000,
+     "progress_m": 16801.518309854655,
+     "phase": "cap:horizon"
+    },
+    {
+     "at_ms": 1795185381001,
+     "progress_m": 16801.518309854655,
+     "phase": "cap:horizon"
+    }
+   ]
+  },
+  {
+   "name": "1023V20280C4a",
+   "envelope": {
+    "reference_at": "2026-11-20T14:33:21.000+00:00",
+    "progress_m_at_reference": 40505.11607812403,
+    "speed_mps": 0.0,
+    "max_progress_m": 40505.11607812403,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "hold_reason": "operator_stopped_at",
+   "cap_kind": null,
+   "cap_reached_at": null,
+   "samples": [
+    {
+     "at_ms": 1795185201000,
+     "progress_m": 40505.11607812403,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185201001,
+     "progress_m": 40505.11607812403,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185231000,
+     "progress_m": 40505.11607812403,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185291000,
+     "progress_m": 40505.11607812403,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185381000,
+     "progress_m": 40505.11607812403,
+     "phase": "hold:operator_stopped_at"
+    }
+   ]
+  },
+  {
+   "name": "1023V20281C4a",
+   "envelope": {
+    "reference_at": "2026-11-20T14:33:21.000+00:00",
+    "progress_m_at_reference": 10327.668671582851,
+    "speed_mps": 13.015434581931823,
+    "max_progress_m": 11896.428547976437,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "hold_reason": null,
+   "cap_kind": "stop",
+   "cap_reached_at": "2026-11-20T14:35:21.531+00:00",
+   "samples": [
+    {
+     "at_ms": 1795185201000,
+     "progress_m": 10327.668671582851,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795185201001,
+     "progress_m": 10327.681687017433,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795185231000,
+     "progress_m": 10718.131709040805,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795185291000,
+     "progress_m": 11499.057783956716,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795185321530,
+     "progress_m": 11896.419001743094,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795185321531,
+     "progress_m": 11896.428547976437,
+     "phase": "cap:stop"
+    },
+    {
+     "at_ms": 1795185321532,
+     "progress_m": 11896.428547976437,
+     "phase": "cap:stop"
+    },
+    {
+     "at_ms": 1795185381000,
+     "progress_m": 11896.428547976437,
+     "phase": "cap:stop"
+    }
+   ]
+  },
+  {
+   "name": "1023V20282C4a",
+   "envelope": {
+    "reference_at": "2026-11-20T14:33:21.000+00:00",
+    "progress_m_at_reference": 12033.74512223166,
+    "speed_mps": 0.0,
+    "max_progress_m": 12033.74512223166,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "hold_reason": "operator_incoming_at",
+   "cap_kind": null,
+   "cap_reached_at": null,
+   "samples": [
+    {
+     "at_ms": 1795185201000,
+     "progress_m": 12033.74512223166,
+     "phase": "hold:operator_incoming_at"
+    },
+    {
+     "at_ms": 1795185201001,
+     "progress_m": 12033.74512223166,
+     "phase": "hold:operator_incoming_at"
+    },
+    {
+     "at_ms": 1795185231000,
+     "progress_m": 12033.74512223166,
+     "phase": "hold:operator_incoming_at"
+    },
+    {
+     "at_ms": 1795185291000,
+     "progress_m": 12033.74512223166,
+     "phase": "hold:operator_incoming_at"
+    },
+    {
+     "at_ms": 1795185381000,
+     "progress_m": 12033.74512223166,
+     "phase": "hold:operator_incoming_at"
+    }
+   ]
+  },
+  {
+   "name": "1023V20283C4a",
+   "envelope": {
+    "reference_at": "2026-11-20T14:33:21.000+00:00",
+    "progress_m_at_reference": 68.38740007108092,
+    "speed_mps": 0.0,
+    "max_progress_m": 68.38740007108092,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "hold_reason": "operator_stopped_at",
+   "cap_kind": null,
+   "cap_reached_at": null,
+   "samples": [
+    {
+     "at_ms": 1795185201000,
+     "progress_m": 68.38740007108092,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185201001,
+     "progress_m": 68.38740007108092,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185231000,
+     "progress_m": 68.38740007108092,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185291000,
+     "progress_m": 68.38740007108092,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185381000,
+     "progress_m": 68.38740007108092,
+     "phase": "hold:operator_stopped_at"
+    }
+   ]
+  },
+  {
+   "name": "1023V20284C4a",
+   "envelope": {
+    "reference_at": "2026-11-20T14:33:21.000+00:00",
+    "progress_m_at_reference": 6875.068122787095,
+    "speed_mps": 0.0,
+    "max_progress_m": 6875.068122787095,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "hold_reason": "operator_incoming_at",
+   "cap_kind": null,
+   "cap_reached_at": null,
+   "samples": [
+    {
+     "at_ms": 1795185201000,
+     "progress_m": 6875.068122787095,
+     "phase": "hold:operator_incoming_at"
+    },
+    {
+     "at_ms": 1795185201001,
+     "progress_m": 6875.068122787095,
+     "phase": "hold:operator_incoming_at"
+    },
+    {
+     "at_ms": 1795185231000,
+     "progress_m": 6875.068122787095,
+     "phase": "hold:operator_incoming_at"
+    },
+    {
+     "at_ms": 1795185291000,
+     "progress_m": 6875.068122787095,
+     "phase": "hold:operator_incoming_at"
+    },
+    {
+     "at_ms": 1795185381000,
+     "progress_m": 6875.068122787095,
+     "phase": "hold:operator_incoming_at"
+    }
+   ]
+  },
+  {
+   "name": "1023V20285C4a",
+   "envelope": {
+    "reference_at": "2026-11-20T14:33:21.000+00:00",
+    "progress_m_at_reference": 68.38740007108092,
+    "speed_mps": 0.0,
+    "max_progress_m": 68.38740007108092,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "hold_reason": "operator_stopped_at",
+   "cap_kind": null,
+   "cap_reached_at": null,
+   "samples": [
+    {
+     "at_ms": 1795185201000,
+     "progress_m": 68.38740007108092,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185201001,
+     "progress_m": 68.38740007108092,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185231000,
+     "progress_m": 68.38740007108092,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185291000,
+     "progress_m": 68.38740007108092,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185381000,
+     "progress_m": 68.38740007108092,
+     "phase": "hold:operator_stopped_at"
+    }
+   ]
+  },
+  {
+   "name": "1023V20286C4a",
+   "envelope": {
+    "reference_at": "2026-11-20T14:33:21.000+00:00",
+    "progress_m_at_reference": 96.02021055846775,
+    "speed_mps": 0.0,
+    "max_progress_m": 96.02021055846775,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "hold_reason": "operator_stopped_at",
+   "cap_kind": null,
+   "cap_reached_at": null,
+   "samples": [
+    {
+     "at_ms": 1795185201000,
+     "progress_m": 96.02021055846775,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185201001,
+     "progress_m": 96.02021055846775,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185231000,
+     "progress_m": 96.02021055846775,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185291000,
+     "progress_m": 96.02021055846775,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185381000,
+     "progress_m": 96.02021055846775,
+     "phase": "hold:operator_stopped_at"
+    }
+   ]
+  },
+  {
+   "name": "1023V20288C4a",
+   "envelope": {
+    "reference_at": "2026-11-20T14:33:21.000+00:00",
+    "progress_m_at_reference": 96.02021055846775,
+    "speed_mps": 0.0,
+    "max_progress_m": 96.02021055846775,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "hold_reason": "operator_stopped_at",
+   "cap_kind": null,
+   "cap_reached_at": null,
+   "samples": [
+    {
+     "at_ms": 1795185201000,
+     "progress_m": 96.02021055846775,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185201001,
+     "progress_m": 96.02021055846775,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185231000,
+     "progress_m": 96.02021055846775,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185291000,
+     "progress_m": 96.02021055846775,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185381000,
+     "progress_m": 96.02021055846775,
+     "phase": "hold:operator_stopped_at"
+    }
+   ]
+  },
+  {
+   "name": "1023V20468C4b",
+   "envelope": {
+    "reference_at": "2026-11-20T14:33:21.000+00:00",
+    "progress_m_at_reference": 47406.793825682216,
+    "speed_mps": 0.0,
+    "max_progress_m": 47406.793825682216,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "hold_reason": "operator_stopped_at",
+   "cap_kind": null,
+   "cap_reached_at": null,
+   "samples": [
+    {
+     "at_ms": 1795185201000,
+     "progress_m": 47406.793825682216,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185201001,
+     "progress_m": 47406.793825682216,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185231000,
+     "progress_m": 47406.793825682216,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185291000,
+     "progress_m": 47406.793825682216,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185381000,
+     "progress_m": 47406.793825682216,
+     "phase": "hold:operator_stopped_at"
+    }
+   ]
+  },
+  {
+   "name": "1023V20470C4b",
+   "envelope": {
+    "reference_at": "2026-11-20T14:33:21.000+00:00",
+    "progress_m_at_reference": 29435.695293483295,
+    "speed_mps": 0.0,
+    "max_progress_m": 29435.695293483295,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "hold_reason": "operator_stopped_at",
+   "cap_kind": null,
+   "cap_reached_at": null,
+   "samples": [
+    {
+     "at_ms": 1795185201000,
+     "progress_m": 29435.695293483295,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185201001,
+     "progress_m": 29435.695293483295,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185231000,
+     "progress_m": 29435.695293483295,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185291000,
+     "progress_m": 29435.695293483295,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185381000,
+     "progress_m": 29435.695293483295,
+     "phase": "hold:operator_stopped_at"
+    }
+   ]
+  },
+  {
+   "name": "1023V20472C4b",
+   "envelope": {
+    "reference_at": "2026-11-20T14:33:21.000+00:00",
+    "progress_m_at_reference": 10812.106102892845,
+    "speed_mps": 0.0,
+    "max_progress_m": 10812.106102892845,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "hold_reason": "operator_incoming_at",
+   "cap_kind": null,
+   "cap_reached_at": null,
+   "samples": [
+    {
+     "at_ms": 1795185201000,
+     "progress_m": 10812.106102892845,
+     "phase": "hold:operator_incoming_at"
+    },
+    {
+     "at_ms": 1795185201001,
+     "progress_m": 10812.106102892845,
+     "phase": "hold:operator_incoming_at"
+    },
+    {
+     "at_ms": 1795185231000,
+     "progress_m": 10812.106102892845,
+     "phase": "hold:operator_incoming_at"
+    },
+    {
+     "at_ms": 1795185291000,
+     "progress_m": 10812.106102892845,
+     "phase": "hold:operator_incoming_at"
+    },
+    {
+     "at_ms": 1795185381000,
+     "progress_m": 10812.106102892845,
+     "phase": "hold:operator_incoming_at"
+    }
+   ]
+  },
+  {
+   "name": "1023V20474C4b",
+   "envelope": {
+    "reference_at": "2026-11-20T14:33:21.000+00:00",
+    "progress_m_at_reference": 32.468178765193265,
+    "speed_mps": 0.0,
+    "max_progress_m": 32.468178765193265,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "hold_reason": "operator_stopped_at",
+   "cap_kind": null,
+   "cap_reached_at": null,
+   "samples": [
+    {
+     "at_ms": 1795185201000,
+     "progress_m": 32.468178765193265,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185201001,
+     "progress_m": 32.468178765193265,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185231000,
+     "progress_m": 32.468178765193265,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185291000,
+     "progress_m": 32.468178765193265,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185381000,
+     "progress_m": 32.468178765193265,
+     "phase": "hold:operator_stopped_at"
+    }
+   ]
+  },
+  {
+   "name": "1023V20476C4b",
+   "envelope": {
+    "reference_at": "2026-11-20T14:33:21.000+00:00",
+    "progress_m_at_reference": 32.468178765193265,
+    "speed_mps": 0.0,
+    "max_progress_m": 32.468178765193265,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "hold_reason": "operator_stopped_at",
+   "cap_kind": null,
+   "cap_reached_at": null,
+   "samples": [
+    {
+     "at_ms": 1795185201000,
+     "progress_m": 32.468178765193265,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185201001,
+     "progress_m": 32.468178765193265,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185231000,
+     "progress_m": 32.468178765193265,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185291000,
+     "progress_m": 32.468178765193265,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185381000,
+     "progress_m": 32.468178765193265,
+     "phase": "hold:operator_stopped_at"
+    }
+   ]
+  },
+  {
+   "name": "1023V20478C4b",
+   "envelope": {
+    "reference_at": "2026-11-20T14:33:21.000+00:00",
+    "progress_m_at_reference": 32.468178765193265,
+    "speed_mps": 0.0,
+    "max_progress_m": 32.468178765193265,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "hold_reason": "operator_stopped_at",
+   "cap_kind": null,
+   "cap_reached_at": null,
+   "samples": [
+    {
+     "at_ms": 1795185201000,
+     "progress_m": 32.468178765193265,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185201001,
+     "progress_m": 32.468178765193265,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185231000,
+     "progress_m": 32.468178765193265,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185291000,
+     "progress_m": 32.468178765193265,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185381000,
+     "progress_m": 32.468178765193265,
+     "phase": "hold:operator_stopped_at"
+    }
+   ]
+  },
+  {
+   "name": "1023V20836C5",
+   "envelope": {
+    "reference_at": "2026-11-20T14:33:21.000+00:00",
+    "progress_m_at_reference": 30046.46903634405,
+    "speed_mps": 0.0,
+    "max_progress_m": 30046.46903634405,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "hold_reason": "operator_incoming_at",
+   "cap_kind": null,
+   "cap_reached_at": null,
+   "samples": [
+    {
+     "at_ms": 1795185201000,
+     "progress_m": 30046.46903634405,
+     "phase": "hold:operator_incoming_at"
+    },
+    {
+     "at_ms": 1795185201001,
+     "progress_m": 30046.46903634405,
+     "phase": "hold:operator_incoming_at"
+    },
+    {
+     "at_ms": 1795185231000,
+     "progress_m": 30046.46903634405,
+     "phase": "hold:operator_incoming_at"
+    },
+    {
+     "at_ms": 1795185291000,
+     "progress_m": 30046.46903634405,
+     "phase": "hold:operator_incoming_at"
+    },
+    {
+     "at_ms": 1795185381000,
+     "progress_m": 30046.46903634405,
+     "phase": "hold:operator_incoming_at"
+    }
+   ]
+  },
+  {
+   "name": "1023V20842C5",
+   "envelope": {
+    "reference_at": "2026-11-20T14:33:21.000+00:00",
+    "progress_m_at_reference": 61.67329373455408,
+    "speed_mps": 0.0,
+    "max_progress_m": 61.67329373455408,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "hold_reason": "operator_stopped_at",
+   "cap_kind": null,
+   "cap_reached_at": null,
+   "samples": [
+    {
+     "at_ms": 1795185201000,
+     "progress_m": 61.67329373455408,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185201001,
+     "progress_m": 61.67329373455408,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185231000,
+     "progress_m": 61.67329373455408,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185291000,
+     "progress_m": 61.67329373455408,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185381000,
+     "progress_m": 61.67329373455408,
+     "phase": "hold:operator_stopped_at"
+    }
+   ]
+  },
+  {
+   "name": "1023V20844C5",
+   "envelope": {
+    "reference_at": "2026-11-20T14:33:21.000+00:00",
+    "progress_m_at_reference": 12604.456931907103,
+    "speed_mps": 11.839937704501397,
+    "max_progress_m": 13315.457846995892,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "hold_reason": null,
+   "cap_kind": "stop",
+   "cap_reached_at": "2026-11-20T14:34:21.052+00:00",
+   "samples": [
+    {
+     "at_ms": 1795185201000,
+     "progress_m": 12604.456931907103,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795185201001,
+     "progress_m": 12604.468771844808,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795185231000,
+     "progress_m": 12959.655063042144,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795185261051,
+     "progress_m": 13315.457031000116,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795185261052,
+     "progress_m": 13315.457846995892,
+     "phase": "cap:stop"
+    },
+    {
+     "at_ms": 1795185261053,
+     "progress_m": 13315.457846995892,
+     "phase": "cap:stop"
+    },
+    {
+     "at_ms": 1795185291000,
+     "progress_m": 13315.457846995892,
+     "phase": "cap:stop"
+    },
+    {
+     "at_ms": 1795185381000,
+     "progress_m": 13315.457846995892,
+     "phase": "cap:stop"
+    }
+   ]
+  },
+  {
+   "name": "1023V20845C5",
+   "envelope": {
+    "reference_at": "2026-11-20T14:33:21.000+00:00",
+    "progress_m_at_reference": 29271.90937877909,
+    "speed_mps": 12.356120360607202,
+    "max_progress_m": 29744.272533162402,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "hold_reason": null,
+   "cap_kind": "stop",
+   "cap_reached_at": "2026-11-20T14:33:59.230+00:00",
+   "samples": [
+    {
+     "at_ms": 1795185201000,
+     "progress_m": 29271.90937877909,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795185201001,
+     "progress_m": 29271.921734899453,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795185231000,
+     "progress_m": 29642.59298959731,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795185239229,
+     "progress_m": 29744.271504044744,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795185239230,
+     "progress_m": 29744.272533162402,
+     "phase": "cap:stop"
+    },
+    {
+     "at_ms": 1795185239231,
+     "progress_m": 29744.272533162402,
+     "phase": "cap:stop"
+    },
+    {
+     "at_ms": 1795185291000,
+     "progress_m": 29744.272533162402,
+     "phase": "cap:stop"
+    },
+    {
+     "at_ms": 1795185381000,
+     "progress_m": 29744.272533162402,
+     "phase": "cap:stop"
+    }
+   ]
+  },
+  {
+   "name": "1023V20846C5",
+   "envelope": {
+    "reference_at": "2026-11-20T14:33:21.000+00:00",
+    "progress_m_at_reference": 3939.278920451678,
+    "speed_mps": 13.132165363993748,
+    "max_progress_m": 4454.202271647417,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "hold_reason": null,
+   "cap_kind": "stop",
+   "cap_reached_at": "2026-11-20T14:34:00.211+00:00",
+   "samples": [
+    {
+     "at_ms": 1795185201000,
+     "progress_m": 3939.278920451678,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795185201001,
+     "progress_m": 3939.292052617042,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795185231000,
+     "progress_m": 4333.243881371491,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795185240210,
+     "progress_m": 4454.191124373873,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795185240211,
+     "progress_m": 4454.202271647417,
+     "phase": "cap:stop"
+    },
+    {
+     "at_ms": 1795185240212,
+     "progress_m": 4454.202271647417,
+     "phase": "cap:stop"
+    },
+    {
+     "at_ms": 1795185291000,
+     "progress_m": 4454.202271647417,
+     "phase": "cap:stop"
+    },
+    {
+     "at_ms": 1795185381000,
+     "progress_m": 4454.202271647417,
+     "phase": "cap:stop"
+    }
+   ]
+  },
+  {
+   "name": "1023V20849C5",
+   "envelope": {
+    "reference_at": "2026-11-20T14:33:21.000+00:00",
+    "progress_m_at_reference": 4074.16802311607,
+    "speed_mps": 0.0,
+    "max_progress_m": 4074.16802311607,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "hold_reason": "operator_stopped_at",
+   "cap_kind": null,
+   "cap_reached_at": null,
+   "samples": [
+    {
+     "at_ms": 1795185201000,
+     "progress_m": 4074.16802311607,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185201001,
+     "progress_m": 4074.16802311607,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185231000,
+     "progress_m": 4074.16802311607,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185291000,
+     "progress_m": 4074.16802311607,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185381000,
+     "progress_m": 4074.16802311607,
+     "phase": "hold:operator_stopped_at"
+    }
+   ]
+  },
+  {
+   "name": "1023V20850C5",
+   "envelope": {
+    "reference_at": "2026-11-20T14:33:21.000+00:00",
+    "progress_m_at_reference": 61.67329373455408,
+    "speed_mps": 0.0,
+    "max_progress_m": 61.67329373455408,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "hold_reason": "operator_stopped_at",
+   "cap_kind": null,
+   "cap_reached_at": null,
+   "samples": [
+    {
+     "at_ms": 1795185201000,
+     "progress_m": 61.67329373455408,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185201001,
+     "progress_m": 61.67329373455408,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185231000,
+     "progress_m": 61.67329373455408,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185291000,
+     "progress_m": 61.67329373455408,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185381000,
+     "progress_m": 61.67329373455408,
+     "phase": "hold:operator_stopped_at"
+    }
+   ]
+  },
+  {
+   "name": "1023V20853C5",
+   "envelope": {
+    "reference_at": "2026-11-20T14:33:21.000+00:00",
+    "progress_m_at_reference": 7593.705504370397,
+    "speed_mps": 0.0,
+    "max_progress_m": 7593.705504370397,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "hold_reason": "operator_incoming_at",
+   "cap_kind": null,
+   "cap_reached_at": null,
+   "samples": [
+    {
+     "at_ms": 1795185201000,
+     "progress_m": 7593.705504370397,
+     "phase": "hold:operator_incoming_at"
+    },
+    {
+     "at_ms": 1795185201001,
+     "progress_m": 7593.705504370397,
+     "phase": "hold:operator_incoming_at"
+    },
+    {
+     "at_ms": 1795185231000,
+     "progress_m": 7593.705504370397,
+     "phase": "hold:operator_incoming_at"
+    },
+    {
+     "at_ms": 1795185291000,
+     "progress_m": 7593.705504370397,
+     "phase": "hold:operator_incoming_at"
+    },
+    {
+     "at_ms": 1795185381000,
+     "progress_m": 7593.705504370397,
+     "phase": "hold:operator_incoming_at"
+    }
+   ]
+  },
+  {
+   "name": "1023V20854C5",
+   "envelope": {
+    "reference_at": "2026-11-20T14:33:21.000+00:00",
+    "progress_m_at_reference": 61.67329373455408,
+    "speed_mps": 0.0,
+    "max_progress_m": 61.67329373455408,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "hold_reason": "operator_stopped_at",
+   "cap_kind": null,
+   "cap_reached_at": null,
+   "samples": [
+    {
+     "at_ms": 1795185201000,
+     "progress_m": 61.67329373455408,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185201001,
+     "progress_m": 61.67329373455408,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185231000,
+     "progress_m": 61.67329373455408,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185291000,
+     "progress_m": 61.67329373455408,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185381000,
+     "progress_m": 61.67329373455408,
+     "phase": "hold:operator_stopped_at"
+    }
+   ]
+  },
+  {
+   "name": "1023V20859C5",
+   "envelope": {
+    "reference_at": "2026-11-20T14:33:21.000+00:00",
+    "progress_m_at_reference": 4074.16802311607,
+    "speed_mps": 0.0,
+    "max_progress_m": 4074.16802311607,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "hold_reason": "operator_stopped_at",
+   "cap_kind": null,
+   "cap_reached_at": null,
+   "samples": [
+    {
+     "at_ms": 1795185201000,
+     "progress_m": 4074.16802311607,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185201001,
+     "progress_m": 4074.16802311607,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185231000,
+     "progress_m": 4074.16802311607,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185291000,
+     "progress_m": 4074.16802311607,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185381000,
+     "progress_m": 4074.16802311607,
+     "phase": "hold:operator_stopped_at"
+    }
+   ]
+  },
+  {
+   "name": "1023V20863C5",
+   "envelope": {
+    "reference_at": "2026-11-20T14:33:21.000+00:00",
+    "progress_m_at_reference": 4074.16802311607,
+    "speed_mps": 0.0,
+    "max_progress_m": 4074.16802311607,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "hold_reason": "operator_stopped_at",
+   "cap_kind": null,
+   "cap_reached_at": null,
+   "samples": [
+    {
+     "at_ms": 1795185201000,
+     "progress_m": 4074.16802311607,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185201001,
+     "progress_m": 4074.16802311607,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185231000,
+     "progress_m": 4074.16802311607,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185291000,
+     "progress_m": 4074.16802311607,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795185381000,
+     "progress_m": 4074.16802311607,
+     "phase": "hold:operator_stopped_at"
+    }
+   ]
+  },
+  {
+   "name": "S1",
+   "envelope": {
+    "reference_at": "2026-11-20T13:25:00.000+00:00",
+    "progress_m_at_reference": 70.51484948027553,
+    "speed_mps": 0.0,
+    "max_progress_m": 70.51484948027553,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "hold_reason": "operator_stopped_at",
+   "cap_kind": null,
+   "cap_reached_at": null,
+   "samples": [
+    {
+     "at_ms": 1795181100000,
+     "progress_m": 70.51484948027553,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795181100001,
+     "progress_m": 70.51484948027553,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795181130000,
+     "progress_m": 70.51484948027553,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795181190000,
+     "progress_m": 70.51484948027553,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795181280000,
+     "progress_m": 70.51484948027553,
+     "phase": "hold:operator_stopped_at"
+    }
+   ]
+  },
+  {
+   "name": "S2",
+   "envelope": {
+    "reference_at": "2026-11-20T13:29:00.000+00:00",
+    "progress_m_at_reference": 70.51484948027553,
+    "speed_mps": 0.0,
+    "max_progress_m": 70.51484948027553,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "hold_reason": "operator_stopped_at",
+   "cap_kind": null,
+   "cap_reached_at": null,
+   "samples": [
+    {
+     "at_ms": 1795181340000,
+     "progress_m": 70.51484948027553,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795181340001,
+     "progress_m": 70.51484948027553,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795181370000,
+     "progress_m": 70.51484948027553,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795181430000,
+     "progress_m": 70.51484948027553,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795181520000,
+     "progress_m": 70.51484948027553,
+     "phase": "hold:operator_stopped_at"
+    }
+   ]
+  },
+  {
+   "name": "S2b",
+   "envelope": {
+    "reference_at": "2026-11-20T13:29:00.000+00:00",
+    "progress_m_at_reference": 70.51484948027553,
+    "speed_mps": 16.869147138735556,
+    "max_progress_m": 2090.412506128542,
+    "horizon_s": 180.0,
+    "dwell_until": "2026-11-20T13:30:00.000+00:00"
+   },
+   "hold_reason": "before_first_departure",
+   "cap_kind": "stop",
+   "cap_reached_at": "2026-11-20T13:31:59.740+00:00",
+   "samples": [
+    {
+     "at_ms": 1795181340000,
+     "progress_m": 70.51484948027553,
+     "phase": "hold:before_first_departure"
+    },
+    {
+     "at_ms": 1795181340001,
+     "progress_m": 70.51484948027553,
+     "phase": "hold:before_first_departure"
+    },
+    {
+     "at_ms": 1795181370000,
+     "progress_m": 70.51484948027553,
+     "phase": "hold:before_first_departure"
+    },
+    {
+     "at_ms": 1795181399999,
+     "progress_m": 70.51484948027553,
+     "phase": "hold:before_first_departure"
+    },
+    {
+     "at_ms": 1795181400000,
+     "progress_m": 70.51484948027553,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795181400001,
+     "progress_m": 70.53171862741426,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795181430000,
+     "progress_m": 576.5892636423422,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795181519739,
+     "progress_m": 2090.4096587253325,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795181519740,
+     "progress_m": 2090.412506128542,
+     "phase": "cap:stop"
+    },
+    {
+     "at_ms": 1795181519741,
+     "progress_m": 2090.412506128542,
+     "phase": "cap:stop"
+    },
+    {
+     "at_ms": 1795181520000,
+     "progress_m": 2090.412506128542,
+     "phase": "cap:stop"
+    }
+   ]
+  },
+  {
+   "name": "S3",
+   "envelope": {
+    "reference_at": "2026-11-20T13:32:00.000+00:00",
+    "progress_m_at_reference": 70.51484948027553,
+    "speed_mps": 0.0,
+    "max_progress_m": 70.51484948027553,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "hold_reason": "operator_stopped_at",
+   "cap_kind": null,
+   "cap_reached_at": null,
+   "samples": [
+    {
+     "at_ms": 1795181520000,
+     "progress_m": 70.51484948027553,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795181520001,
+     "progress_m": 70.51484948027553,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795181550000,
+     "progress_m": 70.51484948027553,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795181610000,
+     "progress_m": 70.51484948027553,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795181700000,
+     "progress_m": 70.51484948027553,
+     "phase": "hold:operator_stopped_at"
+    }
+   ]
+  },
+  {
+   "name": "S4",
+   "envelope": {
+    "reference_at": "2026-11-20T14:00:20.000+00:00",
+    "progress_m_at_reference": 20433.65069986241,
+    "speed_mps": 0.0,
+    "max_progress_m": 20433.65069986241,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "hold_reason": "operator_stopped_at",
+   "cap_kind": null,
+   "cap_reached_at": null,
+   "samples": [
+    {
+     "at_ms": 1795183220000,
+     "progress_m": 20433.65069986241,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795183220001,
+     "progress_m": 20433.65069986241,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795183250000,
+     "progress_m": 20433.65069986241,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795183310000,
+     "progress_m": 20433.65069986241,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795183400000,
+     "progress_m": 20433.65069986241,
+     "phase": "hold:operator_stopped_at"
+    }
+   ]
+  },
+  {
+   "name": "S5",
+   "envelope": {
+    "reference_at": "2026-11-20T13:32:30.000+00:00",
+    "progress_m_at_reference": 2087.412506128542,
+    "speed_mps": 0.0,
+    "max_progress_m": 2087.412506128542,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "hold_reason": "operator_stopped_at",
+   "cap_kind": null,
+   "cap_reached_at": null,
+   "samples": [
+    {
+     "at_ms": 1795181550000,
+     "progress_m": 2087.412506128542,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795181550001,
+     "progress_m": 2087.412506128542,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795181580000,
+     "progress_m": 2087.412506128542,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795181640000,
+     "progress_m": 2087.412506128542,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795181730000,
+     "progress_m": 2087.412506128542,
+     "phase": "hold:operator_stopped_at"
+    }
+   ]
+  },
+  {
+   "name": "S5b",
+   "envelope": {
+    "reference_at": "2026-11-20T13:32:30.000+00:00",
+    "progress_m_at_reference": 2087.412506128542,
+    "speed_mps": 13.132165363993748,
+    "max_progress_m": 4057.2373107276044,
+    "horizon_s": 180.0,
+    "dwell_until": "2026-11-20T13:33:00.000+00:00"
+   },
+   "hold_reason": "schedule_stop_zone",
+   "cap_kind": "horizon",
+   "cap_reached_at": "2026-11-20T13:35:30.000+00:00",
+   "samples": [
+    {
+     "at_ms": 1795181550000,
+     "progress_m": 2087.412506128542,
+     "phase": "hold:schedule_stop_zone"
+    },
+    {
+     "at_ms": 1795181550001,
+     "progress_m": 2087.412506128542,
+     "phase": "hold:schedule_stop_zone"
+    },
+    {
+     "at_ms": 1795181579999,
+     "progress_m": 2087.412506128542,
+     "phase": "hold:schedule_stop_zone"
+    },
+    {
+     "at_ms": 1795181580000,
+     "progress_m": 2087.412506128542,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795181580001,
+     "progress_m": 2087.425638293906,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795181640000,
+     "progress_m": 2875.342427968167,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795181729999,
+     "progress_m": 4057.22417856224,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795181730000,
+     "progress_m": 4057.2373107276044,
+     "phase": "cap:horizon"
+    },
+    {
+     "at_ms": 1795181730001,
+     "progress_m": 4057.2373107276044,
+     "phase": "cap:horizon"
+    }
+   ]
+  },
+  {
+   "name": "S6",
+   "envelope": {
+    "reference_at": "2026-11-20T13:33:30.000+00:00",
+    "progress_m_at_reference": 3272.3073888879794,
+    "speed_mps": 0.0,
+    "max_progress_m": 3272.3073888879794,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "hold_reason": "trip_canceled",
+   "cap_kind": null,
+   "cap_reached_at": null,
+   "samples": [
+    {
+     "at_ms": 1795181610000,
+     "progress_m": 3272.3073888879794,
+     "phase": "hold:trip_canceled"
+    },
+    {
+     "at_ms": 1795181610001,
+     "progress_m": 3272.3073888879794,
+     "phase": "hold:trip_canceled"
+    },
+    {
+     "at_ms": 1795181640000,
+     "progress_m": 3272.3073888879794,
+     "phase": "hold:trip_canceled"
+    },
+    {
+     "at_ms": 1795181700000,
+     "progress_m": 3272.3073888879794,
+     "phase": "hold:trip_canceled"
+    },
+    {
+     "at_ms": 1795181790000,
+     "progress_m": 3272.3073888879794,
+     "phase": "hold:trip_canceled"
+    }
+   ]
+  },
+  {
+   "name": "S6b",
+   "envelope": {
+    "reference_at": "2026-11-20T13:33:30.000+00:00",
+    "progress_m_at_reference": 3272.3073888879794,
+    "speed_mps": 13.132165363993748,
+    "max_progress_m": 4454.202271647417,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "hold_reason": null,
+   "cap_kind": "stop",
+   "cap_reached_at": "2026-11-20T13:35:00.000+00:00",
+   "samples": [
+    {
+     "at_ms": 1795181610000,
+     "progress_m": 3272.3073888879794,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795181610001,
+     "progress_m": 3272.3205210533433,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795181640000,
+     "progress_m": 3666.2723498077917,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795181699999,
+     "progress_m": 4454.189139482052,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795181700000,
+     "progress_m": 4454.202271647417,
+     "phase": "cap:stop"
+    },
+    {
+     "at_ms": 1795181700001,
+     "progress_m": 4454.202271647417,
+     "phase": "cap:stop"
+    },
+    {
+     "at_ms": 1795181790000,
+     "progress_m": 4454.202271647417,
+     "phase": "cap:stop"
+    }
+   ]
+  },
+  {
+   "name": "S7",
+   "envelope": {
+    "reference_at": "2026-11-20T13:33:30.000+00:00",
+    "progress_m_at_reference": 3272.3073888879794,
+    "speed_mps": 13.132165363993748,
+    "max_progress_m": 4454.202271647417,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "hold_reason": null,
+   "cap_kind": "stop",
+   "cap_reached_at": "2026-11-20T13:35:00.000+00:00",
+   "samples": [
+    {
+     "at_ms": 1795181610000,
+     "progress_m": 3272.3073888879794,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795181610001,
+     "progress_m": 3272.3205210533433,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795181640000,
+     "progress_m": 3666.2723498077917,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795181699999,
+     "progress_m": 4454.189139482052,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795181700000,
+     "progress_m": 4454.202271647417,
+     "phase": "cap:stop"
+    },
+    {
+     "at_ms": 1795181700001,
+     "progress_m": 4454.202271647417,
+     "phase": "cap:stop"
+    },
+    {
+     "at_ms": 1795181790000,
+     "progress_m": 4454.202271647417,
+     "phase": "cap:stop"
+    }
+   ]
+  },
+  {
+   "name": "S10",
+   "envelope": {
+    "reference_at": "2026-11-20T13:33:30.000+00:00",
+    "progress_m_at_reference": 3272.3073888879794,
+    "speed_mps": 13.132165363993748,
+    "max_progress_m": 4454.202271647417,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "hold_reason": null,
+   "cap_kind": "stop",
+   "cap_reached_at": "2026-11-20T13:35:00.000+00:00",
+   "samples": [
+    {
+     "at_ms": 1795181610000,
+     "progress_m": 3272.3073888879794,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795181610001,
+     "progress_m": 3272.3205210533433,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795181640000,
+     "progress_m": 3666.2723498077917,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795181699999,
+     "progress_m": 4454.189139482052,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795181700000,
+     "progress_m": 4454.202271647417,
+     "phase": "cap:stop"
+    },
+    {
+     "at_ms": 1795181700001,
+     "progress_m": 4454.202271647417,
+     "phase": "cap:stop"
+    },
+    {
+     "at_ms": 1795181790000,
+     "progress_m": 4454.202271647417,
+     "phase": "cap:stop"
+    }
+   ]
+  },
+  {
+   "name": "S11",
+   "envelope": {
+    "reference_at": "2026-11-20T13:31:00.000+00:00",
+    "progress_m_at_reference": -433.88515051972445,
+    "speed_mps": 0.0,
+    "max_progress_m": -433.88515051972445,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "hold_reason": "outside_schedule_extent",
+   "cap_kind": null,
+   "cap_reached_at": null,
+   "samples": [
+    {
+     "at_ms": 1795181460000,
+     "progress_m": -433.88515051972445,
+     "phase": "hold:outside_schedule_extent"
+    },
+    {
+     "at_ms": 1795181460001,
+     "progress_m": -433.88515051972445,
+     "phase": "hold:outside_schedule_extent"
+    },
+    {
+     "at_ms": 1795181490000,
+     "progress_m": -433.88515051972445,
+     "phase": "hold:outside_schedule_extent"
+    },
+    {
+     "at_ms": 1795181550000,
+     "progress_m": -433.88515051972445,
+     "phase": "hold:outside_schedule_extent"
+    },
+    {
+     "at_ms": 1795181640000,
+     "progress_m": -433.88515051972445,
+     "phase": "hold:outside_schedule_extent"
+    }
+   ]
+  },
+  {
+   "name": "S12",
+   "envelope": {
+    "reference_at": "2026-11-20T09:00:20.000+00:00",
+    "progress_m_at_reference": 40.0,
+    "speed_mps": 14.0,
+    "max_progress_m": 2560.0,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "hold_reason": null,
+   "cap_kind": "horizon",
+   "cap_reached_at": "2026-11-20T09:03:20.000+00:00",
+   "samples": [
+    {
+     "at_ms": 1795165220000,
+     "progress_m": 40.0,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795165220001,
+     "progress_m": 40.014,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795165250000,
+     "progress_m": 460.0,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795165310000,
+     "progress_m": 1300.0,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795165399999,
+     "progress_m": 2559.986,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795165400000,
+     "progress_m": 2560.0,
+     "phase": "cap:horizon"
+    },
+    {
+     "at_ms": 1795165400001,
+     "progress_m": 2560.0,
+     "phase": "cap:horizon"
+    }
+   ]
+  },
+  {
+   "name": "S13",
+   "envelope": {
+    "reference_at": "2026-11-20T09:00:00.000+00:00",
+    "progress_m_at_reference": 0.0,
+    "speed_mps": 16.666666666666668,
+    "max_progress_m": 1000.0,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "hold_reason": null,
+   "cap_kind": "stop",
+   "cap_reached_at": "2026-11-20T09:01:00.000+00:00",
+   "samples": [
+    {
+     "at_ms": 1795165200000,
+     "progress_m": 0.0,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795165200001,
+     "progress_m": 0.01666666666666667,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795165230000,
+     "progress_m": 500.00000000000006,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795165259999,
+     "progress_m": 999.9833333333335,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795165260000,
+     "progress_m": 1000.0,
+     "phase": "cap:stop"
+    },
+    {
+     "at_ms": 1795165260001,
+     "progress_m": 1000.0,
+     "phase": "cap:stop"
+    },
+    {
+     "at_ms": 1795165290000,
+     "progress_m": 1000.0,
+     "phase": "cap:stop"
+    },
+    {
+     "at_ms": 1795165380000,
+     "progress_m": 1000.0,
+     "phase": "cap:stop"
+    }
+   ]
+  },
+  {
+   "name": "S14",
+   "envelope": {
+    "reference_at": "2026-11-20T09:00:05.000+00:00",
+    "progress_m_at_reference": 10.0,
+    "speed_mps": 0.0,
+    "max_progress_m": 10.0,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "hold_reason": "operator_stopped_at",
+   "cap_kind": null,
+   "cap_reached_at": null,
+   "samples": [
+    {
+     "at_ms": 1795165205000,
+     "progress_m": 10.0,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795165205001,
+     "progress_m": 10.0,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795165235000,
+     "progress_m": 10.0,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795165295000,
+     "progress_m": 10.0,
+     "phase": "hold:operator_stopped_at"
+    },
+    {
+     "at_ms": 1795165385000,
+     "progress_m": 10.0,
+     "phase": "hold:operator_stopped_at"
+    }
+   ]
+  },
+  {
+   "name": "S8",
+   "envelope": {
+    "reference_at": "2027-03-28T00:58:00.000+00:00",
+    "progress_m_at_reference": 8000.000000000001,
+    "speed_mps": 16.666666666666668,
+    "max_progress_m": 11000.0,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "hold_reason": null,
+   "cap_kind": "horizon",
+   "cap_reached_at": "2027-03-28T01:01:00.000+00:00",
+   "samples": [
+    {
+     "at_ms": 1806195480000,
+     "progress_m": 8000.000000000001,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1806195480001,
+     "progress_m": 8000.016666666667,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1806195510000,
+     "progress_m": 8500.000000000002,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1806195570000,
+     "progress_m": 9500.0,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1806195659999,
+     "progress_m": 10999.983333333334,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1806195660000,
+     "progress_m": 11000.0,
+     "phase": "cap:horizon"
+    },
+    {
+     "at_ms": 1806195660001,
+     "progress_m": 11000.0,
+     "phase": "cap:horizon"
+    }
+   ]
+  },
+  {
+   "name": "S9",
+   "envelope": {
+    "reference_at": "2027-10-31T00:59:00.000+00:00",
+    "progress_m_at_reference": 9888.888888888889,
+    "speed_mps": 1.8518518518518519,
+    "max_progress_m": 10222.222222222223,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "hold_reason": null,
+   "cap_kind": "horizon",
+   "cap_reached_at": "2027-10-31T01:02:00.000+00:00",
+   "samples": [
+    {
+     "at_ms": 1824944340000,
+     "progress_m": 9888.888888888889,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1824944340001,
+     "progress_m": 9888.89074074074,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1824944370000,
+     "progress_m": 9944.444444444443,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1824944430000,
+     "progress_m": 10055.555555555555,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1824944519999,
+     "progress_m": 10222.22037037037,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1824944520000,
+     "progress_m": 10222.222222222223,
+     "phase": "cap:horizon"
+    },
+    {
+     "at_ms": 1824944520001,
+     "progress_m": 10222.222222222223,
+     "phase": "cap:horizon"
+    }
+   ]
+  },
+  {
+   "name": "S15",
+   "envelope": {
+    "reference_at": "2027-10-31T02:28:20.000+00:00",
+    "progress_m_at_reference": 10003.0,
+    "speed_mps": 5.555555555555555,
+    "max_progress_m": 10447.444444444445,
+    "horizon_s": 180.0,
+    "dwell_until": "2027-10-31T02:30:00.000+00:00"
+   },
+   "hold_reason": "schedule_stop_zone",
+   "cap_kind": "horizon",
+   "cap_reached_at": "2027-10-31T02:31:20.000+00:00",
+   "samples": [
+    {
+     "at_ms": 1824949700000,
+     "progress_m": 10003.0,
+     "phase": "hold:schedule_stop_zone"
+    },
+    {
+     "at_ms": 1824949700001,
+     "progress_m": 10003.0,
+     "phase": "hold:schedule_stop_zone"
+    },
+    {
+     "at_ms": 1824949730000,
+     "progress_m": 10003.0,
+     "phase": "hold:schedule_stop_zone"
+    },
+    {
+     "at_ms": 1824949790000,
+     "progress_m": 10003.0,
+     "phase": "hold:schedule_stop_zone"
+    },
+    {
+     "at_ms": 1824949799999,
+     "progress_m": 10003.0,
+     "phase": "hold:schedule_stop_zone"
+    },
+    {
+     "at_ms": 1824949800000,
+     "progress_m": 10003.0,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1824949800001,
+     "progress_m": 10003.005555555555,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1824949879999,
+     "progress_m": 10447.43888888889,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1824949880000,
+     "progress_m": 10447.444444444445,
+     "phase": "cap:horizon"
+    },
+    {
+     "at_ms": 1824949880001,
+     "progress_m": 10447.444444444445,
+     "phase": "cap:horizon"
+    }
+   ]
+  },
+  {
+   "name": "S15b",
+   "envelope": {
+    "reference_at": "2027-10-31T02:28:20.000+00:00",
+    "progress_m_at_reference": 10003.0,
+    "speed_mps": 0.0,
+    "max_progress_m": 10003.0,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "hold_reason": "schedule_stop_zone",
+   "cap_kind": null,
+   "cap_reached_at": null,
+   "samples": [
+    {
+     "at_ms": 1824949700000,
+     "progress_m": 10003.0,
+     "phase": "hold:schedule_stop_zone"
+    },
+    {
+     "at_ms": 1824949700001,
+     "progress_m": 10003.0,
+     "phase": "hold:schedule_stop_zone"
+    },
+    {
+     "at_ms": 1824949730000,
+     "progress_m": 10003.0,
+     "phase": "hold:schedule_stop_zone"
+    },
+    {
+     "at_ms": 1824949790000,
+     "progress_m": 10003.0,
+     "phase": "hold:schedule_stop_zone"
+    },
+    {
+     "at_ms": 1824949880000,
+     "progress_m": 10003.0,
+     "phase": "hold:schedule_stop_zone"
+    }
+   ]
+  },
+  {
+   "name": "S16",
+   "envelope": {
+    "reference_at": "2026-11-20T09:06:10.000+00:00",
+    "progress_m_at_reference": 5003.0,
+    "speed_mps": 22.22222222222222,
+    "max_progress_m": 6780.777777777777,
+    "horizon_s": 180.0,
+    "dwell_until": "2026-11-20T09:07:50.000+00:00"
+   },
+   "hold_reason": "schedule_stop_zone",
+   "cap_kind": "horizon",
+   "cap_reached_at": "2026-11-20T09:09:10.000+00:00",
+   "samples": [
+    {
+     "at_ms": 1795165570000,
+     "progress_m": 5003.0,
+     "phase": "hold:schedule_stop_zone"
+    },
+    {
+     "at_ms": 1795165570001,
+     "progress_m": 5003.0,
+     "phase": "hold:schedule_stop_zone"
+    },
+    {
+     "at_ms": 1795165600000,
+     "progress_m": 5003.0,
+     "phase": "hold:schedule_stop_zone"
+    },
+    {
+     "at_ms": 1795165660000,
+     "progress_m": 5003.0,
+     "phase": "hold:schedule_stop_zone"
+    },
+    {
+     "at_ms": 1795165669999,
+     "progress_m": 5003.0,
+     "phase": "hold:schedule_stop_zone"
+    },
+    {
+     "at_ms": 1795165670000,
+     "progress_m": 5003.0,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795165670001,
+     "progress_m": 5003.022222222222,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795165749999,
+     "progress_m": 6780.7555555555555,
+     "phase": "moving"
+    },
+    {
+     "at_ms": 1795165750000,
+     "progress_m": 6780.777777777777,
+     "phase": "cap:horizon"
+    },
+    {
+     "at_ms": 1795165750001,
+     "progress_m": 6780.777777777777,
+     "phase": "cap:horizon"
+    }
+   ]
+  }
+ ],
+ "micro": [
+  {
+   "name": "1023V19661C5",
+   "envelope": {
+    "reference_at": "2026-11-20T14:33:21.000700+00:00",
+    "progress_m_at_reference": 40835.269721368124,
+    "speed_mps": 13.131013822964128,
+    "max_progress_m": 43193.40455518064,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "samples": [
+    {
+     "at_ms": 1795185231000,
+     "progress_m": 41229.19094434737
+    }
+   ]
+  },
+  {
+   "name": "1023V19667C5",
+   "envelope": {
+    "reference_at": "2026-11-20T14:33:21.000700+00:00",
+    "progress_m_at_reference": 39544.93098238385,
+    "speed_mps": 10.68684865870661,
+    "max_progress_m": 40829.8220670471,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "samples": [
+    {
+     "at_ms": 1795185231000,
+     "progress_m": 39865.52896135099
+    }
+   ]
+  },
+  {
+   "name": "1023V20277C4a",
+   "envelope": {
+    "reference_at": "2026-11-20T14:33:21.000700+00:00",
+    "progress_m_at_reference": 21847.85848686428,
+    "speed_mps": 13.172442290172599,
+    "max_progress_m": 24218.898099095346,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "samples": [
+    {
+     "at_ms": 1795185231000,
+     "progress_m": 22243.022534859854
+    }
+   ]
+  },
+  {
+   "name": "1023V20279C4a",
+   "envelope": {
+    "reference_at": "2026-11-20T14:33:21.000700+00:00",
+    "progress_m_at_reference": 14524.40813812095,
+    "speed_mps": 12.650612065187245,
+    "max_progress_m": 16801.518309854655,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "samples": [
+    {
+     "at_ms": 1795185231000,
+     "progress_m": 14903.917644648123
+    }
+   ]
+  },
+  {
+   "name": "1023V20281C4a",
+   "envelope": {
+    "reference_at": "2026-11-20T14:33:21.000700+00:00",
+    "progress_m_at_reference": 10327.668671582851,
+    "speed_mps": 13.015434581931823,
+    "max_progress_m": 11896.428547976437,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "samples": [
+    {
+     "at_ms": 1795185231000,
+     "progress_m": 10718.122598236598
+    }
+   ]
+  },
+  {
+   "name": "1023V20844C5",
+   "envelope": {
+    "reference_at": "2026-11-20T14:33:21.000700+00:00",
+    "progress_m_at_reference": 12604.456931907103,
+    "speed_mps": 11.839937704501397,
+    "max_progress_m": 13315.457846995892,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "samples": [
+    {
+     "at_ms": 1795185231000,
+     "progress_m": 12959.646775085752
+    }
+   ]
+  },
+  {
+   "name": "1023V20845C5",
+   "envelope": {
+    "reference_at": "2026-11-20T14:33:21.000700+00:00",
+    "progress_m_at_reference": 29271.90937877909,
+    "speed_mps": 12.356120360607202,
+    "max_progress_m": 29744.272533162402,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "samples": [
+    {
+     "at_ms": 1795185231000,
+     "progress_m": 29642.584340313057
+    }
+   ]
+  },
+  {
+   "name": "1023V20846C5",
+   "envelope": {
+    "reference_at": "2026-11-20T14:33:21.000700+00:00",
+    "progress_m_at_reference": 3939.278920451678,
+    "speed_mps": 13.132165363993748,
+    "max_progress_m": 4454.202271647417,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "samples": [
+    {
+     "at_ms": 1795185231000,
+     "progress_m": 4333.234688855736
+    }
+   ]
+  },
+  {
+   "name": "S2b",
+   "envelope": {
+    "reference_at": "2026-11-20T13:29:00.000700+00:00",
+    "progress_m_at_reference": 70.51484948027553,
+    "speed_mps": 16.869147138735556,
+    "max_progress_m": 2090.412506128542,
+    "horizon_s": 180.0,
+    "dwell_until": "2026-11-20T13:30:00.000700+00:00"
+   },
+   "samples": [
+    {
+     "at_ms": 1795181370000,
+     "progress_m": 70.51484948027553
+    }
+   ]
+  },
+  {
+   "name": "S5b",
+   "envelope": {
+    "reference_at": "2026-11-20T13:32:30.000700+00:00",
+    "progress_m_at_reference": 2087.412506128542,
+    "speed_mps": 13.132165363993748,
+    "max_progress_m": 4057.2373107276044,
+    "horizon_s": 180.0,
+    "dwell_until": "2026-11-20T13:33:00.000700+00:00"
+   },
+   "samples": [
+    {
+     "at_ms": 1795181580000,
+     "progress_m": 2087.412506128542
+    }
+   ]
+  },
+  {
+   "name": "S6b",
+   "envelope": {
+    "reference_at": "2026-11-20T13:33:30.000700+00:00",
+    "progress_m_at_reference": 3272.3073888879794,
+    "speed_mps": 13.132165363993748,
+    "max_progress_m": 4454.202271647417,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "samples": [
+    {
+     "at_ms": 1795181640000,
+     "progress_m": 3666.2631572920372
+    }
+   ]
+  },
+  {
+   "name": "S7",
+   "envelope": {
+    "reference_at": "2026-11-20T13:33:30.000700+00:00",
+    "progress_m_at_reference": 3272.3073888879794,
+    "speed_mps": 13.132165363993748,
+    "max_progress_m": 4454.202271647417,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "samples": [
+    {
+     "at_ms": 1795181640000,
+     "progress_m": 3666.2631572920372
+    }
+   ]
+  },
+  {
+   "name": "S10",
+   "envelope": {
+    "reference_at": "2026-11-20T13:33:30.000700+00:00",
+    "progress_m_at_reference": 3272.3073888879794,
+    "speed_mps": 13.132165363993748,
+    "max_progress_m": 4454.202271647417,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "samples": [
+    {
+     "at_ms": 1795181640000,
+     "progress_m": 3666.2631572920372
+    }
+   ]
+  },
+  {
+   "name": "S12",
+   "envelope": {
+    "reference_at": "2026-11-20T09:00:20.000700+00:00",
+    "progress_m_at_reference": 40.0,
+    "speed_mps": 14.0,
+    "max_progress_m": 2560.0,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "samples": [
+    {
+     "at_ms": 1795165250000,
+     "progress_m": 459.9902
+    }
+   ]
+  },
+  {
+   "name": "S13",
+   "envelope": {
+    "reference_at": "2026-11-20T09:00:00.000700+00:00",
+    "progress_m_at_reference": 0.0,
+    "speed_mps": 16.666666666666668,
+    "max_progress_m": 1000.0,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "samples": [
+    {
+     "at_ms": 1795165230000,
+     "progress_m": 499.9883333333334
+    }
+   ]
+  },
+  {
+   "name": "S8",
+   "envelope": {
+    "reference_at": "2027-03-28T00:58:00.000700+00:00",
+    "progress_m_at_reference": 8000.000000000001,
+    "speed_mps": 16.666666666666668,
+    "max_progress_m": 11000.0,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "samples": [
+    {
+     "at_ms": 1806195510000,
+     "progress_m": 8499.988333333335
+    }
+   ]
+  },
+  {
+   "name": "S9",
+   "envelope": {
+    "reference_at": "2027-10-31T00:59:00.000700+00:00",
+    "progress_m_at_reference": 9888.888888888889,
+    "speed_mps": 1.8518518518518519,
+    "max_progress_m": 10222.222222222223,
+    "horizon_s": 180.0,
+    "dwell_until": null
+   },
+   "samples": [
+    {
+     "at_ms": 1824944370000,
+     "progress_m": 9944.443148148148
+    }
+   ]
+  },
+  {
+   "name": "S15",
+   "envelope": {
+    "reference_at": "2027-10-31T02:28:20.000700+00:00",
+    "progress_m_at_reference": 10003.0,
+    "speed_mps": 5.555555555555555,
+    "max_progress_m": 10447.444444444445,
+    "horizon_s": 180.0,
+    "dwell_until": "2027-10-31T02:30:00.000700+00:00"
+   },
+   "samples": [
+    {
+     "at_ms": 1824949730000,
+     "progress_m": 10003.0
+    }
+   ]
+  },
+  {
+   "name": "S16",
+   "envelope": {
+    "reference_at": "2026-11-20T09:06:10.000700+00:00",
+    "progress_m_at_reference": 5003.0,
+    "speed_mps": 22.22222222222222,
+    "max_progress_m": 6780.777777777777,
+    "horizon_s": 180.0,
+    "dwell_until": "2026-11-20T09:07:50.000700+00:00"
+   },
+   "samples": [
+    {
+     "at_ms": 1795165600000,
+     "progress_m": 5003.0
+    }
+   ]
+  }
+ ]
+}

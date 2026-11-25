@@ -1,0 +1,10 @@
+{
+ "envolventes_ms": 64,
+ "muestras_ms": 377,
+ "max_abs_delta_ms_m": 0,
+ "ms_pasa_1e6": true,
+ "fases_distintas": 0,
+ "envolventes_micro": 19,
+ "max_abs_delta_micro_m": 0.01166666666722449,
+ "micro_pasaria_1e6": false
+}
