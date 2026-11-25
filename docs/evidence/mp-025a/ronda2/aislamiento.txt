@@ -1,0 +1,8 @@
+test postgresql://mp_test:mp_local@127.0.0.1:5454/madrid_pulse
+mp025a-r2
+fe8614fd438726c2c1be698ffd6e7b283bbc4bdc445af7dbccf49e44a3dbec25
+Base PostgreSQL marcada como desechable.
+127.0.0.1:5454
+madrid-pulse:disposable
+mp025a-suite-r2
+Ambos contenedores retirados con docker rm -fv; ausencia verificada.

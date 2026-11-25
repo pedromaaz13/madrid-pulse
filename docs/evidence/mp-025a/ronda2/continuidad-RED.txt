@@ -1,0 +1,2 @@
+huella=None, retrocesos=8/44, máximo=2371.039612 m
+huella=discordante, retrocesos=8/44, máximo=2371.039612 m

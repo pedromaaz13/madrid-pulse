@@ -4,6 +4,8 @@ Ejecutor asignado por el despacho: Codex gpt-6.2-astra · high. Base local y
 origin/main en 2b71d17. Implementación 5de418d y corrección de desempate
 2e668a0. La revisión corresponde a Claude Opus High.
 
+La corrección posterior al dictamen de Claude está en [la tabla de B1–B3 y A1–A10](ronda2/README.md). Los resultados de esta página corresponden a la primera entrega.
+
 ## Qué se implementó
 
 | Regla | Comportamiento y evidencia |
