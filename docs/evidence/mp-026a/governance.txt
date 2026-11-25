@@ -1,0 +1,4 @@
+HEAD=83e474158ffa185c3d8e88e6bb454c149e7bd849
+Comando: python scripts/governance/check_docs.py
+Documentación de gobernanza correcta.
+Exit=0

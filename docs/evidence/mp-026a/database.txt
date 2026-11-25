@@ -1,0 +1,94 @@
+DSN=postgresql://mp026a:mp026a_local@127.0.0.1:5453/madrid_pulse
+Host=127.0.0.1 puerto=5453 base=madrid_pulse esquema=public rol=mp026a (propietario y superusuario local de pruebas)
+Contenedor propio mp026a-replay-db, imagen postgis/postgis:17-3.5, volumen anónimo desechable; se eliminará con docker rm -fv.
+Migraciones desde cero; marca madrid-pulse:disposable; MADRID_PULSE_ENV=test/replay; MADRID_PULSE_REQUIRE_DB=1.
+127.0.0.1:5432 - accepting connections
+Migración infra/migrations/0001_init.up.sql
+BEGIN
+CREATE EXTENSION
+NOTICE:  extension "postgis" already exists, skipping
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+COMMIT
+Migración infra/migrations/0002_api_batch_indexes.up.sql
+BEGIN
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+COMMIT
+Base PostgreSQL marcada como desechable.
+ current_database | current_schema | current_user | obj_description
+------------------+----------------+--------------+-----------------
+ madrid_pulse     | public         | mp026a       |
+(1 row)
+
+ current_database | current_schema | current_user |     disposable_mark
+------------------+----------------+--------------+-------------------------
+ madrid_pulse     | public         | mp026a       | madrid-pulse:disposable
+(1 row)
+
+El primer GREEN local detectó cuatro casos previos contaminados por las inserciones de la prueba nueva. Se eliminó el contenedor propio y se recreó para repetir RED y GREEN con la corrección del aislamiento en el arnés.
+mp026a-replay-db
+WARNING: The requested image's platform (linux/amd64) does not match the detected host platform (linux/arm64/v8) and no specific platform was requested
+c8e9bc8e2252d927ac32c3481d5159e73e85f028a0f4039874936c553a898f15
+127.0.0.1:5432 - accepting connections
+Migración infra/migrations/0001_init.up.sql
+BEGIN
+CREATE EXTENSION
+NOTICE:  extension "postgis" already exists, skipping
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+COMMIT
+Migración infra/migrations/0002_api_batch_indexes.up.sql
+BEGIN
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+COMMIT
+Base PostgreSQL marcada como desechable.
+ current_database | current_schema | current_user |     disposable_mark
+------------------+----------------+--------------+-------------------------
+ madrid_pulse     | public         | mp026a       | madrid-pulse:disposable
+(1 row)
+
+Contenedor propio mp026a-replay-db, volumen anónimo 1be0f5eafad89fe0b966843f465b4ce8766de55dffce4e69ae902847669277d3
+Comando: docker rm -fv mp026a-replay-db
+mp026a-replay-db
+Ausencia del contenedor y su volumen verificada.
+Comando: git worktree remove --force /tmp/mp026a-red.2ZUJ59/baseline
+Checkout temporal RED eliminado.
+Exit=0

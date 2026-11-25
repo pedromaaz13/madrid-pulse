@@ -137,9 +137,10 @@ Regla de contrato para el cliente: con `scope` igual, ordenar por `sequence`
 y descartar toda respuesta de `sequence` menor; con `sequence` igual,
 desempatar por `generated_at` y luego por `tiebreak`. Con `scope` **distinto**,
 no comparar secuencias: es una discontinuidad (restauración, otro clúster), no
-un rebobinado. `sequence` es `max(source_ingestion_run.id)` considerado:
-monotónica de verdad, sobrevive a reinicios del proceso de API y **no avanza
-con el reloj** — si el colector se detiene, no avanza.
+un rebobinado. `sequence` es el mayor `source_ingestion_run.id` entre las
+ingestas elegibles. Sobrevive a reinicios y permanece estable mientras el
+conjunto elegible sea el mismo. En replay cambia al cruzar el
+`started_at` de ingestas ya guardadas.
 
 ### Las tres coordenadas, separadas
 
