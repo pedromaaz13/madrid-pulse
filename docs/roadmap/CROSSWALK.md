@@ -41,6 +41,8 @@ H4-11→MP-023 · H4-00→MP-024 · H4-04→MP-025a/b · H4-01→MP-026a/b · H4
 | D-13 | = parte FR-19 de **MP-026a** | alias (`alias_of`; no cuenta como tarea) |
 | D-19 (cierre de FR-01 **y FR-02**) | = **MP-024 + MP-025a/b** (FR-01) **y MP-026a** (FR-02) | solo referencia; no existe como tarea en `PROJECT_STATE.json` |
 | D-11, D-12, D-14…D-18 | subalcance de staging **propuesto**, separado de MP-032 local hasta decisión del propietario (`PROPOSAL-STAGING-LIVE`) | no tareas nuevas automáticas |
+> **Coordinación, no dependencia:** MP-030 (frontend Live) y D-03/D-04 (demo) comparten archivos (`apps/web/src/ui/*`, `App.tsx`, `MapView.tsx`) pero **no** hay dependencia técnica entre ellos; la demo no bloquea MP-030. Si ambas están activas a la vez, se secuencian las ramas.
+
 > **Superado:** las filas D-01…D-07 de la sección «MVP 0» de `docs/deployment/MVP_RELEASE_CHECKLIST.md` (primera versión) quedan sustituidas por `MVP0_IMPLEMENTATION_PLAN.md`; D-10…D-19 siguen vigentes.
 
 ## 5. Design Discovery (DES-00…DES-09, `docs/design/DESIGN_DISCOVERY_A_B_C.md`)

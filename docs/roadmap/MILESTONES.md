@@ -2,6 +2,8 @@
 
 Fuente estructurada: [`docs/governance/PROJECT_STATE.json`](../governance/PROJECT_STATE.json). Las tablas entre marcadores `GENERATED` se regeneran con `python scripts/governance/sync_docs.py`; **no se editan a mano**. Todo lo demás es texto humano y se conserva.
 
+> **Cierre histórico ≠ preparado para release.** `CLOSED` significa que el gate literal de esa fase o hito se evidenció **en su momento** y no se reescribe. No significa que el producto esté listo para publicarse: la auditoría H3 concluyó **NO-GO para despliegue público** y mantiene **FR-01 y FR-02 (P0) abiertos**; las columnas de hallazgos abiertos y los gates heredados (F3, F4, F9) lo muestran en cada fila. La preparación para release se decide solo en el gate MP-035 con aprobación humana (`docs/roadmap/RELEASE_ROADMAP.md`).
+
 ## Fases originales F0–F10 (roadmap de `docs/PLAN.md`)
 
 <!-- BEGIN GENERATED: phases-table -->

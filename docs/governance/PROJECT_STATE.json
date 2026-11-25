@@ -971,7 +971,7 @@
       "title": "Fiabilidad realtime (SKIPPED, UTC, live/replay)",
       "track": "PRODUCT",
       "milestone": "H3",
-      "phase": "H3",
+      "phase": "F10",
       "depends_on": [
         "MP-015"
       ],
@@ -998,7 +998,7 @@
       "title": "Catálogo completo de Madrid (identidad y vigencia)",
       "track": "PRODUCT",
       "milestone": "H3",
-      "phase": "H3",
+      "phase": "F10",
       "depends_on": [
         "MP-016"
       ],
@@ -1025,7 +1025,7 @@
       "title": "Corredores ferroviarios por patrón y sentido",
       "track": "PRODUCT",
       "milestone": "H3",
-      "phase": "H3",
+      "phase": "F10",
       "depends_on": [
         "MP-017"
       ],
@@ -1052,7 +1052,7 @@
       "title": "Contrato de snapshot/API coherente",
       "track": "PRODUCT",
       "milestone": "H3",
-      "phase": "H3",
+      "phase": "F10",
       "depends_on": [
         "MP-018"
       ],
@@ -1079,7 +1079,7 @@
       "title": "Mapa y tablero (React/MapLibre)",
       "track": "PRODUCT",
       "milestone": "H3",
-      "phase": "H3",
+      "phase": "F10",
       "depends_on": [
         "MP-019"
       ],
@@ -1106,7 +1106,7 @@
       "title": "Histórico y continuidad analítica",
       "track": "PRODUCT",
       "milestone": "H3",
-      "phase": "H3",
+      "phase": "F10",
       "depends_on": [
         "MP-020"
       ],
@@ -1133,7 +1133,7 @@
       "title": "Validación integral de cierre (Madrid completo)",
       "track": "PRODUCT",
       "milestone": "H3",
-      "phase": "H3",
+      "phase": "F10",
       "depends_on": [
         "MP-021"
       ],
@@ -1735,7 +1735,15 @@
       "aliases": [
         "H4-05"
       ],
-      "priority": "P1"
+      "priority": "P1",
+      "coordination": {
+        "file_overlap_with": [
+          "D-03",
+          "D-04"
+        ],
+        "kind": "coordinacion_de_archivos",
+        "note": "No existe dependencia técnica de MP-030 con la demo opcional: MP-030 depende del contrato de MP-024. Solo hay solape de archivos (apps/web/src/ui/*, App.tsx, MapView.tsx); si D-03/D-04 están activas a la vez, se secuencian las ramas. La demo no bloquea el frontend Live."
+      }
     },
     {
       "implementation_status": "PLANNED",

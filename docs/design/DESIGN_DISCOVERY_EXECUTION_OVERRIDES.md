@@ -28,6 +28,9 @@
 - **Preflight obligatorio:** antes de declarar nada visual, el worker comprueba que la herramienta existe. Si no hay navegador: resultado **`NOT RUN`**, el **gate visual permanece abierto** y se informa; nunca `PASS` por inferencia ni mockups presentados como capturas.
 - Efectos de la política (`docs/ORCHESTRATION_POLICY.md`): `claude-sonnet-5-5` medium coordina y high para frontend/revisiones importantes; Opus/Astra solo ante problema complejo demostrado; el modelo efectivo se registra (argv durante la ejecución), no el autoinforme.
 
+## 2 bis. Rutas locales del documento original
+El original (`DESIGN_DISCOVERY_A_B_C.md`) menciona una ruta absoluta de la máquina del propietario como ubicación del repositorio. Se conserva **sin modificar** dentro del original (integridad). **No es una ruta operativa obligatoria:** cada entorno debe localizar el repositorio efectivo (`git rev-parse --show-toplevel` desde cualquier worktree) y trabajar en el worktree asignado; ningún agente debe asumir ni escribir esa ruta literal.
+
 ## 3. Fuentes de diseño (discovery, sin instalación)
 Anthropic `frontend-design`, Hallmark (`nutlope/hallmark`) e Impeccable (`pbakaus/impeccable`) se **consultan y comprueban** en DES-02 (versión, licencia, hooks, permisos). Prohibido: instalaciones globales, modo `live`/Apply inseguro, y copiar código con licencia incompatible con el MIT del repositorio. Resultado de DES-02 = decisión de uso, no integración.
 

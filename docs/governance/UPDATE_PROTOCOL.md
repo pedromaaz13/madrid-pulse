@@ -39,6 +39,7 @@ Dictamen `APPROVED` de proveedor contrario sobre el HEAD final; pruebas de acept
 Un hallazgo nuevo entra como `PROPOSED` (`open_findings` o `proposed_extensions`) hasta que el propietario lo acepta; no cambia gates ni abre tareas por sí solo. No se cierra un P0 sin prueba que falle antes y pase después.
 
 ## 7. Cierre de fases e hitos
+**Cierre histórico ≠ preparación para release:** `CLOSED` registra que un gate se evidenció y no se reescribe; la disponibilidad para publicar se decide aparte (gate MP-035, aprobación humana) y no se deduce de ningún cierre. Los P0 abiertos y el NO-GO público permanecen visibles en `PROJECT_STATE.json` y en las tablas generadas.
 1. Cada fase/hito declara su exit gate literal. 2. Se contrasta con evidencia real; si falta, queda `IMPLEMENTED_WITH_OPEN_GATE` y `OPEN`. 3. Solo con gate evidenciado pasa a `CLOSED`. 4. Si más tarde aparece un defecto, **no se reescribe el cierre**: se enlaza como `open_findings` y se abre trabajo nuevo.
 
 ## 8. Flujo por tarea
