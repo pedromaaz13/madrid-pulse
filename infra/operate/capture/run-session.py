@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Ejecuta y supervisa una sesión de captura en primer plano."""
 
 import argparse
@@ -13,7 +12,14 @@ import sys
 import time
 from pathlib import Path
 
-from capture_manifest import DATABASE_URL, MADRID, profile_digest, utcnow, write_json, write_manifest
+from capture_manifest import (
+    DATABASE_URL,
+    MADRID,
+    profile_digest,
+    utcnow,
+    write_json,
+    write_manifest,
+)
 
 ROOT = Path(__file__).resolve().parents[3]
 MAIN = Path("/Users/matu/Documents/DATA/madrid-pulse")
@@ -170,8 +176,8 @@ def supervise(directory, args, initial):
         nonlocal stop_signal
         stop_signal = signal.Signals(signum).name
 
-    signal.signal(signal.SIGTERM, stop)
-    signal.signal(signal.SIGINT, stop)
+    for signum in (signal.SIGTERM, signal.SIGINT, signal.SIGHUP):
+        signal.signal(signum, stop)
     started = utcnow()
     session = {
         "started_at_utc": started.isoformat(),

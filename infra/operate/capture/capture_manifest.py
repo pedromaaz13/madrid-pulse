@@ -8,6 +8,7 @@ import json
 import re
 from collections import Counter
 from datetime import datetime, timezone
+from itertools import pairwise
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -15,7 +16,6 @@ MADRID = ZoneInfo("Europe/Madrid")
 FEEDS = ("vehicle_positions", "trip_updates", "alerts")
 OBSERVATIONS = ("vehicle_position_observation", "trip_update_observation", "service_alert")
 DATABASE_URL = "postgresql://mp028_capture:mp028_capture_local@127.0.0.1:5466/mp028_capture"
-TABLES = ("source_ingestion_run", *OBSERVATIONS, "data_quality_event")
 
 
 def utcnow():
@@ -64,7 +64,7 @@ def summarize(runs, start, end, expected_profile, unexpected):
         points = [start, *sorted(run["started_at"] for run in successful), end]
         gaps = [
             {"from_utc": left.isoformat(), "to_utc": right.isoformat(), "seconds": duration}
-            for left, right in zip(points, points[1:])
+            for left, right in pairwise(points)
             if (duration := (right - left).total_seconds()) > 60
         ]
         total = len(attempts) + unexpected[feed]
