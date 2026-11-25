@@ -11,6 +11,8 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass, field
 
+from packages.database import database_settings_from_env
+
 
 @dataclass(frozen=True)
 class FeedConfig:
@@ -20,6 +22,8 @@ class FeedConfig:
 
 @dataclass(frozen=True)
 class CollectorConfig:
+    database_url: str
+    environment: str
     feeds: tuple[FeedConfig, ...] = field(
         default_factory=lambda: (
             FeedConfig("vehicle_positions", "https://gtfsrt.renfe.com/vehicle_positions.json"),
@@ -31,7 +35,6 @@ class CollectorConfig:
     request_timeout_seconds: float = 10.0
     max_retries: int = 3
     backoff_base_seconds: float = 1.0
-    database_url: str = "postgresql://madrid_pulse:madrid_pulse_local@127.0.0.1:5433/madrid_pulse"
     gtfs_source: str | None = None
     """Ruta al ZIP/directorio GTFS estático oficial (mismo `MADRID_PULSE_GTFS_SOURCE`
     que `apps/api`), usada únicamente para resolver avisos por estación
@@ -42,8 +45,11 @@ class CollectorConfig:
 
     @classmethod
     def from_env(cls) -> "CollectorConfig":
-        defaults = cls()
+        database_url, environment = database_settings_from_env()
+        defaults = cls(database_url, environment)
         return cls(
+            database_url=database_url,
+            environment=environment,
             poll_interval_seconds=float(
                 os.environ.get("COLLECTOR_POLL_INTERVAL_SECONDS", defaults.poll_interval_seconds)
             ),
@@ -56,6 +62,5 @@ class CollectorConfig:
             backoff_base_seconds=float(
                 os.environ.get("COLLECTOR_BACKOFF_BASE_SECONDS", defaults.backoff_base_seconds)
             ),
-            database_url=os.environ.get("MADRID_PULSE_DATABASE_URL", defaults.database_url),
             gtfs_source=os.environ.get("MADRID_PULSE_GTFS_SOURCE", defaults.gtfs_source),
         )

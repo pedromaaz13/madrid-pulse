@@ -9,12 +9,14 @@ resumen gold inicial.
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-docker compose -p madrid-pulse -f infra/docker/docker-compose.yml up -d
-python3 -m services.snapshotter 2026-11-19
+# Prepara una base y exporta MADRID_PULSE_DATABASE_URL según la guía enlazada.
+MADRID_PULSE_ENV=replay python3 -m services.snapshotter 2026-11-19
 ```
 
-`SNAPSHOTTER_OUTPUT_DIR` (por defecto `data/parquet`) y
-`MADRID_PULSE_DATABASE_URL` son las únicas variables de entorno.
+`MADRID_PULSE_DATABASE_URL` y `MADRID_PULSE_ENV` son obligatorias.
+`SNAPSHOTTER_OUTPUT_DIR` elige el destino (por defecto `data/parquet`).
+En `test` y `replay` se exige la marca de base desechable antes de modificar
+el archivo. Consulta la [guía de aislamiento](../../docs/operations/DATABASE_ISOLATION.md).
 
 ## Diseño
 
@@ -61,5 +63,5 @@ pérdida. Limpia sus propias filas al terminar (`try/finally`), nunca
 ```bash
 python3 -m unittest services.snapshotter.tests.test_export         # puro, sin BD
 python3 -m unittest services.snapshotter.tests.test_gold           # puro, sin BD (fixture GTFS real)
-python3 -m unittest services.snapshotter.tests.test_export_replay  # requiere PostgreSQL local
+MADRID_PULSE_ENV=test python3 -m unittest services.snapshotter.tests.test_export_replay  # requiere base desechable
 ```

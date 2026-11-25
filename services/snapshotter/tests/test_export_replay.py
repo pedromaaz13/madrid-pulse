@@ -23,14 +23,11 @@ from pathlib import Path
 import json
 
 import duckdb
-import psycopg
-
 from packages.contracts.canonical import ServiceAlert
-from packages.gtfs import load_feed
 from services.collector import db as collector_db
-from services.collector.config import CollectorConfig
 from services.snapshotter.config import SnapshotterConfig
 from services.snapshotter.export import export_service_date
+from tests.postgres import connect_disposable_or_skip
 from services.snapshotter.gold import (
     build_line_daily_metrics,
     build_nucleo_daily_summary,
@@ -53,26 +50,9 @@ TEST_OBSERVED_AT = datetime(2099, 1, 1, 10, 0, tzinfo=timezone.utc)
 TEST_ALERT_ACTIVE_PERIOD_START = datetime(2020, 1, 1, tzinfo=timezone.utc)
 
 
-def _connect_or_skip() -> psycopg.Connection:
-    # `CollectorConfig.from_env()`, no `CollectorConfig()` a secas -- hallazgo
-    # real de MP-015: la versión anterior ignoraba `MADRID_PULSE_DATABASE_URL`
-    # y siempre apuntaba al valor por defecto, mientras `SnapshotterConfig.from_env()`
-    # (usada líneas más abajo para `export_service_date`) sí lo respeta. En
-    # cualquier entorno donde ambos apunten a la misma base nunca se nota,
-    # pero diverge en CI/verificación contra una base distinta a la de
-    # desarrollo local -- las filas insertadas y las exportadas terminan en
-    # bases distintas sin ningún error visible.
-    try:
-        return psycopg.connect(
-            CollectorConfig.from_env().database_url, autocommit=False, connect_timeout=3
-        )
-    except psycopg.OperationalError as exc:
-        raise unittest.SkipTest(f"PostgreSQL local no disponible: {exc}")
-
-
 class ExportReplayTests(unittest.TestCase):
     def setUp(self) -> None:
-        self.conn = _connect_or_skip()
+        self.conn = connect_disposable_or_skip()
         self.addCleanup(self.conn.close)
         self.output_dir = Path(tempfile.mkdtemp(prefix="mp009_replay_"))
         self.addCleanup(lambda: shutil.rmtree(self.output_dir, ignore_errors=True))

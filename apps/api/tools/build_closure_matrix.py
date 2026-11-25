@@ -28,6 +28,7 @@ import psycopg
 from apps.api import snapshot
 from apps.api.config import ApiConfig
 from apps.api.gtfs_source import load_network
+from packages.database import require_disposable_database
 from packages.gtfs import scheduled_trip_instances_for_date
 
 
@@ -297,6 +298,7 @@ def main() -> None:
     service_date = date.fromisoformat(args.service_date)
     config = ApiConfig.from_env()
     with psycopg.connect(config.database_dsn) as conn:
+        require_disposable_database(conn)
         rows = build_rows(
             conn, config=config, captured_at=captured_at, service_date=service_date
         )

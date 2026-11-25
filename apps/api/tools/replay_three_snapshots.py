@@ -18,9 +18,8 @@ Uso:
 
     PYTHONPATH="$PWD" \
     MADRID_PULSE_GTFS_SOURCE="$PWD/data/hito-03/replay/fomento_transit.zip" \
-    MADRID_PULSE_SHORT_NAME= MADRID_PULSE_MODE=replay \
+    MADRID_PULSE_SHORT_NAME= MADRID_PULSE_MODE=replay MADRID_PULSE_ENV=replay \
     MADRID_PULSE_DATABASE_URL=postgresql://...:5434/madrid_pulse \
-    MADRID_PULSE_DATABASE_DSN=postgresql://...:5434/madrid_pulse \
       .venv/bin/python -m apps.api.tools.replay_three_snapshots
 """
 from __future__ import annotations
@@ -34,8 +33,9 @@ import psycopg
 from apps.api import snapshot
 from apps.api.config import ApiConfig
 from apps.api.gtfs_source import load_network
+from packages.database import require_disposable_database
 from services.collector.collector import run_cycle
-from services.collector.config import CollectorConfig, FeedConfig
+from services.collector.config import FeedConfig
 from services.collector.http_client import RetryPolicy
 
 REPLAY = Path("data/hito-03/replay")
@@ -45,7 +45,13 @@ CAP_1533 = datetime(2026, 11, 20, 14, 33, 21, tzinfo=timezone.utc)
 
 config = ApiConfig.from_env()
 network = load_network(config)
-conn = psycopg.connect(CollectorConfig.from_env().database_url, autocommit=False)
+conn = psycopg.connect(config.database_dsn, autocommit=False)
+try:
+    require_disposable_database(conn)
+    conn.rollback()
+except Exception:
+    conn.close()
+    raise
 
 
 def ingest(sample: str, at: datetime) -> None:

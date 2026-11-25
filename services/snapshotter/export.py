@@ -135,8 +135,13 @@ class ExportResult:
 
 def _connect_with_postgres(database_url: str) -> duckdb.DuckDBPyConnection:
     con = duckdb.connect()
-    con.execute("INSTALL postgres; LOAD postgres;")
-    con.execute(f"ATTACH '{database_url}' AS pg (TYPE POSTGRES, READ_ONLY)")
+    try:
+        con.execute("INSTALL postgres; LOAD postgres;")
+        escaped_url = database_url.replace("'", "''")
+        con.execute(f"ATTACH '{escaped_url}' AS pg (TYPE POSTGRES, READ_ONLY)")
+    except Exception:
+        con.close()
+        raise
     return con
 
 

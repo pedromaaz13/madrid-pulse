@@ -51,22 +51,26 @@ a mano con la fecha correspondiente.
 
 ## Arranque rápido (operación local)
 
+Define la URL de una base autorizada en otro puerto. En las plantillas de
+servicio, sustituye también `<<DEPLOYMENT_ENV>>` por el entorno elegido.
+Consulta [Aislamiento de PostgreSQL](../../docs/operations/DATABASE_ISOLATION.md).
+
 ```bash
 # 1. Supervisor del colector (deja el proceso en primer plano; Ctrl-C lo para)
-MADRID_PULSE_DATABASE_URL=postgresql://madrid_pulse:...@127.0.0.1:5433/madrid_pulse \
+MADRID_PULSE_ENV=dev MADRID_PULSE_DATABASE_URL=postgresql://madrid_pulse:...@127.0.0.1:5442/madrid_pulse \
 MADRID_PULSE_GTFS_SOURCE="$PWD/data/gtfs_static/fomento_transit.zip" \
   infra/operate/supervise-collector.sh
 
 # 2. Archivo del día anterior, con el núcleo Madrid completo
-MADRID_PULSE_DATABASE_URL=postgresql://madrid_pulse:...@127.0.0.1:5433/madrid_pulse \
+MADRID_PULSE_ENV=dev MADRID_PULSE_DATABASE_URL=postgresql://madrid_pulse:...@127.0.0.1:5442/madrid_pulse \
 MADRID_PULSE_GTFS_SOURCE="$PWD/data/gtfs_static/fomento_transit.zip" \
 MADRID_PULSE_SHORT_NAME= \
 SNAPSHOTTER_OUTPUT_DIR="$PWD/data/parquet" \
   infra/operate/daily-archive.sh
 
 # 3. Medir lo que cuesta (ver docs/evidence/mp-021-coste-colector-continuo.md)
-.venv/bin/python infra/operate/measure-cost.py \
-  --database-url postgresql://... \
+MADRID_PULSE_ENV=dev MADRID_PULSE_DATABASE_URL=postgresql://madrid_pulse:...@127.0.0.1:5442/madrid_pulse \
+PYTHONPATH="$PWD" .venv/bin/python infra/operate/measure-cost.py \
   --window-start 2026-11-23T05:23:00Z \
   --size-before-bytes <pg_database_size antes> \
   --samples-csv data/operate/rss_samples.csv \

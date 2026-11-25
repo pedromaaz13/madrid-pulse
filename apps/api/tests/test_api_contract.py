@@ -18,7 +18,6 @@ from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from unittest.mock import Mock, patch
 
-import psycopg
 from fastapi.testclient import TestClient
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -36,7 +35,7 @@ from apps.api.gtfs_source import load_network  # noqa: E402
 from apps.api.main import app  # noqa: E402
 from packages.contracts.canonical import TripUpdateObservation, VehiclePositionObservation  # noqa: E402
 from services.collector import db as collector_db  # noqa: E402
-from services.collector.config import CollectorConfig  # noqa: E402
+from tests.postgres import connect_disposable_or_skip  # noqa: E402
 
 VALID_MODES = {"observed", "estimated", "stale", "scheduled"}
 
@@ -95,6 +94,7 @@ class FrozenOpenApiContractTests(unittest.TestCase):
 
 class ApiContractTests(unittest.TestCase):
     def setUp(self) -> None:
+        connect_disposable_or_skip().close()
         self.client = TestClient(app)
         self.client.__enter__()
         self.addCleanup(self.client.__exit__, None, None, None)
@@ -281,12 +281,7 @@ class OldTripUpdateCannotCompleteTodayTests(unittest.TestCase):
     de otro día de servicio."""
 
     def setUp(self) -> None:
-        try:
-            self.conn = psycopg.connect(
-                CollectorConfig.from_env().database_url, autocommit=False, connect_timeout=3
-            )
-        except psycopg.OperationalError as exc:
-            raise unittest.SkipTest(f"PostgreSQL local no disponible: {exc}")
+        self.conn = connect_disposable_or_skip()
         self.conn.execute("SELECT 1")
         self.addCleanup(self.conn.close)
         self.addCleanup(self.conn.rollback)

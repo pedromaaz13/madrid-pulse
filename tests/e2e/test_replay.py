@@ -32,31 +32,17 @@ import unittest
 from datetime import datetime, timezone
 from pathlib import Path
 
-import psycopg
-
 from apps.api.config import ApiConfig
 from apps.api.gtfs_source import load_network
 from apps.api.service import list_vehicles
 from services.collector.collector import run_cycle
-from services.collector.config import CollectorConfig, FeedConfig
+from services.collector.config import FeedConfig
 from services.collector.http_client import RetryPolicy
+from tests.postgres import connect_disposable_or_skip
 
 FIXTURES_DIR = Path(__file__).resolve().parents[1] / "fixtures"
 _POLICY = RetryPolicy(max_retries=0, backoff_base_seconds=0.1, timeout_seconds=5.0)
 _NOW = datetime(2026, 11, 19, 12, 0, tzinfo=timezone.utc)
-
-
-def _connect_or_skip() -> psycopg.Connection:
-    # `.from_env()`, no `CollectorConfig()` a secas -- ver hallazgo de MP-015
-    # en `services/snapshotter/tests/test_export_replay.py`.
-    try:
-        return psycopg.connect(
-            CollectorConfig.from_env().database_url, autocommit=False, connect_timeout=3
-        )
-    except psycopg.OperationalError as exc:
-        raise unittest.SkipTest(
-            f"PostgreSQL local no disponible (levantar infra/docker/docker-compose.yml): {exc}"
-        )
 
 
 class FullPipelineReplayTests(unittest.TestCase):
@@ -64,7 +50,7 @@ class FullPipelineReplayTests(unittest.TestCase):
     nunca se compromete nada real."""
 
     def setUp(self) -> None:
-        self.conn = _connect_or_skip()
+        self.conn = connect_disposable_or_skip()
         self.conn.execute("SELECT 1")
         self.addCleanup(self.conn.close)
         self.addCleanup(self.conn.rollback)

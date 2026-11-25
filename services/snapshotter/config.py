@@ -7,13 +7,16 @@ from dataclasses import dataclass
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
+from packages.database import database_settings_from_env
+
 MADRID_TZ = ZoneInfo("Europe/Madrid")
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
 @dataclass(frozen=True)
 class SnapshotterConfig:
-    database_url: str = "postgresql://madrid_pulse:madrid_pulse_local@127.0.0.1:5433/madrid_pulse"
+    database_url: str
+    environment: str
     output_dir: str = "data/parquet"
     # Mismas variables de entorno que `apps/api/config.py` (MP-013) -- misma
     # topología GTFS, sin literales de línea embebidos (ADR-0011).
@@ -42,9 +45,11 @@ class SnapshotterConfig:
 
     @classmethod
     def from_env(cls) -> "SnapshotterConfig":
-        defaults = cls()
+        database_url, environment = database_settings_from_env()
+        defaults = cls(database_url, environment)
         return cls(
-            database_url=os.environ.get("MADRID_PULSE_DATABASE_URL", defaults.database_url),
+            database_url=database_url,
+            environment=environment,
             output_dir=os.environ.get("SNAPSHOTTER_OUTPUT_DIR", defaults.output_dir),
             network_id=os.environ.get("MADRID_PULSE_NETWORK_ID", defaults.network_id),
             short_name=os.environ.get("MADRID_PULSE_SHORT_NAME", defaults.short_name),

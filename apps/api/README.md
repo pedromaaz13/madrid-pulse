@@ -70,15 +70,19 @@ congelados y el modo live exige un ZIP ajeno a `tests/fixtures/` cuya ventana
 de calendario incluya la fecha actual de Madrid. Ambos publican en
 `/api/v1/health` el modo, el SHA-256 del catálogo y su vigencia.
 
+Define `MADRID_PULSE_DATABASE_URL` y `MADRID_PULSE_ENV` según la
+[guía de aislamiento](../../docs/operations/DATABASE_ISOLATION.md).
+`MADRID_PULSE_MODE` sigue eligiendo cómo la API interpreta su fuente y su reloj.
+
 ```sh
 # Replay reproducible (fixture reducida, valor por defecto)
-MADRID_PULSE_MODE=replay \
+MADRID_PULSE_ENV=replay MADRID_PULSE_MODE=replay \
 MADRID_PULSE_GTFS_SOURCE="$PWD/tests/fixtures/gtfs_c5_real" \
 .venv/bin/uvicorn apps.api.main:app --port 8000
 
 # Live: descargar primero el ZIP oficial y comprobar que sigue vigente
 .venv/bin/python -m apps.api.tools.fetch_gtfs_static
-MADRID_PULSE_MODE=live \
+MADRID_PULSE_ENV=live MADRID_PULSE_MODE=live \
 MADRID_PULSE_GTFS_SOURCE="$PWD/data/gtfs_static/fomento_transit.zip" \
 .venv/bin/uvicorn apps.api.main:app --port 8000
 ```
@@ -148,7 +152,7 @@ línea — es el modo que usan los tests y el piloto. El filtro sigue siendo
 configuración, nunca un literal en la lógica (ADR-0011).
 
 ```sh
-MADRID_PULSE_MODE=replay MADRID_PULSE_SHORT_NAME= \
+MADRID_PULSE_ENV=replay MADRID_PULSE_MODE=replay MADRID_PULSE_SHORT_NAME= \
 MADRID_PULSE_GTFS_SOURCE="$PWD/data/gtfs_static/fomento_transit.zip" \
   .venv/bin/uvicorn apps.api.main:app --port 8000
 ```
@@ -204,12 +208,12 @@ PostgreSQL desechable; resultado en
 ## Pruebas
 
 ```sh
-.venv/bin/python -m unittest apps.api.tests.test_api_contract -v
+MADRID_PULSE_ENV=test .venv/bin/python -m unittest apps.api.tests.test_api_contract -v
 ```
 
 Usa la fixture reducida (sin red) más PostgreSQL real para
-`/api/v1/health` y `/api/v1/live/vehicles` (requiere el contenedor
-`madrid-pulse` levantado). Un test adicional (`ResolvedTripEndToEndTests`)
+`/api/v1/health` y `/api/v1/live/vehicles` (requiere una base marcada como
+desechable en `MADRID_PULSE_DATABASE_URL`). Un test adicional (`ResolvedTripEndToEndTests`)
 construye una observación sintética para un trip real de la fixture
 reducida y prueba la resolución de extremo a extremo (ruta, map-matching,
 motor de movimiento) sin depender del GTFS completo.
@@ -217,8 +221,8 @@ motor de movimiento) sin depender del GTFS completo.
 ## Ejecución local
 
 ```sh
-.venv/bin/uvicorn apps.api.main:app --reload --port 8000
+MADRID_PULSE_ENV=dev .venv/bin/uvicorn apps.api.main:app --reload --port 8000
 ```
 
-Requiere PostgreSQL levantado (`docker compose -p madrid-pulse -f infra/docker/docker-compose.yml up -d`)
-y, para vehículos C5 reales, el GTFS completo (sección anterior).
+Requiere una `MADRID_PULSE_DATABASE_URL` explícita y, para vehículos C5 reales,
+el GTFS completo (sección anterior).
