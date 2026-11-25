@@ -1,2 +1,3 @@
 # Falso positivo verificado a mano (2026-11-25): SHA-256 de una huella de versión GTFS (dato público de ingesta), no una credencial.
 55140160fdc693b463c691ccae5565ee3dab2852:docs/evidence/mp-025a/perfil.txt:generic-api-key:3
+docs/evidence/mp-025a/perfil.txt:generic-api-key:3
