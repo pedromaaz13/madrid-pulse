@@ -92,7 +92,8 @@ def build_rows(
     service_date: date,
 ) -> list[dict[str, object]]:
     network = load_network(config)
-    catalog = snapshot.build_catalog_payload(network)
+    validity = network.gtfs_validity(captured_at, expiring_days=config.gtfs_expiring_days)
+    catalog = snapshot.build_catalog_payload(network, validity)
     route_to_line = {
         route_id: line.line_id for line in catalog.lines for route_id in line.route_ids
     }

@@ -632,7 +632,7 @@ Dos ramas pueden avanzar en paralelo en worktrees independientes una vez resuelt
 | MP-024 | Enmienda de ADR-0014 (estado de parada) (H4-00) | PRODUCT | PLANNED | — | claude | codex | Alias H4-00 | — | [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md) | — |
 | MP-025a | Modelo de estado de parada: cierre determinista (H4-04) | PRODUCT | PLANNED | MP-024 | codex | claude | Alias H4-04 | — | [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md) | — |
 | MP-025b | Validación Live del modelo de parada (H4-04) | PRODUCT | PLANNED | MP-025a, MP-028 | codex | claude | Alias H4-04 | — | [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md) | — |
-| MP-026a | FR-02 replay ?at= y FR-19 vigencia GTFS (H4-01) | PRODUCT | PLANNED | — | codex | claude | Alias H4-01 | — | [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md) | — |
+| MP-026a | FR-02 replay ?at= y FR-19 vigencia GTFS (H4-01) | PRODUCT | IMPLEMENTED | — | codex | claude | Alias H4-01 | — | [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md) | [docs/evidence/mp-026a/README.md](evidence/mp-026a/README.md); [docs/operations/GTFS_STATIC_REFRESH.md](operations/GTFS_STATIC_REFRESH.md); [docs/DATA_CONTRACTS.md](DATA_CONTRACTS.md); [docs/evidence/mp-026a/CLOCK_ROBUSTNESS.md](evidence/mp-026a/CLOCK_ROBUSTNESS.md) |
 | MP-026b | FR-07 snapshot consistente (H4-01) | PRODUCT | PLANNED | MP-024 | codex | claude | Alias H4-01 | — | [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md) | — |
 | MP-027 | Portada, legal y puertas falsables (H4-10) | PRODUCT | PLANNED | — | claude | codex | Alias H4-10 | — | [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md) | — |
 | MP-028 | Captura en vivo (≥2 h, ≥3 días) (H4-12) | PRODUCT | PLANNED | MP-023 | codex | claude | Alias H4-12 | — | [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md) | — |
