@@ -200,13 +200,14 @@ def recent_ingestion_runs(
             SELECT recent.*
             FROM feeds
             CROSS JOIN LATERAL (
-                SELECT run.feed_name, run.source_timestamp, run.started_at, run.finished_at,
+                SELECT run.id, run.feed_name, run.source_timestamp, run.started_at, run.finished_at,
                        run.status, run.entity_count, run.payload_hash
                 FROM source_ingestion_run run
                 WHERE run.feed_name = feeds.feed_name AND run.started_at <= %s
                 ORDER BY run.started_at DESC, run.id DESC
                 LIMIT %s
             ) AS recent
+            ORDER BY recent.feed_name, recent.started_at DESC, recent.id DESC
             """,
             (as_of, per_feed_limit),
         )
