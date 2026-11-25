@@ -396,7 +396,12 @@ class SnapshotVehicleOut(BaseModel):
 
 
 class SnapshotRevisionOut(BaseModel):
-    """Revisión ordenable **solo dentro de `scope`** (ADR-0014).
+    """Revisión ordenable **solo dentro de `scope`** (ADR-0014, enmienda §4.7).
+
+    La cota `sequence` es el mayor ID de ingesta elegible que ve la respuesta
+    en su instantánea PostgreSQL de solo lectura. Es nula si no hay runs
+    elegibles. Respuestas con la misma cota pueden contener datos distintos
+    cuando una ingesta con ID inferior se confirma más tarde.
 
     Regla de contrato para el cliente: si `scope` coincide, ordenar por
     `sequence` y descartar una respuesta con `sequence` menor; con `sequence`
@@ -524,6 +529,8 @@ class BoardCoverageOut(BaseModel):
 
 
 class StationBoardOut(BaseModel):
+    """Tablero cuyo marcador y datos se leen en una sola instantánea PostgreSQL."""
+
     schema_version: str = BOARD_SCHEMA_VERSION
     station_id: str
     name: str

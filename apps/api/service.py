@@ -367,8 +367,10 @@ FEED_RESOURCES = {
 }
 
 
-def feed_health(conn: psycopg.Connection, now: datetime, *, stale_after_s: float) -> HealthOut:
-    runs = db.recent_ingestion_runs(conn, as_of=now)
+def feed_health(
+    conn: psycopg.Connection, now: datetime, *, stale_after_s: float, max_run_id: int | None = None
+) -> HealthOut:
+    runs = db.recent_ingestion_runs(conn, as_of=now, max_run_id=max_run_id)
     by_feed: dict[str, list[db.FeedRunSample]] = {}
     for run in runs:
         by_feed.setdefault(run.feed_name, []).append(run)

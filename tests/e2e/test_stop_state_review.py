@@ -149,6 +149,7 @@ class ReviewCases(unittest.TestCase):
         sandbox = integration.StopStateDatabase()
         sandbox.setUp()
         self.addCleanup(sandbox.doCleanups)
+        sandbox.conn.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ")
         sandbox.prepare()
         sandbox.pos = {
             "20849": sandbox.pos["20849"].model_copy(update=dict(latitude=None, longitude=None))
