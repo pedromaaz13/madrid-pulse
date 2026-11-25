@@ -23,7 +23,8 @@ El script crea o reutiliza el contenedor `mp028-capture` con
 `postgis/postgis:17-3.5` (linux/amd64), el volumen `mp028-capture-data` y la
 publicación TCP `127.0.0.1:5466`. Comprueba imagen, montaje y publicación
 antes de reutilizarlo. Aplica las migraciones up de `infra/migrations/` en
-orden y registra sus nombres y hashes en `mp028_capture.migration`. Una segunda
+orden en el esquema `public` y registra sus nombres y hashes en
+`mp028_capture.migration`. Una segunda
 ejecución conserva los datos y comprueba los hashes. Si la preparación falla,
 consulta `docker logs mp028-capture` y vuelve a ejecutar el script al resolver
 la causa. Conserva el contenedor y el volumen incluso ante una incidencia.

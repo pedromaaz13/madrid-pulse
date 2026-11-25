@@ -37,6 +37,7 @@ migration_script=$(mktemp)
 trap 'rm -f "$migration_script"' EXIT
 {
   printf '%s\n' 'SELECT pg_advisory_xact_lock(1297101396);' \
+    'SET LOCAL search_path TO public;' \
     'CREATE SCHEMA IF NOT EXISTS mp028_capture;' \
     'CREATE TABLE IF NOT EXISTS mp028_capture.migration (name text PRIMARY KEY, sha256 text NOT NULL, applied_at timestamptz NOT NULL DEFAULT now());'
   for migration in infra/migrations/*.up.sql; do
