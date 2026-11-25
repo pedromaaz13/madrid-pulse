@@ -2,7 +2,9 @@
 
 Fecha: 2026-11-24. Base: `SERVICE_INVENTORY.md` (código real). **Propuesta**: no contrata ni despliega nada.
 
-## MVP 0 — Demo web reproducible (sin procesos persistentes)
+> **Nota de vigencia (2026-11-25):** la sección **MVP 0** de este documento (exportar el replay de la API, captura de 30–60 min) queda **SUPERADA** por [`MVP0_IMPLEMENTATION_PLAN.md`](MVP0_IMPLEMENTATION_PLAN.md): contrato de demo propio con observaciones, independiente del motor y de `build_snapshot` (que tienen FR-01/FR-02), captura de 90 min. La sección MVP 1 sigue vigente como propuesta.
+
+## MVP 0 — Demo web reproducible (sin procesos persistentes) — SUPERADA
 
 **Qué es.** El frontend actual, publicado como sitio estático, mostrando una **reproducción congelada de una captura real** (Renfe, 2026-11-20) con el reloj de replay que ya existe (`?at=`). Mapa, líneas, estaciones, fichas, tablero y histórico funcionan con ficheros JSON precalculados por la propia API. Nada se presenta como actual: el panel ya muestra `REPLAY` y la hora del snapshot, y se añade un aviso permanente con fecha de la captura y limitaciones.
 

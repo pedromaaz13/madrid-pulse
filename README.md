@@ -31,7 +31,7 @@ Ver `docs/research/deep-research-report.md` y `docs/research/MADRID_PULSE_BRIEF_
 madrid-pulse/
 ├── docs/            Gobernanza, arquitectura, contratos, calidad, legal, ADRs, investigación
 ├── apps/            web (React/TS/MapLibre), api (FastAPI)
-├── services/        collector, normalizer, snapshotter
+├── services/        collector, snapshotter (normalizer: solo README, sin código)
 ├── packages/        contracts, gtfs, geo, quality, movement — paquetes compartidos
 ├── analytics/       capa analítica (DuckDB, ADR-0013)
 ├── infra/           docker, migrations, operate (cloudflare: vacío por decisión)
@@ -51,7 +51,7 @@ madrid-pulse/
 | [`docs/DECISIONS.md`](docs/DECISIONS.md) | Decisiones aceptadas, propuestas y pendientes |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | Componentes, flujo de datos, justificación tecnológica |
 | [`docs/DATA_MODEL.md`](docs/DATA_MODEL.md) | Entidades, claves, versionado GTFS, retención |
-| [`docs/DATA_CONTRACTS.md`](docs/DATA_CONTRACTS.md) | Contratos de API propuestos, ejemplos sintéticos |
+| [`docs/DATA_CONTRACTS.md`](docs/DATA_CONTRACTS.md) | Contratos de API (implementados parcialmente; ejemplos sintéticos) |
 | [`docs/DATA_QUALITY.md`](docs/DATA_QUALITY.md) | Métricas de frescura, anomalías, cobertura |
 | [`docs/DEVELOPMENT.md`](docs/DEVELOPMENT.md) | Entorno local y servicios por fase |
 | [`docs/legal/`](docs/legal/) | Fuentes de datos, licencias, atribución |

@@ -1,5 +1,7 @@
 # DATA_CONTRACTS.md
 
+> **Nota de vigencia (2026-11-25).** Los endpoints de `history` y snapshot **sí están implementados** (MP-019 y MP-021; `apps/api/openapi.json`); donde este documento los llama «propuestos» el texto es histórico. Los JSON de ejemplo siguen siendo sintéticos.
+
 Estado: **parcialmente implementada en MP-013** (`apps/api/`, OpenAPI en `apps/api/openapi.json`). Ningún ejemplo de este documento es una respuesta real de Renfe, CRTM ni de ningún proyecto de terceros — **todos los JSON de ejemplo son sintéticos** y están marcados como tales; reflejan la forma del contrato, no un payload observado. Los endpoints `live`/`lines`/`stations`/`health` están implementados y probados contra datos reales (PostgreSQL + GTFS/OSM). Los endpoints `history`/`metrics` siguen como propuesta — ver "Endpoints diferidos" más abajo.
 
 ## Discrepancia a reconciliar (antes de MP-013)

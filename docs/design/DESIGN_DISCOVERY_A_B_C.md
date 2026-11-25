@@ -3,8 +3,9 @@
 > - **Estatus:** ORDEN DE DISCOVERY HISTÓRICA (edición 2026-11-23), no iniciada; ver overrides vigentes en DESIGN_DISCOVERY_EXECUTION_OVERRIDES.md
 > - **Fuente:** `DESIGN_DISCOVERY_A_B_C.md` (paquete `MADRID_PULSE_ORCA_GOBERNANZA_MVP_LIVE_DESIGN`)
 > - **SHA-256 del original:** `9cabcb4170eb253a72efb67d922f16f828be95aa74f0d2ce3729a74e2c91d413`
-> - **Alcance:** discovery y prototipos aislados A/B/C (DES-00…DES-09); no autoriza rediseño productivo ni elección de propuesta (gate humano)
-> - **Regla:** importar este documento **no** convierte sus recomendaciones en decisiones aprobadas. Las decisiones viven en `docs/DECISIONS.md` y `docs/adr/`; el estado vigente, en `docs/STATUS.md` y `docs/governance/PROJECT_STATE.yaml`.
+> - **Alcance:** discovery y prototipos aislados A/B/C (DES-00…DES-09). **Hoy esta orden histórica NO habilita ni discovery ni prototipos** (gate humano HG-DESIGN-START abierto), no autoriza rediseño productivo ni elección de propuesta (gate humano). Las adaptaciones vigentes (Terra sin navegador, etc.) están en DESIGN_DISCOVERY_EXECUTION_OVERRIDES.md y mandan sobre el imperativo del cuerpo
+> - **Regla:** importar este documento **no** convierte sus recomendaciones en decisiones aprobadas. Las decisiones viven en `docs/DECISIONS.md` y `docs/adr/`; el estado vigente, en `docs/STATUS.md` y `docs/governance/PROJECT_STATE.json` (si el cuerpo menciona PROJECT_STATE.yaml, el fichero real es el .json).
+> - **Privacidad:** el cuerpo conserva por integridad la formulación original, incluida alguna ruta absoluta local; excepción pendiente de decisión del propietario antes de fusionar.
 
 ---
 # MADRID PULSE — ORCA / PRODUCT DESIGN DISCOVERY A–B–C

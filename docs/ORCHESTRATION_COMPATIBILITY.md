@@ -1,5 +1,7 @@
 # ORCHESTRATION_COMPATIBILITY.md — Informe de compatibilidad de modelos y capacidades
 
+> **Nota de vigencia (2026-11-25).** Resultado del ensayo del 2026-11-24: `gpt-6.1-terra` **sí puede** implementar/revisar React/TypeScript sin navegador (decisión del propietario, DEC-044); lo que **no** puede es validación visual. La frase «no se asigna a frontend» de abajo significa «no se asigna a validación visual».
+
 **Fecha:** 2026-11-24 · **Elabora:** coordinador (`claude-sonnet-5-5` · medium) · **Método:** primero catálogo, configuración y recibos existentes; después **tres** despachos de solo lectura autorizados por el propietario. Ningún despacho modificó el repositorio ni bases de datos.
 
 ## 1. Sin worker (catálogo y configuración)

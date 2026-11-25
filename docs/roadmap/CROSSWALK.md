@@ -27,9 +27,9 @@ H4-11→MP-023 · H4-00→MP-024 · H4-04→MP-025a/b · H4-01→MP-026a/b · H4
 |---|---|---|
 | FR-01 trenes `STOPPED_AT` o sin salir se mueven | P0 | MP-024 (ADR) → MP-025a (cierre determinista) → MP-025b (validación Live) |
 | FR-02 `?at=` publica `unknown` con edades negativas | P0 | MP-026a |
-| FR-07 snapshot no consistente | P1 | MP-026b |
-| FR-19 vigencia GTFS | P1 | MP-026a |
-| Resto de FR (16 P1, 24 P2) | — | `docs/audits/hito-03/FINDINGS_REGISTER.md`; registro estructurado en MP-034 |
+| FR-07 snapshot no consistente | P1 (incluido en los 16 P1) | MP-026b |
+| FR-19 vigencia GTFS (catálogo vence el 2026-12-19) | **P2**, bloquea publicar | MP-026a |
+| Resto de FR (los 16 P1 incluyen FR-07; 24 P2 incluyen FR-19) | — | `docs/audits/hito-03/FINDINGS_REGISTER.md`; registro estructurado en MP-034 |
 
 ## 4. MVP 0 (D-01…D-06, `docs/deployment/MVP0_IMPLEMENTATION_PLAN.md`) y Live staging (D-10…D-19)
 | D | Qué es | Relación con MP |
@@ -37,10 +37,10 @@ H4-11→MP-023 · H4-00→MP-024 · H4-04→MP-025a/b · H4-01→MP-026a/b · H4
 | D-01 captura 90 min | precursor reducido de MP-028 | usa el colector existente; no sustituye a MP-028 |
 | D-02…D-06 | track MVP 0 (demo estática) | **sin equivalente MP**: es un entregable de superficie (contrato de demo + adaptador), no corrección de motor; no bloquea Live ni MP-025/026 |
 | D-04 teselas configurables | comparte alcance con MP-027 (fuente de teselas, legal) | coordinar archivos (`MapView.tsx`) |
-| D-10 | = **MP-023** | alias |
-| D-13 | = parte FR-19 de **MP-026a** | alias |
-| D-19 | = **MP-024/MP-025a/b** | alias |
-| D-11, D-12, D-14…D-18 | subalcance de **MP-032** (operación) y MP-033 | no tareas nuevas automáticas |
+| D-10 | = **MP-023** | alias (`alias_of`; no cuenta como tarea) |
+| D-13 | = parte FR-19 de **MP-026a** | alias (`alias_of`; no cuenta como tarea) |
+| D-19 (cierre de FR-01 **y FR-02**) | = **MP-024 + MP-025a/b** (FR-01) **y MP-026a** (FR-02) | solo referencia; no existe como tarea en `PROJECT_STATE.json` |
+| D-11, D-12, D-14…D-18 | subalcance de staging **propuesto**, separado de MP-032 local hasta decisión del propietario (`PROPOSAL-STAGING-LIVE`) | no tareas nuevas automáticas |
 > **Superado:** las filas D-01…D-07 de la sección «MVP 0» de `docs/deployment/MVP_RELEASE_CHECKLIST.md` (primera versión) quedan sustituidas por `MVP0_IMPLEMENTATION_PLAN.md`; D-10…D-19 siguen vigentes.
 
 ## 5. Design Discovery (DES-00…DES-09, `docs/design/DESIGN_DISCOVERY_A_B_C.md`)
@@ -56,8 +56,8 @@ Subtareas internas de discovery; **no** son tareas MP ni autorización de H4. Co
 | API-01 snapshot coherente | MP-026b |
 | API-02 reloj replay | MP-026a |
 | GEO-01 completar corredores | MP-029 |
-| GEO-02 PoC de grafo | MP-029 (PoC) — candidato a propuesta de MP-038 si se ejecuta tras éxito |
-| GEO-03 build geográfico reproducible | **sin MP**: propuesta de extensión |
+| GEO-02 PoC de grafo | **posterior a la beta**, propuesta (`PROPOSAL-GEO-BUILD`); no es MP-029 |
+| GEO-03 build geográfico reproducible | **sin MP**: propuesta (`PROPOSAL-GEO-BUILD`) |
 | UX-01 procedencia visual | MP-030 |
 | UX-02 basemap vectorial y design system | MP-027 (teselas) + track Design (DES) |
 | UX-03 vías compartidas y símbolos | MP-029 + DES-07 |
@@ -68,8 +68,8 @@ Subtareas internas de discovery; **no** son tareas MP ni autorización de H4. Co
 | OPS-03 soak 72 h y carga | MP-032 / MP-033 |
 | REL-01 release-readiness | MP-035 |
 
-## 7. Extensiones `MP-036+` — solo propuestas
-Sin ID asignado hasta decisión del propietario (`proposed_extensions` en `PROJECT_STATE.json`):
-1. **PROPOSAL-MP-036** staging Live (Docker/Caddy/backups) como tarea propia — solo si MP-032 se desborda.
-2. **PROPOSAL-MP-037** PoC de snapshot publisher y manifest versionado (SRV-01/02) — diferido a beta con métricas.
-3. **PROPOSAL-MP-038** build geográfico reproducible (GEO-02/03) — solo si el PoC de grafo valida.
+## 7. Extensiones posibles — solo propuestas, sin reservar ningún número `MP-`
+Registradas en `proposed_extensions` de `PROJECT_STATE.json`; el propietario decide si existen y qué ID reciben:
+1. **PROPOSAL-STAGING-LIVE** — staging Live (Docker/Caddy/backups) como tarea propia; solo si MP-032 se desborda.
+2. **PROPOSAL-SNAPSHOT-PUBLISHER** — PoC de snapshot publisher y manifest versionado (SRV-01/02); diferido a beta con métricas.
+3. **PROPOSAL-GEO-BUILD** — grafo OSM/Geofabrik y build geográfico reproducible (GEO-02/03); solo si el PoC valida.

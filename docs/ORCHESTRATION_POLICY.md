@@ -1,6 +1,6 @@
 # ORCHESTRATION_POLICY.md — Política de orquestación de agentes (Hito 4 en adelante)
 
-**Estado:** BORRADOR para aprobación del propietario. No entra en vigor hasta que lo apruebe.
+**Estado:** BORRADOR **aceptado con ajustes por el propietario el 2026-11-24** (DEC-044; `claude-sonnet-5-5` medium para coordinación y high para frontend y revisiones técnicas importantes; Terra utilizable en React/TS sin navegador, **no** como validador visual independiente). El texto de abajo conserva su redacción original; ante discrepancia mandan DEC-044 y `docs/H4_TASK_MATRIX.md` («Decisiones del propietario»).
 **Alcance:** hitos nuevos (H4+). **No reescribe** los registros históricos de modelos de los hitos 1–3 ni de la auditoría H3 (`docs/audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md` y los `STATUS.md`/`TASKS.md` de cada tarea): allí constan los modelos realmente usados (`gpt-5.6-*`, `sonnet`/`opus`, etc.).
 **Precedencia:** `AGENTS.md` y `CLAUDE.md` mandan sobre este documento; las decisiones del propietario mandan sobre todo.
 **Evidencia de compatibilidad:** `docs/ORCHESTRATION_COMPATIBILITY.md`.

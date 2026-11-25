@@ -2,7 +2,7 @@
 
 > **Actualización de estado (2026-11-25).** El texto original de este documento fue una propuesta previa al código. Hoy, **implementado y en `main` (solo local, sin despliegue)**: collector idempotente, normalización y quality layer, PostgreSQL/PostGIS (migraciones 0001–0002), exportación Parquet diaria con DuckDB, API FastAPI `/api/v1`, motor de movimiento y frontend React/MapLibre (Live/History/Explore). **Sigue siendo propuesta o no implementado:** snapshot en CDN, Cloudflare R2, hosting gestionado, VPS, MVP 0 y Live público (ver [`roadmap/RELEASE_ROADMAP.md`](roadmap/RELEASE_ROADMAP.md) y [`plans/MVP_LIVE_END_TO_END.md`](plans/MVP_LIVE_END_TO_END.md), que es PROPUESTA). ADR-0014 y ADR-0015 siguen `Propuesto`. La auditoría H3 halló defectos P0 en movimiento (FR-01) y API de replay (FR-02): la arquitectura descrita no garantiza por sí sola la veracidad ferroviaria. Estado de cada pieza: [`governance/PROJECT_STATE.json`](governance/PROJECT_STATE.json).
 
-Estado de este documento: **propuesta validada por investigación, pendiente de validación empírica en MP-002 a MP-007**. Ningún componente aquí descrito está implementado todavía (ver `docs/STATUS.md`).
+*(Texto histórico, anterior al código:)* Estado de este documento: **propuesta validada por investigación, pendiente de validación empírica en MP-002 a MP-007**. Ningún componente aquí descrito estaba implementado todavía (ver `docs/STATUS.md`).
 
 ## Visión general
 
@@ -44,7 +44,7 @@ Renfe GTFS-Realtime (vehicle_positions,              │
 ## Componentes y responsabilidades
 
 ### `services/collector`
-Hace polling de los feeds GTFS-RT de Renfe. Responsabilidades: idempotencia (hash canónico de payload), reintentos con backoff, timeout, registro de `feed_run` (metadatos de cada ejecución: éxito, latencia, nº de entidades). No normaliza ni interpreta — solo captura y persiste el crudo con su metadata.
+Hace polling de los feeds GTFS-RT de Renfe. Responsabilidades: idempotencia (hash canónico de payload), reintentos con backoff, timeout, registro de la ejecución del feed (`source_ingestion_run`, MP-006; `feed_run` es el nombre de diseño original) (metadatos de cada ejecución: éxito, latencia, nº de entidades). No normaliza ni interpreta — solo captura y persiste el crudo con su metadata.
 
 ### Normalizer + Quality Layer (`packages/contracts`, `packages/quality`)
 Transforma el payload crudo al contrato canónico interno (ver `docs/DATA_CONTRACTS.md`) y aplica las reglas de `docs/DATA_QUALITY.md`: detección de staleness, anomalías geográficas, duplicados, continuidad temporal. Produce los `quality_flags` que acompañan cada observación.

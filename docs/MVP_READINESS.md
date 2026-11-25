@@ -1,5 +1,7 @@
 # MVP_READINESS.md — Checklist de preparación de Hito 2 ("Live Railway MVP")
 
+> **Nota de vigencia (2026-11-25).** Documento de cierre del **Hito 2** (2026-11-20); los estados «en curso», las limitaciones de calendario/resúmenes de History, la retención sin medición y los merges en espera descritos aquí son **históricos**: H2 se fusionó en `main` (PR #2, `990c95d`) y MP-016…022 (H3) lo ampliaron. Estado actual: `docs/STATUS.md`.
+
 Documento de cierre de Hito 2 (`MP-010`→`MP-015`), redactado en MP-015 para la
 aceptación del propietario. Resume el estado real, con evidencia verificable,
 no una declaración de intenciones — cada punto enlaza a su prueba real. No

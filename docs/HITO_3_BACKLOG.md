@@ -1,5 +1,7 @@
 # HITO_3_BACKLOG.md — Propuesta de planificación (no implementación)
 
+> **Nota de vigencia (2026-11-25).** Antecedente de planificación redactado durante el Hito 2, con alcance sin numerar. H3 se ejecutó como `MP-016`→`MP-022` y está en `main` (`7583ca5`). No es un backlog vigente.
+
 Estado: **propuesta de planificación**, redactada durante Hito 2 por instrucción explícita del propietario (Sección 7 de la autorización de Hito 2, `2026-11-19`). Ningún punto de este documento se implementa durante Hito 2 (`MP-010`→`MP-015`); es exclusivamente backlog para que el propietario lo revise, recorte o reordene antes de autorizar Hito 3. Corresponde a la Fase **F10** de `docs/PLAN.md` ("Expansión — fuera de alcance de MP-001 a MP-015") y aplica la distinción de [ADR-0011](adr/0011-public-scope-vs-technical-pilot.md) (`Propuesto`): Hito 2 es el piloto técnico C5; Hito 3 es el primer paso real hacia el objetivo de producto (toda la red de Cercanías Madrid).
 
 ## Objetivo de Hito 3 (propuesto)

@@ -14,10 +14,15 @@ else:
 
 def _verify_repo(root: Path, state: Record) -> list[str]:
     errors = []
+    root = root.resolve()
     for location, field, path in dict.fromkeys(repo_references(state)):
         try:
-            exists = (root / path).exists()
-        except (OSError, ValueError):
+            target = (root / path).resolve()
+            if not target.is_relative_to(root):
+                errors.append(f"{location}: {field}: ruta que escapa del repositorio: {path}")
+                continue
+            exists = target.exists()
+        except (OSError, RuntimeError, ValueError):
             exists = False
         if not exists:
             errors.append(f"{location}: {field} apunta a una ruta inexistente: {path}")

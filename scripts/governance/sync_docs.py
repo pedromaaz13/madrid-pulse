@@ -2,12 +2,16 @@
 
 import argparse
 import difflib
+import os
 import posixpath
 import re
 import sys
+import tempfile
 from collections import Counter
 from collections.abc import Iterable
+from contextlib import ExitStack
 from pathlib import Path
+from stat import S_IMODE
 from urllib.parse import quote
 
 if __package__:
@@ -56,12 +60,20 @@ def _refs(record: Record, field: str, document: str) -> str:
         if is_repo_path(reference):
             path, separator, anchor = reference.partition("#")
             relative = posixpath.relpath(path, posixpath.dirname(document))
-            destination = quote(relative, safe="/") + separator + quote(anchor)
+            destination = quote(relative, safe="/") + separator + anchor
+            if re.search(r"[\s()]", anchor):
+                destination = f"<{destination}>"
             label = reference.replace("[", r"\[").replace("]", r"\]")
             links.append(f"[{label}]({destination})")
         else:
             links.append(reference)
     return "; ".join(links) or "—"
+
+
+def _integration_label(record: Record, pr: object) -> str | None:
+    if record.get("integration_kind") == "content_in_main":
+        return "incorporado a main (no fusión de rama)"
+    return f"PR #{pr}" if pr is not None else None
 
 
 def _milestones(state: Record, document: str) -> str:
@@ -72,17 +84,22 @@ def _milestones(state: Record, document: str) -> str:
             merge = {}
         merge_text = " · ".join(
             str(value)
-            for value in (f"#{merge['pr']}" if merge.get("pr") is not None else None,
-                          merge.get("sha"), merge.get("date"))
+            for value in (_integration_label(milestone, merge.get("pr")), merge.get("sha"), merge.get("date"))
             if value is not None
         )
+        closure = milestone.get("closure")
+        inherited = text_entries(milestone.get("open_gates_inherited"))
+        if closure == "CLOSED" and inherited:
+            closure = f"CLOSED · cierre histórico; gates abiertos heredados: {', '.join(inherited)}"
         rows.append((
             milestone.get("id"), milestone.get("title"),
-            *(milestone.get(field) for field in STATUS_FIELDS), milestone.get("closure"),
+            *(milestone.get(field) for field in STATUS_FIELDS), closure,
             merge_text, milestone.get("gate"), _refs(milestone, "gate_evidence", document),
+            milestone.get("evidence_limit"),
         ))
     return _table(
-        ("ID", "Hito", *STATUS_FIELDS, "closure", "Merge (PR · SHA · fecha)", "Gate", "Evidencia"),
+        ("ID", "Hito", *STATUS_FIELDS, "closure", "Integración (PR · SHA · fecha)", "Gate",
+         "Evidencia", "Límite de la evidencia"),
         rows,
     )
 
@@ -90,11 +107,12 @@ def _milestones(state: Record, document: str) -> str:
 def _phases(state: Record) -> str:
     return _table(
         ("ID", "Fase", "Tareas", "implementation_status", "closure", "Hallazgos abiertos",
-         "Evidencia del gate", "Fuente"),
+         "Evidencia del gate", "Límite de la evidencia", "Fuente"),
         (
             (phase.get("id"), phase.get("title"), phase.get("tasks"), phase.get("implementation_status"),
              phase.get("closure"), phase.get("open_findings"),
              _refs(phase, "gate_evidence", MILESTONES_DOC),
+             phase.get("evidence_limit"),
              _refs(phase, "source", MILESTONES_DOC))
             for phase in records(state, "phases")
         ),
@@ -103,8 +121,12 @@ def _phases(state: Record) -> str:
 
 def _backlog(state: Record) -> str:
     rows = []
+    aliases = []
     for task in records(state, "tasks"):
         task_id = task.get("id")
+        if "alias_of" in task:
+            aliases.append((task_id, task["alias_of"], task.get("title")))
+            continue
         if isinstance(task_id, str) and task_id in HISTORICAL_TASKS:
             continue
         relationships = "; ".join(
@@ -115,6 +137,7 @@ def _backlog(state: Record) -> str:
         rows.append((
             task_id, task.get("title"), task.get("track"), task.get("implementation_status"),
             task.get("depends_on"), task.get("executor"), task.get("reviewer"), relationships,
+            _integration_label(task, task.get("pr")),
             _refs(task, "source", TASKS_DOC), _refs(task, "evidence", TASKS_DOC),
         ))
     extensions = []
@@ -127,10 +150,14 @@ def _backlog(state: Record) -> str:
         extensions.append(proposal)
     table = _table(
         ("ID", "Título", "Track", "implementation_status", "Dependencias", "Ejecutor", "Revisor",
-         "Alias y relaciones", "Fuente", "Evidencia"),
+         "Alias y relaciones", "Integración", "Fuente", "Evidencia"),
         rows,
     )
-    return "\n\n".join([table, "### Extensiones propuestas", "\n".join(extensions) or "—"])
+    sections = [table]
+    if aliases:
+        sections.extend(("### Alias (mismo trabajo, otro identificador)", _table(("ID", "alias_of", "Título"), aliases)))
+    sections.extend(("### Extensiones propuestas", "\n".join(extensions) or "—"))
+    return "\n\n".join(sections)
 
 
 def _summary(state: Record) -> str:
@@ -145,7 +172,7 @@ def _summary(state: Record) -> str:
         vocab = {}
     counts = []
     for field in STATUS_FIELDS:
-        tally = Counter(_text(task.get(field)) for task in records(state, "tasks"))
+        tally = Counter(_text(task.get(field)) for task in records(state, "tasks") if "alias_of" not in task)
         counts.extend((field, status, tally[status]) for status in text_entries(vocab.get(field)))
     findings = _table(
         ("ID", "Severidad", "Hallazgo", "Estado", "Corrección prevista", "Evidencia"),
@@ -163,9 +190,8 @@ def _summary(state: Record) -> str:
         f"Despliegue público **{_cell(verdict.get('public_deployment'))}** · "
         f"código integrado local **{_cell(verdict.get('local_integrated_code'))}**. "
         f"Fuente: {_cell(_refs(verdict, 'source', STATUS_DOC))}.",
-        f"Main: `{_cell(as_of.get('origin_main'))}` · "
-        f"línea base: `{_cell(as_of.get('baseline_tag'))}` "
-        f"(`{_cell(as_of.get('product_baseline_head'))}`).",
+        f"Etiqueta `{_cell(as_of.get('baseline_tag'))}` → `{_cell(as_of.get('origin_main'))}`.",
+        f"Baseline de producto auditado: `{_cell(as_of.get('product_baseline_head'))}`.",
         "**DONE ≠ MERGED ≠ LIVE. CI verde ≠ cero P0.**",
         "### Recuentos de tareas por estado",
         _table(("Dimensión", "Estado", "Tareas"), counts),
@@ -173,6 +199,7 @@ def _summary(state: Record) -> str:
         _milestones(state, STATUS_DOC),
         "### Hallazgos abiertos",
         findings,
+        "Universo completo de hallazgos: `docs/audits/hito-03/FINDINGS_REGISTER.md` (hasta MP-034).",
         "### Decisiones del propietario",
         gates,
     ))
@@ -202,6 +229,44 @@ def _replace_blocks(
     for start, end, body in sorted(edits, reverse=True):
         updated = updated[:start] + body + updated[end:]
     return updated, errors
+
+
+def _stage_file(path: Path, content: bytes, mode: int, cleanup: ExitStack) -> Path:
+    with tempfile.NamedTemporaryFile(dir=path.parent, prefix=f".{path.name}.", delete=False) as stream:
+        staged = Path(stream.name)
+        cleanup.callback(staged.unlink, missing_ok=True)
+        stream.write(content)
+        os.fchmod(stream.fileno(), mode)
+    return staged
+
+
+def _write_documents(root: Path, changes: list[tuple[str, bytes, bytes]]) -> int:
+    with ExitStack() as cleanup:
+        staged = []
+        replaced: list[tuple[Path, Path]] = []
+        try:
+            for name, original, updated in changes:
+                path = root / name
+                mode = S_IMODE(path.stat().st_mode)
+                backup = _stage_file(path, original, mode, cleanup)
+                replacement = _stage_file(path, updated, mode, cleanup)
+                staged.append((path, original, backup, replacement))
+            for path, original, backup, replacement in staged:
+                if path.read_bytes() != original:
+                    raise OSError("el documento cambió durante la sincronización")
+                os.replace(replacement, path)
+                replaced.append((path, backup))
+        except OSError as error:
+            print(f"{path.relative_to(root)}: {error}", file=sys.stderr)
+            for path, backup in reversed(replaced):
+                try:
+                    os.replace(backup, path)
+                except OSError as restore_error:
+                    print(f"{path.relative_to(root)}: error al restaurar: {restore_error}", file=sys.stderr)
+            return 2
+    for name, _, _ in changes:
+        print(f"Actualizado {name}")
+    return 0
 
 
 def sync(root: Path, state: Record, *, check: bool) -> int:
@@ -239,14 +304,7 @@ def sync(root: Path, state: Record, *, check: bool) -> int:
         if errors:
             return 2
         return 1 if changes else 0
-    for name, _, updated in changes:
-        try:
-            (root / name).write_bytes(updated)
-        except OSError as error:
-            print(f"{name}: {error}", file=sys.stderr)
-            return 2
-        print(f"Actualizado {name}")
-    return 0
+    return _write_documents(root, changes)
 
 
 def main() -> int:

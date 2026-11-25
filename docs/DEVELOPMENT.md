@@ -16,7 +16,7 @@ OpenAI Codex
 ```text
 Docker Desktop / Docker Engine
 Python 3.12 (fijado en MP-007/DEC-019; sin gestor adicional: venv + requirements.txt)
-Node.js (versión a fijar en MP-014/ADR correspondiente)
+Node.js 22.13.1 (fijada en CI y DEC-032)
 PostgreSQL + PostGIS (local, vía docker-compose en infra/docker/)
 DuckDB (embebido, sin servicio; versión fijada en MP-009/DEC-021, `requirements.txt`)
 ```
@@ -30,7 +30,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-Madrid Pulse puede desarrollarse **completamente en local** hasta el final de la validación del colector (MP-001 a MP-006), sin pagar nada.
+Madrid Pulse puede desarrollarse **completamente en local** hasta el final de la validación del colector (MP-001 a MP-007), sin pagar nada.
 
 ## Después de validar el colector (post-MP-007)
 

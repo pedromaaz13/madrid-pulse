@@ -4,7 +4,7 @@ Fecha: 2026-11-24. **Propuesta; no autoriza implementar ni contratar.** Polític
 
 ## MVP 0 — URL pública con demo congelada
 
-> **SUPERADO (2026-11-25):** las tareas D-01…D-07 de esta tabla las sustituye `MVP0_IMPLEMENTATION_PLAN.md` (D-01…D-06, contrato de demo propio). Se conserva como histórico. D-10…D-19 siguen vigentes.
+> **SUPERADO (2026-11-25) = sustituido documentalmente, no ejecutado ni cancelado en el mundo real:** las tareas D-01…D-07 de esta tabla las sustituye `MVP0_IMPLEMENTATION_PLAN.md` (D-01…D-06, contrato de demo propio). Se conserva como histórico. D-10…D-18 siguen como **subalcance de staging propuesto** (separado de MP-032 local hasta decisión del propietario); D-10 = MP-023, D-13 = parte de MP-026a y D-19 = MP-024/MP-025a/b + MP-026a (`docs/roadmap/CROSSWALK.md`).
 
 | ID | Tarea | Tipo | Ejecutor (modelo · esf.) | Revisor contrario | Aceptación |
 |---|---|---|---|---|---|
@@ -43,7 +43,7 @@ Puertas humanas: aprobar publicar con FR-01/FR-02 rotulados; elegir proveedor de
 7. Veredicto **GO** del gate H4-09 y tu autorización explícita (publicación, coste y dominio).
 
 ## Secuencia de publicación recomendada
-1. Merge del PR #3 (tu aprobación) → `main`.
+1. ~~Merge del PR #3~~ **Hecho** (2026-11-24, `7583ca5`).
 2. D-01…D-07 → **URL pública del demo** (MVP 0).
-3. Decidir VPS/Railway y presupuesto; D-10…D-17 en paralelo a H4-11/H4-00/H4-04/H4-01.
+3. Decidir VPS/Railway y presupuesto; D-11…D-17 tras MP-023 (D-10 es alias de MP-023, no una tarea aparte) y en paralelo al resto de H4.
 4. D-18 y gate H4-09 → decisión de abrir Live.

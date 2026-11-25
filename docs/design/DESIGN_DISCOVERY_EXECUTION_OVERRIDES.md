@@ -19,8 +19,11 @@
 |---|---|---|
 | DES-01 captura Playwright del frontend actual | Terra ejecuta, Claude revisa | **Claude `claude-sonnet-5-5` · high** ejecuta la inspección real **solo tras preflight** (comprobar que Chrome DevTools/Playwright existe y responde); Codex `gpt-6.2-sol` · medium revisa **código y artefactos** declarando que no tiene navegador |
 | DES-08 verificación A/B/C en navegador real | Terra ejecuta | Igual que DES-01: ejecución visual por Claude con preflight; Codex audita artefactos/código |
-| DES-07 iconografía | Terra ejecuta | Terra puede implementar la parte de código React/TS; las mediciones de FPS/legibilidad en navegador las hace Claude con preflight |
+| DES-04/05/06 revisión formal | Terra revisa en DES-08 sobre artefactos reales | **Codex revisa código y artefactos** (sin navegador). La verificación visual la ejecuta Claude en DES-08 con preflight |
+| DES-07 iconografía | Terra ejecuta y mide | **Separado:** Terra puede implementar el código React/TS; la **medición** en navegador (FPS, legibilidad) la hace Claude con preflight; la revisión la hace Claude Opus High según el original, por lo que **quien mide y quien revisa es el mismo proveedor**: limitación declarada |
 | Terra en el resto | — | Puede implementar o revisar código React/TS **sin** navegador |
+
+**Limitación declarada (independencia visual):** sin navegador para Codex, la verificación visual de A/B/C la ejecuta el mismo proveedor que los implementa (Claude). No existe verificación visual de proveedor contrario hasta que Codex disponga de navegador verificado. Mitigación: preflight y artefactos conservados, revisión de código/artefactos por Codex, y la elección humana (DES-09) como control visual final. El gate visual independiente queda `NOT RUN`/abierto en `PROJECT_STATE.json` hasta entonces.
 
 - **Preflight obligatorio:** antes de declarar nada visual, el worker comprueba que la herramienta existe. Si no hay navegador: resultado **`NOT RUN`**, el **gate visual permanece abierto** y se informa; nunca `PASS` por inferencia ni mockups presentados como capturas.
 - Efectos de la política (`docs/ORCHESTRATION_POLICY.md`): `claude-sonnet-5-5` medium coordina y high para frontend/revisiones importantes; Opus/Astra solo ante problema complejo demostrado; el modelo efectivo se registra (argv durante la ejecución), no el autoinforme.

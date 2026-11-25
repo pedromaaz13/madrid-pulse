@@ -55,7 +55,11 @@
       "implementation_status": "IMPLEMENTED",
       "closure": "CLOSED",
       "open_findings": [],
-      "gate_evidence": "MP-001 DONE; propietario autorizó Hito 1 el 2026-11-18",
+      "gate_evidence": [
+        "docs/TASKS.md#mp-001--bootstrap-documental-del-repositorio"
+      ],
+      "gate_note": "MP-001 DONE; el propietario autorizó el Hito 1 el 2026-11-18",
+      "evidence_limit": "",
       "source": "docs/PLAN.md"
     },
     {
@@ -69,7 +73,14 @@
       "implementation_status": "IMPLEMENTED",
       "closure": "CLOSED",
       "open_findings": [],
-      "gate_evidence": "MP-002/MP-003 DONE; docs/legal/LICENSE_MATRIX.md; docs/research/MP-003-probe-findings.md",
+      "gate_evidence": [
+        "docs/TASKS.md#mp-002--matriz-de-fuentes-y-licencias",
+        "docs/TASKS.md#mp-003--probe-real-de-feeds-c5-gtfs--gtfs-rt",
+        "docs/legal/LICENSE_MATRIX.md",
+        "docs/adr/0002-data-sources.md"
+      ],
+      "gate_note": "MP-002/MP-003 DONE; Renfe verificada",
+      "evidence_limit": "La evidencia acredita Renfe (GTFS estático y GTFS-RT) y licencias; la disponibilidad técnica de CRTM no está acreditada (ADR-0002).",
       "source": "docs/PLAN.md"
     },
     {
@@ -83,7 +94,12 @@
       "implementation_status": "IMPLEMENTED",
       "closure": "CLOSED",
       "open_findings": [],
-      "gate_evidence": "MP-004/MP-005 DONE",
+      "gate_evidence": [
+        "docs/TASKS.md#mp-004--fixtures-reproducibles",
+        "docs/TASKS.md#mp-005--contrato-canónico-interno"
+      ],
+      "gate_note": "MP-004/MP-005 DONE",
+      "evidence_limit": "",
       "source": "docs/PLAN.md"
     },
     {
@@ -97,7 +113,12 @@
       "implementation_status": "IMPLEMENTED_WITH_OPEN_GATE",
       "closure": "OPEN",
       "open_findings": [],
-      "gate_evidence": "Dedupe y migraciones verificados; el gate de 24 h NO tiene evidencia (soak real = 668 filas). Cierre: MP-032/D-18.",
+      "gate_evidence": [
+        "docs/TASKS.md#mp-006--esquema-postgresqlpostgis-v1",
+        "docs/TASKS.md#mp-007--collector-idempotente"
+      ],
+      "gate_note": "Dedupe y migraciones verificados; el gate de 24 h NO tiene evidencia. Cierre: MP-032/D-18.",
+      "evidence_limit": "Las 668 posiciones citadas proceden de un soak local corto (≈20 min), no de 24 h.",
       "source": "docs/PLAN.md"
     },
     {
@@ -111,7 +132,12 @@
       "implementation_status": "IMPLEMENTED_WITH_OPEN_GATE",
       "closure": "OPEN",
       "open_findings": [],
-      "gate_evidence": "Anomalías cubiertas por test; replay de día completo sin evidencia (solo ventana de soak). Cierre: MP-028/MP-032.",
+      "gate_evidence": [
+        "docs/TASKS.md#mp-008--quality-engine",
+        "docs/TASKS.md#mp-009--exportador-histórico-parquet-particionado"
+      ],
+      "gate_note": "Anomalías cubiertas por test; replay de día completo sin evidencia (solo ventana de soak). Cierre: MP-028/MP-032.",
+      "evidence_limit": "El archivo real cubre la ventana del soak, no un día completo.",
       "source": "docs/PLAN.md"
     },
     {
@@ -125,7 +151,12 @@
       "implementation_status": "IMPLEMENTED",
       "closure": "CLOSED",
       "open_findings": [],
-      "gate_evidence": "MP-010/MP-011 DONE; la cobertura de la red completa es otra cuestión (H3/MP-029).",
+      "gate_evidence": [
+        "docs/TASKS.md#mp-010--topología-gtfs-c5",
+        "docs/TASKS.md#mp-011--prototipo-de-geometría-ferroviaria-sobre-osm"
+      ],
+      "gate_note": "MP-010/MP-011 DONE",
+      "evidence_limit": "Cierra la geometría C5; la cobertura de la red completa es H3/MP-029.",
       "source": "docs/PLAN.md"
     },
     {
@@ -140,7 +171,12 @@
       "open_findings": [
         "FR-01"
       ],
-      "gate_evidence": "Gate histórico cumplido en MP-012; la auditoría H3 halló FR-01 (P0) en el motor entregado: se corrige en MP-024/MP-025a/b.",
+      "gate_evidence": [
+        "docs/TASKS.md#mp-012--motor-de-movimiento-v1",
+        "docs/audits/hito-03/AUDIT_EXECUTIVE_DECISION.md"
+      ],
+      "gate_note": "Gate histórico cumplido en MP-012; la auditoría H3 halló FR-01 (P0) en el motor entregado: se corrige en MP-024/MP-025a/b.",
+      "evidence_limit": "",
       "source": "docs/PLAN.md"
     },
     {
@@ -155,7 +191,12 @@
       "open_findings": [
         "FR-02"
       ],
-      "gate_evidence": "Gate histórico cumplido en MP-013; la auditoría H3 halló FR-02 (P0) en la API: se corrige en MP-026a.",
+      "gate_evidence": [
+        "docs/TASKS.md#mp-013--fastapi-v1",
+        "docs/audits/hito-03/AUDIT_EXECUTIVE_DECISION.md"
+      ],
+      "gate_note": "Gate histórico cumplido en MP-013; la auditoría H3 halló FR-02 (P0) en la API: se corrige en MP-026a.",
+      "evidence_limit": "",
       "source": "docs/PLAN.md"
     },
     {
@@ -170,7 +211,12 @@
       "open_findings": [
         "FR-01"
       ],
-      "gate_evidence": "Gate histórico cumplido en MP-014; el rótulo de estados depende de la corrección de FR-01 (MP-030).",
+      "gate_evidence": [
+        "docs/TASKS.md#mp-014--frontend-reactmaplibre-c5",
+        "docs/audits/hito-03/AUDIT_EXECUTIVE_DECISION.md"
+      ],
+      "gate_note": "Gate histórico cumplido en MP-014; el rótulo de estados depende de la corrección de FR-01 (MP-030).",
+      "evidence_limit": "",
       "source": "docs/PLAN.md"
     },
     {
@@ -183,7 +229,12 @@
       "implementation_status": "IMPLEMENTED",
       "closure": "CLOSED",
       "open_findings": [],
-      "gate_evidence": "MP-015 DONE; PR #2 fusionado por el propietario el 2026-11-20 (990c95d)",
+      "gate_evidence": [
+        "docs/TASKS.md#mp-015--e2e-y-readiness-mvp",
+        "docs/MVP_READINESS.md"
+      ],
+      "gate_note": "MP-015 DONE; PR #2 fusionado por el propietario el 2026-11-20 (990c95d)",
+      "evidence_limit": "Constan la fusión del PR #2 y la promoción de ADR por el propietario; no se localizó una aceptación expresa del checklist de MVP_READINESS: ese es el límite de la evidencia.",
       "source": "docs/PLAN.md"
     },
     {
@@ -202,7 +253,11 @@
       "implementation_status": "IMPLEMENTED_WITH_OPEN_GATE",
       "closure": "OPEN",
       "open_findings": [],
-      "gate_evidence": "H3 amplió C5→núcleo Madrid solo en local; resto de España, AVE/LD/MD y capa colaborativa NO iniciados; gate no definido.",
+      "gate_evidence": [
+        "docs/PLAN.md"
+      ],
+      "gate_note": "H3 amplió C5→núcleo Madrid solo en local (catálogo completo, trazado parcial); resto de España, AVE/LD/MD y capa colaborativa NO iniciados; gate no definido.",
+      "evidence_limit": "",
       "source": "docs/PLAN.md"
     }
   ],
@@ -220,8 +275,10 @@
       "closure": "CLOSED",
       "gate": "MP-001 aprobado por Codex; Hito 1 autorizado por el propietario",
       "gate_evidence": [
-        "docs/TASKS.md#mp-001"
+        "docs/TASKS.md#mp-001--bootstrap-documental-del-repositorio"
       ],
+      "integration_kind": "content_in_main",
+      "evidence_limit": "El contenido fundacional entró en el commit inicial de main (5b45227), no por fusión de rama; chore/mp-001-foundation conserva 5 commits de bitácora sin fusionar.",
       "merge": {
         "pr": null,
         "sha": "5b45227",
@@ -246,7 +303,11 @@
       "integration_status": "MERGED",
       "deployment_status": "NOT_DEPLOYED",
       "closure": "CLOSED",
-      "gate": "Revisión cruzada aprobada 2026-11-19; PR #1 fusionado por el propietario",
+      "open_gates_inherited": [
+        "F3",
+        "F4"
+      ],
+      "gate": "Cierre histórico: revisión cruzada aprobada 2026-11-19 y PR #1 fusionado por el propietario; los gates F3 (24 h de ingesta) y F4 (replay de día completo) siguen abiertos",
       "gate_evidence": [
         "docs/STATUS.md"
       ],
@@ -273,10 +334,11 @@
       "integration_status": "MERGED",
       "deployment_status": "NOT_DEPLOYED",
       "closure": "CLOSED",
-      "gate": "MVP_READINESS aceptado; PR #2 fusionado por el propietario",
+      "gate": "PR #2 fusionado por el propietario; checklist MVP_READINESS presentado",
       "gate_evidence": [
         "docs/MVP_READINESS.md"
       ],
+      "evidence_limit": "No se localizó una aceptación expresa del checklist; consta la fusión del PR #2 y la promoción de ADR.",
       "merge": {
         "pr": 2,
         "sha": "990c95d",
@@ -338,7 +400,7 @@
       "integration_status": "MERGED",
       "deployment_status": "NOT_APPLICABLE",
       "closure": "CLOSED",
-      "gate": "AUD-09 aprobado por revisor de proveedor contrario; decisión final del propietario: ver human_gates",
+      "gate": "Cierre formal técnico: AUD-09 aprobado por revisor de proveedor contrario. La aceptación humana del dictamen sigue OPEN (HG-AUDIT-DECISION)",
       "gate_evidence": [
         "docs/audits/hito-03/AUDIT_EXECUTIVE_DECISION.md",
         "docs/audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md"
@@ -387,6 +449,7 @@
     {
       "id": "MVP0",
       "title": "MVP 0 — Primera URL de demostración estática (D-01→D-06)",
+      "deployment_gate": "HG-MVP0-PUBLISH",
       "tasks": [
         "D-01",
         "D-02",
@@ -444,8 +507,7 @@
         "D-15",
         "D-16",
         "D-17",
-        "D-18",
-        "D-19"
+        "D-18"
       ],
       "implementation_status": "PLANNED",
       "review_status": "NOT_REVIEWED",
@@ -461,15 +523,13 @@
     {
       "id": "BETA_PUBLIC",
       "title": "Beta pública funcional",
-      "tasks": [
-        "MP-035"
-      ],
+      "tasks": [],
       "implementation_status": "PLANNED",
       "review_status": "NOT_REVIEWED",
       "integration_status": "NOT_INTEGRATED",
       "deployment_status": "NOT_DEPLOYED",
       "closure": "OPEN",
-      "gate": "Gate 2 + MP-035 GO + aprobación del propietario",
+      "gate": "Gate 2 + dictamen GO de MP-035 (gate de publicación, hito H4) + aprobación del propietario (HG-LIVE-PUBLIC)",
       "gate_evidence": [
         "docs/plans/MVP_LIVE_END_TO_END.md"
       ]
@@ -507,12 +567,13 @@
       "head": "15820ac",
       "head_kind": "branch_tip",
       "evidence": [
-        "docs/TASKS.md#mp-001"
+        "docs/TASKS.md#mp-001--bootstrap-documental-del-repositorio"
       ],
       "gate": "Revisión cruzada aprobada y registrada en docs/TASKS.md (campo Estado)",
       "pr": null,
       "merge_sha": "5b45227",
       "notes": "Contenido fundacional en main desde 5b45227 (docs iniciales); la rama chore/mp-001-foundation conserva 5 commits de bitácora sin fusionar.",
+      "integration_kind": "content_in_main",
       "source": "docs/TASKS.md"
     },
     {
@@ -534,7 +595,7 @@
       "head": "4ac67fc",
       "head_kind": "branch_tip",
       "evidence": [
-        "docs/TASKS.md#mp-002"
+        "docs/TASKS.md#mp-002--matriz-de-fuentes-y-licencias"
       ],
       "gate": "Revisión cruzada aprobada y registrada en docs/TASKS.md (campo Estado)",
       "pr": 1,
@@ -561,7 +622,7 @@
       "head": "b4a749c",
       "head_kind": "branch_tip",
       "evidence": [
-        "docs/TASKS.md#mp-003"
+        "docs/TASKS.md#mp-003--probe-real-de-feeds-c5-gtfs--gtfs-rt"
       ],
       "gate": "Revisión cruzada aprobada y registrada en docs/TASKS.md (campo Estado)",
       "pr": 1,
@@ -588,7 +649,7 @@
       "head": "fa6d70d",
       "head_kind": "branch_tip",
       "evidence": [
-        "docs/TASKS.md#mp-004"
+        "docs/TASKS.md#mp-004--fixtures-reproducibles"
       ],
       "gate": "Revisión cruzada aprobada y registrada en docs/TASKS.md (campo Estado)",
       "pr": 1,
@@ -615,7 +676,7 @@
       "head": "bcdb27c",
       "head_kind": "branch_tip",
       "evidence": [
-        "docs/TASKS.md#mp-005"
+        "docs/TASKS.md#mp-005--contrato-canónico-interno"
       ],
       "gate": "Revisión cruzada aprobada y registrada en docs/TASKS.md (campo Estado)",
       "pr": 1,
@@ -642,7 +703,7 @@
       "head": "57c1c14",
       "head_kind": "branch_tip",
       "evidence": [
-        "docs/TASKS.md#mp-006"
+        "docs/TASKS.md#mp-006--esquema-postgresqlpostgis-v1"
       ],
       "gate": "Revisión cruzada aprobada y registrada en docs/TASKS.md (campo Estado)",
       "pr": 1,
@@ -670,7 +731,7 @@
       "head": "6654516",
       "head_kind": "branch_tip",
       "evidence": [
-        "docs/TASKS.md#mp-007"
+        "docs/TASKS.md#mp-007--collector-idempotente"
       ],
       "gate": "Revisión cruzada aprobada y registrada en docs/TASKS.md (campo Estado)",
       "pr": 1,
@@ -697,7 +758,7 @@
       "head": "a5a30b7",
       "head_kind": "branch_tip",
       "evidence": [
-        "docs/TASKS.md#mp-008"
+        "docs/TASKS.md#mp-008--quality-engine"
       ],
       "gate": "Revisión cruzada aprobada y registrada en docs/TASKS.md (campo Estado)",
       "pr": 1,
@@ -723,9 +784,9 @@
       "integration_status": "MERGED",
       "deployment_status": "NOT_DEPLOYED",
       "head": "8be1272",
-      "head_kind": "branch_tip",
+      "head_kind": "remote_branch_tip",
       "evidence": [
-        "docs/TASKS.md#mp-009"
+        "docs/TASKS.md#mp-009--exportador-histórico-parquet-particionado"
       ],
       "gate": "Revisión cruzada aprobada y registrada en docs/TASKS.md (campo Estado)",
       "pr": 1,
@@ -752,7 +813,7 @@
       "head": "0a31640",
       "head_kind": "branch_tip",
       "evidence": [
-        "docs/TASKS.md#mp-010"
+        "docs/TASKS.md#mp-010--topología-gtfs-c5"
       ],
       "gate": "Revisión cruzada aprobada y registrada en docs/TASKS.md (campo Estado)",
       "pr": 2,
@@ -779,7 +840,7 @@
       "head": "da5f5e1",
       "head_kind": "branch_tip",
       "evidence": [
-        "docs/TASKS.md#mp-011"
+        "docs/TASKS.md#mp-011--prototipo-de-geometría-ferroviaria-sobre-osm"
       ],
       "gate": "Revisión cruzada aprobada y registrada en docs/TASKS.md (campo Estado)",
       "pr": 2,
@@ -808,7 +869,7 @@
       "head": "1c1529d",
       "head_kind": "branch_tip",
       "evidence": [
-        "docs/TASKS.md#mp-012"
+        "docs/TASKS.md#mp-012--motor-de-movimiento-v1"
       ],
       "gate": "Revisión cruzada aprobada y registrada en docs/TASKS.md (campo Estado)",
       "pr": 2,
@@ -837,7 +898,7 @@
       "head": "2e883aa",
       "head_kind": "branch_tip",
       "evidence": [
-        "docs/TASKS.md#mp-013"
+        "docs/TASKS.md#mp-013--fastapi-v1"
       ],
       "gate": "Revisión cruzada aprobada y registrada en docs/TASKS.md (campo Estado)",
       "pr": 2,
@@ -864,7 +925,7 @@
       "head": "a1067b2",
       "head_kind": "branch_tip",
       "evidence": [
-        "docs/TASKS.md#mp-014"
+        "docs/TASKS.md#mp-014--frontend-reactmaplibre-c5"
       ],
       "gate": "Revisión cruzada aprobada y registrada en docs/TASKS.md (campo Estado)",
       "pr": 2,
@@ -892,9 +953,9 @@
       "integration_status": "MERGED",
       "deployment_status": "NOT_DEPLOYED",
       "head": "05faef9",
-      "head_kind": "branch_tip",
+      "head_kind": "remote_branch_tip",
       "evidence": [
-        "docs/TASKS.md#mp-015"
+        "docs/TASKS.md#mp-015--e2e-y-readiness-mvp"
       ],
       "gate": "Revisión cruzada aprobada y registrada en docs/TASKS.md (campo Estado)",
       "pr": 2,
@@ -921,7 +982,7 @@
       "head": "92c1b09",
       "head_kind": "branch_tip",
       "evidence": [
-        "docs/TASKS.md#mp-016"
+        "docs/TASKS.md#mp-016--fiabilidad-realtime-skipped-utc-livereplay"
       ],
       "gate": "Revisión cruzada aprobada y registrada en docs/TASKS.md (campo Estado)",
       "pr": 3,
@@ -948,7 +1009,7 @@
       "head": "c28d5e4",
       "head_kind": "branch_tip",
       "evidence": [
-        "docs/TASKS.md#mp-017"
+        "docs/TASKS.md#mp-017--catálogo-completo-de-madrid-identidad-y-vigencia"
       ],
       "gate": "Revisión cruzada aprobada y registrada en docs/TASKS.md (campo Estado)",
       "pr": 3,
@@ -975,7 +1036,7 @@
       "head": "728c667",
       "head_kind": "branch_tip",
       "evidence": [
-        "docs/TASKS.md#mp-018"
+        "docs/TASKS.md#mp-018--corredores-ferroviarios-por-patrón-y-sentido"
       ],
       "gate": "Revisión cruzada aprobada y registrada en docs/TASKS.md (campo Estado)",
       "pr": 3,
@@ -1002,7 +1063,7 @@
       "head": "7b87e6b",
       "head_kind": "branch_tip",
       "evidence": [
-        "docs/TASKS.md#mp-019"
+        "docs/TASKS.md#mp-019--contrato-de-snapshotapi-coherente"
       ],
       "gate": "Revisión cruzada aprobada y registrada en docs/TASKS.md (campo Estado)",
       "pr": 3,
@@ -1029,7 +1090,7 @@
       "head": "b616ae6",
       "head_kind": "branch_tip",
       "evidence": [
-        "docs/TASKS.md#mp-020"
+        "docs/TASKS.md#mp-020--mapa-y-tablero-reactmaplibre"
       ],
       "gate": "Revisión cruzada aprobada y registrada en docs/TASKS.md (campo Estado)",
       "pr": 3,
@@ -1056,7 +1117,7 @@
       "head": "1ecbc8f",
       "head_kind": "branch_tip",
       "evidence": [
-        "docs/TASKS.md#mp-021"
+        "docs/TASKS.md#mp-021--histórico-y-continuidad-analítica"
       ],
       "gate": "Revisión cruzada aprobada y registrada en docs/TASKS.md (campo Estado)",
       "pr": 3,
@@ -1083,7 +1144,7 @@
       "head": "beb9434",
       "head_kind": "branch_tip",
       "evidence": [
-        "docs/TASKS.md#mp-022"
+        "docs/TASKS.md#mp-022--validación-integral-de-cierre-madrid-completo"
       ],
       "gate": "Revisión cruzada aprobada y registrada en docs/TASKS.md (campo Estado)",
       "pr": 3,
@@ -1106,15 +1167,15 @@
       "integration_status": "MERGED",
       "deployment_status": "NOT_APPLICABLE",
       "head": "acb5749",
-      "head_kind": "branch_tip",
+      "head_kind": "shared_audit_branch_tip",
       "evidence": [
         "docs/audits/hito-03/BASELINE.md",
         "docs/audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md"
       ],
-      "gate": "Revisor de proveedor contrario APPROVED (registro de despachos); dictamen final AUD-09 provisional hasta aceptación del propietario",
+      "gate": "Cierre formal técnico: revisor de proveedor contrario APPROVED (registro de despachos). La aceptación humana del dictamen sigue OPEN (HG-AUDIT-DECISION).",
       "pr": 3,
       "merge_sha": "7583ca5",
-      "notes": "",
+      "notes": "head = punta compartida de la rama de auditoría; los commits revisados de cada AUD constan en el registro de despachos.",
       "source": "docs/audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md"
     },
     {
@@ -1134,15 +1195,15 @@
       "integration_status": "MERGED",
       "deployment_status": "NOT_APPLICABLE",
       "head": "acb5749",
-      "head_kind": "branch_tip",
+      "head_kind": "shared_audit_branch_tip",
       "evidence": [
         "docs/audits/hito-03/PRODUCT_AUDIT.md",
         "docs/audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md"
       ],
-      "gate": "Revisor de proveedor contrario APPROVED (registro de despachos); dictamen final AUD-09 provisional hasta aceptación del propietario",
+      "gate": "Cierre formal técnico: revisor de proveedor contrario APPROVED (registro de despachos). La aceptación humana del dictamen sigue OPEN (HG-AUDIT-DECISION).",
       "pr": 3,
       "merge_sha": "7583ca5",
-      "notes": "",
+      "notes": "head = punta compartida de la rama de auditoría; los commits revisados de cada AUD constan en el registro de despachos.",
       "source": "docs/audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md"
     },
     {
@@ -1162,15 +1223,15 @@
       "integration_status": "MERGED",
       "deployment_status": "NOT_APPLICABLE",
       "head": "acb5749",
-      "head_kind": "branch_tip",
+      "head_kind": "shared_audit_branch_tip",
       "evidence": [
         "docs/audits/hito-03/RAILWAY_GEOMETRY_AUDIT.md",
         "docs/audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md"
       ],
-      "gate": "Revisor de proveedor contrario APPROVED (registro de despachos); dictamen final AUD-09 provisional hasta aceptación del propietario",
+      "gate": "Cierre formal técnico: revisor de proveedor contrario APPROVED (registro de despachos). La aceptación humana del dictamen sigue OPEN (HG-AUDIT-DECISION).",
       "pr": 3,
       "merge_sha": "7583ca5",
-      "notes": "",
+      "notes": "head = punta compartida de la rama de auditoría; los commits revisados de cada AUD constan en el registro de despachos.",
       "source": "docs/audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md"
     },
     {
@@ -1190,15 +1251,15 @@
       "integration_status": "MERGED",
       "deployment_status": "NOT_APPLICABLE",
       "head": "acb5749",
-      "head_kind": "branch_tip",
+      "head_kind": "shared_audit_branch_tip",
       "evidence": [
         "docs/audits/hito-03/RAILWAY_GEOMETRY_AUDIT.md",
         "docs/audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md"
       ],
-      "gate": "Revisor de proveedor contrario APPROVED (registro de despachos); dictamen final AUD-09 provisional hasta aceptación del propietario",
+      "gate": "Cierre formal técnico: revisor de proveedor contrario APPROVED (registro de despachos). La aceptación humana del dictamen sigue OPEN (HG-AUDIT-DECISION).",
       "pr": 3,
       "merge_sha": "7583ca5",
-      "notes": "",
+      "notes": "head = punta compartida de la rama de auditoría; los commits revisados de cada AUD constan en el registro de despachos.",
       "source": "docs/audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md"
     },
     {
@@ -1218,15 +1279,15 @@
       "integration_status": "MERGED",
       "deployment_status": "NOT_APPLICABLE",
       "head": "acb5749",
-      "head_kind": "branch_tip",
+      "head_kind": "shared_audit_branch_tip",
       "evidence": [
         "docs/audits/hito-03/POSITION_MOVEMENT_AUDIT.md",
         "docs/audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md"
       ],
-      "gate": "Revisor de proveedor contrario APPROVED (registro de despachos); dictamen final AUD-09 provisional hasta aceptación del propietario",
+      "gate": "Cierre formal técnico: revisor de proveedor contrario APPROVED (registro de despachos). La aceptación humana del dictamen sigue OPEN (HG-AUDIT-DECISION).",
       "pr": 3,
       "merge_sha": "7583ca5",
-      "notes": "",
+      "notes": "head = punta compartida de la rama de auditoría; los commits revisados de cada AUD constan en el registro de despachos.",
       "source": "docs/audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md"
     },
     {
@@ -1246,15 +1307,15 @@
       "integration_status": "MERGED",
       "deployment_status": "NOT_APPLICABLE",
       "head": "acb5749",
-      "head_kind": "branch_tip",
+      "head_kind": "shared_audit_branch_tip",
       "evidence": [
         "docs/audits/hito-03/FRONTEND_UX_AUDIT.md",
         "docs/audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md"
       ],
-      "gate": "Revisor de proveedor contrario APPROVED (registro de despachos); dictamen final AUD-09 provisional hasta aceptación del propietario",
+      "gate": "Cierre formal técnico: revisor de proveedor contrario APPROVED (registro de despachos). La aceptación humana del dictamen sigue OPEN (HG-AUDIT-DECISION).",
       "pr": 3,
       "merge_sha": "7583ca5",
-      "notes": "",
+      "notes": "head = punta compartida de la rama de auditoría; los commits revisados de cada AUD constan en el registro de despachos.",
       "source": "docs/audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md"
     },
     {
@@ -1274,15 +1335,15 @@
       "integration_status": "MERGED",
       "deployment_status": "NOT_APPLICABLE",
       "head": "acb5749",
-      "head_kind": "branch_tip",
+      "head_kind": "shared_audit_branch_tip",
       "evidence": [
         "docs/audits/hito-03/BACKEND_OPERATIONS_AUDIT.md",
         "docs/audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md"
       ],
-      "gate": "Revisor de proveedor contrario APPROVED (registro de despachos); dictamen final AUD-09 provisional hasta aceptación del propietario",
+      "gate": "Cierre formal técnico: revisor de proveedor contrario APPROVED (registro de despachos). La aceptación humana del dictamen sigue OPEN (HG-AUDIT-DECISION).",
       "pr": 3,
       "merge_sha": "7583ca5",
-      "notes": "",
+      "notes": "head = punta compartida de la rama de auditoría; los commits revisados de cada AUD constan en el registro de despachos.",
       "source": "docs/audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md"
     },
     {
@@ -1302,15 +1363,15 @@
       "integration_status": "MERGED",
       "deployment_status": "NOT_APPLICABLE",
       "head": "acb5749",
-      "head_kind": "branch_tip",
+      "head_kind": "shared_audit_branch_tip",
       "evidence": [
         "docs/audits/hito-03/EGM_REVIEW.md",
         "docs/audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md"
       ],
-      "gate": "Revisor de proveedor contrario APPROVED (registro de despachos); dictamen final AUD-09 provisional hasta aceptación del propietario",
+      "gate": "Cierre formal técnico: revisor de proveedor contrario APPROVED (registro de despachos). La aceptación humana del dictamen sigue OPEN (HG-AUDIT-DECISION).",
       "pr": 3,
       "merge_sha": "7583ca5",
-      "notes": "",
+      "notes": "head = punta compartida de la rama de auditoría; los commits revisados de cada AUD constan en el registro de despachos.",
       "source": "docs/audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md"
     },
     {
@@ -1336,15 +1397,15 @@
       "integration_status": "MERGED",
       "deployment_status": "NOT_APPLICABLE",
       "head": "acb5749",
-      "head_kind": "branch_tip",
+      "head_kind": "shared_audit_branch_tip",
       "evidence": [
         "docs/audits/hito-03/AUD08_REPRODUCTION.md",
         "docs/audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md"
       ],
-      "gate": "Revisor de proveedor contrario APPROVED (registro de despachos); dictamen final AUD-09 provisional hasta aceptación del propietario",
+      "gate": "Cierre formal técnico: revisor de proveedor contrario APPROVED (registro de despachos). La aceptación humana del dictamen sigue OPEN (HG-AUDIT-DECISION).",
       "pr": 3,
       "merge_sha": "7583ca5",
-      "notes": "",
+      "notes": "head = punta compartida de la rama de auditoría; los commits revisados de cada AUD constan en el registro de despachos.",
       "source": "docs/audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md"
     },
     {
@@ -1364,12 +1425,12 @@
       "integration_status": "MERGED",
       "deployment_status": "NOT_APPLICABLE",
       "head": "acb5749",
-      "head_kind": "branch_tip",
+      "head_kind": "shared_audit_branch_tip",
       "evidence": [
         "docs/audits/hito-03/AUDIT_EXECUTIVE_DECISION.md",
         "docs/audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md"
       ],
-      "gate": "Revisor de proveedor contrario APPROVED (registro de despachos); dictamen final AUD-09 provisional hasta aceptación del propietario",
+      "gate": "Cierre formal técnico: revisor de proveedor contrario APPROVED (registro de despachos). La aceptación humana del dictamen sigue OPEN (HG-AUDIT-DECISION).",
       "pr": 3,
       "merge_sha": "7583ca5",
       "notes": "Dictamen: NO-GO despliegue público; CONDITIONAL GO local. 2 P0 (FR-01, FR-02) y 16 P1 abiertos. Aceptación del propietario: ver human_gates HG-AUDIT-DECISION.",
@@ -1427,7 +1488,10 @@
       "aliases": [
         "H4-00"
       ],
-      "priority": "P0"
+      "priority": "P0",
+      "requires_gates": [
+        "HG-ADR-0014"
+      ]
     },
     {
       "implementation_status": "PLANNED",
@@ -1456,7 +1520,10 @@
       "aliases": [
         "H4-04"
       ],
-      "priority": "P0"
+      "priority": "P0",
+      "requires_gates": [
+        "HG-ADR-0014"
+      ]
     },
     {
       "implementation_status": "PLANNED",
@@ -1542,7 +1609,10 @@
       "aliases": [
         "H4-01"
       ],
-      "priority": "P0"
+      "priority": "P0",
+      "requires_gates": [
+        "HG-ADR-0014"
+      ]
     },
     {
       "implementation_status": "PLANNED",
@@ -1569,7 +1639,10 @@
       "aliases": [
         "H4-10"
       ],
-      "priority": "P1"
+      "priority": "P1",
+      "requires_gates": [
+        "HG-TILES"
+      ]
     },
     {
       "implementation_status": "PLANNED",
@@ -1598,7 +1671,10 @@
       "aliases": [
         "H4-12"
       ],
-      "priority": "P1"
+      "priority": "P1",
+      "requires_gates": [
+        "HG-CAPTURE"
+      ]
     },
     {
       "implementation_status": "PLANNED",
@@ -1611,14 +1687,16 @@
       "merge_sha": null,
       "review_date": null,
       "gate": "Aprobación humana donde indica docs/H4_MP_MAPPING.md; prueba RED en beb9434 y GREEN tras el fix",
-      "notes": "Planificada; implementación H4 no autorizada.",
+      "notes": "Depende del modelo de segmentos (en MP-024 o ADR propio, H4_TASK_MATRIX). Alcance H4: mejoras sin rediseño y catálogo honesto. El PoC de grafo y la expansión por cobertura son trabajo posterior a la beta (propuestas).",
       "head_kind": "none",
       "id": "MP-029",
       "title": "Corredores, ramales y catálogo honesto (H4-03)",
       "track": "PRODUCT",
       "milestone": "H4",
       "phase": "H4",
-      "depends_on": [],
+      "depends_on": [
+        "MP-024"
+      ],
       "executor": "codex",
       "reviewer": "claude",
       "source": "docs/H4_MP_MAPPING.md",
@@ -1712,7 +1790,10 @@
       "aliases": [
         "H4-07"
       ],
-      "priority": "P1"
+      "priority": "P1",
+      "requires_gates": [
+        "HG-HOSTING"
+      ]
     },
     {
       "implementation_status": "PLANNED",
@@ -1743,7 +1824,11 @@
       "aliases": [
         "H4-08"
       ],
-      "priority": "P1"
+      "priority": "P1",
+      "requires_gates": [
+        "HG-DEC-038",
+        "HG-DEC-004"
+      ]
     },
     {
       "implementation_status": "PLANNED",
@@ -1782,7 +1867,7 @@
       "pr": null,
       "merge_sha": null,
       "review_date": null,
-      "gate": "Aprobación humana donde indica docs/H4_MP_MAPPING.md; prueba RED en beb9434 y GREEN tras el fix",
+      "gate": "Todas las tareas MP-023…MP-034 cerradas o con BLOCKED documentado; decisión humana GO/NO-GO de publicación",
       "notes": "Planificada; implementación H4 no autorizada.",
       "head_kind": "none",
       "id": "MP-035",
@@ -1812,32 +1897,9 @@
       "aliases": [
         "H4-09"
       ],
-      "priority": "P0"
-    },
-    {
-      "implementation_status": "PLANNED",
-      "review_status": "NOT_REVIEWED",
-      "integration_status": "NOT_INTEGRATED",
-      "deployment_status": "NOT_DEPLOYED",
-      "head": "UNKNOWN",
-      "evidence": [],
-      "pr": null,
-      "merge_sha": null,
-      "review_date": null,
-      "gate": "Gate 0 de docs/plans/MVP_LIVE_END_TO_END.md; aprobación del propietario antes de publicar la URL",
-      "notes": "Planificada; no autorizada.",
-      "head_kind": "none",
-      "id": "D-01",
-      "title": "Captura local de 90 min con BD desechable y manifest",
-      "track": "MVP0",
-      "milestone": "MVP0",
-      "phase": "MVP0",
-      "depends_on": [],
-      "executor": "claude",
-      "reviewer": "codex",
-      "source": "docs/deployment/MVP0_IMPLEMENTATION_PLAN.md",
-      "related": [
-        "MP-028"
+      "priority": "P0",
+      "requires_gates": [
+        "HG-LIVE-PUBLIC"
       ]
     },
     {
@@ -1850,19 +1912,26 @@
       "pr": null,
       "merge_sha": null,
       "review_date": null,
-      "gate": "Gate 0 de docs/plans/MVP_LIVE_END_TO_END.md; aprobación del propietario antes de publicar la URL",
-      "notes": "Planificada; no autorizada.",
+      "gate": "Gate 0 de docs/plans/MVP_LIVE_END_TO_END.md verificado en entorno previo; aprobación del propietario antes de publicar la URL",
+      "notes": "Planificada; no autorizada. La demo no condiciona ni bloquea los P0 de Live.",
       "head_kind": "none",
-      "id": "D-02",
-      "title": "Contrato de demo estática y exportador determinista",
+      "id": "D-01",
+      "title": "Captura local de 90 min con BD desechable y manifest",
       "track": "MVP0",
       "milestone": "MVP0",
       "phase": "MVP0",
-      "depends_on": [],
-      "executor": "codex",
-      "reviewer": "claude",
+      "depends_on": [
+        "MP-023"
+      ],
+      "executor": "claude",
+      "reviewer": "codex",
       "source": "docs/deployment/MVP0_IMPLEMENTATION_PLAN.md",
-      "related": []
+      "related": [
+        "MP-028"
+      ],
+      "requires_gates": [
+        "HG-CAPTURE"
+      ]
     },
     {
       "implementation_status": "PLANNED",
@@ -1874,8 +1943,33 @@
       "pr": null,
       "merge_sha": null,
       "review_date": null,
-      "gate": "Gate 0 de docs/plans/MVP_LIVE_END_TO_END.md; aprobación del propietario antes de publicar la URL",
-      "notes": "Planificada; no autorizada.",
+      "gate": "Gate 0 de docs/plans/MVP_LIVE_END_TO_END.md verificado en entorno previo; aprobación del propietario antes de publicar la URL",
+      "notes": "Planificada; no autorizada. La demo no condiciona ni bloquea los P0 de Live.",
+      "head_kind": "none",
+      "id": "D-02",
+      "title": "Contrato de demo estática y exportador determinista",
+      "track": "MVP0",
+      "milestone": "MVP0",
+      "phase": "MVP0",
+      "depends_on": [],
+      "executor": "codex",
+      "reviewer": "claude",
+      "source": "docs/deployment/MVP0_IMPLEMENTATION_PLAN.md",
+      "related": [],
+      "requires_gates": []
+    },
+    {
+      "implementation_status": "PLANNED",
+      "review_status": "NOT_REVIEWED",
+      "integration_status": "NOT_INTEGRATED",
+      "deployment_status": "NOT_DEPLOYED",
+      "head": "UNKNOWN",
+      "evidence": [],
+      "pr": null,
+      "merge_sha": null,
+      "review_date": null,
+      "gate": "Gate 0 de docs/plans/MVP_LIVE_END_TO_END.md verificado en entorno previo; aprobación del propietario antes de publicar la URL",
+      "notes": "Planificada; no autorizada. La demo no condiciona ni bloquea los P0 de Live.",
       "head_kind": "none",
       "id": "D-03",
       "title": "Adaptador estático, reloj en bucle, banner y pie",
@@ -1888,7 +1982,8 @@
       "executor": "claude",
       "reviewer": "codex",
       "source": "docs/deployment/MVP0_IMPLEMENTATION_PLAN.md",
-      "related": []
+      "related": [],
+      "requires_gates": []
     },
     {
       "implementation_status": "PLANNED",
@@ -1900,8 +1995,8 @@
       "pr": null,
       "merge_sha": null,
       "review_date": null,
-      "gate": "Gate 0 de docs/plans/MVP_LIVE_END_TO_END.md; aprobación del propietario antes de publicar la URL",
-      "notes": "Planificada; no autorizada.",
+      "gate": "Gate 0 de docs/plans/MVP_LIVE_END_TO_END.md verificado en entorno previo; aprobación del propietario antes de publicar la URL",
+      "notes": "Planificada; no autorizada. La demo no condiciona ni bloquea los P0 de Live.",
       "head_kind": "none",
       "id": "D-04",
       "title": "Teselas configurables y estilo OpenFreeMap",
@@ -1914,6 +2009,9 @@
       "source": "docs/deployment/MVP0_IMPLEMENTATION_PLAN.md",
       "related": [
         "MP-027"
+      ],
+      "requires_gates": [
+        "HG-TILES"
       ]
     },
     {
@@ -1926,8 +2024,8 @@
       "pr": null,
       "merge_sha": null,
       "review_date": null,
-      "gate": "Gate 0 de docs/plans/MVP_LIVE_END_TO_END.md; aprobación del propietario antes de publicar la URL",
-      "notes": "Planificada; no autorizada.",
+      "gate": "Gate 0 de docs/plans/MVP_LIVE_END_TO_END.md verificado en entorno previo; aprobación del propietario antes de publicar la URL",
+      "notes": "Planificada; no autorizada. La demo no condiciona ni bloquea los P0 de Live.",
       "head_kind": "none",
       "id": "D-05",
       "title": "vite base, verify-build demo y pages.yml",
@@ -1935,12 +2033,14 @@
       "milestone": "MVP0",
       "phase": "MVP0",
       "depends_on": [
-        "D-03"
+        "D-03",
+        "D-04"
       ],
       "executor": "codex",
       "reviewer": "claude",
       "source": "docs/deployment/MVP0_IMPLEMENTATION_PLAN.md",
-      "related": []
+      "related": [],
+      "requires_gates": []
     },
     {
       "implementation_status": "PLANNED",
@@ -1952,8 +2052,8 @@
       "pr": null,
       "merge_sha": null,
       "review_date": null,
-      "gate": "Gate 0 de docs/plans/MVP_LIVE_END_TO_END.md; aprobación del propietario antes de publicar la URL",
-      "notes": "Planificada; no autorizada.",
+      "gate": "Gate 0 de docs/plans/MVP_LIVE_END_TO_END.md verificado en entorno previo; aprobación del propietario antes de publicar la URL",
+      "notes": "Planificada; no autorizada. La demo no condiciona ni bloquea los P0 de Live.",
       "head_kind": "none",
       "id": "D-06",
       "title": "Validación integrada de la demo y aprobación del propietario",
@@ -1970,32 +2070,9 @@
       "executor": "claude",
       "reviewer": "codex",
       "source": "docs/deployment/MVP0_IMPLEMENTATION_PLAN.md",
-      "related": []
-    },
-    {
-      "implementation_status": "PLANNED",
-      "review_status": "NOT_REVIEWED",
-      "integration_status": "NOT_INTEGRATED",
-      "deployment_status": "NOT_DEPLOYED",
-      "head": "UNKNOWN",
-      "evidence": [],
-      "pr": null,
-      "merge_sha": null,
-      "review_date": null,
-      "gate": "Gate 1 de docs/plans/MVP_LIVE_END_TO_END.md",
-      "notes": "Subtarea de despliegue con correspondencia a MP existente; no duplica backlog.",
-      "head_kind": "none",
-      "id": "D-10",
-      "title": "Defaults seguros de BD (= MP-023)",
-      "track": "LIVE_STAGING",
-      "milestone": "LIVE_STAGING",
-      "phase": "LIVE_STAGING",
-      "depends_on": [],
-      "executor": "codex",
-      "reviewer": "claude",
-      "source": "docs/deployment/MVP_RELEASE_CHECKLIST.md",
-      "related": [
-        "MP-023"
+      "related": [],
+      "requires_gates": [
+        "HG-MVP0-PUBLISH"
       ]
     },
     {
@@ -2009,7 +2086,34 @@
       "merge_sha": null,
       "review_date": null,
       "gate": "Gate 1 de docs/plans/MVP_LIVE_END_TO_END.md",
-      "notes": "Subtarea de despliegue con correspondencia a MP existente; no duplica backlog.",
+      "notes": "Alias de MP-023; el trabajo canónico y su estado viven en MP-023.",
+      "head_kind": "none",
+      "id": "D-10",
+      "title": "Defaults seguros de BD (= MP-023)",
+      "track": "LIVE_STAGING",
+      "milestone": "LIVE_STAGING",
+      "phase": "LIVE_STAGING",
+      "depends_on": [],
+      "executor": "codex",
+      "reviewer": "claude",
+      "source": "docs/deployment/MVP_RELEASE_CHECKLIST.md",
+      "related": [
+        "MP-023"
+      ],
+      "alias_of": "MP-023"
+    },
+    {
+      "implementation_status": "PLANNED",
+      "review_status": "NOT_REVIEWED",
+      "integration_status": "NOT_INTEGRATED",
+      "deployment_status": "NOT_DEPLOYED",
+      "head": "UNKNOWN",
+      "evidence": [],
+      "pr": null,
+      "merge_sha": null,
+      "review_date": null,
+      "gate": "Gate 1 de docs/plans/MVP_LIVE_END_TO_END.md",
+      "notes": "Subalcance de staging propuesto (separado de MP-032 local hasta decisión del propietario); no duplica backlog. D-19 (cierre de FR-01 y FR-02) = MP-024, MP-025a/b y MP-026a: solo en CROSSWALK.",
       "head_kind": "none",
       "id": "D-11",
       "title": "Dockerfiles, compose de producción y Caddy mismo origen",
@@ -2017,7 +2121,7 @@
       "milestone": "LIVE_STAGING",
       "phase": "LIVE_STAGING",
       "depends_on": [
-        "D-10"
+        "MP-023"
       ],
       "executor": "codex",
       "reviewer": "claude",
@@ -2037,7 +2141,7 @@
       "merge_sha": null,
       "review_date": null,
       "gate": "Gate 1 de docs/plans/MVP_LIVE_END_TO_END.md",
-      "notes": "Subtarea de despliegue con correspondencia a MP existente; no duplica backlog.",
+      "notes": "Subalcance de staging propuesto (separado de MP-032 local hasta decisión del propietario); no duplica backlog. D-19 (cierre de FR-01 y FR-02) = MP-024, MP-025a/b y MP-026a: solo en CROSSWALK.",
       "head_kind": "none",
       "id": "D-12",
       "title": "Migraciones idempotentes en arranque",
@@ -2065,7 +2169,7 @@
       "merge_sha": null,
       "review_date": null,
       "gate": "Gate 1 de docs/plans/MVP_LIVE_END_TO_END.md",
-      "notes": "Subtarea de despliegue con correspondencia a MP existente; no duplica backlog.",
+      "notes": "Alias de MP-026a; el trabajo canónico y su estado viven en MP-026a.",
       "head_kind": "none",
       "id": "D-13",
       "title": "Descarga/validación GTFS con aviso de vigencia (FR-19)",
@@ -2078,7 +2182,8 @@
       "source": "docs/deployment/MVP_RELEASE_CHECKLIST.md",
       "related": [
         "MP-026a"
-      ]
+      ],
+      "alias_of": "MP-026a"
     },
     {
       "implementation_status": "PLANNED",
@@ -2091,7 +2196,7 @@
       "merge_sha": null,
       "review_date": null,
       "gate": "Gate 1 de docs/plans/MVP_LIVE_END_TO_END.md",
-      "notes": "Subtarea de despliegue con correspondencia a MP existente; no duplica backlog.",
+      "notes": "Subalcance de staging propuesto (separado de MP-032 local hasta decisión del propietario); no duplica backlog. D-19 (cierre de FR-01 y FR-02) = MP-024, MP-025a/b y MP-026a: solo en CROSSWALK.",
       "head_kind": "none",
       "id": "D-14",
       "title": "Purga y retención de BD caliente",
@@ -2119,7 +2224,7 @@
       "merge_sha": null,
       "review_date": null,
       "gate": "Gate 1 de docs/plans/MVP_LIVE_END_TO_END.md",
-      "notes": "Subtarea de despliegue con correspondencia a MP existente; no duplica backlog.",
+      "notes": "Subalcance de staging propuesto (separado de MP-032 local hasta decisión del propietario); no duplica backlog. D-19 (cierre de FR-01 y FR-02) = MP-024, MP-025a/b y MP-026a: solo en CROSSWALK.",
       "head_kind": "none",
       "id": "D-15",
       "title": "Rate limit, /healthz y cabeceras de seguridad",
@@ -2147,7 +2252,7 @@
       "merge_sha": null,
       "review_date": null,
       "gate": "Gate 1 de docs/plans/MVP_LIVE_END_TO_END.md",
-      "notes": "Subtarea de despliegue con correspondencia a MP existente; no duplica backlog.",
+      "notes": "Subalcance de staging propuesto (separado de MP-032 local hasta decisión del propietario); no duplica backlog. D-19 (cierre de FR-01 y FR-02) = MP-024, MP-025a/b y MP-026a: solo en CROSSWALK.",
       "head_kind": "none",
       "id": "D-16",
       "title": "Backups con restauración probada",
@@ -2175,7 +2280,7 @@
       "merge_sha": null,
       "review_date": null,
       "gate": "Gate 1 de docs/plans/MVP_LIVE_END_TO_END.md",
-      "notes": "Subtarea de despliegue con correspondencia a MP existente; no duplica backlog.",
+      "notes": "Subalcance de staging propuesto (separado de MP-032 local hasta decisión del propietario); no duplica backlog. D-19 (cierre de FR-01 y FR-02) = MP-024, MP-025a/b y MP-026a: solo en CROSSWALK.",
       "head_kind": "none",
       "id": "D-17",
       "title": "CD por SSH con aprobación manual",
@@ -2203,7 +2308,7 @@
       "merge_sha": null,
       "review_date": null,
       "gate": "Gate 1 de docs/plans/MVP_LIVE_END_TO_END.md",
-      "notes": "Subtarea de despliegue con correspondencia a MP existente; no duplica backlog.",
+      "notes": "Subalcance de staging propuesto (separado de MP-032 local hasta decisión del propietario); no duplica backlog. D-19 (cierre de FR-01 y FR-02) = MP-024, MP-025a/b y MP-026a: solo en CROSSWALK.",
       "head_kind": "none",
       "id": "D-18",
       "title": "Operación supervisada ≥24 h (ideal 72 h)",
@@ -2217,8 +2322,8 @@
         "D-15",
         "D-16"
       ],
-      "executor": "codex",
-      "reviewer": "claude",
+      "executor": "claude",
+      "reviewer": "codex",
       "source": "docs/deployment/MVP_RELEASE_CHECKLIST.md",
       "related": [
         "MP-032"
@@ -2228,26 +2333,26 @@
       "implementation_status": "PLANNED",
       "review_status": "NOT_REVIEWED",
       "integration_status": "NOT_INTEGRATED",
-      "deployment_status": "NOT_DEPLOYED",
+      "deployment_status": "NOT_APPLICABLE",
       "head": "UNKNOWN",
       "evidence": [],
       "pr": null,
       "merge_sha": null,
       "review_date": null,
-      "gate": "Gate 1 de docs/plans/MVP_LIVE_END_TO_END.md",
-      "notes": "Subtarea de despliegue con correspondencia a MP existente; no duplica backlog.",
+      "gate": "Gate humano irrevocable de elección A/B/C (DES-09); precondición AUD-H3 ya cumplida",
+      "notes": "Subtarea de discovery, no tarea MP. Terra sin navegador en Orca: ejecución visual solo con Claude + DevTools tras preflight; si no hay navegador, NOT RUN y gate visual abierto. Limitación declarada: la verificación visual la ejecuta el mismo proveedor que implementa A/B/C; Codex revisa código y artefactos; la elección humana es el control visual final. DES-07: implementación React/TS por Terra, medición en navegador por Claude.",
       "head_kind": "none",
-      "id": "D-19",
-      "title": "Cierre de FR-01 y FR-02",
-      "track": "LIVE_STAGING",
-      "milestone": "LIVE_STAGING",
-      "phase": "LIVE_STAGING",
+      "id": "DES-00",
+      "title": "Baseline y verificación de restricciones",
+      "track": "DESIGN",
+      "milestone": "DESIGN",
+      "phase": "DESIGN",
       "depends_on": [],
-      "executor": "codex",
-      "reviewer": "claude",
-      "source": "docs/deployment/MVP_RELEASE_CHECKLIST.md",
-      "related": [
-        "MP-025a"
+      "executor": "claude",
+      "reviewer": "codex",
+      "source": "docs/design/DESIGN_DISCOVERY_A_B_C.md",
+      "requires_gates": [
+        "HG-DESIGN-START"
       ]
     },
     {
@@ -2261,42 +2366,20 @@
       "merge_sha": null,
       "review_date": null,
       "gate": "Gate humano irrevocable de elección A/B/C (DES-09); precondición AUD-H3 ya cumplida",
-      "notes": "Subtarea de discovery, no tarea MP. Terra sin navegador en Orca: visual solo con Claude + DevTools tras preflight; si no hay navegador, NOT RUN.",
-      "head_kind": "none",
-      "id": "DES-00",
-      "title": "Baseline y verificación de restricciones",
-      "track": "DESIGN",
-      "milestone": "DESIGN",
-      "phase": "DESIGN",
-      "depends_on": [],
-      "executor": "claude",
-      "reviewer": "codex",
-      "source": "docs/design/DESIGN_DISCOVERY_A_B_C.md"
-    },
-    {
-      "implementation_status": "PLANNED",
-      "review_status": "NOT_REVIEWED",
-      "integration_status": "NOT_INTEGRATED",
-      "deployment_status": "NOT_APPLICABLE",
-      "head": "UNKNOWN",
-      "evidence": [],
-      "pr": null,
-      "merge_sha": null,
-      "review_date": null,
-      "gate": "Gate humano irrevocable de elección A/B/C (DES-09); precondición AUD-H3 ya cumplida",
-      "notes": "Subtarea de discovery, no tarea MP. Terra sin navegador en Orca: visual solo con Claude + DevTools tras preflight; si no hay navegador, NOT RUN.",
+      "notes": "Subtarea de discovery, no tarea MP. Terra sin navegador en Orca: ejecución visual solo con Claude + DevTools tras preflight; si no hay navegador, NOT RUN y gate visual abierto. Limitación declarada: la verificación visual la ejecuta el mismo proveedor que implementa A/B/C; Codex revisa código y artefactos; la elección humana es el control visual final. DES-07: implementación React/TS por Terra, medición en navegador por Claude.",
       "head_kind": "none",
       "id": "DES-01",
-      "title": "Captura Playwright del frontend existente",
+      "title": "Inspección real y capturas del frontend existente (Claude + preflight de DevTools/Playwright)",
       "track": "DESIGN",
       "milestone": "DESIGN",
       "phase": "DESIGN",
       "depends_on": [
         "DES-00"
       ],
-      "executor": "codex",
-      "reviewer": "claude",
-      "source": "docs/design/DESIGN_DISCOVERY_A_B_C.md"
+      "executor": "claude",
+      "reviewer": "codex",
+      "source": "docs/design/DESIGN_DISCOVERY_A_B_C.md",
+      "requires_gates": []
     },
     {
       "implementation_status": "PLANNED",
@@ -2309,7 +2392,7 @@
       "merge_sha": null,
       "review_date": null,
       "gate": "Gate humano irrevocable de elección A/B/C (DES-09); precondición AUD-H3 ya cumplida",
-      "notes": "Subtarea de discovery, no tarea MP. Terra sin navegador en Orca: visual solo con Claude + DevTools tras preflight; si no hay navegador, NOT RUN.",
+      "notes": "Subtarea de discovery, no tarea MP. Terra sin navegador en Orca: ejecución visual solo con Claude + DevTools tras preflight; si no hay navegador, NOT RUN y gate visual abierto. Limitación declarada: la verificación visual la ejecuta el mismo proveedor que implementa A/B/C; Codex revisa código y artefactos; la elección humana es el control visual final. DES-07: implementación React/TS por Terra, medición en navegador por Claude.",
       "head_kind": "none",
       "id": "DES-02",
       "title": "Comparación de fuentes de diseño (frontend-design, Hallmark, Impeccable)",
@@ -2321,7 +2404,8 @@
       ],
       "executor": "claude",
       "reviewer": "codex",
-      "source": "docs/design/DESIGN_DISCOVERY_A_B_C.md"
+      "source": "docs/design/DESIGN_DISCOVERY_A_B_C.md",
+      "requires_gates": []
     },
     {
       "implementation_status": "PLANNED",
@@ -2334,7 +2418,7 @@
       "merge_sha": null,
       "review_date": null,
       "gate": "Gate humano irrevocable de elección A/B/C (DES-09); precondición AUD-H3 ya cumplida",
-      "notes": "Subtarea de discovery, no tarea MP. Terra sin navegador en Orca: visual solo con Claude + DevTools tras preflight; si no hay navegador, NOT RUN.",
+      "notes": "Subtarea de discovery, no tarea MP. Terra sin navegador en Orca: ejecución visual solo con Claude + DevTools tras preflight; si no hay navegador, NOT RUN y gate visual abierto. Limitación declarada: la verificación visual la ejecuta el mismo proveedor que implementa A/B/C; Codex revisa código y artefactos; la elección humana es el control visual final. DES-07: implementación React/TS por Terra, medición en navegador por Claude.",
       "head_kind": "none",
       "id": "DES-03",
       "title": "Brief y tres conceptos A/B/C",
@@ -2347,7 +2431,8 @@
       ],
       "executor": "claude",
       "reviewer": "codex",
-      "source": "docs/design/DESIGN_DISCOVERY_A_B_C.md"
+      "source": "docs/design/DESIGN_DISCOVERY_A_B_C.md",
+      "requires_gates": []
     },
     {
       "implementation_status": "PLANNED",
@@ -2360,7 +2445,7 @@
       "merge_sha": null,
       "review_date": null,
       "gate": "Gate humano irrevocable de elección A/B/C (DES-09); precondición AUD-H3 ya cumplida",
-      "notes": "Subtarea de discovery, no tarea MP. Terra sin navegador en Orca: visual solo con Claude + DevTools tras preflight; si no hay navegador, NOT RUN.",
+      "notes": "Subtarea de discovery, no tarea MP. Terra sin navegador en Orca: ejecución visual solo con Claude + DevTools tras preflight; si no hay navegador, NOT RUN y gate visual abierto. Limitación declarada: la verificación visual la ejecuta el mismo proveedor que implementa A/B/C; Codex revisa código y artefactos; la elección humana es el control visual final. DES-07: implementación React/TS por Terra, medición en navegador por Claude.",
       "head_kind": "none",
       "id": "DES-04",
       "title": "Prototipo A Titanium Control",
@@ -2372,7 +2457,8 @@
       ],
       "executor": "claude",
       "reviewer": "codex",
-      "source": "docs/design/DESIGN_DISCOVERY_A_B_C.md"
+      "source": "docs/design/DESIGN_DISCOVERY_A_B_C.md",
+      "requires_gates": []
     },
     {
       "implementation_status": "PLANNED",
@@ -2385,7 +2471,7 @@
       "merge_sha": null,
       "review_date": null,
       "gate": "Gate humano irrevocable de elección A/B/C (DES-09); precondición AUD-H3 ya cumplida",
-      "notes": "Subtarea de discovery, no tarea MP. Terra sin navegador en Orca: visual solo con Claude + DevTools tras preflight; si no hay navegador, NOT RUN.",
+      "notes": "Subtarea de discovery, no tarea MP. Terra sin navegador en Orca: ejecución visual solo con Claude + DevTools tras preflight; si no hay navegador, NOT RUN y gate visual abierto. Limitación declarada: la verificación visual la ejecuta el mismo proveedor que implementa A/B/C; Codex revisa código y artefactos; la elección humana es el control visual final. DES-07: implementación React/TS por Terra, medición en navegador por Claude.",
       "head_kind": "none",
       "id": "DES-05",
       "title": "Prototipo B Immersive Rail Map",
@@ -2397,7 +2483,8 @@
       ],
       "executor": "claude",
       "reviewer": "codex",
-      "source": "docs/design/DESIGN_DISCOVERY_A_B_C.md"
+      "source": "docs/design/DESIGN_DISCOVERY_A_B_C.md",
+      "requires_gates": []
     },
     {
       "implementation_status": "PLANNED",
@@ -2410,7 +2497,7 @@
       "merge_sha": null,
       "review_date": null,
       "gate": "Gate humano irrevocable de elección A/B/C (DES-09); precondición AUD-H3 ya cumplida",
-      "notes": "Subtarea de discovery, no tarea MP. Terra sin navegador en Orca: visual solo con Claude + DevTools tras preflight; si no hay navegador, NOT RUN.",
+      "notes": "Subtarea de discovery, no tarea MP. Terra sin navegador en Orca: ejecución visual solo con Claude + DevTools tras preflight; si no hay navegador, NOT RUN y gate visual abierto. Limitación declarada: la verificación visual la ejecuta el mismo proveedor que implementa A/B/C; Codex revisa código y artefactos; la elección humana es el control visual final. DES-07: implementación React/TS por Terra, medición en navegador por Claude.",
       "head_kind": "none",
       "id": "DES-06",
       "title": "Prototipo C Contemporary Signal",
@@ -2422,7 +2509,8 @@
       ],
       "executor": "claude",
       "reviewer": "codex",
-      "source": "docs/design/DESIGN_DISCOVERY_A_B_C.md"
+      "source": "docs/design/DESIGN_DISCOVERY_A_B_C.md",
+      "requires_gates": []
     },
     {
       "implementation_status": "PLANNED",
@@ -2435,7 +2523,7 @@
       "merge_sha": null,
       "review_date": null,
       "gate": "Gate humano irrevocable de elección A/B/C (DES-09); precondición AUD-H3 ya cumplida",
-      "notes": "Subtarea de discovery, no tarea MP. Terra sin navegador en Orca: visual solo con Claude + DevTools tras preflight; si no hay navegador, NOT RUN.",
+      "notes": "Subtarea de discovery, no tarea MP. Terra sin navegador en Orca: ejecución visual solo con Claude + DevTools tras preflight; si no hay navegador, NOT RUN y gate visual abierto. Limitación declarada: la verificación visual la ejecuta el mismo proveedor que implementa A/B/C; Codex revisa código y artefactos; la elección humana es el control visual final. DES-07: implementación React/TS por Terra, medición en navegador por Claude.",
       "head_kind": "none",
       "id": "DES-07",
       "title": "Comparativa de iconografía ferroviaria",
@@ -2447,7 +2535,8 @@
       ],
       "executor": "codex",
       "reviewer": "claude",
-      "source": "docs/design/DESIGN_DISCOVERY_A_B_C.md"
+      "source": "docs/design/DESIGN_DISCOVERY_A_B_C.md",
+      "requires_gates": []
     },
     {
       "implementation_status": "PLANNED",
@@ -2460,10 +2549,10 @@
       "merge_sha": null,
       "review_date": null,
       "gate": "Gate humano irrevocable de elección A/B/C (DES-09); precondición AUD-H3 ya cumplida",
-      "notes": "Subtarea de discovery, no tarea MP. Terra sin navegador en Orca: visual solo con Claude + DevTools tras preflight; si no hay navegador, NOT RUN.",
+      "notes": "Subtarea de discovery, no tarea MP. Terra sin navegador en Orca: ejecución visual solo con Claude + DevTools tras preflight; si no hay navegador, NOT RUN y gate visual abierto. Limitación declarada: la verificación visual la ejecuta el mismo proveedor que implementa A/B/C; Codex revisa código y artefactos; la elección humana es el control visual final. DES-07: implementación React/TS por Terra, medición en navegador por Claude.",
       "head_kind": "none",
       "id": "DES-08",
-      "title": "Verificación comparativa A/B/C en navegador real",
+      "title": "Verificación comparativa A/B/C en navegador real (Claude + preflight; Codex audita código y artefactos)",
       "track": "DESIGN",
       "milestone": "DESIGN",
       "phase": "DESIGN",
@@ -2473,9 +2562,10 @@
         "DES-06",
         "DES-07"
       ],
-      "executor": "codex",
-      "reviewer": "claude",
-      "source": "docs/design/DESIGN_DISCOVERY_A_B_C.md"
+      "executor": "claude",
+      "reviewer": "codex",
+      "source": "docs/design/DESIGN_DISCOVERY_A_B_C.md",
+      "requires_gates": []
     },
     {
       "implementation_status": "PLANNED",
@@ -2488,7 +2578,7 @@
       "merge_sha": null,
       "review_date": null,
       "gate": "Gate humano irrevocable de elección A/B/C (DES-09); precondición AUD-H3 ya cumplida",
-      "notes": "Subtarea de discovery, no tarea MP. Terra sin navegador en Orca: visual solo con Claude + DevTools tras preflight; si no hay navegador, NOT RUN.",
+      "notes": "Subtarea de discovery, no tarea MP. Terra sin navegador en Orca: ejecución visual solo con Claude + DevTools tras preflight; si no hay navegador, NOT RUN y gate visual abierto. Limitación declarada: la verificación visual la ejecuta el mismo proveedor que implementa A/B/C; Codex revisa código y artefactos; la elección humana es el control visual final. DES-07: implementación React/TS por Terra, medición en navegador por Claude.",
       "head_kind": "none",
       "id": "DES-09",
       "title": "Índice comparativo y gate humano de elección",
@@ -2500,12 +2590,13 @@
       ],
       "executor": "claude",
       "reviewer": "codex",
-      "source": "docs/design/DESIGN_DISCOVERY_A_B_C.md"
+      "source": "docs/design/DESIGN_DISCOVERY_A_B_C.md",
+      "requires_gates": []
     }
   ],
   "proposed_extensions": [
     {
-      "id": "PROPOSAL-MP-036",
+      "id": "PROPOSAL-STAGING-LIVE",
       "status": "PROPOSED",
       "title": "Staging Live en VPS (Docker, Caddy, backups) como tarea propia",
       "reason": "El plan lo llama subalcance de MP-032; si MP-032 (operación medida) se desborda, separar evita mezclar medición con despliegue. Sin ID asignado hasta decisión del propietario.",
@@ -2517,7 +2608,7 @@
       ]
     },
     {
-      "id": "PROPOSAL-MP-037",
+      "id": "PROPOSAL-SNAPSHOT-PUBLISHER",
       "status": "PROPOSED",
       "title": "PoC de snapshot publisher y manifest versionado",
       "reason": "SRV-01/SRV-02 no tienen tarea MP; el plan los difiere hasta que haya beta Live y métricas que lo justifiquen.",
@@ -2527,7 +2618,7 @@
       ]
     },
     {
-      "id": "PROPOSAL-MP-038",
+      "id": "PROPOSAL-GEO-BUILD",
       "status": "PROPOSED",
       "title": "Build geográfico reproducible (grafo OSM/Geofabrik)",
       "reason": "GEO-03 excede el alcance de MP-029 si el PoC de grafo (GEO-02) tiene éxito.",
@@ -2576,6 +2667,21 @@
       "status": "OPEN"
     },
     {
+      "id": "HG-CAPTURE",
+      "title": "Autorizar la captura continua local (D-01 y MP-028)",
+      "status": "OPEN"
+    },
+    {
+      "id": "HG-DESIGN-START",
+      "title": "Permiso para iniciar el Design Discovery (distinto de la elección A/B/C)",
+      "status": "OPEN"
+    },
+    {
+      "id": "HG-DEC-038",
+      "title": "DEC-038: pool de conexiones de la API (MP-033)",
+      "status": "OPEN"
+    },
+    {
       "id": "HG-TILES",
       "title": "Proveedor de teselas y condiciones",
       "status": "OPEN"
@@ -2591,6 +2697,7 @@
       "status": "OPEN"
     }
   ],
+  "open_findings_note": "Solo se listan los P0 abiertos. El universo completo de hallazgos (2 P0, 16 P1, 24 P2 según la auditoría; recuento por severidad, con estados posteriores a la auditoría) está en docs/audits/hito-03/FINDINGS_REGISTER.md hasta MP-034.",
   "open_findings": [
     {
       "id": "FR-01",
