@@ -5,7 +5,7 @@
 > - **SHA-256 del original:** `d1172ebaba7c379791a3a8716c19026adcee0b63d418b352c36009f9ee803031`
 > - **Alcance:** plan técnico hacia un MVP Live público; hechos verificados e hipótesis están separados en su §1
 > - **Regla:** importar este documento **no** convierte sus recomendaciones en decisiones aprobadas. Las decisiones viven en `docs/DECISIONS.md` y `docs/adr/`; el estado vigente, en `docs/STATUS.md` y `docs/governance/PROJECT_STATE.json` (si el cuerpo menciona PROJECT_STATE.yaml, el fichero real es el .json).
-> - **Privacidad:** el cuerpo conserva por integridad la formulación original, incluida alguna ruta absoluta local; excepción pendiente de decisión del propietario antes de fusionar.
+> - **Privacidad:** el cuerpo conserva por integridad la formulación original, incluida alguna ruta absoluta local; excepción **aceptada por el propietario (2026-11-25)**: el original se conserva sin modificar y la ruta no es operativa (ver el override).
 
 ---
 # Madrid Pulse — Plan de ejecución hacia un MVP Live público

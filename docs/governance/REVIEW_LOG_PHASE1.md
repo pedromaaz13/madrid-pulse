@@ -21,3 +21,23 @@
 **Autorización del propietario (2026-11-25):** push de `docs/governance-roadmap` y PR **en borrador** contra `main`. **No** autoriza merge, despliegue, contratación ni el Prompt 02. Autoriza además **una verificación excepcional y focalizada** de los hallazgos documentales pendientes de la ronda 2 y de sus correcciones posteriores, por Codex `gpt-6.2-sol` · medium. No es una tercera auditoría general. Esta instrucción **no** implica aceptar F9/H2 ni `HG-AUDIT-DECISION`; `UNKNOWN` se mantiene donde no hay evidencia.
 
 **Cambios previos a la verificación:** F10 asigna ahora MP-016…MP-022 (`phase: F10`); aclaración «cierre histórico ≠ preparado para release» (MILESTONES, UPDATE_PROTOCOL); MP-030 ↔ demo: sin dependencia técnica, solo solape de archivos (`coordination` en `PROJECT_STATE.json`); aclaración sobre la ruta histórica del original de Design en el override.
+
+### Resultado de la verificación excepcional (Codex `gpt-6.2-sol` · medium, solicitado vía Orca; argv no verificable)
+**HEAD revisado: `5d7a9a1`.** Dictamen: **CHANGES_REQUESTED** (no hay `APPROVED`). Por ID (hallazgo original → corrección → resultado):
+
+| ID | Resultado de la verificación |
+|---|---|
+| B2 (checklist obsoleto; MP-030 tras D-06) | RESUELTO |
+| B4 (excepción BLOCKED de MP-035) | RESUELTO |
+| B5 (Gate 0 preview vs URL pública) | PARCIAL: el estado canónico seguía describiendo Gate 0 en un solo tiempo |
+| B5 descubrimiento (gate MVP0 por identidad) | RESUELTO (reproducción independiente) |
+| B6 (F9 CLOSED sin aceptación; F1) | PARCIAL: `docs/PLAN.md` aún decía F9 cerrada |
+| B8 (ruta local del original) | RESUELTO (excepción aceptada por el propietario; original íntegro por `cmp`) |
+| B10 (CI/merge; `content_in_main`; enlace al override) | PARCIAL: §8 limitaba MERGED al merge real; cabecera de Design sin enlace y con «excepción pendiente» |
+| B11 (ARCHITECTURE) | RESUELTO |
+| A1, A2, A4 | RESUELTO |
+| A3 | PARCIAL: «16 P1 abiertos» en la nota de AUD-09 |
+| A6 | PARCIAL + **descubrimiento material nuevo**: la nota de MP-026a llamaba «aprobada por el propietario» a la matriz H4, que es PROPUESTA (HG-H4-SCOPE abierto) |
+| Cierres históricos vs release | RESUELTO |
+
+**Correcciones posteriores (commit siguiente), NO re-verificadas por Codex** (la autorización cubría una sola verificación): estado canónico con Gate 0 en dos tiempos; PLAN con F9 abierta; §8 con `integration_kind`; cabecera de Design con enlace relativo y la excepción de la ruta marcada como aceptada; «16 P1 registrados»; nota de MP-026a con la matriz como PROPUESTA y precedencia provisional. Verificación solo local: sync/check/36 tests y `cmp` del original.

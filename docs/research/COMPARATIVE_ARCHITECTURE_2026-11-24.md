@@ -5,7 +5,7 @@
 > - **SHA-256 del original:** `adb830489832626e7cea7ff5b2d4c1076093b2c18cf2ae729825bb52794fbfaf`
 > - **Alcance:** comparativa Madrid Pulse @ 7583ca5 / Vía Península @ 66d468a (AGPL-3.0) / Electricity Maps @ 3a17f6c (AGPL-3.0); solo estudio conceptual, sin copia de código
 > - **Regla:** importar este documento **no** convierte sus recomendaciones en decisiones aprobadas. Las decisiones viven en `docs/DECISIONS.md` y `docs/adr/`; el estado vigente, en `docs/STATUS.md` y `docs/governance/PROJECT_STATE.json` (si el cuerpo menciona PROJECT_STATE.yaml, el fichero real es el .json).
-> - **Privacidad:** el cuerpo conserva por integridad la formulación original, incluida alguna ruta absoluta local; excepción pendiente de decisión del propietario antes de fusionar.
+> - **Privacidad:** el cuerpo conserva por integridad la formulación original, incluida alguna ruta absoluta local; excepción **aceptada por el propietario (2026-11-25)**: el original se conserva sin modificar y la ruta no es operativa (ver el override).
 
 ---
 # **Madrid Pulse — Deep Research: arquitectura end-to-end, ingeniería de datos y estrategia de producto**
