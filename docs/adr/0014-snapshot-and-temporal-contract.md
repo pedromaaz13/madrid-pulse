@@ -2,7 +2,7 @@
 
 - **Estado:** `Propuesto` — aplicado de forma provisional bajo [ADR-0007](0007-autonomy-model.md). No lo promueve el ejecutor ni el revisor: solo el propietario del repositorio (`AGENTS.md`, regla 8), normalmente en el cierre de Hito 3.
 - **Fecha:** 2026-11-22
-- **Enmienda propuesta:** [0014-amendment-stop-state.md](0014-amendment-stop-state.md) (MP-024, `Propuesto`). Sustituye la fórmula de §2 y enmienda §3 y §5; el resto de este ADR no cambia.
+- **Enmienda:** [0014-amendment-stop-state.md](0014-amendment-stop-state.md) (MP-024), cuya **dirección aprobó el propietario el 2026-11-25** ([registro y alcance por sección](0014-amendment-owner-decision.md)). **Sustituye** §2 y §5 y **enmienda** §3 de este ADR; **el resto (§1, §4, §6, §7, §8) no está decidido y sigue `Propuesto`**. El estado global de este ADR sigue siendo `Propuesto`.
 - **Decisores:** Claude Opus como ejecutor de MP-019 (escalado por política de modelo de Hito 2: decisión arquitectónica de alto impacto); revisión cruzada completada y aprobada por OpenAI Codex el 2026-11-22; promoción pendiente del propietario (Pedro Matute).
 
 ## Contexto
