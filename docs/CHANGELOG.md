@@ -4,6 +4,20 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 
 ## [Unreleased]
 
+### MP-026a — Replay temporal `?at=` y vigencia del GTFS (rama `pedromaaz13/mp-026a-replay-gtfs`, sin fusionar; apilada sobre MP-023)
+
+Ejecutor Codex `gpt-6.2-sol` · high (recibo de Orca); revisor Claude Opus 5.5 · high (argv verificado): 2 rondas, APPROVED. **No integrada en `main`.**
+
+#### Fixed
+- FR-02: las lecturas de ingestas y observaciones se acotan al instante pedido; antes del primer dato el estado es «sin dato» con edades `null`, nunca negativas; `?at=` fuera de rango → 400 (antes 500).
+- FR-19: la vigencia del GTFS se evalúa en ejecución con el reloj de la petición (`valid`/`expiring`/`expired`/`not_yet_valid`) en health, catálogo y snapshot, y degrada el snapshot con causa visible.
+
+#### Changed
+- Contrato con tres excepciones declaradas a «aditivo» (`poll_age_s` nullable, `feeds` siempre con tres, formato del ETag) y esquema `1.1`.
+
+#### Verified
+- RED contra `beb9434`/`fe0ea85` y GREEN; 296 tests con 18 skipped sobre PostgreSQL desechable; web 89 tests. Pendiente: Actions remoto y rotulado en la UI (MP-030).
+
 ### MP-023 — Configuración segura de PostgreSQL (rama `pedromaaz13/mp-023-db-segura`, sin fusionar)
 
 Implementada por Codex `gpt-6.2-sol` · medium (recibo de Orca); revisada por Claude Sonnet 5.5 · high (argv verificado), 2 rondas, 0 bloqueantes. **No integrada en `main`.**
