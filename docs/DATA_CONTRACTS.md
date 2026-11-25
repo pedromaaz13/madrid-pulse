@@ -180,7 +180,7 @@ y **no** acredita que haya habido map-matching. El modelo lo valida en
 construcción.
 
 `position` (los cuatro estados de [ADR-0004](adr/0004-position-model.md)) se
-conserva sin cambios por compatibilidad. `rendered` es la autoridad de
+conserva por compatibilidad. Con lag cero en estimated y stale, publica la misma coordenada que rendered. `rendered` es la autoridad de
 presentación; ambos derivan del mismo ancla, publicado en
 `rendered.anchor_observed_at`.
 
@@ -200,7 +200,7 @@ lugar.
 | `interpolated_between_known_anchors` | `display_at` cae entre dos anclas reales. Solo con retraso de presentación declarado; jamás en directo. |
 | `extrapolated_from_last_anchor` | Hay ancla pasada y no hay ancla futura: avance acotado por horario, topología y límites físicos. Caso normal del directo. |
 | `schedule_only` | Sin observación utilizable: posición derivada solo del horario. |
-| `stale_frozen` | El ancla superó `stale_after_s` o se agotó el horizonte: congelada **en el ancla**, sin envolvente y sin `valid_until`. |
+| `stale_frozen` | El ancla superó `stale_after_s` o se agotó el horizonte: congelada en el final autorizado con F1, sin envolvente y sin `valid_until`. |
 | `unlocated` | No se puede publicar coordenada defendible. La circulación sigue en lista/tablero, no en el mapa. |
 
 La `progress_envelope` es una sola expresión, válida para
@@ -218,10 +218,63 @@ una espera programada real durante la que el progreso se mantiene. Un patrón
 sin corredor validado **no** recibe envolvente: sin longitud de arco no hay
 avance defendible.
 
-Limitación declarada: tras la espera del propio ancla la envolvente usa una
-sola tasa media hasta el fin del horizonte, así que no reproduce esperas
-*intermedias* dentro de él — publicarlas exigiría el array de puntos futuros
-que el encargo de MP-019 prohíbe.
+La enmienda 1 de ADR-0014 toma el estado de la observación efectiva del motor.
+`stop_state` indica la fuente aplicada, el estado y la parada declarados, el
+instante observado y la coherencia (true, false o null si falta el estado).
+Una cancelación base vigente tiene prioridad. STOPPED_AT coherente y
+INCOMING_AT en zona retienen. Para avanzar se usa la velocidad del tramo en
+segundos reales UTC y se limita el progreso en la primera parada fuera de
+zona. El modelo no infiere omisiones de parada. Con estado ausente o
+contradictorio se aplica R8. La espera conserva el tiempo probado en la zona
+por el ancla y la muestra anterior admisible (`dwell_basis` ancla o muestras).
+
+`hold_reason` identifica la causa inicial de la envolvente. `cap_stop_id`
+identifica la siguiente parada, `cap_kind` distingue stop y horizon, y
+`cap_reached_at` redondea hacia arriba al milisegundo. En cada fotograma la
+fase es `hold:<hold_reason>` si la velocidad es cero o t < t0,
+`cap:<cap_kind>` desde cap_reached_at y `moving` en otro caso. Los instantes
+de la envolvente se construyen y se serializan en milisegundos para que
+Date.parse y Python evalúen los mismos tiempos. La precisión submilisegundo
+se descarta al construir la referencia temporal. Si el reloj del cliente está
+antes de t0 y la causa es nula, ambos evaluadores devuelven `hold:null`.
+
+Las causas de retención admitidas son `anchor_version_changed`, `trip_canceled`,
+`operator_stopped_at`, `operator_incoming_at`, `outside_schedule_extent`,
+`terminal`, `before_first_departure`, `schedule_stop_zone`,
+`schedule_incoherent` y `horizon_exhausted`. Sin retención se publica null.
+Las fuentes de stop_state son `operator`, `schedule` y `trip_update`.
+
+`envelope_id` identifica el ancla, su estado efectivo, run base, geometría,
+GTFS y parámetros. Se elige la última actualización por (run, observed_at, id)
+con run ≤ run del ancla. La edad de CANCELED se mide en observed_at respecto
+del ancla. Una cancelación conocida posterior se señala inmediatamente mediante
+el campo existente `schedule_relationship`; su efecto sobre la coordenada se
+difiere hasta la siguiente ancla. En directo se excluye de la base toda
+actualización marcada retroactiva en ingesta. Se toleran pequeños saltos de
+reloj configurables. Snapshot y tablero solo señalizan relaciones conocidas
+dentro de la ventana MP-017 de 20 h. Para CANCELED comprueban además los
+600 s provisionales respecto de la observación del viaje, o de now si el
+tablero solo dispone del horario.
+En replay explícito puede incluirse.
+
+F1 congela en progress(valid_until) con `frozen_basis=authorized_envelope_end`.
+`last_confirmed_progress_m` conserva el progreso del GPS proyectado. Si falta
+la huella de ingesta o cambia GTFS, geometría o umbrales se congela en el
+ancla desde el primer fotograma con hold_reason y frozen_basis
+`anchor_version_changed`. Se conserva esa coordenada al caducar. El filtro
+de línea de la API no cambia la compatibilidad del patrón. Una sustitución
+del catálogo entre dos peticiones puede cambiar la proyección del mismo GPS;
+la garantía de reconstrucción exige versiones concordantes.
+La reconstrucción requiere la identidad de la observación, su run y las mismas
+versiones. El replay por hora civil puede escoger una observación distinta:
+started_at no registra el instante de confirmación. La garantía de F1 en
+directo exige un único colector.
+
+P-024 usa provisionalmente 50 m, 30 s y 600 s (zona, espera mínima y edad de
+cancelación). Se parametrizan con MADRID_PULSE_STOP_ZONE_RADIUS_M,
+MADRID_PULSE_MIN_DWELL_S y MADRID_PULSE_CANCEL_MAX_AGE_S. La calibración
+corresponde a MP-028. Los rótulos y el consumo de vigencia desde el snapshot
+corresponden a MP-030.
 
 ### ETA con procedencia, nunca fabricada
 

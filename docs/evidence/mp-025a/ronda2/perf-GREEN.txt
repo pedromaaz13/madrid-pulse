@@ -1,0 +1,103 @@
+Incremental Sort  (cost=1600.25..6406.91 rows=202 width=273) (actual time=8.111..14.338 rows=200 loops=1)
+  Sort Key: v.source_vehicle_id, (row_number() OVER (?))
+  Presorted Key: v.source_vehicle_id
+  Full-sort Groups: 7  Sort Method: quicksort  Average Memory: 33kB  Peak Memory: 33kB
+  Buffers: shared hit=6102 read=220 written=7
+  CTE vehicles
+    ->  Recursive Union  (cost=0.45..49.99 rows=101 width=32) (actual time=0.385..1.814 rows=100 loops=1)
+          Buffers: shared hit=202 read=105
+          ->  Result  (cost=0.45..0.46 rows=1 width=32) (actual time=0.334..0.336 rows=1 loops=1)
+                Buffers: shared hit=1 read=3
+                InitPlan 1
+                  ->  Limit  (cost=0.42..0.45 rows=1 width=3) (actual time=0.266..0.300 rows=1 loops=1)
+                        Buffers: shared hit=1 read=3
+                        ->  Index Only Scan using vehicle_position_vehicle_time_idx on vehicle_position_observation  (cost=0.42..3502.19 rows=100000 width=3) (actual time=0.151..0.152 rows=1 loops=1)
+                              Heap Fetches: 0
+                              Buffers: shared hit=1 read=3
+          ->  Nested Loop  (cost=0.42..4.85 rows=10 width=3) (actual time=0.013..0.014 rows=1 loops=100)
+                Buffers: shared hit=201 read=102
+                ->  WorkTable Scan on vehicles v_1  (cost=0.00..0.20 rows=10 width=32) (actual time=0.000..0.000 rows=1 loops=100)
+                ->  Limit  (cost=0.42..0.46 rows=1 width=3) (actual time=0.012..0.012 rows=1 loops=100)
+                      Buffers: shared hit=201 read=102
+                      ->  Index Only Scan using vehicle_position_vehicle_time_idx on vehicle_position_observation vehicle_position_observation_1  (cost=0.42..1256.78 rows=33333 width=3) (actual time=0.012..0.012 rows=1 loops=100)
+                            Index Cond: (source_vehicle_id > v_1.source_vehicle_id)
+                            Heap Fetches: 2
+                            Buffers: shared hit=201 read=102
+  ->  Nested Loop Left Join  (cost=1501.75..6351.37 rows=202 width=273) (actual time=6.418..13.754 rows=200 loops=1)
+        Buffers: shared hit=6099 read=220 written=7
+        ->  Nested Loop Left Join  (cost=1492.58..4960.79 rows=202 width=255) (actual time=6.263..12.089 rows=200 loops=1)
+              Buffers: shared hit=4700 read=220 written=7
+              ->  Nested Loop Left Join  (cost=1492.17..3392.98 rows=202 width=231) (actual time=6.217..10.284 rows=200 loops=1)
+                    Buffers: shared hit=3900 read=220 written=7
+                    ->  WindowAgg  (cost=1488.94..1493.46 rows=202 width=205) (actual time=5.890..6.060 rows=200 loops=1)
+                          Buffers: shared hit=616 read=105
+                          ->  Sort  (cost=1488.91..1489.42 rows=202 width=197) (actual time=5.471..5.489 rows=200 loops=1)
+                                Sort Key: v.source_vehicle_id, v.observed_at DESC, v.id DESC
+                                Sort Method: quicksort  Memory: 60kB
+                                Buffers: shared hit=616 read=105
+                                ->  Nested Loop  (cost=0.85..1481.18 rows=202 width=197) (actual time=1.280..4.485 rows=200 loops=1)
+                                      Buffers: shared hit=613 read=105
+                                      ->  CTE Scan on vehicles  (cost=0.00..2.02 rows=101 width=32) (actual time=0.455..1.909 rows=100 loops=1)
+                                            Buffers: shared hit=202 read=105
+                                      ->  Limit  (cost=0.85..14.63 rows=2 width=197) (actual time=0.024..0.025 rows=2 loops=100)
+                                            Buffers: shared hit=411
+                                            ->  Nested Loop  (cost=0.85..6888.42 rows=1000 width=197) (actual time=0.024..0.024 rows=2 loops=100)
+                                                  Buffers: shared hit=411
+                                                  ->  Index Scan using vehicle_position_vehicle_time_idx on vehicle_position_observation v  (cost=0.42..2195.44 rows=1000 width=157) (actual time=0.017..0.018 rows=2 loops=100)
+                                                        Index Cond: ((source_vehicle_id = vehicles.source_vehicle_id) AND (observed_at <= 'infinity'::timestamp with time zone))
+                                                        Buffers: shared hit=400
+                                                  ->  Memoize  (cost=0.43..7.37 rows=1 width=48) (actual time=0.002..0.002 rows=1 loops=200)
+                                                        Cache Key: v.ingestion_run_id
+                                                        Cache Mode: logical
+                                                        Hits: 198  Misses: 2  Evictions: 0  Overflows: 0  Memory Usage: 1kB
+                                                        Buffers: shared hit=11
+                                                        ->  Index Scan using source_ingestion_run_pkey on source_ingestion_run r  (cost=0.42..7.36 rows=1 width=48) (actual time=0.014..0.014 rows=1 loops=2)
+                                                              Index Cond: (id = v.ingestion_run_id)
+                                                              Filter: (started_at <= '2026-11-24 08:00:00+00'::timestamp with time zone)
+                                                              Buffers: shared hit=10
+                    ->  Limit  (cost=3.23..9.38 rows=1 width=34) (actual time=0.021..0.021 rows=1 loops=200)
+                          Buffers: shared hit=3284 read=115 written=7
+                          ->  Merge Join  (cost=3.23..1024.64 rows=166 width=34) (actual time=0.020..0.020 rows=1 loops=200)
+                                Merge Cond: (u.ingestion_run_id = r_1.id)
+                                Buffers: shared hit=3085 read=115 written=7
+                                ->  Index Scan using trip_update_trip_run_idx on trip_update_observation u  (cost=0.42..795.63 rows=333 width=34) (actual time=0.015..0.015 rows=1 loops=200)
+                                      Index Cond: ((source_trip_id = v.source_trip_id) AND (ingestion_run_id <= v.ingestion_run_id))
+                                      Buffers: shared hit=685 read=115 written=7
+                                ->  Index Scan Backward using source_ingestion_run_pkey on source_ingestion_run r_1  (cost=0.42..23308.42 rows=150000 width=8) (actual time=0.002..0.003 rows=4 loops=200)
+                                      Filter: (NOT is_retroactive)
+                                      Buffers: shared hit=2400
+              ->  Subquery Scan on prior  (cost=0.42..7.75 rows=1 width=27) (actual time=0.008..0.008 rows=1 loops=200)
+                    Filter: (prior.source_trip_id = v.source_trip_id)
+                    Buffers: shared hit=800
+                    ->  Limit  (cost=0.42..7.74 rows=1 width=35) (actual time=0.008..0.008 rows=1 loops=200)
+                          Buffers: shared hit=800
+                          ->  Index Scan using vehicle_position_vehicle_time_idx on vehicle_position_observation p  (cost=0.42..813.10 rows=111 width=35) (actual time=0.008..0.008 rows=1 loops=200)
+                                Index Cond: ((source_vehicle_id = v.source_vehicle_id) AND (observed_at < v.observed_at))
+                                Filter: (ingestion_run_id <= v.ingestion_run_id)
+                                Buffers: shared hit=800
+        ->  Memoize  (cost=9.17..13.80 rows=1 width=18) (actual time=0.007..0.007 rows=1 loops=200)
+              Cache Key: v.source_trip_id
+              Cache Mode: binary
+              Hits: 100  Misses: 100  Evictions: 0  Overflows: 0  Memory Usage: 13kB
+              Buffers: shared hit=1399
+              ->  Subquery Scan on known  (cost=9.16..13.79 rows=1 width=18) (actual time=0.013..0.013 rows=1 loops=100)
+                    Buffers: shared hit=1399
+                    ->  Limit  (cost=9.16..13.78 rows=1 width=34) (actual time=0.013..0.013 rows=1 loops=100)
+                          Buffers: shared hit=1399
+                          ->  Merge Join  (cost=9.16..2318.41 rows=500 width=34) (actual time=0.012..0.012 rows=1 loops=100)
+                                Merge Cond: (u_1.ingestion_run_id = r_2.id)
+                                Buffers: shared hit=1300
+                                ->  Index Scan using trip_update_trip_run_idx on trip_update_observation u_1  (cost=0.42..2077.23 rows=1000 width=34) (actual time=0.010..0.010 rows=1 loops=100)
+                                      Index Cond: ((source_trip_id = v.source_trip_id) AND (observed_at >= '2026-11-23 12:00:00+00'::timestamp with time zone) AND (observed_at <= 'infinity'::timestamp with time zone))
+                                      Buffers: shared hit=400
+                                ->  Index Scan Backward using source_ingestion_run_pkey on source_ingestion_run r_2  (cost=0.42..24058.42 rows=150000 width=8) (actual time=0.001..0.002 rows=3 loops=100)
+                                      Filter: ((NOT is_retroactive) AND (started_at <= '2026-11-24 08:00:00+00'::timestamp with time zone))
+                                      Buffers: shared hit=900
+Planning:
+  Buffers: shared hit=482 read=47
+Planning Time: 23.134 ms
+Execution Time: 16.169 ms
+100 vehículos 13.83 ms
+100 vehículos 15.92 ms
+100 vehículos 17.05 ms
+300000|0

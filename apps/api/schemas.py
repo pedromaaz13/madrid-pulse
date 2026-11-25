@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_serializer
 
 
 class PositionOut(BaseModel):
@@ -280,7 +280,8 @@ class ProgressEnvelopeOut(BaseModel):
     horario no autoriza avanzar en el horizonte), no dato ausente. El cliente
     convierte el progreso en coordenada sobre la longitud de arco del patrón
     que ya tiene del catálogo; nunca interpola lat/lon en línea recta entre
-    estaciones.
+    estaciones. La fase es hold:<hold_reason> con velocidad cero o antes de
+    t0, cap:<cap_kind> desde cap_reached_at y moving en otro caso.
     """
 
     reference_at: datetime
@@ -291,7 +292,34 @@ class ProgressEnvelopeOut(BaseModel):
     dwell_until: datetime | None
 
 
+    hold_reason: Literal[
+        "anchor_version_changed", "trip_canceled", "operator_stopped_at", "operator_incoming_at",
+        "schedule_incoherent", "outside_schedule_extent", "terminal", "before_first_departure",
+        "schedule_stop_zone", "horizon_exhausted",
+    ] | None = None
+    cap_stop_id: str | None = None
+    cap_kind: Literal["stop", "horizon"] | None = None
+    cap_reached_at: datetime | None = None
+    envelope_id: str | None = None
+
+    @field_serializer("reference_at", "dwell_until", "cap_reached_at", when_used="json")
+    def milliseconds(self, value: datetime | None):
+        return value.isoformat(timespec="milliseconds") if value is not None else None
+
+
+class StopStateOut(BaseModel):
+    source: Literal["schedule", "operator", "trip_update"]
+    operator_status: str | None
+    operator_stop_id: str | None
+    observation_observed_at: datetime | None
+    coherent: bool | None
+
+
 class RenderedOut(BaseModel):
+    stop_state: StopStateOut | None = None
+    frozen_basis: Literal["authorized_envelope_end", "anchor_version_changed"] | None = None
+    last_confirmed_progress_m: float | None = None
+    dwell_basis: Literal["muestras", "ancla"] | None = None
     rendering_method: RenderingMethodLiteral
     coordinate_space: Literal["map_matched", "raw", "schedule"] | None
     lat: float | None
@@ -359,7 +387,8 @@ class SnapshotVehicleOut(BaseModel):
     map_matched: MapMatchedOut | None
     rendered: RenderedOut
     position: PositionOut | None
-    """Vista de compatibilidad de los cuatro estados de ADR-0004, sin cambios.
+    """Vista de compatibilidad de los cuatro estados de ADR-0004. En estimated y stale
+    sin retraso de presentación, las coordenadas coinciden con rendered.
     `rendered` es la autoridad de presentación; ambos derivan del mismo ancla
     (`rendered.anchor_observed_at`)."""
     delay: SnapshotDelayOut

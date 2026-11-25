@@ -20,7 +20,7 @@ Ninguna de las tres escribe en PostgreSQL ni archiva una coordenada
 from __future__ import annotations
 
 import hashlib
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import date, datetime, timedelta, timezone
 from typing import Literal
 from zoneinfo import ZoneInfo
@@ -30,6 +30,7 @@ import psycopg
 from packages.contracts.canonical import TripUpdateObservation
 from packages.geo import CorridorCoverage, CoverageStatus, PositionResolution, corridor_length_m
 from packages.gtfs import OPERATOR, scheduled_trip_instances_for_date
+from packages.movement.profile import profile_matches
 from packages.movement import (
     AnchorSample,
     MovementPosition,
@@ -249,12 +250,15 @@ def coverage_for_trip(
     return network.corridor_catalog.coverage_for_stops(route_id, stop_ids)
 
 
-def _legacy_position(movement: MovementPosition | None) -> PositionOut | None:
-    if movement is None:
+def _legacy_position(movement: MovementPosition | None, rendered: RenderedPosition | None = None) -> PositionOut | None:
+    if movement is None or (rendered and rendered.rendering_method is RenderingMethod.UNLOCATED):
         return None
+    same_frame = (rendered is not None and rendered.display_at == movement.calculated_at
+                  and movement.position_mode.value in {"estimated", "stale"}
+                  and rendered.latitude is not None)
     return PositionOut(
-        lat=movement.latitude,
-        lon=movement.longitude,
+        lat=rendered.latitude if same_frame else movement.latitude,
+        lon=rendered.longitude if same_frame else movement.longitude,
         mode=movement.position_mode.value,
         confidence=movement.confidence,
     )
@@ -271,6 +275,11 @@ def _envelope_out(rendered: RenderedPosition) -> ProgressEnvelopeOut | None:
         max_progress_m=envelope.max_progress_m,
         horizon_s=envelope.horizon_s,
         dwell_until=envelope.dwell_until,
+        hold_reason=envelope.hold_reason,
+        cap_stop_id=envelope.cap_stop_id,
+        cap_kind=envelope.cap_kind,
+        cap_reached_at=envelope.cap_reached_at,
+        envelope_id=envelope.envelope_id,
     )
 
 
@@ -296,6 +305,10 @@ def _rendered_out(rendered: RenderedPosition) -> RenderedOut:
         anchor_distance_from_raw_m=rendered.anchor_distance_from_raw_m,
         progress_envelope=_envelope_out(rendered),
         reason=rendered.reason,
+        stop_state=rendered.stop_state,
+        frozen_basis=rendered.frozen_basis,
+        last_confirmed_progress_m=rendered.last_confirmed_progress_m,
+        dwell_basis=rendered.dwell_basis,
     )
 
 
@@ -325,6 +338,14 @@ def _delay_out(
     )
 
 
+def _valid_relationship(relationship, observed_at, anchor_at, now, cancel_max_age_s):
+    if observed_at is None or observed_at < db.trip_update_cutoff(now):
+        return None
+    if relationship == "CANCELED" and (anchor_at - observed_at).total_seconds() > cancel_max_age_s:
+        return None
+    return relationship
+
+
 def _render_vehicle(
     network: LoadedNetwork,
     history: db.VehicleHistory,
@@ -333,6 +354,7 @@ def _render_vehicle(
     service_date: date,
     now: datetime,
     display_at: datetime,
+    known_relationship: str | None,
 ) -> tuple[RenderedPosition, MapMatchedOut | None]:
     latest = history.latest.position
     pattern_id = coverage.identity.pattern_id if coverage is not None else None
@@ -368,16 +390,81 @@ def _render_vehicle(
         schedule = engine.trip_schedule(latest.source_trip_id)
         previous_anchor: AnchorSample | None = None
         if (
-            display_at < latest.observed_at
-            and history.previous is not None
+            history.previous is not None
+            and movement.anchor_payload_hash == latest.payload_hash
+            and movement.observed_at == latest.observed_at
             and history.previous.position.source_trip_id == latest.source_trip_id
         ):
             previous_match = engine.map_match(history.previous.position)
-            if previous_match is not None:
+            if (
+                previous_match is not None
+                and previous_match.distance_from_track_m <= engine.thresholds.off_track_distance_m
+            ):
                 previous_anchor = AnchorSample(
                     observed_at=history.previous.position.observed_at,
                     progress_m=schedule.directed_progress(previous_match.physical_arc_m),
                 )
+        effective = history.latest
+        if (
+            history.previous
+            and history.previous.position.source_trip_id == latest.source_trip_id
+            and movement.anchor_payload_hash == history.previous.position.payload_hash
+            and movement.observed_at == history.previous.position.observed_at
+        ):
+            effective = history.previous
+        # Con búfer, el ancla futura solo autoriza interpolar en un tramo corto.
+        if (
+            previous_anchor
+            and display_at < latest.observed_at
+            and (
+                display_at <= previous_anchor.observed_at
+                or (latest.observed_at - previous_anchor.observed_at).total_seconds()
+                > engine.thresholds.stale_after_s
+            )
+        ):
+            effective = history.previous
+            movement = engine.position(
+                trip_id=latest.source_trip_id,
+                service_date=service_date,
+                calculated_at=now,
+                latest=effective.position,
+            )
+            previous_anchor = None
+        # Si ambas muestras quedan en el futuro, solo el horario ubica ese fotograma.
+        if (
+            movement.observed_at
+            and display_at < movement.observed_at
+            and (previous_anchor is None or display_at < previous_anchor.observed_at)
+        ):
+            movement = engine.position(
+                trip_id=latest.source_trip_id, service_date=service_date, calculated_at=display_at
+            )
+            previous_anchor = None
+        pos = effective.position
+        zone_sample = previous_anchor if effective.ingestion_run_id is None else None
+        if effective.prior_gps is not None:
+            prior_at, lat, lon = effective.prior_gps
+            prior = pos.model_copy(update=dict(latitude=lat, longitude=lon, observed_at=prior_at))
+            match_prior = engine.map_match(prior)
+            if (
+                match_prior
+                and match_prior.distance_from_track_m <= engine.thresholds.off_track_distance_m
+            ):
+                zone_sample = AnchorSample(
+                    prior_at, schedule.directed_progress(match_prior.physical_arc_m)
+                )
+        canceled = (
+            effective.base_relationship == "CANCELED"
+            and effective.base_observed_at is not None
+            and (pos.observed_at - effective.base_observed_at).total_seconds()
+            <= engine.thresholds.cancel_max_age_s
+        )
+        if movement.anchor_progress_m is None:
+            canceled = known_relationship == "CANCELED"
+        if movement.anchor_progress_m is not None:
+            service_date = network.service_date_resolver(pos.observed_at).for_trip(
+                pos.source_trip_id
+            )
         rendered = render_from_movement(
             movement,
             schedule=schedule,
@@ -388,11 +475,27 @@ def _render_vehicle(
             geometry_version=coverage.geometry_version,
             thresholds=engine.thresholds,
             previous_anchor=previous_anchor,
+            zone_sample=zone_sample,
+            status=pos.current_status,
+            stop_id=pos.current_stop_id,
+            canceled=canceled,
+            identity=(
+                history.source_vehicle_id,
+                effective.ingestion_run_id,
+                effective.base_run,
+                network.gtfs_version,
+            ),
+            versions_match=profile_matches(effective.anchor_profile, network.gtfs_version, pattern_id,
+                                           coverage.geometry_version, engine.thresholds),
             anchor_distance_from_raw_m=(
-                map_matched.distance_from_raw_m if map_matched is not None else None
+                map_matched.distance_from_raw_m
+                if effective is history.latest and map_matched
+                else previous_match.distance_from_track_m
+                if effective is history.previous and previous_anchor
+                else None
             ),
         )
-        return rendered, map_matched
+        return replace(rendered, calculated_at=now), map_matched
 
     if latest.latitude is not None and latest.longitude is not None:
         reason = (
@@ -421,6 +524,7 @@ def _render_vehicle(
             pattern_id=pattern_id,
             geometry_candidate_version=candidate_version,
             reason=(
+                "trip_canceled" if known_relationship == "CANCELED" else
                 match.reason
                 if match is not None and match.reason
                 else "sin posición bruta y sin corredor utilizable"
@@ -457,8 +561,14 @@ def build_vehicle_entry(
         if route_id
         else None
     )
+    known = history.latest.known_relationship
+    known_at = history.latest.known_observed_at
+    if history.latest.ingestion_run_id is None and trip_update is not None:
+        known, known_at = trip_update.schedule_relationship, trip_update.observed_at
+    relationship = _valid_relationship(known, known_at, latest.observed_at, now,
+                                       config.thresholds.cancel_max_age_s)
     rendered, map_matched = _render_vehicle(
-        network, history, coverage, movement, service_date, now, display_at
+        network, history, coverage, movement, service_date, now, display_at, relationship
     )
 
     stale = rendered.rendering_method in (
@@ -478,9 +588,7 @@ def build_vehicle_entry(
             network, source_trip_id, route_id, resolver.scheduled_service_ids(service_date)
         ),
         service_date=service_date.isoformat(),
-        schedule_relationship=(
-            trip_update.schedule_relationship if trip_update is not None else None
-        ),
+        schedule_relationship=relationship,
         timestamps=VehicleTimestampsOut(
             gps_observed_at=latest.observed_at,
             received_at=history.latest.received_at,
@@ -497,7 +605,7 @@ def build_vehicle_entry(
         ),
         map_matched=map_matched,
         rendered=_rendered_out(rendered),
-        position=_legacy_position(movement),
+        position=_legacy_position(movement, rendered),
         delay=_delay_out(trip_update, now, max_age_s=config.operator_delay_max_age_s),
         quality=QualityOut(stale=stale, flags=flags),
     )
@@ -982,6 +1090,7 @@ def build_station_board(
     marker = db.revision_marker(conn, as_of=now)
     health = service.feed_health(conn, now, stale_after_s=config.feed_stale_after_s)
 
+    known = db.known_trip_relationships(conn, trip_ids, as_of=now, observed_through=observed_through)
     entries: list[BoardEntryOut] = []
     for _, call_service_date, call in visible:
         trip_update = trip_updates.get(call.trip_id)
@@ -990,6 +1099,11 @@ def build_station_board(
         arrival_at = service_instant(call_service_date, call.arrival_s)
         departure_at = service_instant(call_service_date, call.departure_s)
         sighting = observed.get(call.trip_id)
+        value, stamp = known.get(call.trip_id, (None, None))
+        relationship = _valid_relationship(value, stamp, sighting.observed_at if sighting else now,
+                                           now, config.thresholds.cancel_max_age_s)
+        if trip_update:
+            trip_update = trip_update.model_copy(update={"schedule_relationship": relationship})
         entries.append(
             BoardEntryOut(
                 trip_id=call.trip_id,
@@ -1024,9 +1138,7 @@ def build_station_board(
                 position_available=(
                     sighting is not None and sighting.has_position
                 ),
-                schedule_relationship=(
-                    trip_update.schedule_relationship if trip_update is not None else None
-                ),
+                schedule_relationship=relationship,
                 operator_next_stop_id=operator_next,
                 relative_to_operator_next=relative,  # type: ignore[arg-type]
             )

@@ -27,18 +27,23 @@ correcto: no se observó, y eso se ve.
 
 from __future__ import annotations
 
+from pathlib import Path
+import math
+import os
 import logging
 import time
 
 import psycopg
 
 from packages.contracts.nucleo import MADRID_PREFIX
+from packages.gtfs import load_feed, build_catalog
+from packages.geo import build_madrid_corridor_catalog
+from packages.movement.profile import anchor_profile, source_version, thresholds_from_env
 from packages.database import (
     DISPOSABLE_ENVIRONMENTS,
     DatabaseConfigurationError,
     require_disposable_database,
 )
-from packages.gtfs import load_feed
 from services.collector.collector import run_cycle
 from services.collector.config import CollectorConfig
 from services.collector.http_client import RetryPolicy
@@ -55,21 +60,20 @@ modo que el supervisor y las bitácoras puedan diferenciar "la base se fue" de
 """
 
 
-def _load_madrid_stop_ids(gtfs_source: str | None) -> frozenset[str] | None:
-    """Carga el conjunto de `stop_id` del núcleo Madrid, si hay fuente GTFS.
-
-    Usado solo para resolver avisos por estación en `_persist_alerts`
-    (hallazgo MP-017) -- nunca para filtrar posiciones/viajes, que ya tienen
-    su propio filtro por núcleo de `route_id`/`trip_id` (ADR-0008).
-    """
-    if not gtfs_source:
-        logger.warning(
-            "MADRID_PULSE_GTFS_SOURCE no definido: avisos por estación (sin routeId) "
-            "se descartarán como fuera de alcance en vez de resolverse por stop_id "
-            "(limitación documentada, no un fallo)."
-        )
-        return None
+def _load_madrid_stop_ids(gtfs_source: str, conn: psycopg.Connection) -> frozenset[str] | None:
     topology = load_feed(gtfs_source, network_id=MADRID_PREFIX)
+    version = source_version(Path(gtfs_source))
+    fixtures = Path(os.environ.get("MADRID_PULSE_GEOMETRY_FIXTURES_ROOT",
+                                   Path(__file__).resolve().parents[2] / "tests/fixtures"))
+    try:
+        corridors = build_madrid_corridor_catalog(build_catalog(topology, gtfs_version=version),
+                                                  topology, fixtures_root=fixtures)
+    except (OSError, ValueError) as exc:
+        logger.warning("Geometría sin verificar; se conserva el GPS con huella NULL: %s", exc)
+    else:
+        with conn.transaction():
+            conn.execute("SELECT set_config('madrid_pulse.anchor_profile', %s, false)",
+                         (anchor_profile(version, corridors, thresholds_from_env()),))
     return frozenset(stop.stop_id for stop in topology.stops)
 
 
@@ -88,20 +92,32 @@ def _run() -> None:
         backoff_base_seconds=config.backoff_base_seconds,
         timeout_seconds=config.request_timeout_seconds,
     )
-    madrid_stop_ids = _load_madrid_stop_ids(config.gtfs_source)
-    logger.info(
-        "Colector iniciado: %d feeds, poll=%.0fs, timeout=%.0fs, max_retries=%d, "
-        "estaciones Madrid=%s",
-        len(config.feeds),
-        config.poll_interval_seconds,
-        config.request_timeout_seconds,
-        config.max_retries,
-        len(madrid_stop_ids) if madrid_stop_ids is not None else "sin catálogo",
-    )
     with psycopg.connect(config.database_url, autocommit=False) as conn:
         if config.environment in DISPOSABLE_ENVIRONMENTS:
             require_disposable_database(conn)
             conn.rollback()  # Finaliza la transacción de comprobación antes del polling.
+        # Bloqueo de sesión. Sigue vigente entre commits y se libera al desconectar.
+        with conn.transaction():
+            acquired = conn.execute("SELECT pg_try_advisory_lock(1297101395)").fetchone()[0]
+            if not acquired:
+                raise SystemExit("Ya hay otro colector activo en esta base de datos.")
+        tolerance = float(os.environ.get("MADRID_PULSE_RETRO_TOLERANCE_S", "2"))
+        if not math.isfinite(tolerance) or tolerance < 0:
+            raise DatabaseConfigurationError("MADRID_PULSE_RETRO_TOLERANCE_S debe ser finita y no negativa")
+        with conn.transaction():
+            conn.execute("SELECT set_config('madrid_pulse.retro_tolerance_s', %s, false)", (str(tolerance),))
+        if not config.gtfs_source:
+            logger.warning("Sin GTFS: runs con huella NULL; la presentación se retiene en el ancla.")
+        madrid_stop_ids = _load_madrid_stop_ids(config.gtfs_source, conn) if config.gtfs_source else None
+        logger.info(
+            "Colector iniciado: %d feeds, poll=%.0fs, timeout=%.0fs, max_retries=%d, "
+            "estaciones Madrid=%s",
+            len(config.feeds),
+            config.poll_interval_seconds,
+            config.request_timeout_seconds,
+            config.max_retries,
+            len(madrid_stop_ids) if madrid_stop_ids is not None else "sin catálogo",
+        )
         while True:
             for feed in config.feeds:
                 try:

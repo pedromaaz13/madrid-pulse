@@ -45,7 +45,14 @@ class MovementThresholds:
     max_estimated_speed_kmh: float = 160.0
     max_estimated_acceleration_mps2: float = 1.2
 
+    # Perfil P-024 provisional, pendiente de calibración en MP-028.
+    stop_zone_radius_m: float = 50.0
+    min_dwell_s: float = 30.0
+    cancel_max_age_s: float = 600.0
+
     def __post_init__(self) -> None:
+        if min(self.stop_zone_radius_m, self.min_dwell_s, self.cancel_max_age_s) < 0:
+            raise ValueError("los parámetros de parada no pueden ser negativos")
         if self.observed_max_age_s < 0 or self.stale_after_s <= self.observed_max_age_s:
             raise ValueError("stale_after_s debe ser mayor que observed_max_age_s >= 0")
         positive = (
@@ -100,6 +107,9 @@ class MovementPosition:
     significa ausencia, no progreso cero. La capa de presentación necesita el
     ancla para construir una envolvente de progreso sin recalcular el
     map-matching ni reimplementar el motor."""
+
+    anchor_payload_hash: str | None = None
+    """Desempata observaciones del operador con el mismo observed_at."""
 
     def __post_init__(self) -> None:
         if not 0.0 <= self.confidence <= 1.0:

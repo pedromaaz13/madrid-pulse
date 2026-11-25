@@ -107,7 +107,7 @@ class RenderedPositionTests(unittest.TestCase):
         """El motor mantiene fija la observación hasta `observed_max_age_s=60`;
         eso es exactamente lo que MP-019 debe resolver sin tocar esa semántica.
         `position.mode` sigue siendo `observed`, pero `rendered` avanza."""
-        movement, anchor_at, now = self.movement_at(self.moving_index)
+        movement, anchor_at, now = self.movement_at(self.moving_index, age_s=35)
         self.assertEqual(movement.position_mode.value, "observed")
 
         first = self.render(movement, now)
@@ -182,7 +182,10 @@ class RenderedPositionTests(unittest.TestCase):
         self.assertGreater(interpolated.progress_m, previous_anchor.progress_m)
         self.assertLess(interpolated.progress_m, movement.anchor_progress_m)
 
-        live = self.render(movement, now, previous_anchor=previous_anchor)
+        waiting = self.render(movement, anchor_at + timedelta(milliseconds=29999),
+                              previous_anchor=previous_anchor)
+        self.assertEqual(waiting.progress_m, movement.anchor_progress_m)
+        live = self.render(movement, anchor_at + timedelta(seconds=35), previous_anchor=previous_anchor)
         self.assertEqual(live.rendering_method, RenderingMethod.EXTRAPOLATED_FROM_LAST_ANCHOR)
 
     def test_stale_frozen_freezes_at_the_anchor_without_envelope(self) -> None:
@@ -194,7 +197,12 @@ class RenderedPositionTests(unittest.TestCase):
         self.assertEqual(rendered.rendering_method, RenderingMethod.STALE_FROZEN)
         self.assertIsNone(rendered.progress_envelope)
         self.assertIsNone(rendered.valid_until)
-        self.assertEqual(rendered.progress_m, movement.anchor_progress_m)
+        expiry = anchor_at + timedelta(seconds=self.thresholds.stale_after_s)
+        authorized = self.render(movement, expiry)
+        self.assertGreater(authorized.progress_m, movement.anchor_progress_m)
+        self.assertEqual(rendered.progress_m, authorized.progress_m)
+        self.assertEqual(rendered.last_confirmed_progress_m, movement.anchor_progress_m)
+        self.assertEqual(rendered.frozen_basis, "authorized_envelope_end")
         self.assertEqual(rendered.last_confirmed_at, anchor_at)
 
     def test_horizon_exhausted_freezes_even_with_a_fresh_anchor(self) -> None:
@@ -202,7 +210,12 @@ class RenderedPositionTests(unittest.TestCase):
         beyond = anchor_at + timedelta(seconds=self.thresholds.stale_after_s + 1)
         rendered = self.render(movement, beyond)
         self.assertEqual(rendered.rendering_method, RenderingMethod.STALE_FROZEN)
-        self.assertEqual(rendered.progress_m, movement.anchor_progress_m)
+        expiry = anchor_at + timedelta(seconds=self.thresholds.stale_after_s)
+        authorized = self.render(movement, expiry)
+        self.assertGreater(authorized.progress_m, movement.anchor_progress_m)
+        self.assertEqual(rendered.progress_m, authorized.progress_m)
+        self.assertEqual(rendered.last_confirmed_progress_m, movement.anchor_progress_m)
+        self.assertEqual(rendered.frozen_basis, "authorized_envelope_end")
         self.assertIn("horizonte", rendered.reason)
 
     def test_schedule_only_has_no_anchor_and_says_so(self) -> None:

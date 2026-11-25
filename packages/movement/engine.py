@@ -150,6 +150,7 @@ class MovementEngine:
                 observed_at=latest.observed_at,
                 anomalies=anomalies,
                 anchor_progress_m=latest_progress,
+                anchor_payload_hash=latest.payload_hash,
             )
         if age_s > self.thresholds.stale_after_s:
             return MovementPosition(
@@ -166,6 +167,7 @@ class MovementEngine:
                 observed_at=latest.observed_at,
                 anomalies=anomalies,
                 anchor_progress_m=latest_progress,
+                anchor_payload_hash=latest.payload_hash,
             )
 
         observed_s = service_seconds(latest.observed_at, service_date)
@@ -201,6 +203,7 @@ class MovementEngine:
             observed_at=latest.observed_at,
             anomalies=anomalies,
             anchor_progress_m=latest_progress,
+            anchor_payload_hash=latest.payload_hash,
         )
 
     def _scheduled(

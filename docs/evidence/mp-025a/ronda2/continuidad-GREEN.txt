@@ -1,0 +1,2 @@
+huella=None, retrocesos=0/44, máximo=0.000000 m
+huella=discordante, retrocesos=0/44, máximo=0.000000 m

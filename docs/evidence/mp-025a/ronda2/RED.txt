@@ -1,0 +1,33 @@
+test_expired_cancellation_without_gps (tests.e2e.test_stop_state_review.ReviewCases.test_expired_cancellation_without_gps) ...
+  test_expired_cancellation_without_gps (tests.e2e.test_stop_state_review.ReviewCases.test_expired_cancellation_without_gps) (offset=-86400) ... FAIL
+  test_expired_cancellation_without_gps (tests.e2e.test_stop_state_review.ReviewCases.test_expired_cancellation_without_gps) (offset=-601) ... FAIL
+test_unknown_profile_never_rewinds (tests.e2e.test_stop_state_review.ReviewCases.test_unknown_profile_never_rewinds) ... FAIL
+
+======================================================================
+FAIL: test_expired_cancellation_without_gps (tests.e2e.test_stop_state_review.ReviewCases.test_expired_cancellation_without_gps) (offset=-86400)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/matu/orca/workspaces/madrid-pulse/mp-025a-estado-parada/tests/e2e/test_stop_state_review.py", line 45, in test_expired_cancellation_without_gps
+    self.assertEqual(train.schedule_relationship,"CANCELED" if offset == -600 else None)
+AssertionError: 'CANCELED' != None
+
+======================================================================
+FAIL: test_expired_cancellation_without_gps (tests.e2e.test_stop_state_review.ReviewCases.test_expired_cancellation_without_gps) (offset=-601)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/matu/orca/workspaces/madrid-pulse/mp-025a-estado-parada/tests/e2e/test_stop_state_review.py", line 45, in test_expired_cancellation_without_gps
+    self.assertEqual(train.schedule_relationship,"CANCELED" if offset == -600 else None)
+AssertionError: 'CANCELED' != None
+
+======================================================================
+FAIL: test_unknown_profile_never_rewinds (tests.e2e.test_stop_state_review.ReviewCases.test_unknown_profile_never_rewinds)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/matu/orca/workspaces/madrid-pulse/mp-025a-estado-parada/tests/e2e/test_stop_state_review.py", line 28, in test_unknown_profile_never_rewinds
+    self.assertEqual(rendered.frozen_basis,"anchor_version_changed")
+AssertionError: None != 'anchor_version_changed'
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.615s
+
+FAILED (failures=3)

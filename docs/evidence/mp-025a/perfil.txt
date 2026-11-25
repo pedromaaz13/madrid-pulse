@@ -1,0 +1,3 @@
+2e668a006c460882a111ba12ab5786d9a416d3c4
+Verificación adicional de la huella de ingesta sobre un GTFS congelado
+Huella insertada por el DEFAULT de 0003 e igual a la de la API: c6c779f123794f070ed284f889c674865583c9165853b88373a201732bff04de

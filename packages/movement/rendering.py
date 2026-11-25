@@ -20,14 +20,17 @@ archiva como observación de origen.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+import hashlib
+import json
+import math
+from dataclasses import asdict, dataclass
 from datetime import date, datetime, timedelta
 from enum import StrEnum
 
 from packages.geo import Corridor, point_at_arc_length
 
 from .model import MovementPosition, MovementThresholds, PositionMode
-from .schedule import TripSchedule, service_seconds
+from .schedule import TripSchedule, service_day_instant
 
 
 class RenderingMethod(StrEnum):
@@ -68,8 +71,7 @@ class ProgressEnvelope:
     Expresión única, con una sola discontinuidad declarada (la espera):
 
     ```text
-    hold  = dwell_until or reference_at
-    t0    = max(reference_at, hold)
+    t0 = dwell_until or reference_at
     progress(t) = min(progress_m_at_reference + speed_mps * max(0, t - t0),
                       max_progress_m)
     ```
@@ -78,11 +80,6 @@ class ProgressEnvelope:
     avanzar dentro del horizonte), no un dato ausente; cuando no hay envolvente
     posible el campo entero es `None`.
 
-    Limitación declarada: tras la espera del propio ancla, la envolvente usa
-    una sola tasa media hasta el fin del horizonte, así que no reproduce las
-    esperas *intermedias* que caigan dentro de él -- publicarlas exigiría el
-    array de puntos futuros que el encargo de MP-019 prohíbe. El horizonte por
-    defecto (`stale_after_s`, 180 s) acota ese efecto.
     """
 
     reference_at: datetime
@@ -91,6 +88,20 @@ class ProgressEnvelope:
     max_progress_m: float
     horizon_s: float
     dwell_until: datetime | None
+    hold_reason: str | None = None
+    cap_stop_id: str | None = None
+    cap_kind: str | None = None
+    cap_reached_at: datetime | None = None
+    envelope_id: str | None = None
+    coherent: bool | None = None
+    dwell_basis: str | None = None
+
+    def phase(self, at: datetime) -> str:
+        if self.speed_mps == 0 or at < self.moving_from:
+            return f"hold:{self.hold_reason or 'null'}"
+        if self.cap_reached_at is not None and at >= self.cap_reached_at:
+            return f"cap:{self.cap_kind}"
+        return "moving"
 
     def __post_init__(self) -> None:
         if self.speed_mps < 0:
@@ -143,6 +154,10 @@ class RenderedPosition:
     anchor_distance_from_raw_m: float | None
     progress_envelope: ProgressEnvelope | None
     reason: str | None
+    frozen_basis: str | None = None
+    last_confirmed_progress_m: float | None = None
+    dwell_basis: str | None = None
+    stop_state: dict | None = None
 
     def __post_init__(self) -> None:
         if (self.latitude is None) != (self.longitude is None):
@@ -158,6 +173,10 @@ class RenderedPosition:
             raise ValueError("anchor_age_s no puede ser negativo")
 
 
+def _millisecond(value: datetime) -> datetime:
+    return value.replace(microsecond=value.microsecond // 1000 * 1000)
+
+
 def _envelope(
     *,
     schedule: TripSchedule,
@@ -166,48 +185,147 @@ def _envelope(
     anchor_progress_m: float,
     horizon_end: datetime,
     max_speed_mps: float,
+    thresholds: MovementThresholds = MovementThresholds(),
+    status: str | None = None,
+    stop_id: str | None = None,
+    previous_anchor: AnchorSample | None = None,
+    canceled: bool = False,
+    identity: tuple = (),
+    versions_match: bool = True,
 ) -> ProgressEnvelope:
-    anchor_s = service_seconds(anchor_at, service_date)
-    temporal_offset_s = anchor_s - schedule.seconds_at_progress(anchor_progress_m)
-    horizon_s = max(0.0, (horizon_end - anchor_at).total_seconds())
-    if horizon_s == 0.0:
-        return ProgressEnvelope(
-            reference_at=anchor_at,
-            progress_m_at_reference=anchor_progress_m,
-            speed_mps=0.0,
-            max_progress_m=anchor_progress_m,
-            horizon_s=0.0,
-            dwell_until=None,
+    reference = _millisecond(anchor_at)
+    end = _millisecond(horizon_end)
+    horizon_s = (end - reference).total_seconds()
+    a = anchor_progress_m
+    status = status.upper() if status else None
+    stops = schedule.stops
+    tau = thresholds.stop_zone_radius_m
+
+    def nearest(progress, candidates):
+        return min(
+            candidates, key=lambda s: (abs(s.progress_m - progress), s.stop_sequence), default=None
         )
-    horizon_schedule_s = service_seconds(horizon_end, service_date) - temporal_offset_s
-    span_m = max(0.0, schedule.progress_at(horizon_schedule_s) - anchor_progress_m)
 
-    # Espera programada del propio ancla: el tren no debe avanzar hasta que el
-    # horario reanude. La envolvente la respeta de verdad (retiene el progreso)
-    # en vez de publicar una espera y a la vez una velocidad que la contradiga.
-    dwell_end_s = schedule.dwell_end_seconds(anchor_progress_m)
-    dwell_until = None
-    if dwell_end_s is not None:
-        candidate = anchor_at + timedelta(seconds=dwell_end_s + temporal_offset_s - anchor_s)
-        if anchor_at < candidate < horizon_end:
-            dwell_until = candidate
-    moving_from = dwell_until or anchor_at
-    moving_s = max(0.0, (horizon_end - moving_from).total_seconds())
-    speed_mps = min(span_m / moving_s, max_speed_mps) if moving_s > 0 else 0.0
+    def zone(progress):
+        return nearest(progress, (s for s in stops if abs(s.progress_m - progress) <= tau))
+
+    def instant(seconds):
+        return service_day_instant(service_date, seconds)
+
+    declared = nearest(a, (s for s in stops if s.stop_id == stop_id))
+    coherent = None
+    if not canceled and stop_id and status in {"STOPPED_AT", "INCOMING_AT", "IN_TRANSIT_TO"}:
+        coherent = declared is not None
+        if declared is not None:
+            gap = declared.progress_m - a
+            coherent = not (
+                (status == "STOPPED_AT" and abs(gap) > tau)
+                or (status == "INCOMING_AT" and gap < -tau)
+            )
+
+    basis = None
+    key = (
+        identity,
+        anchor_at.isoformat(),
+        a,
+        status,
+        stop_id,
+        service_date.isoformat(),
+        asdict(thresholds),
+        canceled,
+        asdict(previous_anchor) if previous_anchor else None,
+    )
+    envelope_id = hashlib.sha256(json.dumps(key, default=str, sort_keys=True).encode()).hexdigest()
+
+    def hold(reason):
+        return ProgressEnvelope(
+            reference,
+            a,
+            0.0,
+            a,
+            horizon_s,
+            None,
+            reason,
+            envelope_id=envelope_id,
+            coherent=coherent,
+            dwell_basis=basis,
+        )
+
+    if not versions_match:
+        return hold("anchor_version_changed")
+    if canceled:
+        return hold("trip_canceled")
+    if coherent and status == "STOPPED_AT":
+        return hold("operator_stopped_at")
+    if coherent and status == "INCOMING_AT" and abs(declared.progress_m - a) <= tau:
+        return hold("operator_incoming_at")
+    if not stops:
+        return hold("schedule_incoherent")
+    if a < stops[0].progress_m - tau:
+        return hold("outside_schedule_extent")
+    if a >= stops[-1].progress_m - tau:
+        return hold("terminal")
+
+    start = reference
+    reason = None
+    departure = instant(stops[0].departure_s)
+    if reference < departure:
+        start, reason = departure, "before_first_departure"
+    elif not coherent and (station := zone(a)) is not None:
+        entry = reference
+        basis = "ancla"
+        if (
+            previous_anchor
+            and previous_anchor.observed_at < anchor_at
+            and zone(previous_anchor.progress_m) == station
+        ):
+            entry = _millisecond(previous_anchor.observed_at)
+            basis = "muestras"
+        dwell = (instant(station.departure_s) - instant(station.arrival_s)).total_seconds()
+        until = _millisecond(entry + timedelta(seconds=max(thresholds.min_dwell_s, dwell)))
+        if until > reference:
+            start, reason = until, "schedule_stop_zone"
+    if start >= end:
+        return hold(reason or "horizon_exhausted")
+
+    j = next(i for i, stop in enumerate(stops) if stop.progress_m > a + tau)
+    prev, cap = stops[j - 1], stops[j]
+    for target in stops[j:]:
+        duration = (instant(target.arrival_s) - instant(prev.departure_s)).total_seconds()
+        distance = target.progress_m - prev.progress_m
+        if duration > 0 and distance > 0:
+            speed = min(max_speed_mps, distance / duration)
+            break
+    else:
+        return hold("schedule_incoherent")
+    reach = min(cap.progress_m, a + speed * (end - start).total_seconds())
+    kind = "stop" if reach == cap.progress_m else "horizon"
+    reached = (
+        start + timedelta(milliseconds=math.ceil(1000 * (reach - a) / speed))
+        if kind == "stop"
+        else end
+    )
     return ProgressEnvelope(
-        reference_at=anchor_at,
-        progress_m_at_reference=anchor_progress_m,
-        speed_mps=speed_mps,
-        max_progress_m=anchor_progress_m + speed_mps * moving_s,
-        horizon_s=horizon_s,
-        dwell_until=dwell_until,
+        reference,
+        a,
+        speed,
+        reach,
+        horizon_s,
+        start if reason else None,
+        reason,
+        cap.stop_id,
+        kind,
+        reached,
+        envelope_id,
+        coherent,
+        basis,
     )
 
 
-def _coordinate(corridor: Corridor, schedule: TripSchedule, progress_m: float) -> tuple[float, float]:
-    return point_at_arc_length(
-        list(corridor.segments[0]), schedule.physical_arc(progress_m)
-    )
+def _coordinate(
+    corridor: Corridor, schedule: TripSchedule, progress_m: float
+) -> tuple[float, float]:
+    return point_at_arc_length(list(corridor.segments[0]), schedule.physical_arc(progress_m))
 
 
 def render_from_movement(
@@ -222,6 +340,12 @@ def render_from_movement(
     thresholds: MovementThresholds = MovementThresholds(),
     previous_anchor: AnchorSample | None = None,
     anchor_distance_from_raw_m: float | None = None,
+    status: str | None = None,
+    stop_id: str | None = None,
+    canceled: bool = False,
+    identity: tuple = (),
+    versions_match: bool = True,
+    zone_sample: AnchorSample | None = None,
     schedule_only_horizon_s: float | None = None,
 ) -> RenderedPosition:
     """Traduce un `MovementPosition` del motor a la coordenada de presentación.
@@ -238,15 +362,21 @@ def render_from_movement(
         or anchor_at is None
         or anchor_progress_m is None
     ):
+        if canceled:
+            return render_unlocated(calculated_at=movement.calculated_at, display_at=display_at,
+                                    pattern_id=pattern_id, geometry_candidate_version=geometry_version,
+                                    reason="trip_canceled")
         horizon_s = (
             schedule_only_horizon_s
             if schedule_only_horizon_s is not None
             else thresholds.stale_after_s
         )
-        horizon_end = movement.calculated_at + timedelta(seconds=horizon_s)
+        horizon_end = _millisecond(movement.calculated_at + timedelta(seconds=horizon_s))
         envelope = _envelope(
             schedule=schedule,
             service_date=service_date,
+            thresholds=thresholds,
+            identity=(movement.trip_id, geometry_version, *identity),
             anchor_at=movement.calculated_at,
             anchor_progress_m=movement.progress_m,
             horizon_end=horizon_end,
@@ -255,6 +385,8 @@ def render_from_movement(
         progress_m = envelope.progress_at(display_at)
         latitude, longitude = _coordinate(corridor, schedule, progress_m)
         return RenderedPosition(
+            stop_state=dict(source="schedule", operator_status=None, operator_stop_id=None, observation_observed_at=None, coherent=None),
+            dwell_basis=envelope.dwell_basis,
             rendering_method=RenderingMethod.SCHEDULE_ONLY,
             coordinate_space=CoordinateSpace.SCHEDULE,
             latitude=latitude,
@@ -276,19 +408,36 @@ def render_from_movement(
         )
 
     anchor_age_s = max(0.0, (display_at - anchor_at).total_seconds())
-    valid_until = anchor_at + timedelta(seconds=thresholds.stale_after_s)
+    valid_until = _millisecond(anchor_at + timedelta(seconds=thresholds.stale_after_s))
 
-    # Congelación: ancla caducada (el motor ya la marcó `stale`) o horizonte
-    # agotado. Se congela en el ANCLA, la última posición realmente confirmada,
-    # nunca en una extrapolación posterior convertida en hecho.
-    if movement.position_mode is PositionMode.STALE or display_at > valid_until:
-        latitude, longitude = _coordinate(corridor, schedule, anchor_progress_m)
+    envelope = _envelope(
+        schedule=schedule, thresholds=thresholds, previous_anchor=zone_sample,
+        status=status, stop_id=stop_id, canceled=canceled,
+        identity=(movement.trip_id, geometry_version, *identity, versions_match),
+        versions_match=versions_match,
+        service_date=service_date,
+        anchor_at=anchor_at,
+        anchor_progress_m=anchor_progress_m,
+        horizon_end=valid_until,
+        max_speed_mps=thresholds.max_estimated_speed_kmh / 3.6,
+    )
+    stop_state = dict(source="trip_update" if canceled else "operator" if envelope.coherent else "schedule",
+                      operator_status=status, operator_stop_id=stop_id,
+                      observation_observed_at=anchor_at, coherent=envelope.coherent)
+    if display_at > valid_until:
+        frozen = envelope.progress_at(valid_until) if versions_match and schedule.stops else anchor_progress_m
+        basis = "authorized_envelope_end" if versions_match and schedule.stops else "anchor_version_changed"
+        latitude, longitude = _coordinate(corridor, schedule, frozen)
         return RenderedPosition(
             rendering_method=RenderingMethod.STALE_FROZEN,
             coordinate_space=CoordinateSpace.MAP_MATCHED,
             latitude=latitude,
             longitude=longitude,
-            progress_m=anchor_progress_m,
+            progress_m=frozen,
+            frozen_basis=basis,
+            last_confirmed_progress_m=anchor_progress_m,
+            stop_state=stop_state,
+            dwell_basis=envelope.dwell_basis,
             pattern_id=pattern_id,
             geometry_version=geometry_version,
             geometry_candidate_version=None,
@@ -307,9 +456,9 @@ def render_from_movement(
     # Replay/búfer: `display_at` cae entre dos anclas reales. Es el único caso
     # en que la etiqueta `interpolated` es cierta.
     if (
-        previous_anchor is not None
+        versions_match and previous_anchor is not None
         and previous_anchor.observed_at < display_at < anchor_at
-        and anchor_at > previous_anchor.observed_at
+        and (anchor_at - previous_anchor.observed_at).total_seconds() <= thresholds.stale_after_s
     ):
         span_s = (anchor_at - previous_anchor.observed_at).total_seconds()
         fraction = (display_at - previous_anchor.observed_at).total_seconds() / span_s
@@ -338,14 +487,6 @@ def render_from_movement(
             reason="retraso de presentación declarado: entre dos anclas reales",
         )
 
-    envelope = _envelope(
-        schedule=schedule,
-        service_date=service_date,
-        anchor_at=anchor_at,
-        anchor_progress_m=anchor_progress_m,
-        horizon_end=valid_until,
-        max_speed_mps=thresholds.max_estimated_speed_kmh / 3.6,
-    )
     progress_m = envelope.progress_at(display_at)
     advanced = progress_m > anchor_progress_m
     method = (
@@ -353,7 +494,9 @@ def render_from_movement(
         if advanced
         else RenderingMethod.ANCHOR
     )
-    if advanced:
+    if not versions_match:
+        reason = "huella de ingesta ausente o distinta: se retiene el GPS confirmado"
+    elif advanced:
         reason = "sin ancla futura: avance estimado desde la última ancla"
     elif envelope.dwell_until is not None:
         reason = "espera programada en parada: la coordenada sigue siendo el ancla"
@@ -362,6 +505,10 @@ def render_from_movement(
     latitude, longitude = _coordinate(corridor, schedule, progress_m)
     return RenderedPosition(
         rendering_method=method,
+        frozen_basis=None if versions_match else "anchor_version_changed",
+        stop_state=stop_state,
+        dwell_basis=envelope.dwell_basis,
+        last_confirmed_progress_m=anchor_progress_m,
         coordinate_space=CoordinateSpace.MAP_MATCHED,
         latitude=latitude,
         longitude=longitude,
@@ -407,6 +554,7 @@ def render_raw_anchor(
             RenderingMethod.STALE_FROZEN if frozen else RenderingMethod.ANCHOR
         ),
         coordinate_space=CoordinateSpace.RAW,
+        frozen_basis="anchor_version_changed" if frozen else None,
         latitude=raw_lat,
         longitude=raw_lon,
         progress_m=None,

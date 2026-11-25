@@ -161,7 +161,7 @@ class Catalog:
     """``gtfs_version`` es la procedencia exigida por
     `docs/hitos/hito-03/MATRIZ-CIERRE-MADRID.md` (MP-017: "versiones y
     procedencia") -- el mismo identificador que `/api/v1/health` ya publica
-    (`apps/api/gtfs_source.py::_source_version`, hash SHA-256 del ZIP/directorio
+    (`packages/movement/profile.py::source_version`, hash SHA-256 del ZIP/directorio
     fuente), no un valor nuevo e inconsistente inventado aquí."""
 
     lines: tuple[LineVariant, ...]

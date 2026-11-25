@@ -1,0 +1,45 @@
+infra/migrations/0003_anchor_profile.up.sql
+NOTICE:  column "anchor_profile" of relation "source_ingestion_run" already exists, skipping
+ALTER TABLE
+infra/migrations/0004_run_recency.up.sql
+BEGIN
+NOTICE:  column "is_retroactive" of relation "source_ingestion_run" already exists, skipping
+ALTER TABLE
+UPDATE 0
+NOTICE:  relation "ingestion_run_started_id_idx" already exists, skipping
+CREATE INDEX
+NOTICE:  relation "trip_update_trip_run_idx" already exists, skipping
+CREATE INDEX
+NOTICE:  relation "vehicle_position_vehicle_time_idx" already exists, skipping
+CREATE INDEX
+CREATE FUNCTION
+CREATE TRIGGER
+ALTER TABLE
+COMMIT
+infra/migrations/0004_run_recency.down.sql
+BEGIN
+DROP TRIGGER
+DROP FUNCTION
+DROP INDEX
+DROP INDEX
+DROP INDEX
+ALTER TABLE
+COMMIT
+infra/migrations/0003_anchor_profile.down.sql
+ALTER TABLE
+infra/migrations/0003_anchor_profile.down.sql
+NOTICE:  column "anchor_profile" of relation "source_ingestion_run" does not exist, skipping
+ALTER TABLE
+infra/migrations/0003_anchor_profile.up.sql
+ALTER TABLE
+infra/migrations/0004_run_recency.up.sql
+BEGIN
+ALTER TABLE
+UPDATE 300000
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE FUNCTION
+CREATE TRIGGER
+ALTER TABLE
+COMMIT

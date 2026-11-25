@@ -6,6 +6,8 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
+from packages.movement.model import MovementThresholds
+from packages.movement.profile import thresholds_from_env
 from packages.database import database_settings_from_env
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -30,6 +32,7 @@ class ApiConfig:
     pasa por aquí."""
 
     gtfs_expiring_days: int = 7
+    thresholds: MovementThresholds = MovementThresholds()
 
     @classmethod
     def from_env(cls) -> "ApiConfig":
@@ -68,4 +71,5 @@ class ApiConfig:
                 os.environ.get("SNAPSHOTTER_OUTPUT_DIR", str(REPO_ROOT / "data" / "parquet"))
             ),
             gtfs_expiring_days=gtfs_expiring_days,
+            thresholds=thresholds_from_env(),
         )
