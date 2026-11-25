@@ -1,0 +1,37 @@
+127.0.0.1:5432 - no response
+127.0.0.1:5432 - no response
+127.0.0.1:5432 - accepting connections
+Migración infra/migrations/0001_init.up.sql
+BEGIN
+NOTICE:  extension "postgis" already exists, skipping
+CREATE EXTENSION
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE TABLE
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+COMMIT
+Migración infra/migrations/0002_api_batch_indexes.up.sql
+BEGIN
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+COMMIT
+                                                           version                                                           | postgis_lib_version | current_database | current_user
+-----------------------------------------------------------------------------------------------------------------------------+---------------------+------------------+--------------
+ PostgreSQL 17.5 (Debian 17.5-1.pgdg110+1) on x86_64-pc-linux-gnu, compiled by gcc (Debian 10.2.1-6) 10.2.1 20210110, 64-bit | 3.5.2               | madrid_pulse     | mp023
+(1 row)

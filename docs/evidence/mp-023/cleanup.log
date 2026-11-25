@@ -1,0 +1,12 @@
+++ docker inspect --format '{{range .Mounts}}{{if eq .Type "volume"}}{{.Name}}{{end}}{{end}}' mp023-check
++ mp023_volume=79d0d0287bf61c6fff060559eab01c2bc089a26bec1bbe07ec5d117e0fec5d64
++ test -n 79d0d0287bf61c6fff060559eab01c2bc089a26bec1bbe07ec5d117e0fec5d64
++ docker rm -fv mp023-check
+mp023-check
+++ docker ps -a --filter 'name=^/mp023-check$' --format '{{.Names}}'
++ test -z ''
++ docker volume inspect 79d0d0287bf61c6fff060559eab01c2bc089a26bec1bbe07ec5d117e0fec5d64
+[]
+Error response from daemon: get 79d0d0287bf61c6fff060559eab01c2bc089a26bec1bbe07ec5d117e0fec5d64: no such volume
++ git worktree list
++ rg /tmp/mp023-red
