@@ -1,0 +1,94 @@
+a51563b64ad46893d330ab373f3605f171bd274d
+DSN postgresql://mp_test:mp_local@127.0.0.1:5455/madrid_pulse
+python -m apps.api.tools.build_closure_matrix --captured-at 2026-11-19T04:13:30Z --service-date 2026-11-19 --csv <tmp>/matrix.csv --markdown <tmp>/matrix.md
+1 líneas escritas en /tmp/mp-026b-44270f-final.22uZyw/matrix.csv y /tmp/mp-026b-44270f-final.22uZyw/matrix.md
+python -m apps.api.tools.bench_snapshot --reuse-connection --iterations 1 --at 2026-11-19T04:20:00Z
+{
+  "machine": {
+    "platform": "macOS-26.6.2-arm64-arm-64bit",
+    "machine": "arm64",
+    "python": "3.12.3"
+  },
+  "connection_mode": "reused",
+  "note": "medición en proceso (TestClient): excluye red y servidor ASGI; cifras medidas, no presupuestos",
+  "results": [
+    {
+      "path": "/api/v1/catalog",
+      "iterations": 1,
+      "status_codes": [
+        200
+      ],
+      "p50_ms": 0.8,
+      "p95_ms": 0.8,
+      "min_ms": 0.8,
+      "max_ms": 0.8,
+      "mean_ms": 0.8,
+      "response_bytes": 79327
+    },
+    {
+      "path": "/api/v1/snapshot?at=2026-11-19T04:20:00Z",
+      "iterations": 1,
+      "status_codes": [
+        200
+      ],
+      "p50_ms": 185.65,
+      "p95_ms": 185.65,
+      "min_ms": 185.65,
+      "max_ms": 185.65,
+      "mean_ms": 185.65,
+      "response_bytes": 151892
+    },
+    {
+      "path": "/api/v1/stations/18000/board?at=2026-11-19T04:20:00Z",
+      "iterations": 1,
+      "status_codes": [
+        200
+      ],
+      "p50_ms": 67.1,
+      "p95_ms": 67.1,
+      "min_ms": 67.1,
+      "max_ms": 67.1,
+      "mean_ms": 67.1,
+      "response_bytes": 6009
+    },
+    {
+      "path": "/api/v1/live/vehicles",
+      "iterations": 1,
+      "status_codes": [
+        200
+      ],
+      "p50_ms": 39.81,
+      "p95_ms": 39.81,
+      "min_ms": 39.81,
+      "max_ms": 39.81,
+      "mean_ms": 39.81,
+      "response_bytes": 31004
+    },
+    {
+      "path": "/api/v1/health",
+      "iterations": 1,
+      "status_codes": [
+        200
+      ],
+      "p50_ms": 63.28,
+      "p95_ms": 63.28,
+      "min_ms": 63.28,
+      "max_ms": 63.28,
+      "mean_ms": 63.28,
+      "response_bytes": 882
+    },
+    {
+      "path": "/api/v1/catalog (If-None-Match -> 304)",
+      "iterations": 1,
+      "status_codes": [
+        304
+      ],
+      "p50_ms": 0.72,
+      "p95_ms": 0.72,
+      "min_ms": 0.72,
+      "max_ms": 0.72,
+      "mean_ms": 0.72,
+      "response_bytes": 0
+    }
+  ]
+}

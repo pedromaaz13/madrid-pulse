@@ -1,0 +1,83 @@
+Producto a51563b64ad46893d330ab373f3605f171bd274d
+python scripts/governance/check_docs.py
+Documentación de gobernanza correcta.
+python -m unittest tests.governance.test_governance -v
+test_added_repo_roots_and_symlink_escape (tests.governance.test_governance.CliTests.test_added_repo_roots_and_symlink_escape)
+Verifica rutas de raíz, sus anclas y escapes por enlace simbólico. ... ok
+test_alias_render_is_separate_and_excluded_from_counts (tests.governance.test_governance.CliTests.test_alias_render_is_separate_and_excluded_from_counts)
+Cada tarea canónica cuenta una vez y su alias se ve en otra tabla. ... ok
+test_atomic_sync_rolls_back_after_second_replace_fails (tests.governance.test_governance.CliTests.test_atomic_sync_rolls_back_after_second_replace_fails)
+Conserva todos los bytes y elimina temporales si falla un reemplazo. ... ok
+test_drift_is_detected_and_fixed (tests.governance.test_governance.CliTests.test_drift_is_detected_and_fixed)
+Detecta la alteración sin escribir y comprueba la reparación. ... ok
+test_duplicate_and_nested_markers (tests.governance.test_governance.CliTests.test_duplicate_and_nested_markers)
+Un marcador duplicado o anidado aborta la actualización completa. ... ok
+test_invalid_json (tests.governance.test_governance.CliTests.test_invalid_json)
+El comprobador rechaza constantes ajenas a JSON. ... ok
+test_missing_marker (tests.governance.test_governance.CliTests.test_missing_marker)
+Devuelve 2 en ambos modos y conserva todos los archivos. ... ok
+test_missing_reference_and_heading (tests.governance.test_governance.CliTests.test_missing_reference_and_heading)
+Comprueba referencias sin ancla y el encabezado de la tarea. ... ok
+test_preserves_external_bytes_and_state (tests.governance.test_governance.CliTests.test_preserves_external_bytes_and_state)
+Preserva CRLF, marcadores, texto ajeno al bloque y el estado JSON. ... ok
+test_render_audit_metadata_limits_and_literal_anchors (tests.governance.test_governance.CliTests.test_render_audit_metadata_limits_and_literal_anchors)
+Distingue baseline, integración, evidencia y cobertura de hallazgos. ... ok
+test_repeatable_sync_and_rendering (tests.governance.test_governance.CliTests.test_repeatable_sync_and_rendering)
+Comprueba bytes y contenido tras dos regeneraciones independientes. ... ok
+test_project_state_passes_check_docs (tests.governance.test_governance.RepositoryTests.test_project_state_passes_check_docs)
+Ejecuta el comprobador sobre el repositorio real en modo de lectura. ... ok
+test_alias_chains_and_self_aliases (tests.governance.test_governance.StateTests.test_alias_chains_and_self_aliases)
+Impide cadenas de alias y referencias a sí mismo. ... ok
+test_alias_target_missing (tests.governance.test_governance.StateTests.test_alias_target_missing)
+Rechaza un alias cuyo identificador canónico no existe. ... ok
+test_approved_without_reviewer (tests.governance.test_governance.StateTests.test_approved_without_reviewer)
+Una revisión aprobada exige revisor y evidencia. ... ok
+test_closed_milestone_with_invalid_inherited_gates (tests.governance.test_governance.StateTests.test_closed_milestone_with_invalid_inherited_gates)
+Rechaza sin fases heredadas, con fases inexistentes o cerradas. ... ok
+test_closed_milestone_with_planned_tasks (tests.governance.test_governance.StateTests.test_closed_milestone_with_planned_tasks)
+Exige gate, evidencia y tareas avanzadas al cerrar un hito. ... ok
+test_closed_milestone_with_valid_inherited_gates (tests.governance.test_governance.StateTests.test_closed_milestone_with_valid_inherited_gates)
+Admite el cierre histórico con fases abiertas identificadas. ... ok
+test_closed_phase_without_gate (tests.governance.test_governance.StateTests.test_closed_phase_without_gate)
+Comprueba el gate, su evidencia y el estado al cerrar una fase. ... ok
+test_dependency_on_alias (tests.governance.test_governance.StateTests.test_dependency_on_alias)
+Exige que las dependencias apunten al identificador canónico. ... ok
+test_deployment_evidence_public_gate_and_verdict (tests.governance.test_governance.StateTests.test_deployment_evidence_public_gate_and_verdict)
+Exige evidencia de despliegue y aplica ambos requisitos de publicidad. ... ok
+test_duplicate_ids (tests.governance.test_governance.StateTests.test_duplicate_ids)
+Detecta duplicados de tarea y colisiones entre colecciones. ... ok
+test_human_gate_approved_by_someone_else (tests.governance.test_governance.StateTests.test_human_gate_approved_by_someone_else)
+Rechaza que otra persona se registre como aprobadora. ... ok
+test_human_gate_without_approval_fields (tests.governance.test_governance.StateTests.test_human_gate_without_approval_fields)
+Exige autoría humana, fecha real y evidencia de una aprobación. ... ok
+test_implemented_and_approved_without_evidence (tests.governance.test_governance.StateTests.test_implemented_and_approved_without_evidence)
+Informa por separado del requisito de cada estado. ... ok
+test_implemented_without_evidence (tests.governance.test_governance.StateTests.test_implemented_without_evidence)
+Exige ejecutor, revisor y evidencia al implementar. ... ok
+test_missing_dependencies_and_cycle (tests.governance.test_governance.StateTests.test_missing_dependencies_and_cycle)
+Comprueba dependencias, referencias de fase e hito, y ciclos. ... ok
+test_mvp0_public_rejects_approved_tiles_gate_without_publish_approval (tests.governance.test_governance.StateTests.test_mvp0_public_rejects_approved_tiles_gate_without_publish_approval)
+Una aprobación de teselas no autoriza publicar MVP0. ... ok
+test_mvp0_public_uses_its_own_gate_under_no_go (tests.governance.test_governance.StateTests.test_mvp0_public_uses_its_own_gate_under_no_go)
+La demo requiere aprobación propia aunque siga vigente el NO-GO Live. ... ok
+test_reference_rejects_escape_absolute_schemes_and_prose (tests.governance.test_governance.StateTests.test_reference_rejects_escape_absolute_schemes_and_prose)
+Solo admite referencias del repositorio y UNKNOWN en campos de evidencia. ... ok
+test_required_gates_exist (tests.governance.test_governance.StateTests.test_required_gates_exist)
+Los gates requeridos deben existir aunque estén abiertos. ... ok
+test_schema_and_vocab (tests.governance.test_governance.StateTests.test_schema_and_vocab)
+Valida la versión y los estados según sus vocabularios. ... ok
+test_self_review_and_unstarted_task (tests.governance.test_governance.StateTests.test_self_review_and_unstarted_task)
+Impide aprobarse a sí mismo y aprobar o integrar tareas planificadas. ... ok
+test_sha_and_date_formats (tests.governance.test_governance.StateTests.test_sha_and_date_formats)
+Verifica el SHA de merge, el HEAD y las fechas del calendario. ... ok
+test_unknown_is_valid_for_optional_metadata (tests.governance.test_governance.StateTests.test_unknown_is_valid_for_optional_metadata)
+Admite UNKNOWN en HEAD y fechas cuyo valor todavía se desconoce. ... ok
+test_valid_alias (tests.governance.test_governance.StateTests.test_valid_alias)
+Admite un alias que apunta a una tarea canónica. ... ok
+
+----------------------------------------------------------------------
+Ran 36 tests in 1.238s
+
+OK
+Regeneración de OpenAPI vía app.openapi() y comparación byte a byte
+OpenAPI idéntico: PASS

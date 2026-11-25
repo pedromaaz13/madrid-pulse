@@ -1,0 +1,84 @@
+DSN postgresql://mp_test:mp_local@127.0.0.1:5455/madrid_pulse
+psql -X -v ON_ERROR_STOP=1 < docs/evidence/mp-026b/carga.sql
+PYTHONPATH=. python docs/evidence/mp-026b/bench.py
+5cf2e95d1853efda23e756920c3093e61459cd758e775bf2fcb0796c2ff42c91  docs/evidence/mp-026b/carga.sql
+58a2d0b2133fb413d8d3c14baea3838295a26a729db480df0c6676502506f46a  docs/evidence/mp-026b/bench.py
+NOTICE:  truncate cascades to table "vehicle_position_observation"
+NOTICE:  truncate cascades to table "trip_update_observation"
+NOTICE:  truncate cascades to table "service_alert"
+TRUNCATE TABLE
+ERROR:  canceling statement due to user request
+CONTEXT:  PL/pgSQL assignment "NEW.is_retroactive := EXISTS (
+        SELECT FROM source_ingestion_run
+        WHERE started_at > NEW.started_at + make_interval(secs => tolerance_s)
+          AND id < NEW.id
+    )"
+PL/pgSQL function classify_ingestion_run() line 8 at assignment
+
+Segunda carga según MP-025a. La primera se canceló durante el INSERT masivo con el trigger activo.
+psql -X -v ON_ERROR_STOP=1 < infra/migrations/0004_run_recency.down.sql
+BEGIN
+DROP TRIGGER
+DROP FUNCTION
+DROP INDEX
+DROP INDEX
+DROP INDEX
+ALTER TABLE
+COMMIT
+NOTICE:  truncate cascades to table "vehicle_position_observation"
+NOTICE:  truncate cascades to table "trip_update_observation"
+NOTICE:  truncate cascades to table "service_alert"
+TRUNCATE TABLE
+psql -X -v ON_ERROR_STOP=1 < docs/evidence/mp-026b/carga.sql
+INSERT 0 300000
+INSERT 0 100000
+INSERT 0 100000
+ANALYZE
+psql -X -v ON_ERROR_STOP=1 < infra/migrations/0004_run_recency.up.sql
+BEGIN
+ALTER TABLE
+UPDATE 300000
+CREATE INDEX
+CREATE INDEX
+CREATE INDEX
+CREATE FUNCTION
+CREATE TRIGGER
+ALTER TABLE
+COMMIT
+ANALYZE
+
+Antes 1d9a424aa86fc54ad75ddeb9100a1e2d5b0dc841
+source_ingestion_run: 300000
+vehicle_position_observation: 100000
+trip_update_observation: 100000
+Python 3.12.3, macOS-26.6.2-arm64-arm-64bit
+/api/v1/snapshot?at=2026-11-19T04:20:00Z: sequence=300000
+{'vehicles_total': 100, 'by_rendering_method': {'schedule_only': 1, 'stale_frozen': 99}, 'by_coordinate_space': {'raw': 99, 'schedule': 1}, 'with_operator_delay': 1, 'without_operator_delay': 99}
+{"iterations": 60, "max_ms": 1646.65, "mean_ms": 1487.92, "min_ms": 1384.53, "p50_ms": 1484.9, "p95_ms": 1605.3, "path": "/api/v1/snapshot?at=2026-11-19T04:20:00Z", "response_bytes": 151892, "status_codes": [200]}
+/api/v1/stations/18000/board?at=2026-11-19T04:20:00Z: sequence=300000
+{'scheduled_calls': 4, 'returned': 4, 'observed_circulations': 1, 'with_operator_delay': 1, 'eta_from_operator': 1, 'eta_from_schedule': 3, 'eta_unavailable': 0, 'operator_delay_coverage_pct': 25.0}
+{"iterations": 60, "max_ms": 224.26, "mean_ms": 159.25, "min_ms": 148.0, "p50_ms": 154.64, "p95_ms": 178.54, "path": "/api/v1/stations/18000/board?at=2026-11-19T04:20:00Z", "response_bytes": 6009, "status_codes": [200]}
+
+Después f02242160a2c4879fd36b27bb5ba71bdf0a8665e
+source_ingestion_run: 300000
+vehicle_position_observation: 100000
+trip_update_observation: 100000
+Python 3.12.3, macOS-26.6.2-arm64-arm-64bit
+/api/v1/snapshot?at=2026-11-19T04:20:00Z: sequence=300000
+{'vehicles_total': 100, 'by_rendering_method': {'schedule_only': 1, 'stale_frozen': 99}, 'by_coordinate_space': {'raw': 99, 'schedule': 1}, 'with_operator_delay': 1, 'without_operator_delay': 99}
+{"iterations": 60, "max_ms": 1749.52, "mean_ms": 1474.32, "min_ms": 1387.48, "p50_ms": 1467.59, "p95_ms": 1583.92, "path": "/api/v1/snapshot?at=2026-11-19T04:20:00Z", "response_bytes": 151892, "status_codes": [200]}
+/api/v1/stations/18000/board?at=2026-11-19T04:20:00Z: sequence=300000
+{'scheduled_calls': 4, 'returned': 4, 'observed_circulations': 1, 'with_operator_delay': 1, 'eta_from_operator': 1, 'eta_from_schedule': 3, 'eta_unavailable': 0, 'operator_delay_coverage_pct': 25.0}
+{"iterations": 60, "max_ms": 223.1, "mean_ms": 163.52, "min_ms": 153.6, "p50_ms": 160.48, "p95_ms": 188.56, "path": "/api/v1/stations/18000/board?at=2026-11-19T04:20:00Z", "response_bytes": 6009, "status_codes": [200]}
+
+Con lectura lateral acotada a51563b64ad46893d330ab373f3605f171bd274d
+source_ingestion_run: 300000
+vehicle_position_observation: 100000
+trip_update_observation: 100000
+Python 3.12.3, macOS-26.6.2-arm64-arm-64bit
+/api/v1/snapshot?at=2026-11-19T04:20:00Z: sequence=300000
+{'vehicles_total': 100, 'by_rendering_method': {'schedule_only': 1, 'stale_frozen': 99}, 'by_coordinate_space': {'raw': 99, 'schedule': 1}, 'with_operator_delay': 1, 'without_operator_delay': 99}
+{"iterations": 60, "max_ms": 254.52, "mean_ms": 210.78, "min_ms": 189.01, "p50_ms": 206.44, "p95_ms": 239.72, "path": "/api/v1/snapshot?at=2026-11-19T04:20:00Z", "response_bytes": 151892, "status_codes": [200]}
+/api/v1/stations/18000/board?at=2026-11-19T04:20:00Z: sequence=300000
+{'scheduled_calls': 4, 'returned': 4, 'observed_circulations': 1, 'with_operator_delay': 1, 'eta_from_operator': 1, 'eta_from_schedule': 3, 'eta_unavailable': 0, 'operator_delay_coverage_pct': 25.0}
+{"iterations": 60, "max_ms": 202.1, "mean_ms": 160.88, "min_ms": 148.84, "p50_ms": 156.98, "p95_ms": 184.78, "path": "/api/v1/stations/18000/board?at=2026-11-19T04:20:00Z", "response_bytes": 6009, "status_codes": [200]}
