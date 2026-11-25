@@ -4,6 +4,18 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 
 ## [Unreleased]
 
+### MP-025a — Modelo de estado de parada aprobado (ADR-0014 enmienda 1) (rama `pedromaaz13/mp-025a-estado-parada`, en revisión del propietario; sin fusionar)
+
+Ejecutor Codex `gpt-6.2-astra` · high (recibo de Orca); revisor Claude Opus 5.5 · high (argv verificado): ronda 1 CHANGES_REQUESTED, ronda 2 APPROVED sobre `0f0ce54`. **No integrada en `main`. No cierra FR-01**: eso exige MP-025b sobre ≥ 500 pares en vivo.
+
+#### Changed
+- Motor de presentación con estado de parada del operador (A) y degradación por horario (C como R8), congelación F1 en el final autorizado distinguiendo la última posición confirmada, perfil P-024 parametrizado (provisional), envolvente inmutable por run, señalización de cancelaciones conocidas y límites explícitos por cambio de versión. Equivalencia Python↔TypeScript verificada.
+- Bloqueo de colector único y exclusión de cargas retroactivas del directo (migraciones `0003` y `0004`, aditivas y reversibles; **cambio de esquema persistente**).
+- 5 expectativas de pruebas previas actualizadas por el cambio deliberado de comportamiento, documentadas individualmente.
+
+#### Verified
+- RED contra `beb9434` y GREEN; 315 tests con 18 skipped sobre PostgreSQL desechable; Vitest 110; `latest_vehicle_histories` con 300 000 runs: 11,55–83,11 ms. Pendiente: Actions remoto y validación en vivo (MP-025b); supuestos `UNVERIFIED` sin validar.
+
 ### MP-024 — Propuesta de enmienda de ADR-0014 (PR #7)
 
 Solo documentación y evidencia offline; **ningún cambio de código de producto**. **Decisión del propietario (2026-11-25): dirección aprobada** (A con C como degradación R8; F1; P-024 provisional; limitaciones aceptadas; ver `docs/adr/0014-amendment-owner-decision.md`); el dictamen de revisor sigue sin ser APPROVED y los supuestos `UNVERIFIED` siguen sin validar; aún no está implementado (MP-025a). Ejecutor Claude Opus 5.5 · high; revisor Codex `gpt-6.2-astra` · high: **sin dictamen APPROVED** (2 rondas con CHANGES_REQUESTED parcial; las correcciones finales no se re-verificaron).
