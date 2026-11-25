@@ -4,6 +4,16 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 
 ## [Unreleased]
 
+### MP-023 — Configuración segura de PostgreSQL (rama `pedromaaz13/mp-023-db-segura`, sin fusionar)
+
+Implementada por Codex `gpt-6.2-sol` · medium (recibo de Orca); revisada por Claude Sonnet 5.5 · high (argv verificado), 2 rondas, 0 bloqueantes. **No integrada en `main`.**
+
+#### Changed
+- API, colector y snapshotter sin valor por defecto de conexión: una sola variable `MADRID_PULSE_DATABASE_URL` y `MADRID_PULSE_ENV` obligatorios; fallo seguro antes de abrir conexiones; el puerto compartido de desarrollo se rechaza en cualquier host; marca de base desechable para escribir/probar; CI con base desechable, `MADRID_PULSE_REQUIRE_DB=1` y la marca tras las migraciones.
+
+#### Verified
+- RED contra `beb9434` y GREEN; 283 tests con 18 skipped en 28 módulos contra PostgreSQL desechable propio; arranques sin variables con 0 filas y 0 conexiones; el contenedor compartido de desarrollo no se tocó. Evidencia: `docs/evidence/mp-023/`. Pendiente: ejecución real en GitHub Actions.
+
 ### Gobernanza documental y roadmap maestro (2026-11-25, rama `docs/governance-roadmap`, sin fusionar)
 
 Solo documentación y mecanismo de seguimiento; **ningún cambio funcional**. La rama incorpora además dos commits de documentos de despliegue (`docs/deployment/*`, propuestas, procedentes de `docs/mvp-web-deployment`).

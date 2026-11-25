@@ -6,27 +6,18 @@ import unittest
 from collections import defaultdict
 from pathlib import Path
 
-import psycopg
-
 from packages.contracts.canonical import VehiclePositionObservation
 from packages.geo import build_corridor, load_relation_geometry_json
 from packages.gtfs import load_feed
 from packages.movement import MovementEngine
-from services.collector.config import CollectorConfig
+from tests.postgres import connect_disposable_or_skip
 
 ROOT = Path(__file__).parents[3]
 
 
 class RealSoakMovementIntegrationTests(unittest.TestCase):
     def test_real_soak_rows_are_map_matched_read_only_without_changing_counts(self) -> None:
-        try:
-            # `.from_env()`, no `CollectorConfig()` a secas -- ver hallazgo de
-            # MP-015 en `services/snapshotter/tests/test_export_replay.py`.
-            conn = psycopg.connect(
-                CollectorConfig.from_env().database_url, autocommit=False, connect_timeout=3
-            )
-        except psycopg.OperationalError as exc:
-            raise unittest.SkipTest(f"PostgreSQL local no disponible: {exc}")
+        conn = connect_disposable_or_skip()
         self.addCleanup(conn.close)
         # El soak real de MP-007 (668 filas) es una captura puntual, irrepetible,
         # de los feeds en vivo de Renfe -- solo existe en la base local de

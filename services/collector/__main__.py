@@ -33,6 +33,11 @@ import time
 import psycopg
 
 from packages.contracts.nucleo import MADRID_PREFIX
+from packages.database import (
+    DISPOSABLE_ENVIRONMENTS,
+    DatabaseConfigurationError,
+    require_disposable_database,
+)
 from packages.gtfs import load_feed
 from services.collector.collector import run_cycle
 from services.collector.config import CollectorConfig
@@ -70,6 +75,13 @@ def _load_madrid_stop_ids(gtfs_source: str | None) -> frozenset[str] | None:
 
 def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+    try:
+        _run()
+    except DatabaseConfigurationError as exc:
+        raise SystemExit(str(exc)) from None
+
+
+def _run() -> None:
     config = CollectorConfig.from_env()
     retry_policy = RetryPolicy(
         max_retries=config.max_retries,
@@ -87,6 +99,9 @@ def main() -> None:
         len(madrid_stop_ids) if madrid_stop_ids is not None else "sin catálogo",
     )
     with psycopg.connect(config.database_url, autocommit=False) as conn:
+        if config.environment in DISPOSABLE_ENVIRONMENTS:
+            require_disposable_database(conn)
+            conn.rollback()  # Finaliza la transacción de comprobación antes del polling.
         while True:
             for feed in config.feeds:
                 try:

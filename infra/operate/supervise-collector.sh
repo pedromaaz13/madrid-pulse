@@ -19,12 +19,15 @@
 #   infra/operate/supervise-collector.sh [directorio-de-logs]
 #
 # Variables relevantes (las mismas que `services/collector/config.py`):
-#   MADRID_PULSE_DATABASE_URL, MADRID_PULSE_GTFS_SOURCE,
+#   MADRID_PULSE_DATABASE_URL, MADRID_PULSE_ENV, MADRID_PULSE_GTFS_SOURCE,
 #   COLLECTOR_POLL_INTERVAL_SECONDS, COLLECTOR_REQUEST_TIMEOUT_SECONDS
 #
 # Parar: Ctrl-C, o `kill` al PID de este script (propaga y espera al hijo).
 
 set -euo pipefail
+
+: "${MADRID_PULSE_DATABASE_URL:?Define MADRID_PULSE_DATABASE_URL}"
+: "${MADRID_PULSE_ENV:?Define MADRID_PULSE_ENV}"
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 LOG_DIR="${1:-${REPO_ROOT}/data/operate/logs}"

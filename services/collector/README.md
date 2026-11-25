@@ -11,15 +11,17 @@ duplicar filas para una entidad sin cambios reales entre polls.
 ```bash
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-docker compose -p madrid-pulse -f infra/docker/docker-compose.yml up -d
-# Si es la primera vez: aplicar infra/migrations/0001_init.up.sql (ver su README)
-python3 -m services.collector
+# Prepara la base del ejemplo según la guía enlazada.
+MADRID_PULSE_ENV=dev \
+MADRID_PULSE_DATABASE_URL=postgresql://mp_test:mp_local@127.0.0.1:5442/madrid_pulse \
+  python3 -m services.collector
 ```
 
-Variables de entorno (todas opcionales, con los valores por defecto de
-`config.py`): `COLLECTOR_POLL_INTERVAL_SECONDS` (30), `COLLECTOR_REQUEST_TIMEOUT_SECONDS`
-(10), `COLLECTOR_MAX_RETRIES` (3), `COLLECTOR_BACKOFF_BASE_SECONDS` (1),
-`MADRID_PULSE_DATABASE_URL` (apunta al Postgres local de MP-006 en el puerto `5433`).
+`MADRID_PULSE_DATABASE_URL` y `MADRID_PULSE_ENV` son obligatorias. Consulta
+la [guía de aislamiento](../../docs/operations/DATABASE_ISOLATION.md) para
+preparar una base y elegir el entorno. El polling se ajusta con
+`COLLECTOR_POLL_INTERVAL_SECONDS` (30), `COLLECTOR_REQUEST_TIMEOUT_SECONDS`
+(10), `COLLECTOR_MAX_RETRIES` (3) y `COLLECTOR_BACKOFF_BASE_SECONDS` (1).
 
 ## Diseño
 
@@ -60,8 +62,11 @@ las adendas de ADR-0008/ADR-0009:
 
 ```bash
 python3 -m unittest services.collector.tests.test_http_client      # sin red, sin BD
-python3 -m unittest services.collector.tests.test_collector_cycle  # requiere el Postgres de MP-006 levantado
+MADRID_PULSE_ENV=test \
+MADRID_PULSE_DATABASE_URL=postgresql://mp_test:mp_local@127.0.0.1:5442/madrid_pulse \
+  python3 -m unittest services.collector.tests.test_collector_cycle
 ```
 
-`test_collector_cycle` se salta (`unittest.SkipTest`) si no puede conectar a
-la base local -- no falla el conjunto si el contenedor no está levantado.
+`test_collector_cycle` requiere que la base de `MADRID_PULSE_DATABASE_URL`
+esté marcada como desechable. Si falta la marca o la base no es accesible,
+la prueba se salta con un motivo explícito.

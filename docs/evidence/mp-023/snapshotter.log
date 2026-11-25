@@ -1,0 +1,28 @@
++ export MADRID_PULSE_DATABASE_URL=postgresql://mp023:mp023_local@127.0.0.1:5451/madrid_pulse
++ MADRID_PULSE_DATABASE_URL=postgresql://mp023:mp023_local@127.0.0.1:5451/madrid_pulse
++ export MADRID_PULSE_ENV=replay
++ MADRID_PULSE_ENV=replay
++ unset MADRID_PULSE_DATABASE_DSN MADRID_PULSE_ALLOW_SHARED_DEV_DB
+++ mktemp -d /tmp/mp023-archive.XXXXXX
++ export SNAPSHOTTER_OUTPUT_DIR=/tmp/mp023-archive.o5fAxU
++ SNAPSHOTTER_OUTPUT_DIR=/tmp/mp023-archive.o5fAxU
++ trap 'rm -rf "$SNAPSHOTTER_OUTPUT_DIR"' EXIT
++ ../audit-hito-03/.venv/bin/python -m services.snapshotter 2026-11-19
+2026-11-25 13:42:47,662 INFO exportado vehicle_position_observation: 1 filas (written) -> /tmp/mp023-archive.o5fAxU/raw/vehicle_position_observation
+2026-11-25 13:42:47,662 INFO exportado trip_update_observation: 0 filas (absent) -> /tmp/mp023-archive.o5fAxU/raw/trip_update_observation
+2026-11-25 13:42:47,662 INFO exportado service_alert: 0 filas (absent) -> /tmp/mp023-archive.o5fAxU/raw/service_alert
+2026-11-25 13:42:47,662 INFO exportado source_ingestion_run: 1 filas (written) -> /tmp/mp023-archive.o5fAxU/raw/source_ingestion_run
+2026-11-25 13:42:47,662 INFO exportado data_quality_event: 0 filas (absent) -> /tmp/mp023-archive.o5fAxU/raw/data_quality_event
+2026-11-25 13:42:47,687 INFO resumen gold por núcleo: 1 filas -> /tmp/mp023-archive.o5fAxU/gold/nucleo_daily_summary/date=2026-11-19
+2026-11-25 13:42:47,692 INFO topología GTFS: 5 rutas, 15 viajes (filtro de línea=C5)
+2026-11-25 13:42:47,718 INFO daily_line_metrics: 3 filas -> /tmp/mp023-archive.o5fAxU/gold/daily_line_metrics/date=2026-11-19
+2026-11-25 13:42:47,734 INFO station_daily_metrics: 1 filas -> /tmp/mp023-archive.o5fAxU/gold/station_daily_metrics/date=2026-11-19
+2026-11-25 13:42:47,751 INFO circulation_daily_history: 6 filas -> /tmp/mp023-archive.o5fAxU/gold/circulation_daily_history/date=2026-11-19
++ find /tmp/mp023-archive.o5fAxU -type f -name '*.parquet' -print
+/tmp/mp023-archive.o5fAxU/gold/station_daily_metrics/date=2026-11-19/part.parquet
+/tmp/mp023-archive.o5fAxU/gold/nucleo_daily_summary/date=2026-11-19/part.parquet
+/tmp/mp023-archive.o5fAxU/gold/circulation_daily_history/date=2026-11-19/part.parquet
+/tmp/mp023-archive.o5fAxU/gold/daily_line_metrics/date=2026-11-19/part.parquet
+/tmp/mp023-archive.o5fAxU/raw/vehicle_position_observation/date=2026-11-19/hour=16/data_0.parquet
+/tmp/mp023-archive.o5fAxU/raw/source_ingestion_run/date=2026-11-19/hour=16/data_0.parquet
++ rm -rf /tmp/mp023-archive.o5fAxU

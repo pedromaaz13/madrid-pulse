@@ -36,10 +36,7 @@ from unittest import mock
 from pathlib import Path
 
 import duckdb
-import psycopg
-
 from packages.gtfs import load_feed
-from services.collector.config import CollectorConfig
 from services.snapshotter.config import SnapshotterConfig
 from services.snapshotter.export import (
     QUARANTINE_DIR_NAME,
@@ -52,6 +49,7 @@ from services.snapshotter.gold import (
     build_station_daily_metrics,
 )
 from services.snapshotter.history import build_circulation_daily_history
+from tests.postgres import connect_disposable_or_skip
 
 FIXTURE_DIR = Path(__file__).resolve().parents[3] / "tests" / "fixtures" / "gtfs_c5_real"
 
@@ -72,15 +70,6 @@ REAL_TRIP_ID = "1022J19502C5"
 activo el 2026-11-19, así que en 2099 no está programado. Se usa igualmente
 como `source_trip_id` para que el mart por circulación tenga una fila
 observada real sobre la que comparar hashes."""
-
-
-def _connect_or_skip() -> psycopg.Connection:
-    try:
-        return psycopg.connect(
-            CollectorConfig.from_env().database_url, autocommit=False, connect_timeout=3
-        )
-    except psycopg.OperationalError as exc:
-        raise unittest.SkipTest(f"PostgreSQL local no disponible: {exc}")
 
 
 def _inventory(root: Path) -> dict[str, str]:
@@ -112,7 +101,7 @@ def _row_counts(root: Path, table: str) -> int:
 
 class ArchiveIdempotencyTests(unittest.TestCase):
     def setUp(self) -> None:
-        self.conn = _connect_or_skip()
+        self.conn = connect_disposable_or_skip()
         self.addCleanup(self.conn.close)
         self.output_dir = Path(tempfile.mkdtemp(prefix="mp021_idem_"))
         self.addCleanup(lambda: shutil.rmtree(self.output_dir, ignore_errors=True))

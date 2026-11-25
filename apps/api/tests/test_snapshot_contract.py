@@ -42,7 +42,7 @@ from packages.contracts.canonical import (  # noqa: E402
 )
 from packages.geo import point_at_arc_length  # noqa: E402
 from services.collector import db as collector_db  # noqa: E402
-from services.collector.config import CollectorConfig  # noqa: E402
+from tests.postgres import connect_disposable_or_skip  # noqa: E402
 
 MADRID = ZoneInfo("Europe/Madrid")
 TRIP_ID = "1022J19502C5"
@@ -55,15 +55,6 @@ ATOCHA = "18000"
 def _instant(seconds: float) -> datetime:
     midnight = datetime.combine(SERVICE_DATE, time.min, tzinfo=MADRID).astimezone(timezone.utc)
     return midnight + timedelta(seconds=seconds)
-
-
-def _connect_or_skip() -> psycopg.Connection:
-    try:
-        return psycopg.connect(
-            CollectorConfig.from_env().database_url, autocommit=False, connect_timeout=3
-        )
-    except psycopg.OperationalError as exc:
-        raise unittest.SkipTest(f"PostgreSQL local no disponible: {exc}")
 
 
 class CountingConnection:
@@ -506,6 +497,7 @@ class CatalogContractTests(unittest.TestCase):
 
 class ReplayClockTests(unittest.TestCase):
     def setUp(self) -> None:
+        connect_disposable_or_skip().close()
         self.client = TestClient(app)
         self.client.__enter__()
         self.addCleanup(self.client.__exit__, None, None, None)
@@ -536,7 +528,7 @@ class SnapshotPostgresTests(NetworkFixtureMixin, unittest.TestCase):
     contra PostgreSQL real, siempre con `rollback`."""
 
     def setUp(self) -> None:
-        self.conn = _connect_or_skip()
+        self.conn = connect_disposable_or_skip()
         self.conn.execute("SELECT 1")
         self.addCleanup(self.conn.close)
         self.addCleanup(self.conn.rollback)
@@ -830,7 +822,7 @@ class SnapshotPostgresTests(NetworkFixtureMixin, unittest.TestCase):
 
 class StationBoardPostgresTests(NetworkFixtureMixin, unittest.TestCase):
     def setUp(self) -> None:
-        self.conn = _connect_or_skip()
+        self.conn = connect_disposable_or_skip()
         self.conn.execute("SELECT 1")
         self.addCleanup(self.conn.close)
         self.addCleanup(self.conn.rollback)
@@ -1153,7 +1145,7 @@ class ExtendedHoursBoardTests(unittest.TestCase):
         cls.network = load_network(cls.config)
 
     def setUp(self) -> None:
-        self.conn = _connect_or_skip()
+        self.conn = connect_disposable_or_skip()
         self.conn.execute("SELECT 1")
         self.addCleanup(self.conn.close)
         self.addCleanup(self.conn.rollback)
@@ -1239,7 +1231,7 @@ class BoardWindowCoversItsCandidateServiceDaysTests(unittest.TestCase):
         cls.network = load_network(cls.config)
 
     def setUp(self) -> None:
-        self.conn = _connect_or_skip()
+        self.conn = connect_disposable_or_skip()
         self.conn.execute("SELECT 1")
         self.addCleanup(self.conn.close)
         self.addCleanup(self.conn.rollback)
