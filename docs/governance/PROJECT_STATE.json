@@ -1606,18 +1606,21 @@
       "integration_kind": "merge_commit"
     },
     {
-      "implementation_status": "PLANNED",
-      "review_status": "NOT_REVIEWED",
+      "implementation_status": "IMPLEMENTED",
+      "review_status": "APPROVED",
       "integration_status": "NOT_INTEGRATED",
       "deployment_status": "NOT_DEPLOYED",
-      "head": "UNKNOWN",
-      "evidence": [],
+      "head": "ff5e6ad",
+      "evidence": [
+        "docs/evidence/mp-026b/README.md",
+        "docs/adr/0014-amendment-owner-decision.md"
+      ],
       "pr": null,
       "merge_sha": null,
-      "review_date": null,
+      "review_date": "2026-11-25",
       "gate": "Aprobación humana donde indica docs/H4_MP_MAPPING.md; prueba RED en beb9434 y GREEN tras el fix",
-      "notes": "Planificada; implementación H4 no autorizada. Autorizada por el propietario el 2026-11-25 (ejecución y PR en borrador sin merge automático); no cierra HG-H4-SCOPE.",
-      "head_kind": "none",
+      "notes": "Lectura consistente de snapshot y tablero (ADR-0014 enmienda §4.7, FR-07): una transacción REPEATABLE READ de solo lectura por petición. Ejecutor Codex gpt-6.2-sol high (recibo de Orca; argv no verificable); revisor Claude Opus 5.5 high (argv verificado): APPROVED en la 1ª ronda (0 B, 4 A). RED 8/8 contra 1d9a424 (carrera de AUD-06 reproducida) y GREEN; suite 323 tests con 18 skipped (+36 de gobernanza); snapshot p50/p95 con 300 000 runs 1 484,90/1 605,30 → 206,44/239,72 ms. Garantía INTRA-respuesta: sequence es una cota, no identidad; visibilidad histórica por hora civil sigue UNVERIFIED. Recomendaciones no bloqueantes sin aplicar: A1 (el desempate/snapshot_id del tablero no es identidad de contenido, preexistente), A2 (sin statement_timeout ni pool; MP-032/033), A3 (consistent_read lanza ValueError con conexión ya en transacción), A4 (_revision_scope solo degrada con InsufficientPrivilege). NO cierra FR-01 ni HG-H4-SCOPE. Apilada sobre MP-025a (PR #8): rama pedromaaz13/mp-026b-snapshot-consistente; PR en borrador sin merge automático.",
+      "head_kind": "branch_tip",
       "id": "MP-026b",
       "title": "FR-07 snapshot consistente (H4-01)",
       "track": "PRODUCT",
