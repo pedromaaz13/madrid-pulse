@@ -35,6 +35,7 @@ from apps.api.gtfs_source import load_network  # noqa: E402
 from apps.api.main import app  # noqa: E402
 from packages.contracts.canonical import TripUpdateObservation, VehiclePositionObservation  # noqa: E402
 from services.collector import db as collector_db  # noqa: E402
+from tests.clock import api_wall_clock  # noqa: E402
 from tests.postgres import connect_disposable_or_skip  # noqa: E402
 
 VALID_MODES = {"observed", "estimated", "stale", "scheduled"}
@@ -102,6 +103,7 @@ class FrozenOpenApiContractTests(unittest.TestCase):
 class ApiContractTests(unittest.TestCase):
     def setUp(self) -> None:
         connect_disposable_or_skip().close()
+        self.enterContext(api_wall_clock(datetime(2026, 11, 25, 12, tzinfo=timezone.utc)))
         self.client = TestClient(app)
         self.client.__enter__()
         self.addCleanup(self.client.__exit__, None, None, None)

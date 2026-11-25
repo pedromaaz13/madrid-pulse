@@ -42,6 +42,7 @@ from packages.contracts.canonical import (  # noqa: E402
 )
 from packages.geo import point_at_arc_length  # noqa: E402
 from services.collector import db as collector_db  # noqa: E402
+from tests.clock import api_wall_clock  # noqa: E402
 from tests.postgres import connect_disposable_or_skip  # noqa: E402
 
 MADRID = ZoneInfo("Europe/Madrid")
@@ -431,6 +432,7 @@ class EtaProvenanceTests(unittest.TestCase):
 
 class CatalogContractTests(unittest.TestCase):
     def setUp(self) -> None:
+        self.enterContext(api_wall_clock(datetime(2026, 11, 25, 12, tzinfo=timezone.utc)))
         self.client = TestClient(app)
         self.client.__enter__()
         self.addCleanup(self.client.__exit__, None, None, None)
@@ -535,7 +537,8 @@ class SnapshotPostgresTests(NetworkFixtureMixin, unittest.TestCase):
         self.conn.execute("SELECT 1")
         self.addCleanup(self.conn.close)
         self.addCleanup(self.conn.rollback)
-        self.base = datetime.now(timezone.utc).replace(microsecond=0)
+        # Mantener el reloj dentro de la vigencia de la fixture C5.
+        self.base = datetime(2026, 11, 25, 12, tzinfo=timezone.utc)
 
     def _ingest_vehicle(
         self,
@@ -581,8 +584,6 @@ class SnapshotPostgresTests(NetworkFixtureMixin, unittest.TestCase):
         )
 
     def test_three_snapshots_are_distinguished_and_none_rejuvenates_data(self) -> None:
-        # El caso aísla la degradación del colector con el GTFS en vigencia.
-        self.base = datetime(2026, 11, 25, 12, tzinfo=timezone.utc)
         observed_at = self.base - timedelta(seconds=10)
         self._ingest_vehicle(
             observed_at=observed_at,

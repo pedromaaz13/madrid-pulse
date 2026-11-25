@@ -12,10 +12,11 @@ from unittest.mock import patch
 
 from fastapi.testclient import TestClient
 
-from apps.api import gtfs_source, main, snapshot
+from apps.api import main
 from services.collector.collector import run_cycle
 from services.collector.config import FeedConfig
 from services.collector.http_client import RetryPolicy
+from tests.clock import api_wall_clock
 from tests.postgres import connect_disposable_or_skip
 
 FIXTURES = Path(__file__).resolve().parents[3] / "tests" / "fixtures"
@@ -24,6 +25,7 @@ SECOND = "2026-11-19T03:59:21Z"
 BETWEEN = "2026-11-19T03:58:10Z"
 BEFORE = "2026-11-19T03:58:03Z"
 CLOCK_ENDPOINTS = ("health", "catalog", "snapshot", "stations/35607/board")
+GTFS_ENDPOINTS = ("health", "catalog", "snapshot")
 
 
 class TemporalApiTests(unittest.TestCase):
@@ -114,6 +116,42 @@ class TemporalApiTests(unittest.TestCase):
         self.assertIsNone(snapshot_at["revision"]["sequence"])
         degradation = next(entry for entry in snapshot_at["degraded"] if entry["resource"] == "vehicles")
         self.assertIsNone(degradation["poll_age_s"])
+
+    def test_ingestion_is_eligible_at_the_exact_clock(self) -> None:
+        self._ingest("vehicle_positions", "first-vehicles", FIRST)
+        self._clock("2027-01-15T12:00:00Z")
+        with TestClient(main.app) as client:
+            for at, poll_age, vehicles in (
+                ("2026-11-19T03:58:03.999999Z", None, 0),
+                (FIRST, 0, 1),
+                ("2026-11-19T03:58:04.000001Z", 0.000001, 1),
+            ):
+                with self.subTest(at=at):
+                    health = self._get(client, "health", at)
+                    body = self._get(client, "snapshot", at)
+                    self.assertEqual(health["feeds"], body["feeds"])
+                    self.assertEqual(self._feed(body)["poll_age_s"], poll_age)
+                    self.assertEqual(body["counts"]["vehicles_total"], vehicles)
+
+    def test_empty_database_declares_missing_feeds_after_gtfs_expiry(self) -> None:
+        self.assertEqual(self.conn.execute("SELECT count(*) FROM source_ingestion_run").fetchone(), (0,))
+        self._clock("2027-01-15T12:00:00Z")
+        with TestClient(main.app) as client:
+            health = self._get(client, "health")
+            body = self._get(client, "snapshot")
+        self.assertEqual(body["gtfs_status"], "expired")
+        self.assertEqual(health["feeds"], body["feeds"])
+        self.assertCountEqual(
+            [feed["feed_name"] for feed in body["feeds"]],
+            ["vehicle_positions", "trip_updates", "alerts"],
+        )
+        for feed in body["feeds"]:
+            self.assertEqual(feed["status"], "unknown")
+            self.assertEqual(feed["reason"], "no_ingestion_at_or_before_clock")
+            self.assertIsNone(feed["data_age_s"])
+            self.assertIsNone(feed["poll_age_s"])
+        self.assertEqual(body["vehicles"], [])
+        self.assertIsNone(body["revision"]["sequence"])
 
     def test_future_source_timestamp_has_its_own_reason(self) -> None:
         self._ingest("vehicle_positions", "future-header", FIRST)
@@ -221,47 +259,37 @@ class TemporalApiTests(unittest.TestCase):
         self.assertEqual(detail["delay"]["seconds"], 80)
 
     def _configure_live(self) -> None:
-        # El catálogo live rechaza fixtures dentro del repo. Copiar al sandbox
-        # y extender el último servicio permite probar el límite del 19/12.
+        # El arranque live exige una ruta externa. Copiar la fixture íntegra
+        # al sandbox permite probar sus fechas reales sin acceso a la red.
         root = Path(self.enterContext(tempfile.TemporaryDirectory())) / "gtfs"
         shutil.copytree(FIXTURES / "gtfs_c5_real", root)
-        calendar = root / "calendar.txt"
-        calendar.write_text(calendar.read_text().replace("20261206,20261206", "20261206,20261219"))
         self.enterContext(patch.dict(os.environ, {
             "MADRID_PULSE_MODE": "live",
             "MADRID_PULSE_GTFS_SOURCE": str(root),
         }))
 
     def _clock(self, instant: str) -> None:
-        clock = datetime.fromisoformat(instant)
-
-        class FrozenDatetime(datetime):
-            @classmethod
-            def now(cls, tz=None):
-                return clock.astimezone(tz)
-
-        self.enterContext(patch.object(main, "now_utc", return_value=clock))
-        self.enterContext(patch.object(gtfs_source, "datetime", FrozenDatetime))
-        self.enterContext(patch.object(snapshot, "datetime", FrozenDatetime))
+        self.enterContext(api_wall_clock(datetime.fromisoformat(instant)))
 
     def test_live_gtfs_validity_changes_after_startup_and_invalidates_catalog_cache(self) -> None:
         self._configure_live()
-        self._clock("2026-12-10T12:00:00Z")
+        self._clock("2026-12-01T12:00:00Z")
         with TestClient(main.app) as client:
             catalog = client.get("/api/v1/catalog")
             self.assertEqual(catalog.status_code, 200)
             etag = catalog.headers["etag"]
             catalog_version = catalog.json()["catalog_version"]
+            self.assertEqual(catalog.json()["gtfs_valid_until"], "2026-12-06")
             for instant, expected, reason in (
-                ("2026-12-16T22:59:59Z", "valid", None),
-                ("2026-12-16T23:00:00Z", "expiring", "gtfs_expiry_approaching"),
-                ("2026-12-18T12:00:00Z", "expiring", "gtfs_expiry_approaching"),
-                ("2026-12-19T22:59:59Z", "expiring", "gtfs_expiry_approaching"),
-                ("2026-12-19T23:00:00Z", "expired", "gtfs_validity_ended"),
-                ("2026-12-20T12:00:00Z", "expired", "gtfs_validity_ended"),
+                ("2026-12-03T22:59:59Z", "valid", None),
+                ("2026-12-03T23:00:00Z", "expiring", "gtfs_expiry_approaching"),
+                ("2026-12-05T12:00:00Z", "expiring", "gtfs_expiry_approaching"),
+                ("2026-12-06T22:59:59Z", "expiring", "gtfs_expiry_approaching"),
+                ("2026-12-06T23:00:00Z", "expired", "gtfs_validity_ended"),
+                ("2026-12-07T12:00:00Z", "expired", "gtfs_validity_ended"),
             ):
                 self._clock(instant)
-                for endpoint in ("health", "catalog", "snapshot"):
+                for endpoint in GTFS_ENDPOINTS:
                     with self.subTest(instant=instant, endpoint=endpoint):
                         body = self._get(client, endpoint)
                         self.assertEqual(body.get("gtfs_status"), expected)
@@ -282,20 +310,27 @@ class TemporalApiTests(unittest.TestCase):
         self.assertEqual(unchanged.status_code, 304)
 
     def test_replay_gtfs_validity_uses_at_instead_of_wall_clock(self) -> None:
-        self._clock("2026-12-20T12:00:00Z")
-        with TestClient(main.app) as client:
-            for at, expected in (
-                ("2026-11-18T12:00:00Z", "not_yet_valid"),
-                ("2026-11-19T12:00:00Z", "valid"),
-                ("2026-12-07T12:00:00Z", "expired"),
-            ):
-                for endpoint in ("health", "catalog", "snapshot"):
-                    with self.subTest(at=at, endpoint=endpoint):
-                        self.assertEqual(self._get(client, endpoint, at).get("gtfs_status"), expected)
+        for wall in ("2026-12-20T12:00:00Z", "2027-01-15T12:00:00Z"):
+            with api_wall_clock(datetime.fromisoformat(wall)), TestClient(main.app) as client:
+                for at, expected in (
+                    ("2026-11-18T22:59:59Z", "not_yet_valid"),
+                    ("2026-11-18T23:00:00Z", "valid"),
+                    ("2026-11-20T14:32:10Z", "valid"),
+                    ("2026-12-06T22:59:59Z", "expiring"),
+                    ("2026-12-06T23:00:00Z", "expired"),
+                    ("2026-12-07T12:00:00Z", "expired"),
+                    (None, "expired"),
+                ):
+                    for endpoint in GTFS_ENDPOINTS:
+                        with self.subTest(wall=wall, at=at, endpoint=endpoint):
+                            body = self._get(client, endpoint, at)
+                            self.assertEqual(body["gtfs_status"], expected)
+                            if endpoint == "snapshot":
+                                self.assertEqual(body["generated_at"], at or wall)
 
     def test_live_http_still_rejects_an_explicit_at(self) -> None:
         self._configure_live()
-        self._clock("2026-12-18T12:00:00Z")
+        self._clock("2026-12-05T12:00:00Z")
         with TestClient(main.app) as client:
             for endpoint in CLOCK_ENDPOINTS:
                 with self.subTest(endpoint=endpoint):
@@ -304,7 +339,7 @@ class TemporalApiTests(unittest.TestCase):
 
     def test_live_startup_still_rejects_an_expired_source(self) -> None:
         self._configure_live()
-        self._clock("2026-12-20T12:00:00Z")
+        self._clock("2026-12-07T12:00:00Z")
         with self.assertRaisesRegex(ValueError, "GTFS fuera de vigencia para live"):
             with TestClient(main.app):
                 pass
