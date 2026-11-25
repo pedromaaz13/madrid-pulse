@@ -1,36 +1,65 @@
-# MP-024 · Evidencia comparativa del modelo de estado de parada
+# MP-024 · Evidencia del modelo de estado de parada (ronda 2)
 
-Evidencia offline y reproducible de la enmienda propuesta [`docs/adr/0014-amendment-stop-state.md`](../../adr/0014-amendment-stop-state.md).
-Compara la envolvente de producción (`beb9434`) con tres alternativas de diseño y con la alternativa descartada «subir la tolerancia». Lo hace sobre los cortes reales congelados del 2026-11-20 y sobre casos sintéticos, y evalúa los criterios de aceptación propuestos para MP-025a.
+Evidencia offline y reproducible de la enmienda [`docs/adr/0014-amendment-stop-state.md`](../../adr/0014-amendment-stop-state.md), en estado `Propuesto`.
 
-**Qué es y qué no es.** Las alternativas del guion son **prototipos de diseño** que sirven para medir criterios. **No** son la implementación de MP-025a ni la sustituyen. El guion no modifica `packages/`, `apps/` ni `services/`: los importa en solo lectura. Las constantes de las alternativas (`TAU_STOP_M`, `D_MIN_S`, `OFFSET_SYM_S`) son **valores de arnés** con barrido de sensibilidad, no valores de diseño; su calibración corresponde a MP-028.
+La ronda 2 responde al dictamen `CHANGES_REQUESTED` de Codex `gpt-6.2-astra` · high sobre `f0f8224` (B1–B7, A1–A4). La tabla de correcciones está en el anexo del ADR.
+
+**Qué es y qué no es:**
+- Las alternativas del guion son **prototipos de diseño**. No son MP-025a.
+- El guion importa `packages/` y `apps/` en solo lectura y no los modifica.
+- τ = 50 m y `min_dwell_s` = 30 s forman el **perfil de ensayo P-024**: valores provisionales, no de diseño. Los calibra MP-028.
 
 ## Ficheros
 
 | Fichero | Contenido |
 |---|---|
-| `stop_state_comparison.py` | Arnés: validación (§3.4), cortes reales, sensibilidad, casos sintéticos y criterios de aceptación |
-| `output.txt` | Salida completa de la ejecución registrada (texto) |
-| `results.json` | La misma ejecución en JSON (`--json`) |
+| `stop_state_comparison.py` | Arnés v2. Secciones 0–6: validación, hechos, grupo M, sensibilidad, grupo S, camino stale (grupo T) y ramas de presentación. Opción `--fixture-out` para AC-15 |
+| `ts_equivalence.cjs` | Evalúa el `progressAt` **de producción** (`apps/web/src/domain/movement.ts` transpilado sin cambios) sobre el fixture, más un prototipo JS de `phase` |
+| `output.txt`, `results.json` | Salida de la ejecución registrada |
+| `ac15_fixture.json`, `ts_equivalence.txt` | Fixture AC-15 y resultado de Node |
 
 ## Cómo reproducir
 
 ```sh
-# Desde la raíz del worktree. Python 3.12 con requirements.txt (pydantic). Sin red ni base de datos.
-python3 docs/evidence/mp-024/stop_state_comparison.py \
-  --replay /Users/matu/orca/workspaces/madrid-pulse/h4-planning/data/hito-03/replay \
-  --json docs/evidence/mp-024/results.json > docs/evidence/mp-024/output.txt
-# Comprobación de integridad de los cortes (guion del propio kit, solo stdlib):
-(cd /Users/matu/orca/workspaces/madrid-pulse/h4-planning/data/hito-03/replay && python3 -I comprobar.py)
+R=/Users/matu/orca/workspaces/madrid-pulse/h4-planning/data/hito-03/replay
+E=docs/evidence/mp-024
+python3 $E/stop_state_comparison.py --replay $R --json $E/results.json \
+  --fixture-out $E/ac15_fixture.json > $E/output.txt
+# Transpilado del TS de producción a un directorio temporal. El tsc 6.0.3 se toma, solo como herramienta,
+# del node_modules del worktree h4-planning; el código que se transpila es el de este worktree.
+TSC=/Users/matu/orca/workspaces/madrid-pulse/h4-planning/apps/web/node_modules/.bin/tsc
+$TSC --outDir /tmp/mp024-ts --module commonjs --target es2022 --skipLibCheck --ignoreDeprecations 6.0 \
+  apps/web/src/domain/movement.ts
+node $E/ts_equivalence.cjs /tmp/mp024-ts/movement.js $E/ac15_fixture.json > $E/ts_equivalence.txt
+(cd $R && python3 -I comprobar.py)   # integridad del kit, solo stdlib
 ```
 
-**Entorno de la ejecución registrada:** 2026-11-25, `python3` 3.12.3 (pyenv), pydantic 2.13.4. La ejecución tardó unos 42 s. No usó base de datos: no se abrió **ningún** DSN, ni `127.0.0.1:5433` ni contenedores. **HEAD de ejecución:** `aee334ebecb722b00bbd516be6ec900cdfa024e7`, con el arnés aún sin commitear. El guion comprueba que `packages/`, `apps/`, `services/` e `infra/` son idénticos a `beb9434` (`git diff --quiet beb9434 -- …` → `True`). Por tanto, la línea base medida **es** `beb9434`.
+**Entorno de la ejecución registrada (2026-11-25):**
+- `python3` 3.12.3, pydantic 2.13.4, Node v20.20.0, tsc 6.0.3.
+- **Sin base de datos:** no se abrió ninguna conexión. Para validar los valores por defecto de `ApiConfig.from_env()`, que por defecto apunta a 5433, se sustituye la DSN por `postgresql://mp024-no-connect.invalid:1/none` y no se conecta.
+- **HEAD de ejecución:** `f0f8224f7b5d098eb1f2b043efaa933c00b6111e` (ronda 1), con los cambios de la ronda 2 aún sin commitear. El guion comprueba que `packages/`, `apps/`, `services/` e `infra/` son idénticos a `beb9434`.
 
-**Determinismo:** dos ejecuciones consecutivas producen un `results.json` idéntico byte a byte (`cmp`).
+**Determinismo:** dos ejecuciones en directorios independientes producen `output.txt`, `results.json` y `ac15_fixture.json` idénticos byte a byte (`cmp`).
 
-## Entradas (fuera de Git por decisión; citadas por hash)
+| Fichero | SHA-256 |
+|---|---|
+| `output.txt` | `010469bfbdb2a9b3c980e52726510e98e944ecf32e2b742661250c949130feb0` |
+| `results.json` | `c4298bb3f1b0f36e8b4bd11ed3f20234b494302b879d1fbe1e2e86b19211f749` |
+| `ac15_fixture.json` | `a82e4fbd1a50666d69a3f51055a410aead625be14f12dda68c80076320571945` |
 
-Directorio: `/Users/matu/orca/workspaces/madrid-pulse/h4-planning/data/hito-03/replay/`. El guion verifica cada SHA-256 contra `manifest.json` y aborta si alguno no coincide. `comprobar.py` del kit también pasa (119/121 vehículos de Madrid, 121 matches en `1533`).
+Las salidas de los comandos registrados:
+
+| Comando | Resultado |
+|---|---|
+| Arnés | exit 0 |
+| `tsc` | exit 0 |
+| `node ts_equivalence.cjs` | exit 0 |
+
+## Entradas
+
+Fuera de Git y citadas por hash: `/Users/matu/orca/workspaces/madrid-pulse/h4-planning/data/hito-03/replay/`. El guion separa la **identidad del manifiesto** de su **validación interna**:
+- Identidad: `sha256(manifest.json)` = `40e0b99af024f67e7e4015c6830f8ee5fad7e062f48d874e962e6e1eba81f9b1`.
+- Validación interna: comprueba que el conjunto de entradas es **exactamente** el esperado (7 ficheros) y verifica cada SHA-256 contra el manifiesto.
 
 | Fichero | SHA-256 |
 |---|---|
@@ -41,150 +70,154 @@ Directorio: `/Users/matu/orca/workspaces/madrid-pulse/h4-planning/data/hito-03/r
 | `1533/trip_updates.json` | `60e2680fb548b79576144ddf3e0578d29f797390e8e4638d689403a780a04c7f` |
 | `1533/alerts.json` | `fa7d28bb85e7f7c36883c112ac63417fc4ef9009ad26623df428469b513cf4f9` |
 | `fomento_transit.zip` | `c5b40823c5cacbec6d9a21d88ec0530d9604a6d4331df98c330e608f0bacb11e` |
-| `manifest.json` | `40e0b99af024f67e7e4015c6830f8ee5fad7e062f48d874e962e6e1eba81f9b1` |
 
-Las geometrías de corredor se leen de `tests/fixtures/` del propio repositorio, igual que en los arneses de AUD-09.
+## 0. Validación del arnés (ORCHESTRATION_POLICY §3.4; A2)
 
-## Validación del arnés (ORCHESTRATION_POLICY §3.4)
+- **Constantes:** cada una se localiza con `archivo:línea` (patrón único) y, si tiene valor en ejecución, se compara con él.
 
-El guion localiza cada constante con una expresión regular que debe aparecer **una sola vez** y comprueba su valor en tiempo de ejecución. Si algo no cuadra, aborta con `ARNÉS INVÁLIDO`.
+  | Constante | Dónde | Valor | Comprobado |
+  |---|---|---|---|
+  | `observed_max_age_s` | `model.py:39` | 60 | texto + ejecución |
+  | `stale_after_s` | `model.py:40` | 180 | texto + ejecución |
+  | `max_estimated_speed_kmh` | `model.py:45` | 160 | texto + ejecución |
+  | `max_estimated_acceleration_mps2` | `model.py:46` | 1,2 | texto + ejecución |
+  | `tolerance_m` | `schedule.py:120` | 1,0 | texto + ejecución |
+  | horizonte = `valid_until` | `rendering.py:279`, `:346` | — | texto |
+  | guarda de espera | `rendering.py:192` | — | texto |
+  | `operator_delay_max_age_s` | `config.py:59` | 600 | texto + ejecución (`ApiConfig.from_env()` sin overrides `MADRID_PULSE_*`) |
+  | `display_lag_s` | `config.py:61` | 0 | texto + ejecución (ídem) |
 
-| Constante | Dónde | Valor |
-|---|---|---|
-| `observed_max_age_s` | `packages/movement/model.py:39` | 60,0 |
-| `stale_after_s` | `packages/movement/model.py:40` | 180,0 |
-| `max_estimated_speed_kmh` | `packages/movement/model.py:45` | 160,0 |
-| `max_estimated_acceleration_mps2` | `packages/movement/model.py:46` | 1,2 |
-| `dwell_end_seconds(tolerance_m=1.0)` | `packages/movement/schedule.py:120` | 1,0 |
-| horizonte del ancla observada = `valid_until` = ancla + `stale_after_s` | `packages/movement/rendering.py:279` y `:346` | 180 s **desde el ancla** (no los 190 s de los arneses de AUD-01/04) |
-| guarda `anchor_at < candidate < horizon_end` | `packages/movement/rendering.py:192` | — |
-| `operator_delay_max_age_s` | `apps/api/config.py:59` | 600 |
-| `display_lag_s` | `apps/api/config.py:61` | 0 |
+- **Equivalencia de la línea base:** igualdad **completa de campos** (`==` del dataclass) entre la envolvente publicada por `render_from_movement`, `_envelope(valid_until)` y la variante B(±∞). Resultado: **44/44**, con denominador 44 comprobado mediante `assert`.
+- **Denominadores comprobados con `assert`:**
+  - 44 circulaciones y 28 `STOPPED_AT`;
+  - 25 con GPS idéntico, 17 pre-salida, 4 salidas retrasadas y 7 intermedias;
+  - 44 pares, todos de 77,0 s;
+  - 9 `IN_TRANSIT_TO`/`INCOMING_AT` que avanzaron y 27 `STOPPED_AT` en `1532`;
+  - 25 en ventana para el camino stale.
+- **Reproyección:** n = 44, distancia máxima entre el ancla `rendered` y `map_matched` de **0,0016 m** (antes se informaba redondeada como 0,0 m).
+- **Línea base de producción:**
+  - FR-05: camino stale **real** (`render_from_movement` a 179 s y 181 s, comprobado `STALE_FROZEN`) → 25/25 retroceden, p50 2 357,87 m, máx 3 959,22 m.
+  - FR-27: 2 975 muestras → 429,52 m en progreso y **429,39 m entre lat/lon**.
 
-- **La línea base llama a producción:** `MovementEngine.position` → `render_from_movement`. Sobre las 44 circulaciones, la envolvente publicada es idéntica a `_envelope(…, horizon_end=valid_until)`. También es idéntica a la variante de B con acotación ±∞, que es la reimplementación usada para B. Resultado: **44/44**.
-- **La línea base reproduce las cifras auditadas:**
+## 1. Hechos del corte (A1: acotados al intervalo observado)
 
-  | Cifra | Auditoría | Este arnés |
+- **`IN_TRANSIT_TO` con la parada más de 1 km por detrás:** 4/8 casos:
+
+  | Viaje | Parada | Distancia por detrás |
   |---|---|---|
-  | `STOPPED_AT` con avance | 28/28 | 28/28 |
-  | `STOPPED_AT` con GPS idéntico y avance | 25/25 | 25/25 |
-  | Pre-salida con avance | 17/17 | 17/17 |
-  | Salidas retrasadas en origen | 4 | 4 |
-  | `STOPPED_AT` intermedias | 7 | 7 |
-  | Envolventes que atraviesan una estación | 29/44 | 29/44 |
-  | `19656` a 30 s / 60 s | 661,1 / 1 322,2 m | 661,1 / 1 322,2 m |
-  | Salto al llegar el ancla siguiente | p50 1 229,15 / máx 3 274,23 m | p50 1 229,1 / máx 3 274,2 m |
-  | FR-05: retroceso 179→181 s | 25/25, p50 2 357,9 / máx 3 959,2 m | 25/25, p50 2 357,9 / máx 3 959,2 m |
-  | FR-27: discrepancia `position`/`rendered` | 429,5 m | 429,5 m |
+  | `20277` | `60100` | 4 288,52 m |
+  | `20281` | `37011` | 2 416,28 m |
+  | `20845` | `35609` | 3 234,47 m |
+  | `20846` | `35606` | 1 848,87 m |
 
-- **Las alternativas reutilizan primitivas de producción:** `TripSchedule`, `Corridor.project_station`, `parse_gtfs_time`, `service_day_instant` y `ProgressEnvelope`, con sus invariantes y su `progress_at`. El guion comprueba que las paradas que reconstruye coinciden con los puntos de `TripSchedule`.
+- **Estructura GTFS de los 44 viajes (829 tramos):**
+  - 0 `stop_id` repetidos;
+  - 0 tramos con separación ≤ τ;
+  - 0 tramos con separación ≤ 2τ;
+  - 0 tramos con duración real ≤ 0.
 
-## Hechos del corte `1533` que condicionan el diseño (44 circulaciones con cadena completa)
+  Esos casos límite solo se prueban con sintéticos.
+- **`19656`:** 75,0 km/h es la **media del arco en los 77 s previos** a `1533` (`scratch/aud04_cohorte_19656.py`). No es una velocidad instantánea ni dice qué hizo después.
+- **Cruces residuales de A con margen de 1 m:** `19667` (a +2,47 m de `35605`) y `20281` (a +6,91 m de `37002`; el operador declara `37011`). Lo **probado** es que hay cero cruces *fuera de zona*. Atribuirlos a ruido de proyección es `UNVERIFIED`.
 
-- **Cobertura del estado del operador:** `current_status` está presente en **44/44**, y `current_stop_id` pertenece al viaje en **44/44**.
-- **`IN_TRANSIT_TO` no apunta a la parada siguiente.** En **4 de 8** casos `current_stop_id` queda **más de 1 km por detrás** del ancla. Los cuatro casos son `20277`, que está 4 288,5 m pasado su `60100`, y `20281`, `20845` y `20846`, entre 1 848,9 y 3 234,5 m (`in_transit_behind_detail`). El sondeo exploratorio previo situó a los otros 4 a ≤ 5,4 m de su parada; ese dato no lo imprime el arnés. En este feed, `IN_TRANSIT_TO X` se comporta como «salió de X», no como «va hacia X» (que es la semántica de la especificación GTFS-RT). Esto está medido en un solo corte; la semántica en vivo es `UNVERIFIED` (MP-028).
-- **Hueco entre la parada declarada y el ancla en los 28 `STOPPED_AT`** (progreso de la parada − progreso del ancla):
-  - **21 en origen:** de −38,0 a +8,2 m. El extremo corresponde a las cocheras de origen `37012`/`17005`.
-  - **7 intermedias:** de −3,6 a +2,5 m.
+## 2. Grupo M: hechos de movimiento sobre cortes reales (discriminantes; predicados exactos)
 
-  Con τ ≥ 40 m las 28 son coherentes; con τ = 20,8 m, 5 caen en degradación (sección «Sensibilidad»).
-- **`19656` está `post_llegada` y en marcha.** Está +141 s pasada su última llegada programada, va `INCOMING_AT 35002` a −5,38 m de la parada y se movió a 75,0 km/h entre cortes (reproducido con `scratch/aud04_cohorte_19656.py`). **Retener por ventana temporal tras la llegada sería falso.**
-- **Reproyección:** la coordenada `rendered` del ancla coincide con la proyección `map_matched` (p50 0,0 m, máx 0,0 m sobre 44).
-
-## Resultados sobre los cortes reales
-
-Definiciones de las columnas:
-- **«Con avance»:** más de 1 m sobre el ancla dentro del horizonte de producción (`valid_until`).
-- **M5:** la parada se supera **estrictamente** antes de `valid_until` con margen de 1 m (definición de `aud09_stop_crossing.py` v2).
-- **M5b:** igual que M5, pero excluye la parada en cuya zona τ ya está el tren.
-- **M7:** usa el ancla de `1532` y compara con la verdad de `1533` (77 s; 44 pares).
-- **H2b:** circulaciones `IN_TRANSIT_TO`/`INCOMING_AT` en `1532` que avanzaron ≥ 100 m y a las que la alternativa no da avance.
-
-| Métrica | BASE `beb9434` | D: tolerancia 50 m (descartada) | B1: offset ±600 s | B2: B1 + pre-salida | C: segmentos (τ 50, Dmin 30) | **A: operador (τ 50)** |
+| Criterio | BASE | D tol 50 | B1 | B2 | C | **A** |
 |---|---|---|---|---|---|---|
-| M1 `STOPPED_AT` con GPS idéntico y avance | 25/25 | 25/25 | 21/25 | 10/25 | 10/25 | **0/25** |
-| M2 pre-salida con avance | 17/17 | 17/17 | 13/17 | 2/17 | 2/17 | **0/17** |
-| M3 salida retrasada en origen con avance | 4/4 | 4/4 | 4/4 | 4/4 | 4/4 | **0/4** |
-| M4 `STOPPED_AT` intermedia con avance | 7/7 | 7/7 | 7/7 | 7/7 | 7/7 | **0/7** |
-| M5 atraviesan ≥ 1 parada (1 m) | 29/44 | 29/44 | 26/44 | 23/44 | 13/44 | 2/44 (\*) |
-| M5b atraviesan ≥ 1 parada (> τ) | 20/44 | 20/44 | 22/44 | 20/44 | 0/44 | **0/44** |
-| M6 `19656`: avance a 30 s / 60 s | 661,1 / 1 322,2 m | 661,1 / 1 322,2 m | 661,1 / 1 322,2 m | 661,1 / 1 322,2 m | 0 / 0 m | **0 / 0 m** |
-| M7 error a 77 s: p50 / p90 / máx | 1 229,1 / 1 731,5 / 3 274,2 m | ídem | 950,5 / 2 216,3 / 3 422,2 m | 876,0 / 1 921,0 / 3 422,2 m | 570,1 / 1 338,3 / 3 669,4 m | 0,0 / 1 523,8 / 3 274,2 m |
-| M7 sobreavance > 100 m | 32 | 32 | 24 | 18 | 15 | **2** |
-| M7 avance legítimo perdido (cualquier estado) | 0 | 0 | 0 | 0 | 0 | **3** (†) |
-| H2b avance perdido (`IN_TRANSIT_TO`/`INCOMING_AT`) | 0/9 | 0/9 | 0/9 | 0/9 | 0/9 | 0/9 |
-| M8 retroceso al caducar si se congela en el ancla (F2): p50 / máx | 2 816,7 / 5 400,6 m | ídem | 2 558,3 / 8 000,0 m | 2 221,9 / 8 000,0 m | 1 588,1 / 3 311,0 m | 0,0 / 2 371,0 m |
+| M1 `STOPPED_AT` con GPS idéntico y `speed_mps > 0` | 25/25 | 25/25 | 21/25 | 10/25 | 10/25 | **0/25** |
+| M2 pre-salida con `speed_mps > 0` | 17/17 | 17/17 | 13/17 | 2/17 | 2/17 | **0/17** |
+| M3 salida retrasada con `speed_mps > 0` | 4/4 | 4/4 | 4/4 | 4/4 | 4/4 | **0/4** |
+| M4 intermedias con `speed_mps > 0` | 7/7 | 7/7 | 7/7 | 7/7 | 7/7 | **0/7** |
+| M5 cruces a más de τ | 20/44 | 20/44 | 22/44 | 20/44 | 0/44 | **0/44** |
+| M6 `19656` a 30 s `== 0` | 661,12 m | 661,12 m | 661,12 m | 661,12 m | 0 | **0** |
+| M7 guarda (predicción `== 0` con ≥ 100 m observados) | 0/9 | 0/9 | 0/9 | 0/9 | 0/9 | 0/9 |
+| **PASS** | **1/7** | 1/7 | 1/7 | 1/7 | 3/7 | **7/7** |
+| Coste: `STOPPED_AT` en `1532` que salieron, predicción `== 0` | 0/27 | 0/27 | 0/27 | 0/27 | 0/27 | **3/27** |
+| Error a 77 s, p50 / p90 / máx (m) | 1 229,15 / 1 731,54 / 3 274,23 | = BASE | 950,49 / 2 216,27 / 3 422,22 | 875,97 / 1 921,01 / 3 422,22 | 570,10 / 1 338,31 / 3 669,40 | 0,00 / 1 523,78 / 3 274,23 |
 
-(\*) Las dos son la parada en la que el tren **ya está** y de la que sale: `19667` está a +2,5 m de `35605` y `20281` a +6,9 m de `37002`. Son ruido de proyección dentro de la zona τ, no cruces reales.
+- Los criterios M1–M4 se solapan.
+- El coste de A son `19671` (2 204,0 m), `20284` (2 424,5 m) y `20836` (1 860,2 m). El instante real de salida es desconocido.
 
-(†) Las tres circulaciones son `19671`, `20284` y `20836`. Estaban `STOPPED_AT` en `1532` y salieron antes de `1533`: 2 204,0 m, 2 424,5 m y 1 860,2 m en 77 s (`M7_lost_detail` en `output.txt`). A las retiene hasta la siguiente observación. Es el coste explícito de A, acotado por la cadencia del feed: 77 s entre los cortes del kit, ~20 s en vivo según MP-003. El error en vivo es `UNVERIFIED` (MP-025b/MP-028).
+## 3. Sensibilidad (barrido discreto: no prueba invariancia en el continuo)
 
-**Lectura:**
-- **D** (solo subir la tolerancia) es idéntica a la línea base en todas las métricas. Con 50 m la espera se detecta, pero la guarda la descarta (`19656` sigue en 661,1 m), lo que confirma el contrafactual B de AUD-04.
-- **B1** apenas corrige y **empeora** el peor caso: la acotación desplaza el horario y satura los 160 km/h (8 000 m al caducar; 3 422,2 m de error máximo).
-- **B2** cubre la pre-salida, pero deja intactas las 4 salidas retrasadas y las 7 intermedias. Son las 11/28 que predijo la auditoría.
-- **C** resuelve `19656` y los cruces de parada, pero sin el estado del operador no distingue un tren parado de uno que pasa por la zona de parada. La sensibilidad lo confirma: solo con Dmin = 180 s retiene las 4 + 7, y entonces pierde 7 de 9 avances legítimos.
+| τ (A) | Grupo M | M1 | `19656` a 30 s | Degradaciones R7/R8 |
+|---|---|---|---|---|
+| 5 / 5,3 | 4/7 | 1/25 | 662,02 m | 17 |
+| 5,5 / 10 | 5/7 | 1/25 | 0 | 13 / 7 |
+| 20,8 / 30 | 7/7 | 0/25 | 0 | 5 |
+| 37,9 | 7/7 | 0/25 | 0 | 2 |
+| 38,1 … 150 | 7/7 | 0/25 | 0 | 0 |
 
-## Sensibilidad (cortes reales)
+| Variante de C | M3 | M4 | Guarda |
+|---|---|---|---|
+| Dmin = 0 / 30 / 60 | 4/4 | 7/7 | 0/9 |
+| Dmin = 180 | 0/4 | 0/7 | **7/9 perdidos** |
 
-| Variante | M1 | M5 | `19656` 30/60 s | M7 p50/p90/máx | H2b perdidos | Degradados |
-|---|---|---|---|---|---|---|
-| A τ = 5 m | 4/25 | 4/44 | 662,0 / 1 324,0 m | 0,0 / 1 730,3 / 3 274,2 | 0/9 | 17 |
-| A τ = 20,8 m (p95 de proyección) | 0/25 | 2/44 | 0 / 0 | 0,0 / 1 523,8 / 3 274,2 | 0/9 | 5 |
-| A τ = 40 / 50 / 100 m | 0/25 | 2/44 | 0 / 0 | 0,0 / 1 523,8 / 3 274,2 | 0/9 | 0 |
+## 4. Grupo S: pruebas sintéticas de reglas (predicados exactos)
 
-| Variante | M1 | M3 | M4 | M7 p50/p90/máx | H2b perdidos |
+Sobre el horario real de `1023V19656C5`, salvo S8, S9 y S12–S15, que usan horarios sintéticos de geometría controlada.
+
+| Caso | Criterio | BASE | A | Otros |
+|---|---|---|---|---|
+| S1 pre-salida −300 s, `STOPPED_AT` | avance `== 0` | FAIL 2 811,25 m | PASS (R1) | B2 PASS, C PASS |
+| S2 pre-salida −60 s | `== 0` 1 ms antes de la salida | FAIL 937,07 m | PASS | B2 y C PASS |
+| S2b R2 con `IN_TRANSIT_TO` | 0 antes de la salida, > 0 después, fases `hold → moving → cap:stop`, `progress(cap_reached_at) == max` | — | PASS (506,07 m a +30 s) | — |
+| S3 salida retrasada +120 s | `== 0` | FAIL | PASS | C FAIL 2 019,90 m |
+| S4 intermedia con espera, +5,38 m | `== 0` a 30 s | FAIL 417,19 m | PASS | C PASS |
+| S5 intermedia sin espera programada | `== 0` | FAIL 2 364,45 m | PASS | C FAIL 1 969,82 m |
+| **S5b contraejemplo del revisor** | R7 → R8 == C campo a campo, `== 0` a 20 s | — | **PASS** (v1: 262,64 m) | — |
+| S6 `CANCELED` | `== 0` y `hold_reason = trip_canceled` | FAIL 2 143,81 m | PASS | C PASS |
+| S6b control en marcha | avance > 0 | PASS | PASS | todos PASS |
+| S7 `stop_id` ajeno | R7 → R8 == C, `coherent = false` | — | PASS | C: N/A |
+| S10 `INCOMING_AT` con la parada 1 182 m por detrás | ídem | — | PASS | C: N/A |
+| S11 ancla 500 m antes de la primera parada | retención `outside_schedule_extent` | — | PASS | — |
+| S12 zonas solapadas (paradas a 0 y 60 m) | tope = Z2 | — | PASS | — |
+| S13 tramo de duración real 0 | v = 3 000/180 m/s, tope T1 | — | PASS | — |
+| S14 `stop_id` repetido | ocurrencia más cercana, R1 | — | PASS | — |
+| S8 DST 2027-03-28 | 3 000 ± 1e-6 m | FAIL 8 000,00 m | PASS | B1/B2/D FAIL, C PASS |
+| S9 DST 2027-10-31 | 333,333 ± 1e-6 m | FAIL 0,00 m | PASS | ídem |
+| S15 espera DST de R8 (01:30→03:30, 2027-10-31) | 10 800 s reales; `== 0` a +90 s; > 0 a +180 s; `conservada` | — | PASS | C PASS |
+| S15b sin historia de entrada | retención declarada `reiniciada` | — | PASS | C PASS |
+
+## 5. Grupo T: camino stale real (prototipo A, 25 en ventana, muestreo cada 0,5 s de 0 a 400 s)
+
+| Escenario de `trip_update` | Recortes efectivos | Retroceso F1 máx | F2: \|salto − `rewind_m`\| máx | F2 con `rewind_m > 0` | Discrepancias tras reinicio |
 |---|---|---|---|---|---|
-| C Dmin = 0 s | 10/25 | 4/4 | 7/7 | 754,9 / 1 571,0 / 3 274,2 | 0/9 |
-| C Dmin = 30 s | 10/25 | 4/4 | 7/7 | 570,1 / 1 338,3 / 3 669,4 | 0/9 |
-| C Dmin = 60 s | 10/25 | 4/4 | 7/7 | 206,2 / 1 672,4 / 4 064,6 | 0/9 |
-| C Dmin = 180 s | 2/25 | 0/4 | 0/7 | 0,0 / 1 899,3 / 4 288,5 | **7/9** |
+| Sin cambio | 0 | 0,0 m | 0,0 m | 7 | 0 |
+| `CANCELED` en +20 s | 7 | 0,0 | 0,0 | 7 | 0 |
+| `CANCELED` en +120 s | 4 | 0,0 | 0,0 | 7 | 0 |
+| `CANCELED` en +60 s y anulación en +150 s | 5 | 0,0 | 0,0 | 7 | 0 |
+| `CANCELED` en +180,5 s (inadmisible) | 0 | 0,0 | 0,0 | 7 | 0 |
 
-**Conclusión para la calibración (MP-028):**
-- τ debe ser ≥ 5,38 m para `19656`.
-- τ debe ser ≥ 38 m para que las 28 `STOPPED_AT` de este corte sean coherentes sin degradar. Entre 40 y 100 m no cambia nada en este corte.
-- La cota superior razonable la fija la distancia mínima entre paradas consecutivas. Queda sin medir aquí: `UNVERIFIED`.
+- **Cambio de versión:** congela en el ancla con `frozen_basis = anchor_version_changed`.
+- **`CANCELED` en +20 s sobre un tren en marcha (`19667`):** queda en 213,74 m (en el corte, a +50 s y congelado: el mismo valor), frente a 534,34 m sin recorte.
+- **Línea base de producción:** 25/25 retroceden (§0).
 
-## Casos sintéticos
+## 6. Ramas de presentación (motor real) y AC-15
 
-Sobre el horario **real** de `1023V19656C5` (paradas con espera de 60 s) y sobre dos horarios sintéticos de 20 000 m en las fechas de cambio de hora de 2027.
-
-| Caso (criterio) | BASE | D | B1 | B2 | C | A |
-|---|---|---|---|---|---|---|
-| S1 pre-salida −300 s, `STOPPED_AT` (0 m en el horizonte) | FAIL 2 811,3 m | FAIL | FAIL | PASS | PASS | PASS |
-| S2 pre-salida −60 s (0 m antes de la salida) | FAIL 921,5 m | FAIL | FAIL | PASS | PASS | PASS |
-| S3 salida retrasada +120 s, `STOPPED_AT` (0 m) | FAIL 2 811,3 m | FAIL | FAIL | FAIL | FAIL 2 019,9 m | PASS |
-| S4 intermedia con espera 60 s, ancla +5,38 m (0 m a 30 s) | FAIL 417,2 m | FAIL 417,2 m | FAIL | FAIL | PASS | PASS |
-| S5 intermedia sin espera programada, `STOPPED_AT` (0 m) | FAIL 2 364,5 m | FAIL | FAIL | FAIL | FAIL 1 969,8 m | PASS |
-| S6 `CANCELED` a mitad de tramo (0 m, R-CANCEL) | FAIL 2 143,8 m | FAIL | FAIL | FAIL | PASS | PASS |
-| S6b control en marcha (> 1 m) | PASS 2 143,8 m | PASS | PASS | PASS | PASS 1 181,9 m | PASS 1 181,9 m |
-| S7 `STOPPED_AT` con `stop_id` ajeno al viaje (degrada y lo declara) | N/A | N/A | N/A | N/A | N/A | PASS |
-| S10 `INCOMING_AT` con la parada 1 182 m por detrás (no retiene y lo declara) | N/A | N/A | N/A | N/A | N/A | PASS |
-| S8 DST 2027-03-28, 01:50→02:10 (3 000,0 ± 1 m en 180 s reales) | FAIL 8 000,0 m | FAIL | FAIL | FAIL | PASS | PASS |
-| S9 DST 2027-10-31, 01:30→03:30 (333,3 ± 1 m) | FAIL 0,0 m | FAIL | FAIL | FAIL | PASS | PASS |
-
-**Advertencia de equidad.** S6, S8, S9 y AC-6 dependen de reglas **transversales**: R-CANCEL, R-DST y R-STALE. Los prototipos A y C las incorporan; B y D conservan la aritmética de producción por definición. Cualquier alternativa podría adoptarlas. Lo que **discrimina** entre alternativas son M1–M5b, M6, M7, S3, S4 y S5.
-
-## Criterios de aceptación propuestos para MP-025a (sección 5 de `output.txt`)
-
-| Criterio | BASE `beb9434` | D | B1 | B2 | C | A |
-|---|---|---|---|---|---|---|
-| Total PASS | **1/11** | 2/11 | 2/11 | 2/11 | 7/11 | **11/11** |
-
-- La línea base solo pasa **AC-4**. Es la prueba de no regresión: no perder el avance legítimo. Es correcto que sea verde en `beb9434`.
-- Las otras **10** son **ROJO en `beb9434`**.
-- **AC-10** (FR-27, una coordenada por instante) **no se mide en el prototipo**: depende de la regla R-ONECOORD en `apps/api`. De ella solo se mide la línea base, con 429,5 m de discrepancia.
+- **P1:** con `latest` de `19664` desplazado 0,27°, el motor usa `previous`.
+  - Con el estado de la observación efectiva (`IN_TRANSIT_TO`): R5, con avance.
+  - Con el de `latest` (`STOPPED_AT`, el uso erróneo): R1, retención.
+  - Los resultados son distintos.
+- **P2:** sin ancla utilizable, `schedule_only` sigue R8 (`R8(ausente):R5`, `coherent = null`). Si está `CANCELED`, publica `unlocated` sin coordenada.
+- **P3:** solo `raw`, sin envolvente. `CANCELED` solo rotula.
+- **P4:** interpolación con `display_at` 30 s antes de `1533` → `interpolated_between_known_anchors`, |prototipo − producción| = 0 m, tramo entre anclas de 77 s.
+- **AC-15 (`ts_equivalence.txt`):**
+  - 63 envolventes y 367 muestras con instantes en ms → |Δ| máx **0 m**, 0 fases distintas.
+  - 18 envolventes con un desfase de 0,7 ms en µs → |Δ| máx **0,0117 m** (`Date.parse` trunca).
+  - De ahí la regla de serializar en ms (§4.3 c).
 
 ## Límites y no verificado
 
 - **`UNVERIFIED`:**
-  - la semántica de `IN_TRANSIT_TO`/`INCOMING_AT` en vivo;
-  - la presencia de `current_status` fuera de este corte;
-  - el error de A en vivo (cadencia ~20 s) y la frecuencia de las salidas inmediatamente posteriores a un `STOPPED_AT`.
+  - la semántica en vivo de `IN_TRANSIT_TO`/`INCOMING_AT`;
+  - el instante real de salida de los 3 trenes retenidos;
+  - la latencia en vivo si hay retraso o pérdida del feed;
+  - la causa de los dos cruces dentro de la zona.
 
-  Todo ello requiere la captura de MP-028 y la validación de MP-025b (salto p50 ≤ 200 m con ≥ 500 pares).
-- **Cancelaciones:** no hay ningún caso de Madrid en los cortes. Los 7 `CANCELED` con posición son del núcleo 51 (AUD04-P2-007). R-CANCEL solo se prueba con casos sintéticos.
-- **DST:** el `calendar.txt` del kit no tiene viajes en las fechas de cambio de hora (AUD-04). Se prueba con horarios sintéticos y la reachability real sigue siendo la que midió AUD-04.
-- **FR-07 (revisión coherente, §5 de la enmienda):** **NO EJECUTADO.** Exige una prueba con dos conexiones PostgreSQL reales y corresponde a MP-026b. Este arnés no usa base de datos.
-- **FR-33 (`stop_time_update` por parada):** no se mide. La enmienda lo declara como limitación.
-- **Alcance del corte:** un solo par de cortes a las 15:32–15:33 locales y 44 circulaciones con cadena completa. **No** es una muestra del día.
+  Requieren MP-028 y MP-025b.
+- **AC-T6 / FR-07: NO EJECUTADO.** Requiere PostgreSQL con dos conexiones y es trabajo de MP-026b.
+- **Prototipos:** la función `phase` y el comparador JS son prototipos de la especificación. Del TS de producción solo se ejecuta `progressAt`, sin cambios.
+- **`CANCELED`:** sin casos de Madrid en el kit; solo se prueba con sintéticos.
+- **DST:** solo con horarios sintéticos, porque el `calendar.txt` del kit no tiene viajes esas fechas.
+- **Muestra:** un único par de cortes (15:32–15:33 locales). No representa el día.

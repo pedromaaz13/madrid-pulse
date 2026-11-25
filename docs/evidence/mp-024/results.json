@@ -4,52 +4,62 @@
       {
         "name": "observed_max_age_s",
         "where": "packages/movement/model.py:39",
-        "value": 60.0
+        "value": 60.0,
+        "checked": "texto+ejecución"
       },
       {
         "name": "stale_after_s",
         "where": "packages/movement/model.py:40",
-        "value": 180.0
+        "value": 180.0,
+        "checked": "texto+ejecución"
       },
       {
         "name": "max_estimated_speed_kmh",
         "where": "packages/movement/model.py:45",
-        "value": 160.0
+        "value": 160.0,
+        "checked": "texto+ejecución"
       },
       {
         "name": "max_estimated_acceleration_mps2",
         "where": "packages/movement/model.py:46",
-        "value": 1.2
+        "value": 1.2,
+        "checked": "texto+ejecución"
       },
       {
         "name": "tolerance_m",
         "where": "packages/movement/schedule.py:120",
-        "value": 1.0
+        "value": 1.0,
+        "checked": "texto+ejecución"
       },
       {
         "name": "horizon=valid_until",
         "where": "packages/movement/rendering.py:279",
-        "value": null
+        "value": null,
+        "checked": "texto"
       },
       {
         "name": "horizon_end=valid_until",
         "where": "packages/movement/rendering.py:346",
-        "value": null
+        "value": null,
+        "checked": "texto"
       },
       {
         "name": "guarda dwell",
         "where": "packages/movement/rendering.py:192",
-        "value": null
+        "value": null,
+        "checked": "texto"
       },
       {
         "name": "operator_delay_max_age_s",
         "where": "apps/api/config.py:59",
-        "value": 600.0
+        "value": 600.0,
+        "checked": "texto+ejecución"
       },
       {
         "name": "display_lag_s",
         "where": "apps/api/config.py:61",
-        "value": 0.0
+        "value": 0.0,
+        "checked": "texto+ejecución"
       }
     ],
     "inputs": {
@@ -59,699 +69,1247 @@
       "1533/alerts.json": "fa7d28bb85e7f7c36883c112ac63417fc4ef9009ad26623df428469b513cf4f9",
       "1533/trip_updates.json": "60e2680fb548b79576144ddf3e0578d29f797390e8e4638d689403a780a04c7f",
       "1533/vehicle_positions.json": "77f8faa14ccd183fc16f81702dc8af0ac0c98dc5558582a684bb96f3e59ca9e9",
-      "fomento_transit.zip": "c5b40823c5cacbec6d9a21d88ec0530d9604a6d4331df98c330e608f0bacb11e",
-      "manifest.json": "40e0b99af024f67e7e4015c6830f8ee5fad7e062f48d874e962e6e1eba81f9b1"
+      "fomento_transit.zip": "c5b40823c5cacbec6d9a21d88ec0530d9604a6d4331df98c330e608f0bacb11e"
     },
-    "head": "aee334ebecb722b00bbd516be6ec900cdfa024e7",
+    "manifest_sha256": "40e0b99af024f67e7e4015c6830f8ee5fad7e062f48d874e962e6e1eba81f9b1",
+    "head": "f0f8224f7b5d098eb1f2b043efaa933c00b6111e",
     "product_equals_baseline": true
   },
-  "equivalence": [
+  "equivalence_full_fields": [
     44,
     44
   ],
   "facts": {
-    "status_present": 44,
-    "stop_in_trip": 44,
-    "n": 44,
-    "in_transit_stop_behind_gt_1km": 4,
-    "in_transit_total": 8,
     "in_transit_behind_detail(trip,stop,m_por_detras)": [
       [
         "1023V20277C4a",
         "60100",
-        4288.5
+        4288.52
       ],
       [
         "1023V20281C4a",
         "37011",
-        2416.3
+        2416.28
       ],
       [
         "1023V20845C5",
         "35609",
-        3234.5
+        3234.47
       ],
       [
         "1023V20846C5",
         "35606",
-        1848.9
+        1848.87
       ]
     ],
-    "stopped_gap_origin_min_max_m": [
-      -38.0,
-      8.2,
-      21
+    "reproyeccion_n_max_m": [
+      44,
+      0.0016052595365907284
     ],
-    "stopped_gap_intermediate_min_max_m": [
-      -3.6,
-      2.5,
-      7
-    ],
-    "rendered_anchor_vs_map_matched_p50_max_m": [
-      0.0,
-      0.0
-    ]
+    "estructura_gtfs_44_viajes": {
+      "trips": 44,
+      "legs": 829,
+      "stop_id_repetidos": 0,
+      "tramos_sep<=τ(50)": 0,
+      "tramos_sep<=2τ(100)": 0,
+      "tramos_duracion_real<=0": 0
+    }
   },
   "baseline_fr05_fr27": {
-    "FR05_regress_179_181_n_gt1m": [
+    "FR05_retroceso_179_181_n_gt0": [
       25,
       25
     ],
-    "FR05_regress_p50_max": [
-      2357.9,
-      3959.2
+    "FR05_retroceso_p50_max_m": [
+      2357.8671699409097,
+      3959.2240780028524
     ],
-    "FR27_position_vs_rendered_max_m": 429.5
+    "FR27_muestras(edades_enteras_61-179,estimated)": 2975,
+    "FR27_|Δprogreso|_max_m": 429.5226534623771,
+    "FR27_distancia_lat/lon_max_m": 429.38787523871457
   },
   "real": [
     {
       "alternative": "BASE(beb9434)",
-      "M1_stopped_same_gps_with_advance": [
+      "M1_stopped_same_gps_speed_gt0": [
         25,
         25
       ],
-      "M2_predeparture_with_advance": [
-        17,
-        17
-      ],
-      "M3_delayed_origin_with_advance": [
-        4,
-        4
-      ],
-      "M4_intermediate_stopped_with_advance": [
-        7,
-        7
-      ],
-      "M1b_stopped_any_with_advance": [
-        28,
-        28
-      ],
-      "M5_cross_stop_within_horizon": [
-        29,
-        44
-      ],
-      "M5_detail(trip,stop,m_por_delante)": "solo se detalla para A",
-      "M5b_cross_stop_beyond_tau": [
-        20,
-        44
-      ],
-      "M6_19656_advance_30s_60s": [
-        661.1,
-        1322.2
-      ],
-      "M8_regress_at_expiry_if_frozen_at_anchor_p50_max": [
-        2816.7,
-        5400.6
-      ],
-      "M7_snap_77s_p50_p90_max": [
-        1229.1,
-        1731.5,
-        3274.2
-      ],
-      "M7_n_pairs": 44,
-      "M7_lost_legit_advance_any_status": 0,
-      "M7_lost_detail(trip,status_1532,avance_observado_m)": [],
-      "M7_over_advance_gt100m": 32,
-      "M7_H2b_transit_or_incoming_lost": [
-        0,
-        9
-      ],
-      "reasons": {
-        "beb9434": 44
-      },
-      "FR05_regress_with_F1_p50_max": "N/A: beb9434 congela en el ancla (ver §1)"
-    },
-    {
-      "alternative": "D(tolerancia=50)",
-      "M1_stopped_same_gps_with_advance": [
+      "M1_stopped_same_gps_advance_gt0": [
         25,
         25
       ],
-      "M2_predeparture_with_advance": [
+      "M2_predeparture_speed_gt0": [
         17,
         17
       ],
-      "M3_delayed_origin_with_advance": [
+      "M3_delayed_origin_speed_gt0": [
         4,
         4
       ],
-      "M4_intermediate_stopped_with_advance": [
+      "M4_intermediate_stopped_speed_gt0": [
         7,
         7
       ],
-      "M1b_stopped_any_with_advance": [
-        28,
-        28
-      ],
-      "M5_cross_stop_within_horizon": [
+      "M5_cross_stop_margin_1m": [
         29,
         44
       ],
-      "M5_detail(trip,stop,m_por_delante)": "solo se detalla para A",
       "M5b_cross_stop_beyond_tau": [
         20,
         44
       ],
-      "M6_19656_advance_30s_60s": [
-        661.1,
-        1322.2
-      ],
-      "M8_regress_at_expiry_if_frozen_at_anchor_p50_max": [
-        2816.7,
-        5400.6
-      ],
-      "M7_snap_77s_p50_p90_max": [
-        1229.1,
-        1731.5,
-        3274.2
-      ],
-      "M7_n_pairs": 44,
-      "M7_lost_legit_advance_any_status": 0,
-      "M7_lost_detail(trip,status_1532,avance_observado_m)": [],
-      "M7_over_advance_gt100m": 32,
-      "M7_H2b_transit_or_incoming_lost": [
-        0,
-        9
-      ],
-      "reasons": {
-        "tolerancia": 44
-      },
-      "FR05_regress_with_F1_p50_max": [
-        0.0,
-        0.0
-      ]
-    },
-    {
-      "alternative": "B1(offset±600)",
-      "M1_stopped_same_gps_with_advance": [
-        21,
-        25
-      ],
-      "M2_predeparture_with_advance": [
-        13,
-        17
-      ],
-      "M3_delayed_origin_with_advance": [
-        4,
-        4
-      ],
-      "M4_intermediate_stopped_with_advance": [
-        7,
-        7
-      ],
-      "M1b_stopped_any_with_advance": [
-        24,
-        28
-      ],
-      "M5_cross_stop_within_horizon": [
-        26,
-        44
-      ],
-      "M5_detail(trip,stop,m_por_delante)": "solo se detalla para A",
-      "M5b_cross_stop_beyond_tau": [
-        22,
-        44
-      ],
-      "M6_19656_advance_30s_60s": [
-        661.1,
-        1322.2
-      ],
-      "M8_regress_at_expiry_if_frozen_at_anchor_p50_max": [
-        2558.3,
-        8000.0
-      ],
-      "M7_snap_77s_p50_p90_max": [
-        950.5,
-        2216.3,
-        3422.2
-      ],
-      "M7_n_pairs": 44,
-      "M7_lost_legit_advance_any_status": 0,
-      "M7_lost_detail(trip,status_1532,avance_observado_m)": [],
-      "M7_over_advance_gt100m": 24,
-      "M7_H2b_transit_or_incoming_lost": [
-        0,
-        9
-      ],
-      "reasons": {
-        "offset_clamp_sym": 44
-      },
-      "FR05_regress_with_F1_p50_max": [
-        0.0,
-        0.0
-      ]
-    },
-    {
-      "alternative": "B2(offset+ventana)",
-      "M1_stopped_same_gps_with_advance": [
-        10,
-        25
-      ],
-      "M2_predeparture_with_advance": [
-        2,
-        17
-      ],
-      "M3_delayed_origin_with_advance": [
-        4,
-        4
-      ],
-      "M4_intermediate_stopped_with_advance": [
-        7,
-        7
-      ],
-      "M1b_stopped_any_with_advance": [
-        13,
-        28
-      ],
-      "M5_cross_stop_within_horizon": [
-        23,
-        44
-      ],
-      "M5_detail(trip,stop,m_por_delante)": "solo se detalla para A",
-      "M5b_cross_stop_beyond_tau": [
-        20,
-        44
-      ],
-      "M6_19656_advance_30s_60s": [
-        661.1,
-        1322.2
-      ],
-      "M8_regress_at_expiry_if_frozen_at_anchor_p50_max": [
-        2221.9,
-        8000.0
-      ],
-      "M7_snap_77s_p50_p90_max": [
-        876.0,
-        1921.0,
-        3422.2
-      ],
-      "M7_n_pairs": 44,
-      "M7_lost_legit_advance_any_status": 0,
-      "M7_lost_detail(trip,status_1532,avance_observado_m)": [],
-      "M7_over_advance_gt100m": 18,
-      "M7_H2b_transit_or_incoming_lost": [
-        0,
-        9
-      ],
-      "reasons": {
-        "offset_clamp_sym": 27,
-        "pre_salida": 17
-      },
-      "FR05_regress_with_F1_p50_max": [
-        0.0,
-        0.0
-      ]
-    },
-    {
-      "alternative": "C(τ=50,Dmin=30)",
-      "M1_stopped_same_gps_with_advance": [
-        10,
-        25
-      ],
-      "M2_predeparture_with_advance": [
-        2,
-        17
-      ],
-      "M3_delayed_origin_with_advance": [
-        4,
-        4
-      ],
-      "M4_intermediate_stopped_with_advance": [
-        7,
-        7
-      ],
-      "M1b_stopped_any_with_advance": [
-        13,
-        28
-      ],
-      "M5_cross_stop_within_horizon": [
-        13,
-        44
-      ],
-      "M5_detail(trip,stop,m_por_delante)": "solo se detalla para A",
-      "M5b_cross_stop_beyond_tau": [
-        0,
-        44
-      ],
-      "M6_19656_advance_30s_60s": [
-        0.0,
-        0.0
-      ],
-      "M8_regress_at_expiry_if_frozen_at_anchor_p50_max": [
-        1588.1,
-        3311.0
-      ],
-      "M7_snap_77s_p50_p90_max": [
-        570.1,
-        1338.3,
-        3669.4
-      ],
-      "M7_n_pairs": 44,
-      "M7_lost_legit_advance_any_status": 0,
-      "M7_lost_detail(trip,status_1532,avance_observado_m)": [],
-      "M7_over_advance_gt100m": 15,
-      "M7_H2b_transit_or_incoming_lost": [
-        0,
-        9
-      ],
-      "reasons": {
-        "pre_salida": 17,
-        "tramo": 3,
-        "zona_parada": 24
-      },
-      "FR05_regress_with_F1_p50_max": [
-        0.0,
-        0.0
-      ]
-    },
-    {
-      "alternative": "A(τ=50)",
-      "M1_stopped_same_gps_with_advance": [
-        0,
-        25
-      ],
-      "M2_predeparture_with_advance": [
-        0,
-        17
-      ],
-      "M3_delayed_origin_with_advance": [
-        0,
-        4
-      ],
-      "M4_intermediate_stopped_with_advance": [
-        0,
-        7
-      ],
-      "M1b_stopped_any_with_advance": [
-        0,
-        28
-      ],
-      "M5_cross_stop_within_horizon": [
-        2,
-        44
-      ],
-      "M5_detail(trip,stop,m_por_delante)": [
+      "M5_detail_within_tau(trip,stop,m)": [
+        [
+          "1023V19664C5",
+          "35703",
+          1.3
+        ],
         [
           "1023V19667C5",
           "35605",
-          2.5
+          2.47
+        ],
+        [
+          "1023V19668C5",
+          "35608",
+          2.53
+        ],
+        [
+          "1023V19671C5",
+          "35600",
+          16.94
+        ],
+        [
+          "1023V19674C5",
+          "35607",
+          4.44
+        ],
+        [
+          "1023V19677C5",
+          "35012",
+          8.16
+        ],
+        [
+          "1023V19678C5",
+          "35607",
+          4.44
+        ],
+        [
+          "1023V19681C5",
+          "35012",
+          8.16
+        ],
+        [
+          "1023V19682C5",
+          "35607",
+          4.44
+        ],
+        [
+          "1023V19685C5",
+          "35012",
+          8.16
+        ],
+        [
+          "1023V19687C5",
+          "35012",
+          8.16
+        ],
+        [
+          "1023V19689C5",
+          "35012",
+          8.16
         ],
         [
           "1023V20281C4a",
           "37002",
-          6.9
+          6.91
+        ],
+        [
+          "1023V20282C4a",
+          "17001",
+          3.98
+        ],
+        [
+          "1023V20468C4b",
+          "37010",
+          1.54
+        ],
+        [
+          "1023V20842C5",
+          "35607",
+          4.44
+        ],
+        [
+          "1023V20849C5",
+          "35002",
+          5.45
+        ],
+        [
+          "1023V20850C5",
+          "35607",
+          4.44
+        ],
+        [
+          "1023V20853C5",
+          "35011",
+          3.37
+        ],
+        [
+          "1023V20854C5",
+          "35607",
+          4.44
+        ],
+        [
+          "1023V20859C5",
+          "35002",
+          5.45
+        ],
+        [
+          "1023V20863C5",
+          "35002",
+          5.45
         ]
+      ],
+      "M6_19656_advance_30s_60s": [
+        661.1236106324941,
+        1322.2472212649955
+      ],
+      "M7_guard_transit_incoming_moved_pred_eq0": [
+        0,
+        9
+      ],
+      "COST_stopped1532_departed_pred_eq0": [
+        0,
+        27,
+        []
+      ],
+      "M7_snap_77s_p50_p90_max": [
+        1229.1463781272096,
+        1731.539876490056,
+        3274.2257828165166
+      ],
+      "M7_over_advance_gt100m": [
+        32,
+        44
+      ],
+      "M8_rewind_if_frozen_at_anchor_p50_max": [
+        2816.6691342336126,
+        5400.55501251774
+      ],
+      "rules": {
+        "beb9434": 44
+      },
+      "GROUP_M_pass": {
+        "AC-M1 0/25 STOPPED_AT GPS idéntico con speed_mps>0": false,
+        "AC-M2 0/17 pre-salida con speed_mps>0": false,
+        "AC-M3 0/4 salida retrasada con speed_mps>0": false,
+        "AC-M4 0/7 intermedias con speed_mps>0": false,
+        "AC-M5 0/44 cruzan parada > τ": false,
+        "AC-M6 19656 avance a 30 s == 0": false,
+        "AC-M7 guarda 0/9 IN_TRANSIT_TO/INCOMING_AT que avanzaron con predicción == 0": true
+      }
+    },
+    {
+      "alternative": "D(tolerancia=50)",
+      "M1_stopped_same_gps_speed_gt0": [
+        25,
+        25
+      ],
+      "M1_stopped_same_gps_advance_gt0": [
+        25,
+        25
+      ],
+      "M2_predeparture_speed_gt0": [
+        17,
+        17
+      ],
+      "M3_delayed_origin_speed_gt0": [
+        4,
+        4
+      ],
+      "M4_intermediate_stopped_speed_gt0": [
+        7,
+        7
+      ],
+      "M5_cross_stop_margin_1m": [
+        29,
+        44
+      ],
+      "M5b_cross_stop_beyond_tau": [
+        20,
+        44
+      ],
+      "M5_detail_within_tau(trip,stop,m)": [
+        [
+          "1023V19664C5",
+          "35703",
+          1.3
+        ],
+        [
+          "1023V19667C5",
+          "35605",
+          2.47
+        ],
+        [
+          "1023V19668C5",
+          "35608",
+          2.53
+        ],
+        [
+          "1023V19671C5",
+          "35600",
+          16.94
+        ],
+        [
+          "1023V19674C5",
+          "35607",
+          4.44
+        ],
+        [
+          "1023V19677C5",
+          "35012",
+          8.16
+        ],
+        [
+          "1023V19678C5",
+          "35607",
+          4.44
+        ],
+        [
+          "1023V19681C5",
+          "35012",
+          8.16
+        ],
+        [
+          "1023V19682C5",
+          "35607",
+          4.44
+        ],
+        [
+          "1023V19685C5",
+          "35012",
+          8.16
+        ],
+        [
+          "1023V19687C5",
+          "35012",
+          8.16
+        ],
+        [
+          "1023V19689C5",
+          "35012",
+          8.16
+        ],
+        [
+          "1023V20281C4a",
+          "37002",
+          6.91
+        ],
+        [
+          "1023V20282C4a",
+          "17001",
+          3.98
+        ],
+        [
+          "1023V20468C4b",
+          "37010",
+          1.54
+        ],
+        [
+          "1023V20842C5",
+          "35607",
+          4.44
+        ],
+        [
+          "1023V20849C5",
+          "35002",
+          5.45
+        ],
+        [
+          "1023V20850C5",
+          "35607",
+          4.44
+        ],
+        [
+          "1023V20853C5",
+          "35011",
+          3.37
+        ],
+        [
+          "1023V20854C5",
+          "35607",
+          4.44
+        ],
+        [
+          "1023V20859C5",
+          "35002",
+          5.45
+        ],
+        [
+          "1023V20863C5",
+          "35002",
+          5.45
+        ]
+      ],
+      "M6_19656_advance_30s_60s": [
+        661.1236106324941,
+        1322.2472212649955
+      ],
+      "M7_guard_transit_incoming_moved_pred_eq0": [
+        0,
+        9
+      ],
+      "COST_stopped1532_departed_pred_eq0": [
+        0,
+        27,
+        []
+      ],
+      "M7_snap_77s_p50_p90_max": [
+        1229.1463781272096,
+        1731.539876490056,
+        3274.2257828165166
+      ],
+      "M7_over_advance_gt100m": [
+        32,
+        44
+      ],
+      "M8_rewind_if_frozen_at_anchor_p50_max": [
+        2816.6691342336126,
+        5400.55501251774
+      ],
+      "rules": {
+        "tolerancia": 44
+      },
+      "GROUP_M_pass": {
+        "AC-M1 0/25 STOPPED_AT GPS idéntico con speed_mps>0": false,
+        "AC-M2 0/17 pre-salida con speed_mps>0": false,
+        "AC-M3 0/4 salida retrasada con speed_mps>0": false,
+        "AC-M4 0/7 intermedias con speed_mps>0": false,
+        "AC-M5 0/44 cruzan parada > τ": false,
+        "AC-M6 19656 avance a 30 s == 0": false,
+        "AC-M7 guarda 0/9 IN_TRANSIT_TO/INCOMING_AT que avanzaron con predicción == 0": true
+      }
+    },
+    {
+      "alternative": "B1(offset±600)",
+      "M1_stopped_same_gps_speed_gt0": [
+        21,
+        25
+      ],
+      "M1_stopped_same_gps_advance_gt0": [
+        21,
+        25
+      ],
+      "M2_predeparture_speed_gt0": [
+        13,
+        17
+      ],
+      "M3_delayed_origin_speed_gt0": [
+        4,
+        4
+      ],
+      "M4_intermediate_stopped_speed_gt0": [
+        7,
+        7
+      ],
+      "M5_cross_stop_margin_1m": [
+        26,
+        44
+      ],
+      "M5b_cross_stop_beyond_tau": [
+        22,
+        44
+      ],
+      "M5_detail_within_tau(trip,stop,m)": [
+        [
+          "1023V19664C5",
+          "35703",
+          1.3
+        ],
+        [
+          "1023V19667C5",
+          "35605",
+          2.47
+        ],
+        [
+          "1023V19668C5",
+          "35608",
+          2.53
+        ],
+        [
+          "1023V19671C5",
+          "35600",
+          16.94
+        ],
+        [
+          "1023V19674C5",
+          "35607",
+          4.44
+        ],
+        [
+          "1023V19677C5",
+          "35012",
+          8.16
+        ],
+        [
+          "1023V19681C5",
+          "35012",
+          8.16
+        ],
+        [
+          "1023V19685C5",
+          "35012",
+          8.16
+        ],
+        [
+          "1023V20281C4a",
+          "37002",
+          6.91
+        ],
+        [
+          "1023V20282C4a",
+          "17001",
+          3.98
+        ],
+        [
+          "1023V20468C4b",
+          "37010",
+          1.54
+        ],
+        [
+          "1023V20842C5",
+          "35607",
+          4.44
+        ],
+        [
+          "1023V20849C5",
+          "35002",
+          5.45
+        ],
+        [
+          "1023V20850C5",
+          "35607",
+          4.44
+        ],
+        [
+          "1023V20853C5",
+          "35011",
+          3.37
+        ],
+        [
+          "1023V20859C5",
+          "35002",
+          5.45
+        ]
+      ],
+      "M6_19656_advance_30s_60s": [
+        661.1236106324941,
+        1322.2472212649955
+      ],
+      "M7_guard_transit_incoming_moved_pred_eq0": [
+        0,
+        9
+      ],
+      "COST_stopped1532_departed_pred_eq0": [
+        0,
+        27,
+        []
+      ],
+      "M7_snap_77s_p50_p90_max": [
+        950.4946481825409,
+        2216.2660953347327,
+        3422.2222222222226
+      ],
+      "M7_over_advance_gt100m": [
+        24,
+        44
+      ],
+      "M8_rewind_if_frozen_at_anchor_p50_max": [
+        2558.296856701984,
+        8000.0
+      ],
+      "rules": {
+        "offset±600": 44
+      },
+      "GROUP_M_pass": {
+        "AC-M1 0/25 STOPPED_AT GPS idéntico con speed_mps>0": false,
+        "AC-M2 0/17 pre-salida con speed_mps>0": false,
+        "AC-M3 0/4 salida retrasada con speed_mps>0": false,
+        "AC-M4 0/7 intermedias con speed_mps>0": false,
+        "AC-M5 0/44 cruzan parada > τ": false,
+        "AC-M6 19656 avance a 30 s == 0": false,
+        "AC-M7 guarda 0/9 IN_TRANSIT_TO/INCOMING_AT que avanzaron con predicción == 0": true
+      }
+    },
+    {
+      "alternative": "B2(offset+ventana)",
+      "M1_stopped_same_gps_speed_gt0": [
+        10,
+        25
+      ],
+      "M1_stopped_same_gps_advance_gt0": [
+        10,
+        25
+      ],
+      "M2_predeparture_speed_gt0": [
+        2,
+        17
+      ],
+      "M3_delayed_origin_speed_gt0": [
+        4,
+        4
+      ],
+      "M4_intermediate_stopped_speed_gt0": [
+        7,
+        7
+      ],
+      "M5_cross_stop_margin_1m": [
+        23,
+        44
+      ],
+      "M5b_cross_stop_beyond_tau": [
+        20,
+        44
+      ],
+      "M5_detail_within_tau(trip,stop,m)": [
+        [
+          "1023V19664C5",
+          "35703",
+          1.3
+        ],
+        [
+          "1023V19667C5",
+          "35605",
+          2.47
+        ],
+        [
+          "1023V19668C5",
+          "35608",
+          2.53
+        ],
+        [
+          "1023V19671C5",
+          "35600",
+          16.94
+        ],
+        [
+          "1023V19674C5",
+          "35607",
+          4.44
+        ],
+        [
+          "1023V19677C5",
+          "35012",
+          8.16
+        ],
+        [
+          "1023V19681C5",
+          "35012",
+          8.16
+        ],
+        [
+          "1023V20281C4a",
+          "37002",
+          6.91
+        ],
+        [
+          "1023V20282C4a",
+          "17001",
+          3.98
+        ],
+        [
+          "1023V20468C4b",
+          "37010",
+          1.54
+        ],
+        [
+          "1023V20842C5",
+          "35607",
+          4.44
+        ],
+        [
+          "1023V20849C5",
+          "35002",
+          5.45
+        ],
+        [
+          "1023V20853C5",
+          "35011",
+          3.37
+        ]
+      ],
+      "M6_19656_advance_30s_60s": [
+        661.1236106324941,
+        1322.2472212649955
+      ],
+      "M7_guard_transit_incoming_moved_pred_eq0": [
+        0,
+        9
+      ],
+      "COST_stopped1532_departed_pred_eq0": [
+        0,
+        27,
+        []
+      ],
+      "M7_snap_77s_p50_p90_max": [
+        875.9699593667847,
+        1921.0144393201267,
+        3422.2222222222226
+      ],
+      "M7_over_advance_gt100m": [
+        18,
+        44
+      ],
+      "M8_rewind_if_frozen_at_anchor_p50_max": [
+        2221.9355412059413,
+        8000.0
+      ],
+      "rules": {
+        "offset±600": 27,
+        "pre_salida": 17
+      },
+      "GROUP_M_pass": {
+        "AC-M1 0/25 STOPPED_AT GPS idéntico con speed_mps>0": false,
+        "AC-M2 0/17 pre-salida con speed_mps>0": false,
+        "AC-M3 0/4 salida retrasada con speed_mps>0": false,
+        "AC-M4 0/7 intermedias con speed_mps>0": false,
+        "AC-M5 0/44 cruzan parada > τ": false,
+        "AC-M6 19656 avance a 30 s == 0": false,
+        "AC-M7 guarda 0/9 IN_TRANSIT_TO/INCOMING_AT que avanzaron con predicción == 0": true
+      }
+    },
+    {
+      "alternative": "C(τ=50,Dmin=30)",
+      "M1_stopped_same_gps_speed_gt0": [
+        10,
+        25
+      ],
+      "M1_stopped_same_gps_advance_gt0": [
+        10,
+        25
+      ],
+      "M2_predeparture_speed_gt0": [
+        2,
+        17
+      ],
+      "M3_delayed_origin_speed_gt0": [
+        4,
+        4
+      ],
+      "M4_intermediate_stopped_speed_gt0": [
+        7,
+        7
+      ],
+      "M5_cross_stop_margin_1m": [
+        13,
+        44
       ],
       "M5b_cross_stop_beyond_tau": [
         0,
         44
       ],
+      "M5_detail_within_tau(trip,stop,m)": [
+        [
+          "1023V19664C5",
+          "35703",
+          1.3
+        ],
+        [
+          "1023V19667C5",
+          "35605",
+          2.47
+        ],
+        [
+          "1023V19668C5",
+          "35608",
+          2.53
+        ],
+        [
+          "1023V19671C5",
+          "35600",
+          16.94
+        ],
+        [
+          "1023V19674C5",
+          "35607",
+          4.44
+        ],
+        [
+          "1023V19677C5",
+          "35012",
+          8.16
+        ],
+        [
+          "1023V19681C5",
+          "35012",
+          8.16
+        ],
+        [
+          "1023V20281C4a",
+          "37002",
+          6.91
+        ],
+        [
+          "1023V20282C4a",
+          "17001",
+          3.98
+        ],
+        [
+          "1023V20468C4b",
+          "37010",
+          1.54
+        ],
+        [
+          "1023V20842C5",
+          "35607",
+          4.44
+        ],
+        [
+          "1023V20849C5",
+          "35002",
+          5.45
+        ],
+        [
+          "1023V20853C5",
+          "35011",
+          3.37
+        ]
+      ],
       "M6_19656_advance_30s_60s": [
         0.0,
         0.0
       ],
-      "M8_regress_at_expiry_if_frozen_at_anchor_p50_max": [
-        0.0,
-        2371.0
-      ],
-      "M7_snap_77s_p50_p90_max": [
-        0.0,
-        1523.8,
-        3274.2
-      ],
-      "M7_n_pairs": 44,
-      "M7_lost_legit_advance_any_status": 3,
-      "M7_lost_detail(trip,status_1532,avance_observado_m)": [
-        [
-          "1023V19671C5",
-          "STOPPED_AT",
-          2204.0
-        ],
-        [
-          "1023V20284C4a",
-          "STOPPED_AT",
-          2424.5
-        ],
-        [
-          "1023V20836C5",
-          "STOPPED_AT",
-          1860.2
-        ]
-      ],
-      "M7_over_advance_gt100m": 2,
-      "M7_H2b_transit_or_incoming_lost": [
+      "M7_guard_transit_incoming_moved_pred_eq0": [
         0,
         9
       ],
-      "reasons": {
-        "operador_INCOMING_AT_en_parada": 8,
-        "operador_IN_TRANSIT_TO_tramo": 8,
-        "operador_STOPPED_AT": 28
+      "COST_stopped1532_departed_pred_eq0": [
+        0,
+        27,
+        []
+      ],
+      "M7_snap_77s_p50_p90_max": [
+        570.1021579412791,
+        1338.3069977992607,
+        3669.3990515216938
+      ],
+      "M7_over_advance_gt100m": [
+        15,
+        44
+      ],
+      "M8_rewind_if_frozen_at_anchor_p50_max": [
+        1588.0967503295365,
+        3310.9873117890224
+      ],
+      "rules": {
+        "R8:R2": 15,
+        "R8:R2+R5": 2,
+        "R8:R5": 3,
+        "R8:R8-zona": 24
       },
-      "FR05_regress_with_F1_p50_max": [
+      "GROUP_M_pass": {
+        "AC-M1 0/25 STOPPED_AT GPS idéntico con speed_mps>0": false,
+        "AC-M2 0/17 pre-salida con speed_mps>0": false,
+        "AC-M3 0/4 salida retrasada con speed_mps>0": false,
+        "AC-M4 0/7 intermedias con speed_mps>0": false,
+        "AC-M5 0/44 cruzan parada > τ": true,
+        "AC-M6 19656 avance a 30 s == 0": true,
+        "AC-M7 guarda 0/9 IN_TRANSIT_TO/INCOMING_AT que avanzaron con predicción == 0": true
+      }
+    },
+    {
+      "alternative": "A(τ=50)",
+      "M1_stopped_same_gps_speed_gt0": [
+        0,
+        25
+      ],
+      "M1_stopped_same_gps_advance_gt0": [
+        0,
+        25
+      ],
+      "M2_predeparture_speed_gt0": [
+        0,
+        17
+      ],
+      "M3_delayed_origin_speed_gt0": [
+        0,
+        4
+      ],
+      "M4_intermediate_stopped_speed_gt0": [
+        0,
+        7
+      ],
+      "M5_cross_stop_margin_1m": [
+        2,
+        44
+      ],
+      "M5b_cross_stop_beyond_tau": [
+        0,
+        44
+      ],
+      "M5_detail_within_tau(trip,stop,m)": [
+        [
+          "1023V19667C5",
+          "35605",
+          2.47
+        ],
+        [
+          "1023V20281C4a",
+          "37002",
+          6.91
+        ]
+      ],
+      "M6_19656_advance_30s_60s": [
         0.0,
         0.0
-      ]
+      ],
+      "M7_guard_transit_incoming_moved_pred_eq0": [
+        0,
+        9
+      ],
+      "COST_stopped1532_departed_pred_eq0": [
+        3,
+        27,
+        [
+          [
+            "1023V19671C5",
+            2204.0
+          ],
+          [
+            "1023V20284C4a",
+            2424.5
+          ],
+          [
+            "1023V20836C5",
+            1860.2
+          ]
+        ]
+      ],
+      "M7_snap_77s_p50_p90_max": [
+        0.0,
+        1523.7804364882786,
+        3274.2257828165166
+      ],
+      "M7_over_advance_gt100m": [
+        2,
+        44
+      ],
+      "M8_rewind_if_frozen_at_anchor_p50_max": [
+        0.0,
+        2371.0396122310667
+      ],
+      "rules": {
+        "R1": 28,
+        "R4": 8,
+        "R5": 8
+      },
+      "GROUP_M_pass": {
+        "AC-M1 0/25 STOPPED_AT GPS idéntico con speed_mps>0": true,
+        "AC-M2 0/17 pre-salida con speed_mps>0": true,
+        "AC-M3 0/4 salida retrasada con speed_mps>0": true,
+        "AC-M4 0/7 intermedias con speed_mps>0": true,
+        "AC-M5 0/44 cruzan parada > τ": true,
+        "AC-M6 19656 avance a 30 s == 0": true,
+        "AC-M7 guarda 0/9 IN_TRANSIT_TO/INCOMING_AT que avanzaron con predicción == 0": true
+      }
     }
   ],
   "sensitivity": [
     {
       "alternative": "A(τ=5)",
-      "M1_stopped_same_gps_with_advance": [
-        4,
+      "grupo_M": 4,
+      "M1": [
+        1,
         25
       ],
-      "M1b_stopped_any_with_advance": [
-        4,
-        28
-      ],
-      "M5_cross_stop_within_horizon": [
-        4,
+      "M5b": [
+        0,
         44
       ],
-      "M6_19656_advance_30s_60s": [
-        662.0,
-        1324.0
+      "M6_30s": 662.019771775369,
+      "coste": [
+        3,
+        27
       ],
-      "M7_snap_77s_p50_p90_max": [
-        0.0,
-        1730.3,
-        3274.2
+      "R7/R8": 17
+    },
+    {
+      "alternative": "A(τ=5.3)",
+      "grupo_M": 4,
+      "M1": [
+        1,
+        25
       ],
-      "M7_H2b_transit_or_incoming_lost": [
+      "M5b": [
         0,
-        9
+        44
       ],
-      "incoherent": 17
+      "M6_30s": 662.019771775369,
+      "coste": [
+        3,
+        27
+      ],
+      "R7/R8": 17
+    },
+    {
+      "alternative": "A(τ=5.5)",
+      "grupo_M": 5,
+      "M1": [
+        1,
+        25
+      ],
+      "M5b": [
+        0,
+        44
+      ],
+      "M6_30s": 0.0,
+      "coste": [
+        3,
+        27
+      ],
+      "R7/R8": 13
+    },
+    {
+      "alternative": "A(τ=10)",
+      "grupo_M": 5,
+      "M1": [
+        1,
+        25
+      ],
+      "M5b": [
+        0,
+        44
+      ],
+      "M6_30s": 0.0,
+      "coste": [
+        3,
+        27
+      ],
+      "R7/R8": 7
     },
     {
       "alternative": "A(τ=20.8)",
-      "M1_stopped_same_gps_with_advance": [
+      "grupo_M": 7,
+      "M1": [
         0,
         25
       ],
-      "M1b_stopped_any_with_advance": [
+      "M5b": [
         0,
-        28
-      ],
-      "M5_cross_stop_within_horizon": [
-        2,
         44
       ],
-      "M6_19656_advance_30s_60s": [
-        0.0,
-        0.0
+      "M6_30s": 0.0,
+      "coste": [
+        3,
+        27
       ],
-      "M7_snap_77s_p50_p90_max": [
-        0.0,
-        1523.8,
-        3274.2
-      ],
-      "M7_H2b_transit_or_incoming_lost": [
+      "R7/R8": 5
+    },
+    {
+      "alternative": "A(τ=30)",
+      "grupo_M": 7,
+      "M1": [
         0,
-        9
+        25
       ],
-      "incoherent": 5
+      "M5b": [
+        0,
+        44
+      ],
+      "M6_30s": 0.0,
+      "coste": [
+        3,
+        27
+      ],
+      "R7/R8": 5
+    },
+    {
+      "alternative": "A(τ=37.9)",
+      "grupo_M": 7,
+      "M1": [
+        0,
+        25
+      ],
+      "M5b": [
+        0,
+        44
+      ],
+      "M6_30s": 0.0,
+      "coste": [
+        3,
+        27
+      ],
+      "R7/R8": 2
+    },
+    {
+      "alternative": "A(τ=38.1)",
+      "grupo_M": 7,
+      "M1": [
+        0,
+        25
+      ],
+      "M5b": [
+        0,
+        44
+      ],
+      "M6_30s": 0.0,
+      "coste": [
+        3,
+        27
+      ],
+      "R7/R8": 0
     },
     {
       "alternative": "A(τ=40)",
-      "M1_stopped_same_gps_with_advance": [
+      "grupo_M": 7,
+      "M1": [
         0,
         25
       ],
-      "M1b_stopped_any_with_advance": [
+      "M5b": [
         0,
-        28
-      ],
-      "M5_cross_stop_within_horizon": [
-        2,
         44
       ],
-      "M6_19656_advance_30s_60s": [
-        0.0,
-        0.0
+      "M6_30s": 0.0,
+      "coste": [
+        3,
+        27
       ],
-      "M7_snap_77s_p50_p90_max": [
-        0.0,
-        1523.8,
-        3274.2
-      ],
-      "M7_H2b_transit_or_incoming_lost": [
-        0,
-        9
-      ],
-      "incoherent": 0
+      "R7/R8": 0
     },
     {
       "alternative": "A(τ=50)",
-      "M1_stopped_same_gps_with_advance": [
+      "grupo_M": 7,
+      "M1": [
         0,
         25
       ],
-      "M1b_stopped_any_with_advance": [
+      "M5b": [
         0,
-        28
-      ],
-      "M5_cross_stop_within_horizon": [
-        2,
         44
       ],
-      "M6_19656_advance_30s_60s": [
-        0.0,
-        0.0
+      "M6_30s": 0.0,
+      "coste": [
+        3,
+        27
       ],
-      "M7_snap_77s_p50_p90_max": [
-        0.0,
-        1523.8,
-        3274.2
-      ],
-      "M7_H2b_transit_or_incoming_lost": [
+      "R7/R8": 0
+    },
+    {
+      "alternative": "A(τ=75)",
+      "grupo_M": 7,
+      "M1": [
         0,
-        9
+        25
       ],
-      "incoherent": 0
+      "M5b": [
+        0,
+        44
+      ],
+      "M6_30s": 0.0,
+      "coste": [
+        3,
+        27
+      ],
+      "R7/R8": 0
     },
     {
       "alternative": "A(τ=100)",
-      "M1_stopped_same_gps_with_advance": [
+      "grupo_M": 7,
+      "M1": [
         0,
         25
       ],
-      "M1b_stopped_any_with_advance": [
+      "M5b": [
         0,
-        28
-      ],
-      "M5_cross_stop_within_horizon": [
-        2,
         44
       ],
-      "M6_19656_advance_30s_60s": [
-        0.0,
-        0.0
+      "M6_30s": 0.0,
+      "coste": [
+        3,
+        27
       ],
-      "M7_snap_77s_p50_p90_max": [
-        0.0,
-        1523.8,
-        3274.2
-      ],
-      "M7_H2b_transit_or_incoming_lost": [
-        0,
-        9
-      ],
-      "incoherent": 0
+      "R7/R8": 0
     },
     {
-      "alternative": "C(τ=50,Dmin=0)",
-      "M1_stopped_same_gps_with_advance": [
-        10,
+      "alternative": "A(τ=150)",
+      "grupo_M": 7,
+      "M1": [
+        0,
         25
       ],
-      "M3_delayed_origin_with_advance": [
+      "M5b": [
+        0,
+        44
+      ],
+      "M6_30s": 0.0,
+      "coste": [
+        3,
+        27
+      ],
+      "R7/R8": 0
+    },
+    {
+      "alternative": "C(Dmin=0)",
+      "grupo_M": 3,
+      "M3": [
         4,
         4
       ],
-      "M4_intermediate_stopped_with_advance": [
+      "M4": [
         7,
         7
       ],
-      "M7_snap_77s_p50_p90_max": [
-        754.9,
-        1571.0,
-        3274.2
-      ],
-      "M7_H2b_transit_or_incoming_lost": [
+      "guarda": [
         0,
         9
       ]
     },
     {
-      "alternative": "C(τ=50,Dmin=30)",
-      "M1_stopped_same_gps_with_advance": [
-        10,
-        25
-      ],
-      "M3_delayed_origin_with_advance": [
+      "alternative": "C(Dmin=30)",
+      "grupo_M": 3,
+      "M3": [
         4,
         4
       ],
-      "M4_intermediate_stopped_with_advance": [
+      "M4": [
         7,
         7
       ],
-      "M7_snap_77s_p50_p90_max": [
-        570.1,
-        1338.3,
-        3669.4
-      ],
-      "M7_H2b_transit_or_incoming_lost": [
+      "guarda": [
         0,
         9
       ]
     },
     {
-      "alternative": "C(τ=50,Dmin=60)",
-      "M1_stopped_same_gps_with_advance": [
-        10,
-        25
-      ],
-      "M3_delayed_origin_with_advance": [
+      "alternative": "C(Dmin=60)",
+      "grupo_M": 3,
+      "M3": [
         4,
         4
       ],
-      "M4_intermediate_stopped_with_advance": [
+      "M4": [
         7,
         7
       ],
-      "M7_snap_77s_p50_p90_max": [
-        206.2,
-        1672.4,
-        4064.6
-      ],
-      "M7_H2b_transit_or_incoming_lost": [
+      "guarda": [
         0,
         9
       ]
     },
     {
-      "alternative": "C(τ=50,Dmin=180)",
-      "M1_stopped_same_gps_with_advance": [
-        2,
-        25
-      ],
-      "M3_delayed_origin_with_advance": [
+      "alternative": "C(Dmin=180)",
+      "grupo_M": 4,
+      "M3": [
         0,
         4
       ],
-      "M4_intermediate_stopped_with_advance": [
+      "M4": [
         0,
         7
       ],
-      "M7_snap_77s_p50_p90_max": [
-        0.0,
-        1899.3,
-        4288.5
-      ],
-      "M7_H2b_transit_or_incoming_lost": [
+      "guarda": [
         7,
         9
       ]
@@ -759,480 +1317,493 @@
   ],
   "synthetic": [
     {
-      "case": "S1 pre-salida (−300 s, STOPPED_AT origen)",
-      "criterion": "0 m en todo el horizonte",
+      "case": "S1 pre-salida −300 s, STOPPED_AT origen",
+      "criterion": "avance == 0 en todo el horizonte",
       "results": {
         "BASE(beb9434)": {
           "pass": false,
-          "detail": "avance a 180 s = 2811.3 m",
-          "reason": "beb9434"
+          "detail": "avance a 180 s = 2811.2528570230515 m; hold_reason=None; regla=beb9434"
         },
         "D(tolerancia=50)": {
           "pass": false,
-          "detail": "avance a 180 s = 2811.3 m",
-          "reason": "tolerancia"
+          "detail": "avance a 180 s = 2811.2528570230515 m; hold_reason=None; regla=tolerancia"
         },
         "B1(offset±600)": {
           "pass": false,
-          "detail": "avance a 180 s = 2811.3 m",
-          "reason": "offset_clamp_sym"
+          "detail": "avance a 180 s = 2811.2528570230515 m; hold_reason=None; regla=offset±600"
         },
         "B2(offset+ventana)": {
           "pass": true,
-          "detail": "avance a 180 s = 0.0 m",
-          "reason": "pre_salida"
+          "detail": "avance a 180 s = 0.0 m; hold_reason=None; regla=pre_salida"
         },
         "C(τ=50,Dmin=30)": {
           "pass": true,
-          "detail": "avance a 180 s = 0.0 m",
-          "reason": "pre_salida"
+          "detail": "avance a 180 s = 0.0 m; hold_reason=before_first_departure; regla=R8:R2"
         },
         "A(τ=50)": {
           "pass": true,
-          "detail": "avance a 180 s = 0.0 m",
-          "reason": "operador_STOPPED_AT"
+          "detail": "avance a 180 s = 0.0 m; hold_reason=operator_stopped_at; regla=R1"
         }
       }
     },
     {
-      "case": "S2 pre-salida (−60 s): sin avance antes de la salida",
-      "criterion": "0 m hasta la hora de salida",
+      "case": "S2 pre-salida −60 s, STOPPED_AT origen",
+      "criterion": "avance == 0 antes de la salida",
       "results": {
         "BASE(beb9434)": {
           "pass": false,
-          "detail": "avance 1 s antes de la salida = 921.5 m",
-          "reason": "beb9434"
+          "detail": "avance 1 ms antes de la salida = 937.0686676029227 m"
         },
         "D(tolerancia=50)": {
           "pass": false,
-          "detail": "avance 1 s antes de la salida = 921.5 m",
-          "reason": "tolerancia"
+          "detail": "avance 1 ms antes de la salida = 937.0686676029227 m"
         },
         "B1(offset±600)": {
           "pass": false,
-          "detail": "avance 1 s antes de la salida = 921.5 m",
-          "reason": "offset_clamp_sym"
+          "detail": "avance 1 ms antes de la salida = 937.0686676029227 m"
         },
         "B2(offset+ventana)": {
           "pass": true,
-          "detail": "avance 1 s antes de la salida = 0.0 m",
-          "reason": "pre_salida"
+          "detail": "avance 1 ms antes de la salida = 0.0 m"
         },
         "C(τ=50,Dmin=30)": {
           "pass": true,
-          "detail": "avance 1 s antes de la salida = 0.0 m",
-          "reason": "pre_salida"
+          "detail": "avance 1 ms antes de la salida = 0.0 m"
         },
         "A(τ=50)": {
           "pass": true,
-          "detail": "avance 1 s antes de la salida = 0.0 m",
-          "reason": "operador_STOPPED_AT"
+          "detail": "avance 1 ms antes de la salida = 0.0 m"
         }
       }
     },
     {
-      "case": "S3 salida retrasada (+120 s, STOPPED_AT origen)",
-      "criterion": "0 m mientras el operador diga STOPPED_AT",
+      "case": "S2b R2 sin STOPPED_AT (IN_TRANSIT_TO), salida a +60 s dentro del horizonte",
+      "criterion": "0 antes de la salida, > 0 después, fases hold→moving→cap",
       "results": {
-        "BASE(beb9434)": {
-          "pass": false,
-          "detail": "avance a 180 s = 2811.3 m",
-          "reason": "beb9434"
-        },
-        "D(tolerancia=50)": {
-          "pass": false,
-          "detail": "avance a 180 s = 2811.3 m",
-          "reason": "tolerancia"
-        },
-        "B1(offset±600)": {
-          "pass": false,
-          "detail": "avance a 180 s = 2811.3 m",
-          "reason": "offset_clamp_sym"
-        },
-        "B2(offset+ventana)": {
-          "pass": false,
-          "detail": "avance a 180 s = 2811.3 m",
-          "reason": "offset_clamp_sym"
-        },
-        "C(τ=50,Dmin=30)": {
-          "pass": false,
-          "detail": "avance a 180 s = 2019.9 m",
-          "reason": "zona_parada"
-        },
         "A(τ=50)": {
           "pass": true,
-          "detail": "avance a 180 s = 0.0 m",
-          "reason": "operador_STOPPED_AT"
+          "detail": "antes=0.0 m, +30 s=506.074 m, fases=['hold:before_first_departure', 'hold:before_first_departure', 'moving', 'moving', 'cap:stop', 'cap:stop'], en_tope_exacto=True"
         }
       }
     },
     {
-      "case": "S4 parada intermedia con espera 60 s (+5,4 m, STOPPED_AT)",
-      "criterion": "0 m a los 30 s",
+      "case": "S3 salida retrasada +120 s, STOPPED_AT origen",
+      "criterion": "avance == 0",
       "results": {
         "BASE(beb9434)": {
           "pass": false,
-          "detail": "avance a 30 s = 417.2 m",
-          "reason": "beb9434"
+          "detail": "avance a 180 s = 2811.2528570230515 m; hold_reason=None; regla=beb9434"
         },
         "D(tolerancia=50)": {
           "pass": false,
-          "detail": "avance a 30 s = 417.2 m",
-          "reason": "tolerancia"
+          "detail": "avance a 180 s = 2811.2528570230515 m; hold_reason=None; regla=tolerancia"
         },
         "B1(offset±600)": {
           "pass": false,
-          "detail": "avance a 30 s = 417.2 m",
-          "reason": "offset_clamp_sym"
+          "detail": "avance a 180 s = 2811.2528570230515 m; hold_reason=None; regla=offset±600"
         },
         "B2(offset+ventana)": {
           "pass": false,
-          "detail": "avance a 30 s = 417.2 m",
-          "reason": "offset_clamp_sym"
+          "detail": "avance a 180 s = 2811.2528570230515 m; hold_reason=None; regla=offset±600"
         },
         "C(τ=50,Dmin=30)": {
-          "pass": true,
-          "detail": "avance a 30 s = 0.0 m",
-          "reason": "zona_parada"
+          "pass": false,
+          "detail": "avance a 180 s = 2019.8976566482665 m; hold_reason=schedule_stop_zone; regla=R8:R8-zona"
         },
         "A(τ=50)": {
           "pass": true,
-          "detail": "avance a 30 s = 0.0 m",
-          "reason": "operador_STOPPED_AT"
+          "detail": "avance a 180 s = 0.0 m; hold_reason=operator_stopped_at; regla=R1"
         }
       }
     },
     {
-      "case": "S5 parada intermedia SIN espera programada (STOPPED_AT)",
-      "criterion": "0 m en todo el horizonte",
+      "case": "S4 intermedia con espera 60 s, ancla +5,38 m, STOPPED_AT",
+      "criterion": "avance == 0 a 30 s",
       "results": {
         "BASE(beb9434)": {
           "pass": false,
-          "detail": "avance a 180 s = 2364.5 m",
-          "reason": "beb9434"
+          "detail": "avance a 30 s = 417.18554547393796 m; hold_reason=None; regla=beb9434"
         },
         "D(tolerancia=50)": {
           "pass": false,
-          "detail": "avance a 180 s = 2364.5 m",
-          "reason": "tolerancia"
+          "detail": "avance a 30 s = 417.18554547393796 m; hold_reason=None; regla=tolerancia"
         },
         "B1(offset±600)": {
           "pass": false,
-          "detail": "avance a 180 s = 2364.5 m",
-          "reason": "offset_clamp_sym"
+          "detail": "avance a 30 s = 417.18554547393796 m; hold_reason=None; regla=offset±600"
         },
         "B2(offset+ventana)": {
           "pass": false,
-          "detail": "avance a 180 s = 2364.5 m",
-          "reason": "offset_clamp_sym"
+          "detail": "avance a 30 s = 417.18554547393796 m; hold_reason=None; regla=offset±600"
         },
         "C(τ=50,Dmin=30)": {
-          "pass": false,
-          "detail": "avance a 180 s = 1969.8 m",
-          "reason": "zona_parada"
+          "pass": true,
+          "detail": "avance a 30 s = 0.0 m; hold_reason=schedule_stop_zone; regla=R8:R8-zona"
         },
         "A(τ=50)": {
           "pass": true,
-          "detail": "avance a 180 s = 0.0 m",
-          "reason": "operador_STOPPED_AT"
+          "detail": "avance a 30 s = 0.0 m; hold_reason=operator_stopped_at; regla=R1"
         }
       }
     },
     {
-      "case": "S6 cancelada (CANCELED, IN_TRANSIT_TO a mitad de tramo)",
-      "criterion": "0 m (R-CANCEL)",
+      "case": "S5 intermedia SIN espera programada, STOPPED_AT",
+      "criterion": "avance == 0",
       "results": {
         "BASE(beb9434)": {
           "pass": false,
-          "detail": "avance a 180 s = 2143.8 m",
-          "reason": "beb9434"
+          "detail": "avance a 180 s = 2364.4543483358066 m; hold_reason=None; regla=beb9434"
         },
         "D(tolerancia=50)": {
           "pass": false,
-          "detail": "avance a 180 s = 2143.8 m",
-          "reason": "tolerancia"
+          "detail": "avance a 180 s = 2364.4543483358066 m; hold_reason=None; regla=tolerancia"
         },
         "B1(offset±600)": {
           "pass": false,
-          "detail": "avance a 180 s = 2143.8 m",
-          "reason": "offset_clamp_sym"
+          "detail": "avance a 180 s = 2364.4543483358066 m; hold_reason=None; regla=offset±600"
         },
         "B2(offset+ventana)": {
           "pass": false,
-          "detail": "avance a 180 s = 2143.8 m",
-          "reason": "offset_clamp_sym"
+          "detail": "avance a 180 s = 2364.4543483358066 m; hold_reason=None; regla=offset±600"
         },
         "C(τ=50,Dmin=30)": {
-          "pass": true,
-          "detail": "avance a 180 s = 0.0 m",
-          "reason": "cancelada"
+          "pass": false,
+          "detail": "avance a 180 s = 1969.8248045990622 m; hold_reason=schedule_stop_zone; regla=R8:R8-zona"
         },
         "A(τ=50)": {
           "pass": true,
-          "detail": "avance a 180 s = 0.0 m",
-          "reason": "cancelada"
+          "detail": "avance a 180 s = 0.0 m; hold_reason=operator_stopped_at; regla=R1"
         }
       }
     },
     {
-      "case": "S6b en marcha a mitad de tramo (control: no se debe retener)",
-      "criterion": "> 1 m en el horizonte",
+      "case": "S5b contraejemplo del revisor: INCOMING_AT a la parada ANTERIOR, ancla en zona de S5",
+      "criterion": "R7 → R8 idéntico a C, avance a 20 s == 0",
       "results": {
-        "BASE(beb9434)": {
-          "pass": true,
-          "detail": "avance en el horizonte = 2143.8 m",
-          "reason": "beb9434"
-        },
-        "D(tolerancia=50)": {
-          "pass": true,
-          "detail": "avance en el horizonte = 2143.8 m",
-          "reason": "tolerancia"
-        },
-        "B1(offset±600)": {
-          "pass": true,
-          "detail": "avance en el horizonte = 2143.8 m",
-          "reason": "offset_clamp_sym"
-        },
-        "B2(offset+ventana)": {
-          "pass": true,
-          "detail": "avance en el horizonte = 2143.8 m",
-          "reason": "offset_clamp_sym"
-        },
         "C(τ=50,Dmin=30)": {
-          "pass": true,
-          "detail": "avance en el horizonte = 1181.9 m",
-          "reason": "tramo"
+          "pass": null,
+          "detail": "no lee el estado del operador; regla=R8:R8-zona"
         },
         "A(τ=50)": {
           "pass": true,
-          "detail": "avance en el horizonte = 1181.9 m",
-          "reason": "operador_IN_TRANSIT_TO_tramo"
+          "detail": "regla=R7(incoming_parada_por_detras)->R8:R8-zona; coherent=False; envolvente==R8: True; avance=1969.8248045990622 m; avance 20 s = 0.0 m"
         }
       }
     },
     {
-      "case": "S7 incoherencia GTFS: STOPPED_AT con stop_id ajeno al viaje, a mitad de tramo",
-      "criterion": "no aplica la retención del operador; degrada declarado (motivo 'incoherente')",
+      "case": "S6 CANCELED, IN_TRANSIT_TO a mitad de tramo",
+      "criterion": "avance == 0 y hold_reason=trip_canceled",
       "results": {
         "BASE(beb9434)": {
-          "pass": null,
-          "detail": "avance en el horizonte = 2143.8 m; motivo declarado = False",
-          "reason": "beb9434"
+          "pass": false,
+          "detail": "avance a 180 s = 2143.8108739876566 m; hold_reason=None; regla=beb9434"
         },
         "D(tolerancia=50)": {
-          "pass": null,
-          "detail": "avance en el horizonte = 2143.8 m; motivo declarado = False",
-          "reason": "tolerancia"
+          "pass": false,
+          "detail": "avance a 180 s = 2143.8108739876566 m; hold_reason=None; regla=tolerancia"
         },
         "B1(offset±600)": {
-          "pass": null,
-          "detail": "avance en el horizonte = 2143.8 m; motivo declarado = False",
-          "reason": "offset_clamp_sym"
+          "pass": false,
+          "detail": "avance a 180 s = 2143.8108739876566 m; hold_reason=None; regla=offset±600"
         },
         "B2(offset+ventana)": {
-          "pass": null,
-          "detail": "avance en el horizonte = 2143.8 m; motivo declarado = False",
-          "reason": "offset_clamp_sym"
+          "pass": false,
+          "detail": "avance a 180 s = 2143.8108739876566 m; hold_reason=None; regla=offset±600"
         },
         "C(τ=50,Dmin=30)": {
-          "pass": null,
-          "detail": "avance en el horizonte = 1181.9 m; motivo declarado = False",
-          "reason": "tramo"
+          "pass": true,
+          "detail": "avance a 180 s = 0.0 m; hold_reason=trip_canceled; regla=R-CANCEL"
         },
         "A(τ=50)": {
           "pass": true,
-          "detail": "avance en el horizonte = 1181.9 m; motivo declarado = True",
-          "reason": "incoherente->C:tramo"
+          "detail": "avance a 180 s = 0.0 m; hold_reason=trip_canceled; regla=R-CANCEL"
         }
       }
     },
     {
-      "case": "S10 INCOMING_AT con current_stop_id 1182 m POR DETRÁS del ancla",
-      "criterion": "no retiene (avance > 1 m) y declara la incoherencia",
+      "case": "S6b control: en marcha a mitad de tramo",
+      "criterion": "avance > 0",
       "results": {
         "BASE(beb9434)": {
-          "pass": null,
-          "detail": "avance en el horizonte = 2143.8 m; motivo declarado = False",
-          "reason": "beb9434"
+          "pass": true,
+          "detail": "avance en el horizonte = 2143.811 m"
         },
         "D(tolerancia=50)": {
-          "pass": null,
-          "detail": "avance en el horizonte = 2143.8 m; motivo declarado = False",
-          "reason": "tolerancia"
+          "pass": true,
+          "detail": "avance en el horizonte = 2143.811 m"
         },
         "B1(offset±600)": {
-          "pass": null,
-          "detail": "avance en el horizonte = 2143.8 m; motivo declarado = False",
-          "reason": "offset_clamp_sym"
+          "pass": true,
+          "detail": "avance en el horizonte = 2143.811 m"
         },
         "B2(offset+ventana)": {
-          "pass": null,
-          "detail": "avance en el horizonte = 2143.8 m; motivo declarado = False",
-          "reason": "offset_clamp_sym"
+          "pass": true,
+          "detail": "avance en el horizonte = 2143.811 m"
         },
         "C(τ=50,Dmin=30)": {
-          "pass": null,
-          "detail": "avance en el horizonte = 1181.9 m; motivo declarado = False",
-          "reason": "tramo"
+          "pass": true,
+          "detail": "avance en el horizonte = 1181.895 m"
         },
         "A(τ=50)": {
           "pass": true,
-          "detail": "avance en el horizonte = 1181.9 m; motivo declarado = True",
-          "reason": "incoherente(parada_atras)->tramo"
+          "detail": "avance en el horizonte = 1181.895 m"
         }
       }
     },
     {
-      "case": "S8 DST adelanto 2027-03-28 (01:50→02:10)",
-      "criterion": "avance = 3000.0 ± 1 m",
+      "case": "S7 STOPPED_AT con stop_id ajeno, a mitad de tramo",
+      "criterion": "R7 → R8: envolvente idéntica a C, coherent=false, avanza",
       "results": {
-        "BASE(beb9434)": {
-          "pass": false,
-          "detail": "avance 8000.0 m (esperado 3000.0 m en tiempo real)",
-          "reason": "beb9434"
-        },
-        "D(tolerancia=50)": {
-          "pass": false,
-          "detail": "avance 8000.0 m (esperado 3000.0 m en tiempo real)",
-          "reason": "tolerancia"
-        },
-        "B1(offset±600)": {
-          "pass": false,
-          "detail": "avance 8000.0 m (esperado 3000.0 m en tiempo real)",
-          "reason": "offset_clamp_sym"
-        },
-        "B2(offset+ventana)": {
-          "pass": false,
-          "detail": "avance 8000.0 m (esperado 3000.0 m en tiempo real)",
-          "reason": "offset_clamp_sym"
-        },
         "C(τ=50,Dmin=30)": {
-          "pass": true,
-          "detail": "avance 3000.0 m (esperado 3000.0 m en tiempo real)",
-          "reason": "tramo"
+          "pass": null,
+          "detail": "no lee el estado del operador; regla=R8:R5"
         },
         "A(τ=50)": {
           "pass": true,
-          "detail": "avance 3000.0 m (esperado 3000.0 m en tiempo real)",
-          "reason": "operador_IN_TRANSIT_TO_tramo"
+          "detail": "regla=R7(stop_ajeno_al_viaje)->R8:R5; coherent=False; envolvente==R8: True; avance=1181.8948827594372 m"
         }
       }
     },
     {
-      "case": "S9 DST atraso 2027-10-31 (01:30→03:30)",
-      "criterion": "avance = 333.3 ± 1 m",
+      "case": "S10 INCOMING_AT con parada 1182 m POR DETRÁS",
+      "criterion": "R7 → R8: idéntica a C, coherent=false, avanza",
       "results": {
-        "BASE(beb9434)": {
-          "pass": false,
-          "detail": "avance 0.0 m (esperado 333.3 m en tiempo real)",
-          "reason": "beb9434"
-        },
-        "D(tolerancia=50)": {
-          "pass": false,
-          "detail": "avance 0.0 m (esperado 333.3 m en tiempo real)",
-          "reason": "tolerancia"
-        },
-        "B1(offset±600)": {
-          "pass": false,
-          "detail": "avance 0.0 m (esperado 333.3 m en tiempo real)",
-          "reason": "offset_clamp_sym"
-        },
-        "B2(offset+ventana)": {
-          "pass": false,
-          "detail": "avance 0.0 m (esperado 333.3 m en tiempo real)",
-          "reason": "offset_clamp_sym"
-        },
         "C(τ=50,Dmin=30)": {
-          "pass": true,
-          "detail": "avance 333.3 m (esperado 333.3 m en tiempo real)",
-          "reason": "tramo"
+          "pass": null,
+          "detail": "no lee el estado del operador; regla=R8:R5"
         },
         "A(τ=50)": {
           "pass": true,
-          "detail": "avance 333.3 m (esperado 333.3 m en tiempo real)",
-          "reason": "operador_IN_TRANSIT_TO_tramo"
+          "detail": "regla=R7(incoming_parada_por_detras)->R8:R5; coherent=False; envolvente==R8: True; avance=1181.8948827594372 m"
+        }
+      }
+    },
+    {
+      "case": "S11 ancla 500 m ANTES de la primera parada (fuera de zona), en ventana",
+      "criterion": "retención outside_schedule_extent",
+      "results": {
+        "A(τ=50)": {
+          "pass": true,
+          "detail": "avance a 180 s = 0.0 m; hold_reason=outside_schedule_extent; regla=R6x"
+        }
+      }
+    },
+    {
+      "case": "S12 zonas solapadas: paradas a 0 y 60 m (≤ 2τ), ancla en 40 m, IN_TRANSIT_TO",
+      "criterion": "tope = primera parada > ancla + τ (Z2)",
+      "results": {
+        "A(τ=50)": {
+          "pass": true,
+          "detail": "tope=Z2, regla=R5"
+        }
+      }
+    },
+    {
+      "case": "S13 tramo de duración real 0 (T0→T1 misma hora): fusión con el siguiente",
+      "criterion": "speed = 3000/180 m/s, tope T1 (no 160 km/h)",
+      "results": {
+        "A(τ=50)": {
+          "pass": true,
+          "detail": "speed=16.666666666666668 (esperada 16.666666666666668), tope=T1"
+        }
+      }
+    },
+    {
+      "case": "S14 stop_id repetido (X en 0 y 4000 m), STOPPED_AT X con ancla en 10 m",
+      "criterion": "ocurrencia más cercana (0 m): R1 coherente",
+      "results": {
+        "A(τ=50)": {
+          "pass": true,
+          "detail": "regla=R1, coherent=True"
+        }
+      }
+    },
+    {
+      "case": "S8 DST adelanto 2027-03-28, tramo 01:50→02:10",
+      "criterion": "avance = 3000.0000 ± 1e-6 m en 180 s reales",
+      "results": {
+        "BASE(beb9434)": {
+          "pass": false,
+          "detail": "avance 7999.999999999999 m (esperado 3000.0)"
+        },
+        "D(tolerancia=50)": {
+          "pass": false,
+          "detail": "avance 7999.999999999999 m (esperado 3000.0)"
+        },
+        "B1(offset±600)": {
+          "pass": false,
+          "detail": "avance 7999.999999999999 m (esperado 3000.0)"
+        },
+        "B2(offset+ventana)": {
+          "pass": false,
+          "detail": "avance 7999.999999999999 m (esperado 3000.0)"
+        },
+        "C(τ=50,Dmin=30)": {
+          "pass": true,
+          "detail": "avance 2999.999999999999 m (esperado 3000.0)"
+        },
+        "A(τ=50)": {
+          "pass": true,
+          "detail": "avance 2999.999999999999 m (esperado 3000.0)"
+        }
+      }
+    },
+    {
+      "case": "S9 DST atraso 2027-10-31, tramo 01:30→03:30",
+      "criterion": "avance = 333.3333 ± 1e-6 m en 180 s reales",
+      "results": {
+        "BASE(beb9434)": {
+          "pass": false,
+          "detail": "avance 0.0 m (esperado 333.3333333333333)"
+        },
+        "D(tolerancia=50)": {
+          "pass": false,
+          "detail": "avance 0.0 m (esperado 333.3333333333333)"
+        },
+        "B1(offset±600)": {
+          "pass": false,
+          "detail": "avance 0.0 m (esperado 333.3333333333333)"
+        },
+        "B2(offset+ventana)": {
+          "pass": false,
+          "detail": "avance 0.0 m (esperado 333.3333333333333)"
+        },
+        "C(τ=50,Dmin=30)": {
+          "pass": true,
+          "detail": "avance 333.33333333333394 m (esperado 333.3333333333333)"
+        },
+        "A(τ=50)": {
+          "pass": true,
+          "detail": "avance 333.33333333333394 m (esperado 333.3333333333333)"
+        }
+      }
+    },
+    {
+      "case": "S15 DST en la ESPERA del fallback: W1 01:30→03:30 del 2027-10-31, estado ausente, entrada conservada",
+      "criterion": "espera 10 800 s reales; sin avance a +90 s; avanza a +180 s",
+      "results": {
+        "C(τ=50,Dmin=30)": {
+          "pass": true,
+          "detail": "espera real=10800.0 s (pared 7200), dwell_until=+100.0 s, +90 s=0.0 m, +180 s=444.444 m, base=conservada"
+        },
+        "A(τ=50)": {
+          "pass": true,
+          "detail": "espera real=10800.0 s (pared 7200), dwell_until=+100.0 s, +90 s=0.0 m, +180 s=444.444 m, base=conservada"
+        }
+      }
+    },
+    {
+      "case": "S15b igual que S15 sin historia de entrada (reinicio): la espera se reinicia y se DECLARA",
+      "criterion": "retención con dwell_basis=reiniciada",
+      "results": {
+        "C(τ=50,Dmin=30)": {
+          "pass": true,
+          "detail": "avance=0.0 m, base=reiniciada"
+        },
+        "A(τ=50)": {
+          "pass": true,
+          "detail": "avance=0.0 m, base=reiniciada"
         }
       }
     }
   ],
-  "acceptance": {
-    "BASE(beb9434)": {
-      "AC-1 0/25 STOPPED_AT GPS idéntico con avance": false,
-      "AC-2 0/17 pre-salida y 0/4 salida retrasada con avance": false,
-      "AC-3 0/7 STOPPED_AT intermedias con avance": false,
-      "AC-4 0 IN_TRANSIT_TO/INCOMING_AT que avanzaron pierden avance": true,
-      "AC-5 19656: 0 m a los 30 s (≤1 m)": false,
-      "AC-6 retroceso al expirar ≤1 m (con la regla transversal R-STALE F1)": false,
-      "AC-7 DST 2027-03-28 sin avance fabricado": false,
-      "AC-8 DST 2027-10-31 sin congelación": false,
-      "AC-9 cancelada sin avance": false,
-      "AC-11 0/44 atraviesan una parada (> τ por delante) antes de valid_until": false,
-      "AC-12 S3 salida retrasada / S5 parada sin espera retenidas": false
+  "stale": {
+    "sin_cambio": {
+      "n": 25,
+      "recortes_efectivos": 0,
+      "F1_max_retroceso_m": 0.0,
+      "F2_|salto−rewind_m|_max": 0.0,
+      "F2_con_rewind>0": 7,
+      "reinicio_distinto": 0,
+      "F1_|congelado−esperado|_max": 0.0
     },
-    "D(tolerancia=50)": {
-      "AC-1 0/25 STOPPED_AT GPS idéntico con avance": false,
-      "AC-2 0/17 pre-salida y 0/4 salida retrasada con avance": false,
-      "AC-3 0/7 STOPPED_AT intermedias con avance": false,
-      "AC-4 0 IN_TRANSIT_TO/INCOMING_AT que avanzaron pierden avance": true,
-      "AC-5 19656: 0 m a los 30 s (≤1 m)": false,
-      "AC-6 retroceso al expirar ≤1 m (con la regla transversal R-STALE F1)": true,
-      "AC-7 DST 2027-03-28 sin avance fabricado": false,
-      "AC-8 DST 2027-10-31 sin congelación": false,
-      "AC-9 cancelada sin avance": false,
-      "AC-11 0/44 atraviesan una parada (> τ por delante) antes de valid_until": false,
-      "AC-12 S3 salida retrasada / S5 parada sin espera retenidas": false
+    "CANCELED_en_+20s": {
+      "n": 25,
+      "recortes_efectivos": 7,
+      "F1_max_retroceso_m": 0.0,
+      "F2_|salto−rewind_m|_max": 0.0,
+      "F2_con_rewind>0": 7,
+      "reinicio_distinto": 0,
+      "F1_|congelado−esperado|_max": 0.0
     },
-    "B1(offset±600)": {
-      "AC-1 0/25 STOPPED_AT GPS idéntico con avance": false,
-      "AC-2 0/17 pre-salida y 0/4 salida retrasada con avance": false,
-      "AC-3 0/7 STOPPED_AT intermedias con avance": false,
-      "AC-4 0 IN_TRANSIT_TO/INCOMING_AT que avanzaron pierden avance": true,
-      "AC-5 19656: 0 m a los 30 s (≤1 m)": false,
-      "AC-6 retroceso al expirar ≤1 m (con la regla transversal R-STALE F1)": true,
-      "AC-7 DST 2027-03-28 sin avance fabricado": false,
-      "AC-8 DST 2027-10-31 sin congelación": false,
-      "AC-9 cancelada sin avance": false,
-      "AC-11 0/44 atraviesan una parada (> τ por delante) antes de valid_until": false,
-      "AC-12 S3 salida retrasada / S5 parada sin espera retenidas": false
+    "CANCELED_en_+120s": {
+      "n": 25,
+      "recortes_efectivos": 4,
+      "F1_max_retroceso_m": 0.0,
+      "F2_|salto−rewind_m|_max": 0.0,
+      "F2_con_rewind>0": 7,
+      "reinicio_distinto": 0,
+      "F1_|congelado−esperado|_max": 0.0
     },
-    "B2(offset+ventana)": {
-      "AC-1 0/25 STOPPED_AT GPS idéntico con avance": false,
-      "AC-2 0/17 pre-salida y 0/4 salida retrasada con avance": false,
-      "AC-3 0/7 STOPPED_AT intermedias con avance": false,
-      "AC-4 0 IN_TRANSIT_TO/INCOMING_AT que avanzaron pierden avance": true,
-      "AC-5 19656: 0 m a los 30 s (≤1 m)": false,
-      "AC-6 retroceso al expirar ≤1 m (con la regla transversal R-STALE F1)": true,
-      "AC-7 DST 2027-03-28 sin avance fabricado": false,
-      "AC-8 DST 2027-10-31 sin congelación": false,
-      "AC-9 cancelada sin avance": false,
-      "AC-11 0/44 atraviesan una parada (> τ por delante) antes de valid_until": false,
-      "AC-12 S3 salida retrasada / S5 parada sin espera retenidas": false
+    "CANCELED_+60s_y_anulado_+150s": {
+      "n": 25,
+      "recortes_efectivos": 5,
+      "F1_max_retroceso_m": 0.0,
+      "F2_|salto−rewind_m|_max": 0.0,
+      "F2_con_rewind>0": 7,
+      "reinicio_distinto": 0,
+      "F1_|congelado−esperado|_max": 0.0
     },
-    "C(τ=50,Dmin=30)": {
-      "AC-1 0/25 STOPPED_AT GPS idéntico con avance": false,
-      "AC-2 0/17 pre-salida y 0/4 salida retrasada con avance": false,
-      "AC-3 0/7 STOPPED_AT intermedias con avance": false,
-      "AC-4 0 IN_TRANSIT_TO/INCOMING_AT que avanzaron pierden avance": true,
-      "AC-5 19656: 0 m a los 30 s (≤1 m)": true,
-      "AC-6 retroceso al expirar ≤1 m (con la regla transversal R-STALE F1)": true,
-      "AC-7 DST 2027-03-28 sin avance fabricado": true,
-      "AC-8 DST 2027-10-31 sin congelación": true,
-      "AC-9 cancelada sin avance": true,
-      "AC-11 0/44 atraviesan una parada (> τ por delante) antes de valid_until": true,
-      "AC-12 S3 salida retrasada / S5 parada sin espera retenidas": false
+    "CANCELED_en_+180.5s(inadmisible)": {
+      "n": 25,
+      "recortes_efectivos": 0,
+      "F1_max_retroceso_m": 0.0,
+      "F2_|salto−rewind_m|_max": 0.0,
+      "F2_con_rewind>0": 7,
+      "reinicio_distinto": 0,
+      "F1_|congelado−esperado|_max": 0.0
     },
-    "A(τ=50)": {
-      "AC-1 0/25 STOPPED_AT GPS idéntico con avance": true,
-      "AC-2 0/17 pre-salida y 0/4 salida retrasada con avance": true,
-      "AC-3 0/7 STOPPED_AT intermedias con avance": true,
-      "AC-4 0 IN_TRANSIT_TO/INCOMING_AT que avanzaron pierden avance": true,
-      "AC-5 19656: 0 m a los 30 s (≤1 m)": true,
-      "AC-6 retroceso al expirar ≤1 m (con la regla transversal R-STALE F1)": true,
-      "AC-7 DST 2027-03-28 sin avance fabricado": true,
-      "AC-8 DST 2027-10-31 sin congelación": true,
-      "AC-9 cancelada sin avance": true,
-      "AC-11 0/44 atraviesan una parada (> τ por delante) antes de valid_until": true,
-      "AC-12 S3 salida retrasada / S5 parada sin espera retenidas": true
+    "cambio_de_version": {
+      "frozen_basis": "anchor_version_changed",
+      "en_ancla": true
+    },
+    "CANCELED_+20s_caso_en_marcha": {
+      "trip": "1023V19667C5",
+      "avance_en_corte_m": 213.73697317413462,
+      "igual_a_+50s": true,
+      "igual_congelado_F1": true,
+      "sin_corte_a_+50s_m": 534.3424329353293
     }
+  },
+  "presentation": {
+    "P1_motor_usa_previous": true,
+    "P1_estado_de_la_observacion_efectiva": [
+      "IN_TRANSIT_TO",
+      "R5",
+      true
+    ],
+    "P1_si_se_usara_latest(erroneo)": [
+      "STOPPED_AT",
+      "R1",
+      false
+    ],
+    "P1_resultados_distintos": true,
+    "P2_schedule_only_regla": [
+      "R8(ausente):R5",
+      null
+    ],
+    "P2_CANCELED_sin_ancla": {
+      "method": "unlocated",
+      "lat": null,
+      "reason": "trip_canceled",
+      "envelope": null
+    },
+    "P3_solo_raw": {
+      "method": "anchor",
+      "coordinate_space": "raw",
+      "envelope": null,
+      "reason": "sin_corredor",
+      "rewind_m": 0.0
+    },
+    "P3_solo_raw_CANCELED": {
+      "method": "anchor",
+      "coordinate_space": "raw",
+      "envelope": null,
+      "reason": "trip_canceled",
+      "rewind_m": 0.0
+    },
+    "P4_interpolacion_metodo_produccion": "interpolated_between_known_anchors",
+    "P4_|prototipo−produccion|_m": 0.0,
+    "P4_span_s(<=stale_after_s_exigido)": 77.0
   }
 }
