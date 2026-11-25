@@ -1,3 +1,4 @@
+import { DegradationNotice } from "./ui/DegradationNotice";
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type {
   BoardEntry,
@@ -570,13 +571,12 @@ export default function App() {
                 onToggle={toggleLine}
                 onClear={clearLines}
               />
-              {(snapshot.error !== null || degradedCount > 0) && (
-                <p className="notice notice--warn" role="status">
-                  {snapshot.error !== null
-                    ? `El snapshot no se pudo actualizar (${snapshot.error}). Se conserva el último válido y su edad sigue avanzando.`
-                    : `${degradedCount} recurso(s) degradado(s): se conserva el último dato válido con su hora.`}
-                </p>
+              {snapshot.error !== null && (
+                <p className="notice notice--warn" role="status">El snapshot no se pudo actualizar ({snapshot.error}). Se conserva el último válido y su edad sigue avanzando.</p>
               )}
+              {snapshot.data?.degraded.map((item, i) => (
+                <DegradationNotice item={item} key={`${item.resource}-${item.feed_name ?? i}`} />
+              ))}
             </>
           )}
           {panel}

@@ -86,7 +86,7 @@ export function frameFor(
   atMs: number,
 ): Frame | null {
   const envelope = rendered.progress_envelope;
-  if (envelope !== null && axis !== null) {
+  if (rendered.rendering_method !== "stale_frozen" && envelope !== null && axis !== null) {
     const validUntilMs =
       rendered.valid_until === null ? Number.POSITIVE_INFINITY : Date.parse(rendered.valid_until);
     const clampedMs = Math.min(atMs, validUntilMs);

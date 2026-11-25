@@ -7,9 +7,11 @@ import {
   formatClockSeconds,
   formatDelay,
   formatIsoClock,
-  METHOD_STYLES,
+  methodStyle,
+  HOLD_LABELS,
 } from "../domain/format";
 import type { CirculationId } from "../domain/identity";
+import { phase } from "../domain/movement";
 import { lineColor } from "../domain/palette";
 
 interface Props {
@@ -70,7 +72,9 @@ export function TrainPanel({
   }
 
   const rendered = vehicle.rendered;
-  const style = METHOD_STYLES[rendered.rendering_method];
+  const style = methodStyle(rendered.rendering_method, rendered.coordinate_space);
+  const envelope = rendered.progress_envelope;
+  const holding = envelope !== null && phase(envelope, nowMs).startsWith("hold:");
   const pattern =
     vehicle.pattern_id === null ? null : (index.patternsById.get(vehicle.pattern_id) ?? null);
   const destinationId = pattern?.destination_stop_id ?? null;
@@ -115,7 +119,21 @@ export function TrainPanel({
         {style.detail}. Última lectura confirmada {formatIsoClock(rendered.last_confirmed_at ?? rendered.anchor_observed_at)} ·{" "}
         {formatAge(anchorAge)}.
       </p>
-      {expired && (
+      {vehicle.schedule_relationship === "CANCELED" && (
+        <p className="notice notice--warn" role="status">Viaje cancelado según el operador. La envolvente vigente puede seguir avanzando hasta su límite.</p>
+      )}
+      {holding && envelope && (
+        <p className="notice" role="status">Retención: {HOLD_LABELS[envelope.hold_reason ?? ""] ?? envelope.hold_reason ?? "motivo desconocido"}. La coordenada no avanza durante la retención.</p>
+      )}
+      {rendered.stop_state && (
+        <p className="meta">Estado de parada: {rendered.stop_state.operator_status ?? "desconocido"} · fuente {rendered.stop_state.source}{rendered.stop_state.operator_stop_id ? ` · parada ${rendered.stop_state.operator_stop_id}` : ""}{rendered.stop_state.coherent === false ? " · no coherente con el recorrido" : ""}.</p>
+      )}
+      {rendered.rendering_method === "stale_frozen" && (
+        <p className="notice notice--warn" role="status">
+          Posición congelada. {rendered.frozen_basis === "authorized_envelope_end" ? "Se muestra el final estimado autorizado" : rendered.frozen_basis === "anchor_version_changed" ? "Se muestra el ancla por cambio de versión" : "Base de congelación desconocida"}. Última posición confirmada: {rendered.last_confirmed_progress_m == null ? "progreso desconocido" : `${Math.round(rendered.last_confirmed_progress_m)} m sobre el patrón`} · {formatIsoClock(rendered.last_confirmed_at ?? rendered.anchor_observed_at)}.
+        </p>
+      )}
+      {expired && rendered.rendering_method !== "stale_frozen" && (
         <p className="notice notice--warn">
           La vigencia de esta posición expiró ({formatIsoClock(rendered.valid_until)}). El símbolo
           queda congelado en su última posición autorizada; no se sigue avanzando.

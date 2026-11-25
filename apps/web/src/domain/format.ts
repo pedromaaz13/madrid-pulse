@@ -1,5 +1,6 @@
 import type {
   BoardEntry,
+  CoordinateSpace,
   Eta,
   HistoryCoverage,
   RenderingMethod,
@@ -21,10 +22,10 @@ export interface MethodStyle {
   shape: "solid" | "ring" | "dashed" | "hollow" | "absent";
 }
 
-export const METHOD_STYLES: Record<RenderingMethod, MethodStyle> = {
+const BASE_METHOD_STYLES: Record<RenderingMethod, MethodStyle> = {
   anchor: {
     label: "Observada",
-    detail: "Coordenada de la última observación publicada por la fuente",
+    detail: "Última observación, bruta o proyectada sobre el corredor según el espacio declarado",
     glyph: "●",
     shape: "solid",
   },
@@ -48,7 +49,7 @@ export const METHOD_STYLES: Record<RenderingMethod, MethodStyle> = {
   },
   stale_frozen: {
     label: "Congelada",
-    detail: "Última posición confirmada; la fuente dejó de actualizar",
+    detail: "Posición congelada; puede ser el final estimado autorizado",
     glyph: "◼",
     shape: "ring",
   },
@@ -58,6 +59,29 @@ export const METHOD_STYLES: Record<RenderingMethod, MethodStyle> = {
     glyph: "—",
     shape: "absent",
   },
+};
+
+/** El espacio forma parte de la procedencia. */
+export const METHOD_STYLES = Object.fromEntries(
+  Object.entries(BASE_METHOD_STYLES).map(([method, style]) => [method, {
+    ...style,
+    raw: style,
+    map_matched: method === "anchor" ? { ...style, label: "Observada proyectada", detail: "Observación proyectada sobre el corredor; no es GPS bruto" } : style,
+    schedule: method === "anchor" ? { ...style, label: "Posición de horario", detail: "Coordenada de horario; no es GPS confirmado" } : style,
+    none: method === "anchor" ? { ...style, label: "Sin coordenada", detail: "No hay espacio de coordenadas declarado" } : style,
+  }]),
+) as Record<RenderingMethod, MethodStyle & Record<CoordinateSpace | "none", MethodStyle>>;
+
+export function methodStyle(method: RenderingMethod, space: CoordinateSpace | null): MethodStyle {
+  return METHOD_STYLES[method][space ?? "none"];
+}
+
+export const HOLD_LABELS: Record<string, string> = {
+  operator_stopped_at: "Detenido según el operador",
+  before_first_departure: "Antes de la primera salida",
+  terminal: "En la estación terminal",
+  trip_canceled: "Viaje cancelado",
+  anchor_version_changed: "Cambió la versión del ancla",
 };
 
 export const CIRCULATION_LABELS: Record<SnapshotVehicle["circulation_status"], string> = {

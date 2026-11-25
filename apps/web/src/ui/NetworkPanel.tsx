@@ -1,6 +1,6 @@
 import type { CatalogIndex } from "../domain/catalogIndex";
 import type { Snapshot, SnapshotVehicle } from "../domain/contract";
-import { formatAge, formatDelay, METHOD_STYLES } from "../domain/format";
+import { formatAge, formatDelay, methodStyle } from "../domain/format";
 import { vehicleKey } from "../domain/identity";
 import { lineColor } from "../domain/palette";
 
@@ -63,7 +63,7 @@ export function NetworkPanel({
       ) : (
         <ul className="board">
           {shown.map((vehicle) => {
-            const style = METHOD_STYLES[vehicle.rendered.rendering_method];
+            const style = methodStyle(vehicle.rendered.rendering_method, vehicle.rendered.coordinate_space);
             return (
               <li key={vehicleKey(vehicle)}>
                 <button type="button" className="row" onClick={() => onOpenVehicle(vehicle)}>
@@ -76,7 +76,7 @@ export function NetworkPanel({
                     </span>
                     <b>{vehicle.vehicle_id}</b>
                     <small>
-                      {style.label} · {formatAge(vehicle.rendered.anchor_age_s)} ·{" "}
+                      {style.label}{vehicle.schedule_relationship === "CANCELED" ? " · Viaje cancelado" : ""} · {formatAge(vehicle.rendered.anchor_age_s)} ·{" "}
                       {formatDelay(vehicle.delay)}
                     </small>
                   </span>
