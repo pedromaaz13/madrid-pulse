@@ -41,3 +41,10 @@
 | Cierres históricos vs release | RESUELTO |
 
 **Correcciones posteriores (commit siguiente), NO re-verificadas por Codex** (la autorización cubría una sola verificación): estado canónico con Gate 0 en dos tiempos; PLAN con F9 abierta; §8 con `integration_kind`; cabecera de Design con enlace relativo y la excepción de la ruta marcada como aceptada; «16 P1 registrados»; nota de MP-026a con la matriz como PROPUESTA y precedencia provisional. Verificación solo local: sync/check/36 tests y `cmp` del original.
+
+### Verificación posterior limitada al delta `5d7a9a1` → `b699cd7` y cierre de la entrega documental (2026-11-25)
+- **Naturaleza:** verificación **posterior y limitada al delta**, comunicada por el propietario, que inspeccionó esas correcciones desde su chat de coordinación: están presentes y no identificó un bloqueante adicional dentro de ese alcance. **No** es un dictamen de un worker Codex Sol de Orca; **no existe** recibo de Orca ni modelo/esfuerzo efectivo asociado, y no se inventa ninguno.
+- **Los dictámenes históricos CHANGES_REQUESTED se conservan** (rondas 1 y 2 y verificación excepcional sobre `5d7a9a1`); esta verificación no los sustituye ni los reescribe.
+- **CI real (GitHub Actions)** sobre `b699cd7`, run 45613637053: `governance` (check_docs + 36 tests), `python` (283 tests, 18 skipped) y `frontend`: verde.
+- **Integración:** el propietario autorizó sacar el PR #4 de borrador y fusionarlo. **Esta autorización cierra únicamente la entrega documental de la Fase 1: no acepta F9/H2 ni otros gates históricos, no aprueba ADR y no cambia el NO-GO público.** F9, H2, `HG-AUDIT-DECISION`, `HG-H4-SCOPE` y demás gates humanos siguen abiertos en `PROJECT_STATE.json`.
+- **Delta de este commit sobre `b699cd7`:** solo este registro (`docs/governance/REVIEW_LOG_PHASE1.md`); sin cambios de código, scripts ni estado.
