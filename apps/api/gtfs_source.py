@@ -10,8 +10,7 @@ snapshot es ligero.
 from __future__ import annotations
 
 import hashlib
-import json
-from dataclasses import asdict, dataclass, field
+from dataclasses import dataclass, field
 from datetime import date, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -28,6 +27,8 @@ from packages.geo import (
 from packages.gtfs import Catalog as GtfsCatalog
 from packages.gtfs import Topology, build_catalog, load_feed
 from packages.movement import MovementEngine, TripSchedule
+
+from packages.movement.profile import anchor_profile, source_version
 
 from .config import ApiConfig
 from .schemas import GtfsValidityOut
@@ -82,9 +83,7 @@ class LoadedNetwork:
     operativo: ninguna observación ni retraso entra aquí."""
 
     def anchor_profile(self, thresholds) -> str:
-        """Huella reproducible del catálogo (GTFS + geometrías) y los umbrales."""
-        payload = json.dumps([self.catalog_version, asdict(thresholds)], sort_keys=True)
-        return hashlib.sha256(payload.encode()).hexdigest()
+        return anchor_profile(self.gtfs_version, self.corridor_catalog, thresholds)
 
     def gtfs_validity(self, now: datetime, *, expiring_days: int) -> GtfsValidityOut:
         today = now.astimezone(MADRID).date()
@@ -141,19 +140,6 @@ class LoadedNetwork:
         return engine
 
 
-def _source_version(source: Path) -> str:
-    digest = hashlib.sha256()
-    if source.is_file():
-        with source.open("rb") as handle:
-            for chunk in iter(lambda: handle.read(1024 * 1024), b""):
-                digest.update(chunk)
-    else:
-        for path in sorted(item for item in source.iterdir() if item.is_file()):
-            digest.update(path.name.encode())
-            digest.update(path.read_bytes())
-    return f"sha256:{digest.hexdigest()}"
-
-
 def load_network(config: ApiConfig) -> LoadedNetwork:
     if config.mode not in {"live", "replay"}:
         raise ValueError("MADRID_PULSE_MODE debe ser 'live' o 'replay'")
@@ -183,7 +169,7 @@ def load_network(config: ApiConfig) -> LoadedNetwork:
         raise ValueError(
             f"GTFS fuera de vigencia para live: {valid_from.isoformat()}..{valid_until.isoformat()}"
         )
-    gtfs_version = _source_version(config.gtfs_fixture_dir)
+    gtfs_version = source_version(config.gtfs_fixture_dir)
     catalog = build_catalog(topology, gtfs_version=gtfs_version)
     corridor_catalog = build_madrid_corridor_catalog(
         catalog, topology, fixtures_root=config.geometry_fixtures_root

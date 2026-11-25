@@ -2073,6 +2073,18 @@
           "hold_reason": {
             "anyOf": [
               {
+                "enum": [
+                  "anchor_version_changed",
+                  "trip_canceled",
+                  "operator_stopped_at",
+                  "operator_incoming_at",
+                  "schedule_incoherent",
+                  "outside_schedule_extent",
+                  "terminal",
+                  "before_first_departure",
+                  "schedule_stop_zone",
+                  "horizon_exhausted"
+                ],
                 "type": "string"
               },
               {
@@ -3119,6 +3131,11 @@
             "title": "Operator Stop Id"
           },
           "source": {
+            "enum": [
+              "schedule",
+              "operator",
+              "trip_update"
+            ],
             "title": "Source",
             "type": "string"
           }

@@ -24,7 +24,7 @@ export function progressAt(envelope: ProgressEnvelope, atMs: number): number {
 
 export function phase(envelope: ProgressEnvelope, atMs: number): string {
   const start = Date.parse(envelope.dwell_until ?? envelope.reference_at);
-  if (envelope.speed_mps === 0 || atMs < start) return `hold:${envelope.hold_reason}`;
+  if (envelope.speed_mps === 0 || atMs < start) return `hold:${envelope.hold_reason ?? "null"}`;
   if (envelope.cap_reached_at && atMs >= Date.parse(envelope.cap_reached_at)) {
     return `cap:${envelope.cap_kind}`;
   }

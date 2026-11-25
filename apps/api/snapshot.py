@@ -30,6 +30,7 @@ import psycopg
 from packages.contracts.canonical import TripUpdateObservation
 from packages.geo import CorridorCoverage, CoverageStatus, PositionResolution, corridor_length_m
 from packages.gtfs import OPERATOR, scheduled_trip_instances_for_date
+from packages.movement.profile import profile_matches
 from packages.movement import (
     AnchorSample,
     MovementPosition,
@@ -337,6 +338,14 @@ def _delay_out(
     )
 
 
+def _valid_relationship(relationship, observed_at, anchor_at, now, cancel_max_age_s):
+    if observed_at is None or observed_at < db.trip_update_cutoff(now):
+        return None
+    if relationship == "CANCELED" and (anchor_at - observed_at).total_seconds() > cancel_max_age_s:
+        return None
+    return relationship
+
+
 def _render_vehicle(
     network: LoadedNetwork,
     history: db.VehicleHistory,
@@ -345,16 +354,9 @@ def _render_vehicle(
     service_date: date,
     now: datetime,
     display_at: datetime,
-    trip_update: TripUpdateObservation | None = None,
+    known_relationship: str | None,
 ) -> tuple[RenderedPosition, MapMatchedOut | None]:
     latest = history.latest.position
-    known_relationship = (
-        history.latest.known_relationship
-        if history.latest.ingestion_run_id is not None
-        else trip_update.schedule_relationship
-        if trip_update
-        else None
-    )
     pattern_id = coverage.identity.pattern_id if coverage is not None else None
     candidate_version = coverage.geometry_version if coverage is not None else None
     engine = network.engine_for(coverage) if coverage is not None else None
@@ -483,7 +485,8 @@ def _render_vehicle(
                 effective.base_run,
                 network.gtfs_version,
             ),
-            versions_match=effective.anchor_profile == network.anchor_profile(engine.thresholds),
+            versions_match=profile_matches(effective.anchor_profile, network.gtfs_version, pattern_id,
+                                           coverage.geometry_version, engine.thresholds),
             anchor_distance_from_raw_m=(
                 map_matched.distance_from_raw_m
                 if effective is history.latest and map_matched
@@ -558,8 +561,14 @@ def build_vehicle_entry(
         if route_id
         else None
     )
+    known = history.latest.known_relationship
+    known_at = history.latest.known_observed_at
+    if history.latest.ingestion_run_id is None and trip_update is not None:
+        known, known_at = trip_update.schedule_relationship, trip_update.observed_at
+    relationship = _valid_relationship(known, known_at, latest.observed_at, now,
+                                       config.thresholds.cancel_max_age_s)
     rendered, map_matched = _render_vehicle(
-        network, history, coverage, movement, service_date, now, display_at, trip_update
+        network, history, coverage, movement, service_date, now, display_at, relationship
     )
 
     stale = rendered.rendering_method in (
@@ -579,10 +588,7 @@ def build_vehicle_entry(
             network, source_trip_id, route_id, resolver.scheduled_service_ids(service_date)
         ),
         service_date=service_date.isoformat(),
-        schedule_relationship=(
-            history.latest.known_relationship if history.latest.ingestion_run_id is not None
-            else trip_update.schedule_relationship if trip_update is not None else None
-        ),
+        schedule_relationship=relationship,
         timestamps=VehicleTimestampsOut(
             gps_observed_at=latest.observed_at,
             received_at=history.latest.received_at,
@@ -1084,6 +1090,7 @@ def build_station_board(
     marker = db.revision_marker(conn, as_of=now)
     health = service.feed_health(conn, now, stale_after_s=config.feed_stale_after_s)
 
+    known = db.known_trip_relationships(conn, trip_ids, as_of=now, observed_through=observed_through)
     entries: list[BoardEntryOut] = []
     for _, call_service_date, call in visible:
         trip_update = trip_updates.get(call.trip_id)
@@ -1092,6 +1099,11 @@ def build_station_board(
         arrival_at = service_instant(call_service_date, call.arrival_s)
         departure_at = service_instant(call_service_date, call.departure_s)
         sighting = observed.get(call.trip_id)
+        value, stamp = known.get(call.trip_id, (None, None))
+        relationship = _valid_relationship(value, stamp, sighting.observed_at if sighting else now,
+                                           now, config.thresholds.cancel_max_age_s)
+        if trip_update:
+            trip_update = trip_update.model_copy(update={"schedule_relationship": relationship})
         entries.append(
             BoardEntryOut(
                 trip_id=call.trip_id,
@@ -1126,9 +1138,7 @@ def build_station_board(
                 position_available=(
                     sighting is not None and sighting.has_position
                 ),
-                schedule_relationship=(
-                    trip_update.schedule_relationship if trip_update is not None else None
-                ),
+                schedule_relationship=relationship,
                 operator_next_stop_id=operator_next,
                 relative_to_operator_next=relative,  # type: ignore[arg-type]
             )

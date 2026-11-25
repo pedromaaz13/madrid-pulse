@@ -16,12 +16,24 @@ docker compose -p madrid-pulse -f infra/docker/docker-compose.yml exec -T postgr
   sh -eu -c 'for migration in /migrations/*.up.sql; do psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" -f "$migration"; done'
 ```
 
-Revertir la última migración (hoy `0002_api_batch_indexes`):
+Revertir la última migración (hoy `0004_run_recency`):
 
 ```bash
 docker compose -p madrid-pulse -f infra/docker/docker-compose.yml exec -T postgres \
-  psql -v ON_ERROR_STOP=1 -U madrid_pulse -d madrid_pulse -f /migrations/0002_api_batch_indexes.down.sql
+  psql -v ON_ERROR_STOP=1 -U madrid_pulse -d madrid_pulse -f /migrations/0004_run_recency.down.sql
 ```
+
+**0004_run_recency.** Calcula una vez la clasificación retroactiva de los runs
+existentes y la asigna a las inserciones mediante trigger. Añade índices para
+las lecturas por vehículo, viaje/run y started_at. Revertirla elimina esa
+clasificación. Reaplicar el up conserva marcas existentes; después de un down
+el backfill usa la tolerancia inicial de 2 s. Antes de cambiar el esquema de
+una base persistente, conserva una copia si necesitas recuperar sus valores.
+
+**0003_anchor_profile.** Añade la procedencia de movimiento del run. Un up
+repetido conserva las huellas. El down elimina las huellas históricas;
+al reaplicar up no se pueden reconstruir a partir del catálogo actual. Las
+observaciones afectadas retienen en el ancla desde el primer fotograma.
 
 `0002_api_batch_indexes` (MP-019) añade únicamente dos índices medidos con
 `EXPLAIN (ANALYZE, BUFFERS)` -- no cambia tablas, columnas ni datos, así que su

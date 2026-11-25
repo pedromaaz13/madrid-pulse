@@ -98,7 +98,7 @@ class ProgressEnvelope:
 
     def phase(self, at: datetime) -> str:
         if self.speed_mps == 0 or at < self.moving_from:
-            return f"hold:{self.hold_reason}"
+            return f"hold:{self.hold_reason or 'null'}"
         if self.cap_reached_at is not None and at >= self.cap_reached_at:
             return f"cap:{self.cap_kind}"
         return "moving"
@@ -191,6 +191,7 @@ def _envelope(
     previous_anchor: AnchorSample | None = None,
     canceled: bool = False,
     identity: tuple = (),
+    versions_match: bool = True,
 ) -> ProgressEnvelope:
     reference = _millisecond(anchor_at)
     end = _millisecond(horizon_end)
@@ -250,6 +251,8 @@ def _envelope(
             dwell_basis=basis,
         )
 
+    if not versions_match:
+        return hold("anchor_version_changed")
     if canceled:
         return hold("trip_canceled")
     if coherent and status == "STOPPED_AT":
@@ -410,7 +413,8 @@ def render_from_movement(
     envelope = _envelope(
         schedule=schedule, thresholds=thresholds, previous_anchor=zone_sample,
         status=status, stop_id=stop_id, canceled=canceled,
-        identity=(movement.trip_id, geometry_version, *identity),
+        identity=(movement.trip_id, geometry_version, *identity, versions_match),
+        versions_match=versions_match,
         service_date=service_date,
         anchor_at=anchor_at,
         anchor_progress_m=anchor_progress_m,
@@ -452,7 +456,7 @@ def render_from_movement(
     # Replay/búfer: `display_at` cae entre dos anclas reales. Es el único caso
     # en que la etiqueta `interpolated` es cierta.
     if (
-        previous_anchor is not None
+        versions_match and previous_anchor is not None
         and previous_anchor.observed_at < display_at < anchor_at
         and (anchor_at - previous_anchor.observed_at).total_seconds() <= thresholds.stale_after_s
     ):
@@ -490,7 +494,9 @@ def render_from_movement(
         if advanced
         else RenderingMethod.ANCHOR
     )
-    if advanced:
+    if not versions_match:
+        reason = "huella de ingesta ausente o distinta: se retiene el GPS confirmado"
+    elif advanced:
         reason = "sin ancla futura: avance estimado desde la última ancla"
     elif envelope.dwell_until is not None:
         reason = "espera programada en parada: la coordenada sigue siendo el ancla"
@@ -499,6 +505,7 @@ def render_from_movement(
     latitude, longitude = _coordinate(corridor, schedule, progress_m)
     return RenderedPosition(
         rendering_method=method,
+        frozen_basis=None if versions_match else "anchor_version_changed",
         stop_state=stop_state,
         dwell_basis=envelope.dwell_basis,
         last_confirmed_progress_m=anchor_progress_m,

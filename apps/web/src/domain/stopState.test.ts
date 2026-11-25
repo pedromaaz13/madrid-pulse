@@ -12,3 +12,8 @@ for (const item of fixture) {
     }
   });
 }
+
+test("fase antes de la referencia sin causa inicial", () => {
+  const envelope = fixture.find(item => item.envelope.speed_mps > 0 && item.envelope.hold_reason === null)!.envelope as ProgressEnvelope;
+  expect(phase(envelope, Date.parse(envelope.reference_at) - 1)).toBe("hold:null");
+});

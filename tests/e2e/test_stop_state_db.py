@@ -77,6 +77,9 @@ collector.main()
             "vehicle_position_observation",
         ):
             self.conn.execute(f"CREATE TEMP TABLE {table} (LIKE public.{table} INCLUDING ALL)")
+        # LIKE INCLUDING ALL copia índices y columnas pero omite los triggers.
+        self.conn.execute("""CREATE TRIGGER classify_ingestion BEFORE INSERT ON source_ingestion_run
+                             FOR EACH ROW EXECUTE FUNCTION classify_ingestion_run()""")
         real.RealStops.setUpClass()
         self.net = real.RealStops.network
         self.pos = real.RealStops.second
@@ -163,7 +166,7 @@ collector.main()
                         if age in (181, 400):
                             self.assertEqual(r.frozen_basis, "authorized_envelope_end")
                             self.assertEqual(r.progress_m, frames[180][vid].rendered.progress_m)
-                        known = [e for e in events if e[0] <= age]
+                        known = [e for e in events if e[0] <= age and e[1] >= -600]
                         self.assertEqual(
                             item.schedule_relationship, known[-1][2] if known else None
                         )

@@ -191,7 +191,7 @@ def _trip_update_cutoff(now: datetime) -> datetime:
     enumeración de servicios programados. Más allá de esta ventana, un
     retraso solo puede pertenecer a un día de servicio anterior.
     """
-    return now - timedelta(hours=20)
+    return db.trip_update_cutoff(now)
 
 
 def _movement_position(

@@ -57,11 +57,11 @@ class RealStops(unittest.TestCase):
                 or self.network.anchor_profile(self.network.engine.thresholds),
             )
             if update:
-                row = replace(row, known_relationship=update.schedule_relationship)
+                row = replace(row, known_relationship=update.schedule_relationship, known_observed_at=update.observed_at)
             if base:
                 row = replace(row, base_relationship=base[0], base_observed_at=base[1], base_run=99)
         hist = db.VehicleHistory(
-            pos.source_vehicle_id, row, db.ObservedRow(prev, prev.observed_at) if prev else None
+            pos.source_vehicle_id, row, replace(row,position=prev,received_at=prev.observed_at) if prev else None
         )
         return snapshot.build_vehicle_entry(
             network,
@@ -214,10 +214,10 @@ class RealStops(unittest.TestCase):
                 replace(net.engine.thresholds, min_dwell_s=31),
             ),
         ):
-            from hashlib import sha256
-
-            version = "sha256:" + sha256(f"{gtfs}\0{geom}".encode()).hexdigest()
-            other = replace(net, catalog_version=version).anchor_profile(threshold)
+            other = replace(net, gtfs_version=gtfs).anchor_profile(threshold)
+            if geom != net.geometry_catalog_version:
+                version, parameters, geometries = json.loads(other)
+                other = json.dumps([version, parameters, dict.fromkeys(geometries, geom)])
             r = self.entry(pos, age=181, profile=other).rendered
             self.assertEqual(r.frozen_basis, "anchor_version_changed")
             self.assertEqual(r.progress_m, r.last_confirmed_progress_m)

@@ -235,7 +235,14 @@ fase es `hold:<hold_reason>` si la velocidad es cero o t < t0,
 `cap:<cap_kind>` desde cap_reached_at y `moving` en otro caso. Los instantes
 de la envolvente se construyen y se serializan en milisegundos para que
 Date.parse y Python evalúen los mismos tiempos. La precisión submilisegundo
-se descarta al construir la referencia temporal.
+se descarta al construir la referencia temporal. Si el reloj del cliente está
+antes de t0 y la causa es nula, ambos evaluadores devuelven `hold:null`.
+
+Las causas de retención admitidas son `anchor_version_changed`, `trip_canceled`,
+`operator_stopped_at`, `operator_incoming_at`, `outside_schedule_extent`,
+`terminal`, `before_first_departure`, `schedule_stop_zone`,
+`schedule_incoherent` y `horizon_exhausted`. Sin retención se publica null.
+Las fuentes de stop_state son `operator`, `schedule` y `trip_update`.
 
 `envelope_id` identifica el ancla, su estado efectivo, run base, geometría,
 GTFS y parámetros. Se elige la última actualización por (run, observed_at, id)
@@ -243,13 +250,21 @@ con run ≤ run del ancla. La edad de CANCELED se mide en observed_at respecto
 del ancla. Una cancelación conocida posterior se señala inmediatamente mediante
 el campo existente `schedule_relationship`; su efecto sobre la coordenada se
 difiere hasta la siguiente ancla. En directo se excluye de la base toda
-actualización cuyo run tenga started_at anterior al de algún run con id menor.
+actualización marcada retroactiva en ingesta. Se toleran pequeños saltos de
+reloj configurables. Snapshot y tablero solo señalizan relaciones conocidas
+dentro de la ventana MP-017 de 20 h. Para CANCELED comprueban además los
+600 s provisionales respecto de la observación del viaje, o de now si el
+tablero solo dispone del horario.
 En replay explícito puede incluirse.
 
 F1 congela en progress(valid_until) con `frozen_basis=authorized_envelope_end`.
 `last_confirmed_progress_m` conserva el progreso del GPS proyectado. Si falta
 la huella de ingesta o cambia GTFS, geometría o umbrales se congela en el
-ancla con `anchor_version_changed`. En ese caso no hay garantía de continuidad.
+ancla desde el primer fotograma con hold_reason y frozen_basis
+`anchor_version_changed`. Se conserva esa coordenada al caducar. El filtro
+de línea de la API no cambia la compatibilidad del patrón. Una sustitución
+del catálogo entre dos peticiones puede cambiar la proyección del mismo GPS;
+la garantía de reconstrucción exige versiones concordantes.
 La reconstrucción requiere la identidad de la observación, su run y las mismas
 versiones. El replay por hora civil puede escoger una observación distinta:
 started_at no registra el instante de confirmación. La garantía de F1 en

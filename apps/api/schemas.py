@@ -292,7 +292,11 @@ class ProgressEnvelopeOut(BaseModel):
     dwell_until: datetime | None
 
 
-    hold_reason: str | None = None
+    hold_reason: Literal[
+        "anchor_version_changed", "trip_canceled", "operator_stopped_at", "operator_incoming_at",
+        "schedule_incoherent", "outside_schedule_extent", "terminal", "before_first_departure",
+        "schedule_stop_zone", "horizon_exhausted",
+    ] | None = None
     cap_stop_id: str | None = None
     cap_kind: Literal["stop", "horizon"] | None = None
     cap_reached_at: datetime | None = None
@@ -304,7 +308,7 @@ class ProgressEnvelopeOut(BaseModel):
 
 
 class StopStateOut(BaseModel):
-    source: str
+    source: Literal["schedule", "operator", "trip_update"]
     operator_status: str | None
     operator_stop_id: str | None
     observation_observed_at: datetime | None

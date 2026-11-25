@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Sequence
 
 import psycopg
@@ -35,6 +35,7 @@ class ObservedRow:
     base_observed_at: datetime | None = None
     prior_gps: tuple[datetime, float, float] | None = None
     known_relationship: str | None = None
+    known_observed_at: datetime | None = None
 
 
 @dataclass(frozen=True)
@@ -66,13 +67,42 @@ def _row_to_observed(row: dict) -> ObservedRow:
         base_relationship=row.get("base_relationship"),
         base_run=row.get("base_run"),
         base_observed_at=row.get("base_observed_at"),
-        known_relationship=row.get("known_relationship"),
+        known_relationship=row.get("known_relationship"), known_observed_at=row.get("known_observed_at"),
         prior_gps=(row["prior_at"], row["prior_lat"], row["prior_lon"])
         if row.get("prior_lat") is not None
         else None,
         received_at=row["received_at"].astimezone(timezone.utc),
         feed_published_at=published.astimezone(timezone.utc) if published is not None else None,
     )
+
+
+def trip_update_cutoff(now: datetime) -> datetime:
+    """Ventana de recencia MP-017 para el día operativo (incluye 24:xx)."""
+    return now - timedelta(hours=20)
+
+
+_KNOWN_UPDATE = """
+    SELECT u.schedule_relationship, u.observed_at
+    FROM trip_update_observation u JOIN source_ingestion_run r ON r.id = u.ingestion_run_id
+    WHERE u.source_trip_id = v.source_trip_id AND r.started_at <= %(as_of)s
+      AND u.observed_at >= %(cutoff)s
+      AND u.observed_at <= COALESCE(%(observed_through)s, 'infinity'::timestamptz)
+      AND (%(observed_through)s::timestamptz IS NOT NULL OR NOT r.is_retroactive)
+    ORDER BY u.ingestion_run_id DESC, u.observed_at DESC, u.id DESC LIMIT 1
+"""
+
+
+def known_trip_relationships(conn, trip_ids, *, as_of, observed_through=None):
+    if not trip_ids:
+        return {}
+    with conn.cursor() as cur:
+        cur.execute(f"""
+            SELECT v.source_trip_id, known.schedule_relationship, known.observed_at
+            FROM unnest(%(trip_ids)s::text[]) AS v(source_trip_id)
+            CROSS JOIN LATERAL ({_KNOWN_UPDATE}) known
+        """, dict(trip_ids=sorted(set(trip_ids)), as_of=as_of,
+                  observed_through=observed_through, cutoff=trip_update_cutoff(as_of)))
+        return {trip: (relationship, at) for trip, relationship, at in cur.fetchall()}
 
 
 def latest_vehicle_histories(
@@ -87,23 +117,34 @@ def latest_vehicle_histories(
     """
     with conn.cursor(row_factory=dict_row) as cur:
         cur.execute(
-            """
-            WITH ranked AS (
-                SELECT v.source_vehicle_id, v.source_trip_id, v.observed_at, v.received_at,
-                       v.latitude, v.longitude, v.current_status, v.current_stop_id,
-                       v.speed_kmh, v.bearing, v.raw_vehicle_label, v.payload_hash,
-                       v.ingestion_run_id, r.anchor_profile, r.source_timestamp AS feed_published_at,
-                       row_number() OVER (
-                           PARTITION BY v.source_vehicle_id
-                           ORDER BY v.observed_at DESC, v.id DESC
-                       ) AS rank
-                FROM vehicle_position_observation v
-                JOIN source_ingestion_run r ON r.id = v.ingestion_run_id
-                WHERE r.started_at <= %(as_of)s
-                  AND v.observed_at <= COALESCE(%(observed_through)s, 'infinity'::timestamptz)
+            f"""
+            WITH RECURSIVE vehicles(source_vehicle_id) AS (
+                SELECT min(source_vehicle_id) FROM vehicle_position_observation
+                UNION ALL
+                SELECT next_vehicle.source_vehicle_id FROM vehicles v
+                CROSS JOIN LATERAL (
+                    SELECT source_vehicle_id FROM vehicle_position_observation
+                    WHERE source_vehicle_id > v.source_vehicle_id ORDER BY source_vehicle_id LIMIT 1
+                ) next_vehicle
+            ), ranked AS (
+                SELECT latest.*, row_number() OVER (
+                    PARTITION BY latest.source_vehicle_id ORDER BY latest.observed_at DESC, latest.id DESC
+                ) AS rank FROM vehicles
+                CROSS JOIN LATERAL (
+                    SELECT v.id, v.source_vehicle_id, v.source_trip_id, v.observed_at, v.received_at,
+                           v.latitude, v.longitude, v.current_status, v.current_stop_id,
+                           v.speed_kmh, v.bearing, v.raw_vehicle_label, v.payload_hash,
+                           v.ingestion_run_id, r.anchor_profile, r.source_timestamp AS feed_published_at
+                    FROM vehicle_position_observation v
+                    JOIN source_ingestion_run r ON r.id = v.ingestion_run_id
+                    WHERE v.source_vehicle_id = vehicles.source_vehicle_id AND r.started_at <= %(as_of)s
+                      AND v.observed_at <= COALESCE(%(observed_through)s, 'infinity'::timestamptz)
+                    ORDER BY v.observed_at DESC, v.id DESC LIMIT 2
+                ) latest
             )
             SELECT v.*, prior.observed_at AS prior_at, prior.latitude AS prior_lat,
                    prior.longitude AS prior_lon, known.schedule_relationship AS known_relationship,
+                   known.observed_at AS known_observed_at,
                    base.schedule_relationship AS base_relationship,
                    base.ingestion_run_id AS base_run, base.observed_at AS base_observed_at
             FROM ranked v
@@ -111,12 +152,9 @@ def latest_vehicle_histories(
                 SELECT u.schedule_relationship, u.ingestion_run_id, u.observed_at
                 FROM trip_update_observation u
                 JOIN source_ingestion_run r ON r.id = u.ingestion_run_id
-                WHERE u.source_trip_id = v.source_trip_id AND r.id <= v.ingestion_run_id
-                  AND (%(observed_through)s::timestamptz IS NOT NULL OR NOT EXISTS (
-                      SELECT 1 FROM source_ingestion_run earlier
-                      WHERE earlier.id < r.id AND earlier.started_at > r.started_at
-                  ))
-                ORDER BY r.id DESC, u.observed_at DESC, u.id DESC LIMIT 1
+                WHERE u.source_trip_id = v.source_trip_id AND u.ingestion_run_id <= v.ingestion_run_id
+                  AND (%(observed_through)s::timestamptz IS NOT NULL OR NOT r.is_retroactive)
+                ORDER BY u.ingestion_run_id DESC, u.observed_at DESC, u.id DESC LIMIT 1
             ) base ON true
             LEFT JOIN LATERAL (
                 SELECT p.source_trip_id, p.observed_at, p.latitude, p.longitude
@@ -125,21 +163,10 @@ def latest_vehicle_histories(
                   AND p.ingestion_run_id <= v.ingestion_run_id AND p.observed_at < v.observed_at
                 ORDER BY p.observed_at DESC, p.id DESC LIMIT 1
             ) prior ON prior.source_trip_id = v.source_trip_id
-            LEFT JOIN LATERAL (
-                SELECT u.schedule_relationship, u.ingestion_run_id
-                FROM trip_update_observation u JOIN source_ingestion_run r ON r.id = u.ingestion_run_id
-                WHERE u.source_trip_id = v.source_trip_id AND r.started_at <= %(as_of)s
-                  AND u.observed_at <= COALESCE(%(observed_through)s, 'infinity'::timestamptz)
-                  AND (%(observed_through)s::timestamptz IS NOT NULL OR NOT EXISTS (
-                      SELECT 1 FROM source_ingestion_run earlier
-                      WHERE earlier.id < r.id AND earlier.started_at > r.started_at
-                  ))
-                ORDER BY r.id DESC, u.observed_at DESC, u.id DESC LIMIT 1
-            ) known ON true
-            WHERE rank <= 2
+            LEFT JOIN LATERAL ({_KNOWN_UPDATE}) known ON true
             ORDER BY source_vehicle_id, rank
             """,
-            {"as_of": as_of, "observed_through": observed_through},
+            {"as_of": as_of, "observed_through": observed_through, "cutoff": trip_update_cutoff(as_of)},
         )
         by_vehicle: dict[str, list[dict]] = {}
         for row in cur.fetchall():

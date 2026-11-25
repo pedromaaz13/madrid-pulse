@@ -27,21 +27,23 @@ correcto: no se observó, y eso se ve.
 
 from __future__ import annotations
 
-from dataclasses import replace
+from pathlib import Path
+import math
+import os
 import logging
 import time
 
 import psycopg
 
 from packages.contracts.nucleo import MADRID_PREFIX
-from packages.gtfs import load_feed
+from packages.gtfs import load_feed, build_catalog
+from packages.geo import build_madrid_corridor_catalog
+from packages.movement.profile import anchor_profile, source_version, thresholds_from_env
 from packages.database import (
     DISPOSABLE_ENVIRONMENTS,
     DatabaseConfigurationError,
     require_disposable_database,
 )
-from apps.api.config import ApiConfig
-from apps.api.gtfs_source import load_network
 from services.collector.collector import run_cycle
 from services.collector.config import CollectorConfig
 from services.collector.http_client import RetryPolicy
@@ -59,15 +61,19 @@ modo que el supervisor y las bitácoras puedan diferenciar "la base se fue" de
 
 
 def _load_madrid_stop_ids(gtfs_source: str, conn: psycopg.Connection) -> frozenset[str] | None:
-    config = ApiConfig.from_env()
-    # La huella depende del contenido. La vigencia para servir tráfico live
-    # pertenece a la API y no debe impedir archivar observaciones brutas.
-    network = load_network(replace(config, mode="replay"))
-    with conn.transaction():
-        conn.execute("SELECT set_config('madrid_pulse.anchor_profile', %s, false)",
-                     (network.anchor_profile(network.engine.thresholds),))
-    topology = (load_feed(gtfs_source, network_id=MADRID_PREFIX)
-                if config.short_name or config.network_id != MADRID_PREFIX else network.topology)
+    topology = load_feed(gtfs_source, network_id=MADRID_PREFIX)
+    version = source_version(Path(gtfs_source))
+    fixtures = Path(os.environ.get("MADRID_PULSE_GEOMETRY_FIXTURES_ROOT",
+                                   Path(__file__).resolve().parents[2] / "tests/fixtures"))
+    try:
+        corridors = build_madrid_corridor_catalog(build_catalog(topology, gtfs_version=version),
+                                                  topology, fixtures_root=fixtures)
+    except (OSError, ValueError) as exc:
+        logger.warning("Geometría sin verificar; se conserva el GPS con huella NULL: %s", exc)
+    else:
+        with conn.transaction():
+            conn.execute("SELECT set_config('madrid_pulse.anchor_profile', %s, false)",
+                         (anchor_profile(version, corridors, thresholds_from_env()),))
     return frozenset(stop.stop_id for stop in topology.stops)
 
 
@@ -95,6 +101,13 @@ def _run() -> None:
             acquired = conn.execute("SELECT pg_try_advisory_lock(1297101395)").fetchone()[0]
             if not acquired:
                 raise SystemExit("Ya hay otro colector activo en esta base de datos.")
+        tolerance = float(os.environ.get("MADRID_PULSE_RETRO_TOLERANCE_S", "2"))
+        if not math.isfinite(tolerance) or tolerance < 0:
+            raise DatabaseConfigurationError("MADRID_PULSE_RETRO_TOLERANCE_S debe ser finita y no negativa")
+        with conn.transaction():
+            conn.execute("SELECT set_config('madrid_pulse.retro_tolerance_s', %s, false)", (str(tolerance),))
+        if not config.gtfs_source:
+            logger.warning("Sin GTFS: runs con huella NULL; la presentación se retiene en el ancla.")
         madrid_stop_ids = _load_madrid_stop_ids(config.gtfs_source, conn) if config.gtfs_source else None
         logger.info(
             "Colector iniciado: %d feeds, poll=%.0fs, timeout=%.0fs, max_retries=%d, "
