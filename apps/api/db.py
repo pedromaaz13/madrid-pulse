@@ -343,6 +343,8 @@ def latest_trip_updates(
 
     El orden ``observed_at DESC, id DESC`` mantiene el desempate de ADR-0010.
     Un viaje sin fila dentro de la ventana queda fuera del diccionario.
+    El lateral permite usar el índice por viaje y detenerse en la primera
+    fila elegible, aunque la ventana contenga muchas actualizaciones.
     `as_of` acota las ingestas. `observed_through` acota el reloj de origen en replay.
     """
     if not source_trip_ids:
@@ -351,18 +353,24 @@ def latest_trip_updates(
     with conn.cursor(row_factory=dict_row) as cur:
         cur.execute(
             """
-            SELECT DISTINCT ON (source_trip_id)
-                   source_trip_id, observed_at, schedule_relationship, delay_seconds,
-                   delay_coverage, next_stop_id, payload_hash
-            FROM trip_update_observation u
-            WHERE source_trip_id = ANY(%(trip_ids)s) AND observed_at >= %(observed_after)s
-              AND ingestion_run_id <= COALESCE(%(max_run_id)s::bigint, ingestion_run_id)
-              AND observed_at <= COALESCE(%(observed_through)s, 'infinity'::timestamptz)
-              AND (%(as_of)s::timestamptz IS NULL OR EXISTS (
-                  SELECT 1 FROM source_ingestion_run r
-                  WHERE r.id = u.ingestion_run_id AND r.started_at <= %(as_of)s
-              ))
-            ORDER BY source_trip_id, observed_at DESC, id DESC
+            SELECT latest.*
+            FROM unnest(%(trip_ids)s::text[]) AS trips(source_trip_id)
+            CROSS JOIN LATERAL (
+                SELECT u.source_trip_id, u.observed_at, u.schedule_relationship, u.delay_seconds,
+                       u.delay_coverage, u.next_stop_id, u.payload_hash
+                FROM trip_update_observation u
+                WHERE u.source_trip_id = trips.source_trip_id
+                  AND u.observed_at >= %(observed_after)s
+                  AND u.ingestion_run_id <= COALESCE(%(max_run_id)s::bigint, u.ingestion_run_id)
+                  AND u.observed_at <= COALESCE(%(observed_through)s, 'infinity'::timestamptz)
+                  AND (%(as_of)s::timestamptz IS NULL OR EXISTS (
+                      SELECT 1 FROM source_ingestion_run r
+                      WHERE r.id = u.ingestion_run_id AND r.started_at <= %(as_of)s
+                  ))
+                ORDER BY u.observed_at DESC, u.id DESC
+                LIMIT 1
+            ) latest
+            ORDER BY latest.source_trip_id
             """,
             {
                 "trip_ids": unique_ids, "observed_after": observed_after,
