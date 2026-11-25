@@ -6,6 +6,7 @@ import fcntl
 import hashlib
 import json
 import os
+import shutil
 import signal
 import subprocess
 import sys
@@ -18,12 +19,21 @@ ROOT = Path(__file__).resolve().parents[3]
 MAIN = Path("/Users/matu/Documents/DATA/madrid-pulse")
 CAPTURE = MAIN / "data/capture"
 SOURCE = MAIN / "data/gtfs_static/fomento_transit.zip"
+SMOKE_SHA256 = "58ac554356acddfffb2411f48ada26b5ff4655549e6957372906cf7a38e4ba4e"
 ADVISORY_LOCK = 1297101395
 CHILD = """from services.collector.__main__ import main
 try:
     main()
 except KeyboardInterrupt:
     pass
+"""
+LOCK_PROBE = """from services.collector import __main__
+
+def never_poll(*args, **kwargs):
+    raise SystemExit("El proceso de prueba alcanzó el bucle de polling")
+
+__main__.run_cycle = never_poll
+__main__.main()
 """
 
 
@@ -109,6 +119,26 @@ def lock_available():
         return conn.execute("SELECT pg_try_advisory_lock(%s)", (ADVISORY_LOCK,)).fetchone()[0]
 
 
+def preserve_gtfs(version):
+    from packages.movement.profile import source_version
+
+    archive = CAPTURE / "gtfs"
+    archive.mkdir(exist_ok=True)
+    target = archive / (version.split(":")[1] + ".zip")
+    if not target.exists():
+        temporary = target.with_suffix(".tmp")
+        try:
+            shutil.copyfile(SOURCE, temporary)
+            if source_version(temporary) != version:
+                raise RuntimeError("El ZIP cambió durante la preparación")
+            temporary.replace(target)
+        finally:
+            temporary.unlink(missing_ok=True)
+    if source_version(target) != version:
+        raise RuntimeError("La copia local de GTFS no coincide con su SHA-256")
+    return str(target.relative_to(CAPTURE))
+
+
 def smoke_lock(process, directory, stopped):
     probe = {"competing_collector_rejected": False}
     for _ in range(30):
@@ -116,7 +146,7 @@ def smoke_lock(process, directory, stopped):
             break
         if not lock_available():
             result = subprocess.run(
-                [sys.executable, "-m", "services.collector"], capture_output=True,
+                [sys.executable, "-c", LOCK_PROBE], capture_output=True,
                 text=True, timeout=15, check=False,
             )
             (directory / "collector-lock.log").write_text(result.stdout + result.stderr)
@@ -214,10 +244,8 @@ def main():
             parser.exit(1, "Ya hay un supervisor de captura activo.\n")
         subprocess.run(["bash", str(ROOT / "infra/operate/capture/prepare-db.sh")], check=True)
         initial = metadata()
-        if args.smoke and (
-            initial["gtfs"]["valid_from"], initial["gtfs"]["valid_until"]
-        ) != ("2026-11-20", "2026-12-19"):
-            parser.exit(1, "La vigencia del GTFS no coincide con la autorizada para el smoke.\n")
+        if args.smoke and initial["gtfs"]["sha256"] != SMOKE_SHA256:
+            parser.exit(1, "El SHA-256 del ZIP no coincide con el documentado en MP-003.\n")
         day = CAPTURE / utcnow().astimezone(MADRID).date().isoformat()
         day.mkdir(exist_ok=True)
         directory = day / "smoke"
@@ -227,6 +255,7 @@ def main():
                 index += 1
             directory = day / f"session-{index}"
         directory.mkdir()
+        initial["gtfs"]["local_archive"] = preserve_gtfs(initial["gtfs"]["gtfs_version"])
         write_json(directory / "metadata.json", initial)
         print(f"Captura en {directory}", flush=True)
         return supervise(directory, args, initial)

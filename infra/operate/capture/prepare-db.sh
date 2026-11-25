@@ -33,6 +33,8 @@ for ((i=0; i<60; i++)); do
 done
 
 # DDL y registro de hashes se confirman juntos. El bloqueo serializa preparaciones.
+migration_script=$(mktemp)
+trap 'rm -f "$migration_script"' EXIT
 {
   printf '%s\n' 'SELECT pg_advisory_xact_lock(1297101396);' \
     'CREATE SCHEMA IF NOT EXISTS mp028_capture;' \
@@ -48,5 +50,6 @@ done
     printf '\n%s\n' "INSERT INTO mp028_capture.migration (name, sha256) VALUES ('$name', '$hash');" '\endif'
   done
   printf '%s\n' 'SELECT name, sha256 FROM mp028_capture.migration ORDER BY name;'
-} | docker exec -i "$container" psql -X --single-transaction -v ON_ERROR_STOP=1 \
-  -U "$owner" -d "$owner" -f -
+} > "$migration_script"
+docker exec -i "$container" psql -X --single-transaction -v ON_ERROR_STOP=1 \
+  -U "$owner" -d "$owner" -f - < "$migration_script"
