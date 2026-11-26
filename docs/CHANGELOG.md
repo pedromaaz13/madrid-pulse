@@ -4,6 +4,13 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 
 ## [Unreleased]
 
+### MP-028 — Captura real aislada: preparación y smoke (rama `pedromaaz13/mp-028-captura`; sin fusionar)
+
+Ejecutor Codex `gpt-6.2-sol` · medium (recibo de Orca); revisor Claude Sonnet 5.5 · high (argv verificado): **APPROVED** para preparación y smoke. **No integrada en `main`.** **Las sesiones de ≥ 2 h en ≥ 3 días NO están completadas** (0 de 3).
+
+#### Added
+- `docs/operations/CAPTURE_PROTOCOL.md` y `infra/operate/capture/` (preparación de la base dedicada `mp028-capture` en el puerto 5466 con volumen persistente, sesión supervisada, manifiesto por sesión). Smoke real: 300,09 s, 10/10 ciclos por feed, 212 posiciones, 24 vehículos. Los datos no se publican.
+
 ### MP-026b — Lectura consistente de snapshot y tablero (ADR-0014 §4.7, FR-07) (rama `pedromaaz13/mp-026b-snapshot-consistente`, apilada sobre MP-025a; sin fusionar)
 
 Ejecutor Codex `gpt-6.2-sol` · high (recibo de Orca); revisor Claude Opus 5.5 · high (argv verificado): APPROVED en la 1ª ronda sobre `ff5e6ad`. **No integrada en `main`.**
