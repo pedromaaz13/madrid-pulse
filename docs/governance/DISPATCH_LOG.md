@@ -21,9 +21,11 @@
 | MP-030 interfaz mínima | Codex `gpt-6.1-terra` · medium (sin navegador) | Claude `sonnet-5-5` · high con Chrome DevTools MCP | argv + preflight de navegador | `b799b7a`→`6e60249`; final `0600610` | CHANGES_REQUESTED ×2; corrección final no re-verificada |
 | MP-025b validación provisional | Codex `gpt-6.2-astra` · high | Claude `opus-5-5` · high | argv (revisor) | `6398707` | CHANGES_REQUESTED (2 B, 4 A) |
 | MP-025b correcciones | **Sustitución:** Codex `gpt-6.2-sol` · medium (en lugar de Astra High) | Claude `opus-5-5` · high (una verificación del delta) | recibo; despachado por el lanzador programado a las 14:36 | `cc7181b` | APPROVED (del informe provisional; **no** valida el motor ni cierra FR-01) |
+| MP-036 fallback GPS rechazado | Codex `gpt-6.2-sol` · high | Claude `opus-5-5` · high (revisión completa + una verificación del delta) | argv (revisor); recibo (ejecutor) | `a7e01b8`→`8c005c8` (PR #15 en borrador) | 1ª pasada CHANGES_REQUESTED (2 B, 8 A); delta APPROVED (3 A residuales). **No** valida el motor ni cierra FR-01 |
+| MP-037 estudio M7 frente a R4 | Codex `gpt-6.2-sol` · medium | Claude `opus-5-5` · high | recibo (ejecutor) | — | **BLOQUEADA por cuota de Codex** al arrancar (reapertura 19:36); sin retry ni cambio de proveedor |
 
 ## Sustituciones y bloqueos de cuota (registrados, no reintentados)
 - **MP-025b correcciones (2026-11-26):** se reasignan de Astra High a **Sol Medium** por economía (cambios de documento y tests, sin tocar datos ni métricas existentes; condición: resultados previos idénticos con `cmp`). Mismo proveedor, revisor sin cambios; la independencia se conserva. La cuota de Codex es de cuenta, así que el cambio de modelo no adelanta la reapertura (14:35).
-- **Cuota de Codex agotada** en MP-026a (reapertura 17:38), MP-025a (22:39), MP-025b (03:40) y las correcciones de MP-025b (14:35); **de Claude** una vez en MP-024 (17:00). No se compró cuota ni se cambió de proveedor para sortearla.
+- **Cuota de Codex agotada** en MP-026a (reapertura 17:38), MP-025a (22:39), MP-025b (03:40) las correcciones de MP-025b (14:35) y MP-037 (2026-11-26, reapertura 19:36); **de Claude** una vez en MP-024 (17:00). No se compró cuota ni se cambió de proveedor para sortearla.
 - **Terra (`gpt-6.1-terra`):** disponible en el catálogo local; ejecuta React/TypeScript **sin navegador**; la validación visual la hace siempre Claude con preflight (`docs/design/DESIGN_DISCOVERY_EXECUTION_OVERRIDES.md`).
 - **Coordinador:** Claude Sonnet 5.5; su esfuerzo efectivo no es verificable desde dentro de la sesión.
