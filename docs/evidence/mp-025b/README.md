@@ -1,11 +1,12 @@
 # MP-025b · Validación provisional del motor sobre captura MP-028
 
-**PROVISIONAL · 1 de 3 jornadas. FR-01 sigue abierto.** La mediana del salto cumple el criterio de MP-025b, pero en 19 anclas el motor autorizó velocidad positiva mientras Renfe declaraba STOPPED_AT. También retuvo 135 de 1441 avances de al menos 100 m iniciados en tránsito o aproximación. En dos secuencias el snapshot recuperó un ancla antes descartada cuando el GPS bruto ya había vuelto al punto inicial. Los casos proceden de dos segmentos de una sola mañana. El propietario conserva la decisión sobre FR-01.
+**PROVISIONAL · 1 de 3 jornadas · FR-01 sigue abierto.** Las cifras de movimiento corresponden solo a los **135/347 vehículos** con corredor validado, observados en **hora punta** (07:00–07:35 y 08:34–10:00 de Madrid). Quedaron sin plan 11 241/18 242 anclas `STOPPED_AT` y 6 639 anclas `IN_TRANSIT_TO`/`INCOMING_AT`. H1 cumple literalmente el criterio del ADR, pero la mediana global de 0 m es poco informativa y los estratos en movimiento superan 200 m. Se observaron 19 planes con velocidad positiva asociados a GPS fantasma en `STOPPED_AT`, 135/1 441 retenciones en tránsito o aproximación y dos reapariciones de un GPS previamente rechazado. La decisión sobre FR-01 corresponde al propietario tras las jornadas pendientes.
 
 | Criterio del plan | Veredicto de la jornada | Evidencia |
 |---|---|---|
-| H1 · N ≥ 500 y p50 ≤ 200 m | **Cumple** | 11425 pares medidos, p50 0 m. En 2298/11425 el salto supera 200 m; p95 1916,041857 m y máximo 23633,987753 m |
-| STOPPED_AT · cero planes con velocidad positiva | **No cumple** sobre todas las declaraciones; cumple en las coherentes con zona | 19/18242 anclas STOPPED_AT, 19/7001 con plan, 0/6981 con parada declarada coherente. En 11241 anclas falta un plan evaluable |
+| H1 · N ≥ 500 y p50 ≤ 200 m | **Cumple literalmente el criterio del ADR; no informativo sobre el salto en movimiento** | 11 425 pares, p50 0 m. La distribución global incluye 9 004 pares con desplazamiento proyectado inferior a 1 m. |
+| H1 estratificado · avance proyectado ≥ 100 m o estado inicial `IN_TRANSIT_TO` | **No cumple en movimiento** | p50 de 963,5 m en 1 843 pares con avance ≥ 100 m y de 499,8 m en 2 240 pares iniciados en tránsito. |
+| STOPPED_AT · cero planes con velocidad positiva | **No cumple** sobre todas las declaraciones; cumple en las coherentes con zona | GPS fantasma con `STOPPED_AT` en la parada declarada, 19/18 242 anclas y 19/7 001 con plan. Hubo 0/6 981 planes positivos en las declaraciones coherentes con la zona y 11 241 anclas sin plan evaluable |
 | M7 · conservar avance cuando IN_TRANSIT_TO o INCOMING_AT se desplazó ≥ 100 m | **No cumple** la guarda de cero retenciones | 135/1441 pares retenidos. Los 135 empezaron en INCOMING_AT dentro de la zona de la parada declarada |
 | F1 · retroceso al caducar = 0 | **Cumple** en los cruces medibles | 0/65 retrocesos, máximo 0 m. Hubo 8 recuperaciones ordinarias, 5 con salto > 200 m |
 | Cancelación conocida señalizada | **Cumple en las entradas observables** | 12/12 filas con vehículo visible señalizadas; 171/171 llamadas visibles señalizadas. Hubo 7 filas sin vehículo y 1 sin llamada visible en los tableros consultados |
@@ -26,7 +27,7 @@ La ventana civil abarca **3 h 00 min 01,583943 s** (07:00:23–10:00:24 de Madri
 
 Tras aplicar el corte, quedaron posiciones analizables en 234/235 rondas: 68/68 antes y 166/167 después. Hubo datos de captura en las 235. El fin del hueco se fijó en el reloj de ingesta del primer run GPS tras la suspensión. Sus **135** observaciones llevaban la hora GPS **07:34:30**, dentro del intervalo excluido. La segunda serie empieza con el siguiente GPS, a las **07:34:52**. En la primera serie se admiten los GPS de 06:00:10 del primer run porque preceden al arranque de la sesión y no atraviesan la suspensión. La segunda serie también excluye actualizaciones de viaje con reloj de origen dentro del hueco.
 
-**Reanudación tras suspensión.** 65 vehículos reaparecieron en el segundo segmento con el mismo viaje que en su última muestra del primero. Esos 65 enlaces se descartaron antes de calcular distribuciones. Las vistas temporales de PostgreSQL limitan tanto los runs como las observaciones y actualizaciones visibles a producción. Al reanudar no se arrastran ancla, estado del operador, envolvente, progreso congelado ni reloj de latencia del segmento anterior. No se midió un salto a través de la suspensión. Las recuperaciones ordinarias que se indican abajo empiezan y terminan dentro de un solo segmento.
+**Reanudación tras suspensión.** 65 identificadores de vehículo aparecen en ambos segmentos. El arnés cuenta la intersección de vehículos y calcula los pares dentro de cada segmento. Las vistas temporales de PostgreSQL limitan tanto los runs como las observaciones y actualizaciones visibles a producción. Al reanudar no se arrastran ancla, estado del operador, envolvente, progreso congelado ni reloj de latencia del segmento anterior. No se midió un salto a través de la suspensión. Las recuperaciones ordinarias que se indican abajo empiezan y terminan dentro de un solo segmento.
 
 ### Pares y cobertura del corredor
 
@@ -39,6 +40,19 @@ De 347 vehículos únicos, 135 tuvieron al menos un ancla en corredor validado. 
 | Jornada | 29095 | 11425 | 17199 | 92 | 334 | intervalo_largo 44, otra_circulacion 1 | 0.000000 / 1142.973740 / 1916.041857 / 23633.987753 |
 
 De los 11759 pares con dos proyecciones admisibles, 334 no tenían envolvente propia de la primera ancla. Se midieron 11425/11759. El JSON privado identifica cada primera ancla excluida por esta causa. Las exclusiones son disjuntas. Los motivos ausentes de la tabla tienen recuento cero. Los cuantiles conjuntos se calcularon con todos los pares individuales. No se promediaron medianas de los segmentos. Intervalos observados por vehículo dentro de los segmentos (p50 / p90 / p95 / máximo en segundos): 38.000000 / 42.000000 / 42.000000 / 4320.000000.
+
+### H1 estratificado
+
+Se usaron los mismos pares elegibles de H1 y el mismo salto GPS–predicción. El avance se mide con el progreso dirigido proyectado del segundo GPS menos el del primero. El estrato de tránsito usa el estado de la primera fila e incluye pares con GPS repetido.
+
+| Estrato | Pares | p50 (m) | p90 (m) | p95 (m) |
+|---|---:|---:|---:|---:|
+| Avance dirigido ≥ 100 m | 1 843 | 963,5 | 2 626,4 | 3 168,9 |
+| `IN_TRANSIT_TO` al inicio | 2 240 | 499,8 | 2 188,6 | 3 043,0 |
+| Desplazamiento proyectado absoluto < 1 m | 9 004 | 0 | 0 | 73,4 |
+| Coordenada bruta idéntica | 9 004 | 0 | 0 | 73,4 |
+
+La inmovilidad de la coordenada domina la mediana global. La revisión citó 8 155/11 112 pares con menos de 1 m, 9 004/11 465 con GPS idéntico, p50 de 558,5 m en 2 573 pares de avance (p90 2 417 m, p95 3 035 m) y p50 aproximada de 367 m para `IN_TRANSIT_TO`. Esas cifras quedaron sin reproducir con la población y definición de H1 de este arnés. Ambos cálculos sitúan las medianas estratificadas por encima de 200 m.
 
 ### Estado de parada y coherencia
 
@@ -91,9 +105,30 @@ Total de 91890 entradas de vehículo en 516 instantes de replay. Una ancla puede
 
 ### Lectura de los casos adversos
 
-**Correcciones.** En el smoke hubo 19/80 saltos > 200 m (23,75 %); en la jornada, 2298/11425 (20,11 %), repartidos entre 114 vehículos. El patrón persiste con una muestra mayor. En 1680 casos el primer estado era IN_TRANSIT_TO y el motor avanzó por horario; en 364 de ellos la segunda proyección quedó en el mismo punto y en 434 quedó por detrás. También hubo grandes avances de GPS tras retenciones por estado del operador. En 310/2298 casos el segundo GPS careció de plan propio. El máximo, vehículo 20213 a las 06:11:10 UTC, fue un retroceso proyectado de 23633,987753 m tras INCOMING_AT retenido en zona. La nueva fila llevaba implausible_speed y el motor descartó ese GPS como ancla de movimiento. El error GPS–predicción se conserva en el resultado; la fuente no permite afirmar que el tren recorriera esa distancia ni que el usuario viera tal salto.
+**Correcciones.** En el smoke hubo 19/80 saltos > 200 m (23,75 %). En la jornada hubo 2 298/11 425 (20,11 %), en 114 vehículos. En **368** pares adversos la segunda proyección quedó exactamente en el mismo punto, un sobreavance de la predicción con el tren quieto según el GPS. En 1 680 casos el primer estado era `IN_TRANSIT_TO` y se avanzó por horario. De ellos, 364 tuvieron desplazamiento cero y 434 tuvieron desplazamiento hacia atrás. También se observaron grandes avances de GPS tras retenciones por estado del operador.
 
-**STOPPED_AT.** El smoke no reveló planes positivos. En la jornada aparecieron 19, en 17 vehículos. En los 19 la proyección estaba fuera de los 50 m de la parada declarada, R7 marcó incoherencia y R8 recurrió al horario. En 16 se publicó schedule_stop_zone con velocidad positiva disponible después de la espera y en tres se permitió avance por horario sin espera. El rango fue de 8,440056 a 14,353688 m/s. El resultado adverso también llegó a la presentación: 46 entradas extrapolated_from_last_anchor con estado efectivo STOPPED_AT, 32 con schedule_stop_zone y 14 sin causa de retención. Son fotogramas repetibles de anclas, no 46 trenes. Las 4124 pre-salidas, 696 paradas en origen pasada la hora programada, 2129 paradas intermedias y 32 terminales coherentes sí quedaron a 0 m/s.
+| Población H1 | Pares | > 200 m | > 5 km | p90 (m) | Máximo (m) |
+|---|---:|---:|---:|---:|---:|
+| Con todos los segundos GPS | 11 425 | 2 298 | 32 | 1 143,0 | 23 634,0 |
+| Sin segundos GPS sustituidos por un ancla previa | 11 115 | 1 988 | 9 | 775,8 | 7 842,5 |
+
+`jump_tail` usa la marca temporal del ancla efectiva del segundo fotograma para reconocer cuándo se conservó un GPS anterior a la segunda fila. Hubo sustitución en **310/2 298** saltos > 200 m y en **23/32** saltos > 5 km. La revisión citó 27/32 y p90 de unos 781 m en el filtro sin rechazos. Los recuentos y cuantiles de la tabla corresponden al replay de este arnés. El máximo global, de 23 633,987753 m, corresponde al segundo GPS de 20213 a las 06:11:10 UTC, con `implausible_speed` tras una retención por `INCOMING_AT`. El replay conservó la segunda proyección para medir el error respecto de la predicción aunque el motor rechazó el GPS como ancla de movimiento. El desplazamiento físico y el salto visible en el cliente permanecen `UNVERIFIED`.
+
+**GPS fantasma con `STOPPED_AT` en parada correcta.** Los 19 planes positivos, en 17 vehículos, coinciden con coordenadas que el feed repite en puntos fijos. Sus proyecciones estaban entre 709,5 y 7 110,2 m por delante de la parada declarada. En 15 de los 19 casos el siguiente GPS del mismo segmento conservó el `stop_id` y quedó a ≤ 17 m de su parada. Los grupos más frecuentes fueron:
+
+| Parada declarada | Proyección del GPS fantasma (m) | Parada menos proyección (m) | Vehículos | Siguiente GPS menos parada (m) |
+|---|---:|---:|---:|---:|
+| 35605 | 40 835,3 | −1 287,9 | 8 | −2,5 en 7 de 8 |
+| 35600 | 32 677,2 | −709,5 | 5 | −16,9 |
+| 17003 | 17 765,9 | −2 330,8 | 3 | +2,9 |
+
+En 20428 y 20437 el siguiente GPS conservó la misma coordenada, pero cambió el `stop_id` (17001→17000 y 60100→18000, respectivamente). Las dos anclas restantes quedaron en el borde de su segmento. La etiqueta de GPS fantasma describe el patrón observado. Para esos cuatro casos la parada física exacta permanece `UNVERIFIED`.
+
+**Cuantización observada del feed.** Al agrupar las 29 642 filas GPS de la ventana completa en `raw_coordinate_groups`, incluidas las 135 excluidas en el reinicio, se obtienen 1 365 grupos por latitud y longitud. Un grupo representa 37 filas sin posición. Sobre las **29 605 filas con posición**, `raw_quantization` cuenta **1 364 coordenadas distintas** y **25 822 filas (87,2 %)** en solo **126 coordenadas** con al menos 20 filas cada una. Una coordenada se repite en hasta **64 vehículos**. Si se incluye el grupo vacío, el total de grupos de al menos 20 filas sube a 127 y reúne 25 859 filas. El uso de puntos fijos es observable en esta captura. La semántica y el mecanismo de asignación de Renfe siguen `UNVERIFIED`.
+
+R7 detectó la incoherencia espacial y R8 recurrió al horario. Esa respuesta explica la velocidad positiva de los planes, mientras que el artefacto aparece en el GPS de entrada. El patrón apunta al feed, sin evidencia de que ajustar τ lo resuelva. Con `schedule_stop_zone` quedaron 16 planes positivos tras la espera y tres permitieron avance por horario sin espera. El rango fue de 8,440056 a 14,353688 m/s. Hubo 46 fotogramas extrapolados con `STOPPED_AT` efectivo (32 con `schedule_stop_zone` y 14 sin causa de retención). Las 4 124 pre-salidas, 696 paradas en origen pasada la hora programada, 2 129 intermedias y 32 terminales coherentes quedaron a 0 m/s.
+
+**Tarea propuesta.** Evaluar preferir un `stop_id` resoluble del viaje cuando Renfe declara `STOPPED_AT` y el GPS es incoherente con la parada, conservando el GPS bruto y señalando la procedencia. La tarea deberá cubrir identificadores ausentes, cambiantes y paradas repetidas en el itinerario. FR-01 sigue abierto.
 
 | Parada declarada | Decisión de R8 | Vehículo y hora GPS UTC de cada excepción |
 |---|---|---|
@@ -117,11 +152,15 @@ Desde el instante GPS de esa primera proyección, el primer fotograma de replay 
 | 20721 | 06:11:30 | 06:12:18.591167 | 48,591167 |
 | 20793 | 08:46:51 | 08:47:40.042598 | 49,042598 |
 
-**Hallazgo de presentación en dos de esos tres casos.** A las 06:22:35.444589, el GPS de 20231 había vuelto exactamente a su coordenada de las 06:21:30 y seguía declarando STOPPED_AT. Sin embargo, el snapshot eligió como ancla efectiva el GPS de las 06:21:52, que había descartado en el fotograma anterior. El progreso mostrado pasó de 68,387400 a 10327,668672 m. A las 08:47:40.042598, 20793 también volvió a la coordenada previa, pero el snapshot eligió el GPS de las 08:46:51 y extrapoló: progreso confirmado 33687,171049 m y mostrado 34547,078447 m, frente a 12175,342547 m antes. Se reprodujeron ambos casos con build_snapshot sobre las vistas del segmento. La selección latest/previous usa las dos últimas muestras (packages/movement/engine.py:106–125); en estas secuencias reaparece una muestra que la respuesta anterior había rechazado. Se reporta al revisor sin modificar el motor. En cambio, para 20721 sí fue el GPS nuevo de las 06:12:10 el que finalmente se presentó. Esta distinción impide interpretar las 402 latencias como confirmaciones de salidas físicas.
+**Hallazgo propuesto, pendiente de aceptación.** El motor puede recuperar una misma muestra que había rechazado. A las 06:22:35.444589 UTC, 20231 volvió exactamente a la coordenada de las 06:21:30 y siguió declarando `STOPPED_AT`. El snapshot eligió la muestra rechazada de las 06:21:52 y el progreso mostrado pasó de 68,387400 a 10 327,668672 m. En 20793, a las 08:47:40.042598 UTC, eligió la muestra rechazada de las 08:46:51 pese al retorno a la coordenada anterior. El progreso confirmado fue 33 687,171049 m y el mostrado pasó de 12 175,342547 a 34 547,078447 m. La siguiente muestra quedó visible unos 31 s después en ambos casos.
+
+El defecto nace en [`engine.py:110–124`](../../../packages/movement/engine.py#L110-L124) (MP-012). Con `latest` en la coordenada de vuelta y `previous` en la posición atípica, `_is_unusable` evalúa el salto contra esa posición y el fallback vuelve a evaluarla sola como ancla. El [`LIMIT 2` de `db.py:154–167`](../../../apps/api/db.py#L154-L167) viene de MP-013 y se conservó en MP-025a. `triples_aba` cuenta 416 tríadas consecutivas A→B→A del mismo vehículo y viaje dentro de los segmentos. Dos de ellas reprodujeron aquí el fallo de presentación. En 20721 sí se presentó el GPS nuevo de las 06:12:10. Las 402 latencias miden disponibilidad en el replay y la salida física sigue `UNVERIFIED`.
+
+**Tarea propuesta.** Validar el fallback frente a secuencias A→B→A y conservar la última ancla aceptada cuando se rechaza un GPS intermedio. El caso queda fuera de los criterios de aceptación de MP-025a y MP-026b, que permanecen en su estado actual.
 
 **Guarda M7.** La fracción adversa bajó de 9/10 del smoke al 9,37 % (135/1441) en jornada 1. Los 135 casos diurnos proceden de una sola regla: operator_incoming_at congela el avance dentro de la zona de parada y el siguiente GPS ya estaba al menos 100 m más adelante. Ninguno se debió a before_first_departure, que sí explicó cuatro de los nueve del smoke. El corte histórico 1532→1533 daba 0/9. Los tres resultados tienen poblaciones y cadencias distintas.
 
-**F1 y reaparición ordinaria.** Al pasar de valid_until a +1 ms sobre la misma ancla y geometría, el retroceso máximo fue 0 m en 65 comparaciones. Los 8 saltos al recuperar tras caducidad tuvieron p50/p90/p95/máximo de **2571,203214 / 5478,116637 / 6660,286683 / 7842,456728 m**. En los ocho casos se pasó del final congelado autorizado a una nueva ancla sobre corredor. La tabla recoge los ocho, independientemente de su magnitud. Los 65 enlaces de reanudación tras suspensión están fuera de esta población. El salto de **311,371489 m** se reprodujo en el test sintético de recuperación a +95 s, antes de caducar. Su referencia es otra y no entra en estos cuantiles.
+**F1 y reaparición ordinaria.** Al pasar de valid_until a +1 ms sobre la misma ancla y geometría, el retroceso máximo fue 0 m en 65 comparaciones. Los 8 saltos al recuperar tras caducidad tuvieron p50/p90/p95/máximo de **2571,203214 / 5478,116637 / 6660,286683 / 7842,456728 m**. En los ocho casos se pasó del final congelado autorizado a una nueva ancla sobre corredor. La tabla recoge los ocho, independientemente de su magnitud. La reanudación tras suspensión se calcula por separado. El salto de **311,371489 m** se reprodujo en el test sintético de recuperación a +95 s, antes de caducar. Su referencia es otra y no entra en estos cuantiles.
 
 | Vehículo | Primer fotograma recuperado UTC | Salto (m) |
 |---|---|---:|
@@ -157,21 +196,34 @@ En el bloque de reproducción del smoke se sustituyen el nombre del contenedor p
 
 El manifiesto identifica el HEAD de captura 1e60839d408e6668da8e1711937ed21b31c09615. Los 705 runs llevaban la huella esperada de P-024 y ninguno se clasificó retroactivo. Se contrastaron GTFS y catálogo completos. El manifiesto registra 1970 incidencias implausible_speed para la jornada completa. La medida de salto compara la predicción con la segunda proyección del GPS, incluso si el motor descarta ese segundo GPS al dibujar. El detalle por caso permite distinguir ambas situaciones.
 
-**PASS.** Se ejecutaron ruff check infra/operate/validation, compileall y seis pruebas con unittest (cinco pruebas del arnés y la recuperación sintética de referencia). La prueba SQL adicional por segmento verificó que cada posición pertenecía a un run visible y que ningún GPS anterior al reinicio entraba en el segundo segmento. Se ejecutó el replay sin red dos veces:
+El delta añade pruebas de `identify`, de los estratos H1, de M7 y `STOPPED_AT`, y de `isolate`. La prueba SQL por segmento contrasta las vistas temporales con el volcado restaurado. Confirma las 135 exclusiones del reinicio y verifica que la comprobación detecta filas omitidas y adicionales.
+
+Se pueden ejecutar las pruebas y dos replays sin red desde la restauración local. Guardar las salidas en un directorio privado fuera de la captura:
 
 ```bash
 export MADRID_PULSE_ENV=replay MADRID_PULSE_MODE=replay MADRID_PULSE_SHORT_NAME=''
 export MADRID_PULSE_DATABASE_URL=postgresql://mp_test:mp_local@127.0.0.1:5456/mp025b
 export MADRID_PULSE_GTFS_SOURCE=/Users/matu/Documents/DATA/madrid-pulse/data/gtfs_static/fomento_transit.zip
 d=/Users/matu/Documents/DATA/madrid-pulse/data/capture/2026-11-26
+export MP025B_SEGMENT_TEST_MANIFEST="$d/session-1/manifest.json" MADRID_PULSE_REQUIRE_DB=1
+python -m unittest -v infra.operate.validation.test_metrics \
+  infra.operate.validation.test_segments tests.e2e.test_stop_state.RecoveryMeasurement
+ruff check infra/operate/validation
+python -m compileall -q infra/operate/validation
+umask 077
+results=$(mktemp -d)
 for n in 1 2; do
-  python -m infra.operate.validation.replay "$d/session-1/manifest.json" \
-    "$d/analysis/session-1-20261126T090138Z.dump" > "$d/analysis/jornada1-segmentos$n.json"
+  mkdir "$results/$n"
+  python -m infra.operate.validation.replay "$MP025B_SEGMENT_TEST_MANIFEST" \
+    "$d/analysis/session-1-20261126T090138Z.dump" > "$results/$n/results.json"
+  shasum -a 256 "$results/$n/results.json" > "$results/$n/results.json.sha256"
 done
-cmp "$d"/analysis/jornada1-segmentos{1,2}.json
+cmp "$results/1/results.json" "$results/2/results.json"
 ```
 
-**PASS.** Los dos procesos independientes sobre HEAD 39bab4f5413702d7f7186f63fc682d7f06a23290 produjeron JSON idéntico byte a byte (cmp con salida 0), SHA-256 **18e3eb9153e5bb42459fffa4ca740591ac1368c3f11d75f09ed8faa5beeb782c**. El JSON incluye adverse, stopped_adverse, recovery_cases y departure_events para auditar cada caso con el instante exacto sin publicar las capturas. El replay del smoke sobre esta restauración conservó todos los campos numéricos y resultados del informe histórico (se compararon todos sus campos salvo HEAD y SHA del dump). Se verificó la retirada del contenedor y volumen propios con docker rm -fv mp025b-j1 y consulta posterior por nombre exacto.
+En la primera ejecución de la jornada, dos procesos independientes sobre HEAD 39bab4f5413702d7f7186f63fc682d7f06a23290 produjeron JSON idéntico byte a byte (cmp con salida 0), SHA-256 **18e3eb9153e5bb42459fffa4ca740591ac1368c3f11d75f09ed8faa5beeb782c**. El JSON incluye adverse, stopped_adverse, recovery_cases y departure_events para auditar cada caso con el instante exacto sin publicar las capturas. El replay del smoke sobre aquella restauración conservó todos los campos numéricos y resultados del informe histórico (se compararon todos sus campos salvo HEAD y SHA del dump). Se verificó la retirada del contenedor y volumen propios con docker rm -fv mp025b-j1 y consulta posterior por nombre exacto.
+
+Para comparar el delta con `6398707`, ejecutar ese commit sobre otra copia del árbol de código con la misma restauración y los mismos insumos. Validar el campo `head` contra su commit en cada salida. Serializar con las claves ordenadas el subconjunto de claves de la referencia, salvo `head`, tanto en la referencia como en el resultado actual. Comparar esos dos archivos con `cmp`.
 
 La jornada queda entregada para revisión cruzada de Claude Opus · high. Despacho ejecutor Codex gpt-6.2-astra · high; identidad efectiva del backend UNVERIFIED. Jornadas 2 y 3 y cierre por el propietario pendientes.
 

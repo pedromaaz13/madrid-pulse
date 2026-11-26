@@ -27,6 +27,7 @@ from .metrics import (
     first_departure_frame,
     gate,
     jump_strata,
+    jump_tail,
     movement_opportunity,
 )
 from .segments import check_segment, isolate, windows
@@ -51,6 +52,9 @@ def identify(a, v, network, limits):
     schedule = engine.trip_schedule(a.trip)
     a.projected = schedule.directed_progress(m.progress_m)
     r = v.rendered
+    a.previous_anchor_used = (
+        r.anchor_observed_at is not None and r.anchor_observed_at < a.observed
+    )
     if r.anchor_observed_at != a.observed or r.coordinate_space != "map_matched":
         return
     if r.progress_envelope:
@@ -250,6 +254,7 @@ def analyze(conn, network, config, manifest, span=None):
     aba = 0
     excluded, states, costs, strata = Counter(), Counter(), Counter(), defaultdict(list)
     jumps, latency, adverse = [], [], []
+    tail_samples = []
     unavailable = []
     intervals = []
     departure_events = []
@@ -322,6 +327,7 @@ def analyze(conn, network, config, manifest, span=None):
             forecast = a.plan.progress_at(b.observed)
             jump = abs(forecast - b.projected)
             jumps.append(jump)
+            tail_samples.append((jump, b.previous_anchor_used))
             strata[f"{a.status}/{a.classification}/{a.coherent}"].append(jump)
             displacement = b.projected - a.projected
             for label in jump_strata(a, b):
@@ -373,6 +379,7 @@ def analyze(conn, network, config, manifest, span=None):
     ).fetchone()
     result = {
         "h1_strata": {k: distribution(v) for k, v in stratified.items()},
+        "jump_tail": jump_tail(tail_samples),
         "ghost_checks": ghost_checks,
         "triples_aba": aba,
         "m7_retenciones": m7_cases,
@@ -417,6 +424,7 @@ def analyze(conn, network, config, manifest, span=None):
         }
         result["_strata"] = strata
         result["_h1"] = stratified
+        result["_tail_samples"] = tail_samples
         result["_identities"] = {
             "vehicles": set(groups),
             "trips": trips,
@@ -493,6 +501,9 @@ def analyze_segments(conn, network, config, manifest, spans):
         label: distribution([v for part in parts for v in part["_h1"][label]])
         for label in labels
     }
+    result["jump_tail"] = jump_tail(
+        [sample for part in parts for sample in part["_tail_samples"]]
+    )
     result["separacion"] = {
         "filas_gps_fuera": population[0] - result["rows"],
         "cancelaciones_fuera": all_canceled - result["canceled_rows"],
@@ -555,15 +566,29 @@ def main():
             datetime.fromisoformat(manifest["period"][k])
             for k in ("start_utc", "end_utc")
         )
-        quant = conn.execute(
+        *quant, all_groups = conn.execute(
             """
             WITH coords AS (
-                SELECT latitude,longitude,count(*) AS n,count(distinct source_vehicle_id) AS vehicles
-                FROM public.vehicle_position_observation v JOIN public.source_ingestion_run r
-                ON r.id=v.ingestion_run_id WHERE started_at >= %s AND started_at < %s
-                AND latitude IS NOT NULL AND longitude IS NOT NULL GROUP BY latitude,longitude
-            ) SELECT coalesce(sum(n),0)::int,count(*),count(*) FILTER (WHERE n>=20),
-                     coalesce(sum(n) FILTER (WHERE n>=20),0)::int,max(vehicles) FROM coords
+                SELECT latitude IS NOT NULL AND longitude IS NOT NULL AS positioned,
+                       count(*) AS n, count(DISTINCT source_vehicle_id) AS vehicles
+                FROM public.vehicle_position_observation v
+                JOIN public.source_ingestion_run r ON r.id=v.ingestion_run_id
+                WHERE started_at >= %s AND started_at < %s
+                GROUP BY latitude, longitude
+            )
+            SELECT coalesce(sum(n) FILTER (WHERE positioned), 0)::int,
+                   count(*) FILTER (WHERE positioned),
+                   count(*) FILTER (WHERE positioned AND n >= 20),
+                   coalesce(sum(n) FILTER (WHERE positioned AND n >= 20), 0)::int,
+                   max(vehicles) FILTER (WHERE positioned),
+                   jsonb_build_object(
+                       'rows', coalesce(sum(n), 0),
+                       'missing_rows', coalesce(sum(n) FILTER (WHERE NOT positioned), 0),
+                       'groups', count(*),
+                       'groups_ge20', count(*) FILTER (WHERE n >= 20),
+                       'rows_ge20', coalesce(sum(n) FILTER (WHERE n >= 20), 0)
+                   )
+            FROM coords
         """,
             (start, end),
         ).fetchone()
@@ -586,6 +611,7 @@ def main():
             strict=True,
         )
     )
+    result["raw_coordinate_groups"] = all_groups
     result.update(
         head=subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip(),
         manifest_sha256=sha(manifest_path),

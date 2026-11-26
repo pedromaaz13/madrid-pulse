@@ -26,6 +26,7 @@ class Anchor:
     matched_row: bool = False
     raw_xy: tuple[float, float] | None = None
     declared_progress: float | None = None
+    previous_anchor_used: bool = False
 
 
 def distribution(values):
@@ -67,6 +68,22 @@ def gate(jumps):
     if jumps["n"] < 500:
         return "insuficiente"
     return "cumple_umbral_mediana" if jumps["p50"] <= 200 else "incumple_umbral_mediana"
+
+
+def jump_tail(samples):
+    """Saltos H1 con y sin sustitución del segundo GPS por un ancla previa."""
+    result = {}
+    for label, values in (
+        ("todos", [jump for jump, _ in samples]),
+        ("sin_rechazo", [jump for jump, rejected in samples if not rejected]),
+        ("segundo_rechazado", [jump for jump, rejected in samples if rejected]),
+    ):
+        result[label] = {
+            **distribution(values),
+            "mayores_200m": sum(jump > 200 for jump in values),
+            "mayores_5000m": sum(jump > 5000 for jump in values),
+        }
+    return result
 
 
 def first_departure_frame(frames, a, b):
