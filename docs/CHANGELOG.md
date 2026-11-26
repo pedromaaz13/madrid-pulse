@@ -4,6 +4,13 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 
 ## [Unreleased]
 
+### MP-025b — Validación provisional del motor sobre la jornada 1 de MP-028 (rama `pedromaaz13/mp-025b-validacion`; sin fusionar)
+
+Harness e informe: Codex `gpt-6.2-astra` · high (recibo de Orca); correcciones: Codex `gpt-6.2-sol` · medium (sustitución registrada); revisor Claude Opus 5.5 · high (argv verificado): verificación del delta **APPROVED** — del **informe provisional**; **no valida el motor ni cierra FR-01**. **No integrada en `main`.**
+
+#### Added
+- `infra/operate/validation/` (harness reproducible sobre replay identificado, con producción como motor) y `docs/evidence/mp-025b/README.md`. Jornada 1 de 3 (~2 h efectivas): H1 cumple literalmente pero no es informativo; **no cumple en movimiento** (p50 963,5 m); `STOPPED_AT` con avance 19/7 001 (artefacto de cuantización del feed); guarda M7 135/1 441; F1 sin retrocesos (0/65). Hallazgos propuestos: GPS rechazado que reaparece y preferencia del `stop_id` con `STOPPED_AT`.
+
 ### MP-026b — Lectura consistente de snapshot y tablero (ADR-0014 §4.7, FR-07) (integrada por PR #9, merge `4bc8612`)
 
 Ejecutor Codex `gpt-6.2-sol` · high (recibo de Orca); revisor Claude Opus 5.5 · high (argv verificado): APPROVED en la 1ª ronda sobre `ff5e6ad`. **Integrada en `main`** (PR #9, merge commit `4bc8612`, 2026-11-26).
