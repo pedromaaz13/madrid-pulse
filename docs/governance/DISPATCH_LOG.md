@@ -20,7 +20,7 @@
 | MP-028 captura (preparación y smoke) | Codex `gpt-6.2-sol` · medium | Claude `sonnet-5-5` · high | argv (revisor) | `a5ddc9b` | APPROVED (preparación y smoke); sesiones 1 de 3 |
 | MP-030 interfaz mínima | Codex `gpt-6.1-terra` · medium (sin navegador) | Claude `sonnet-5-5` · high con Chrome DevTools MCP | argv + preflight de navegador | `b799b7a`→`6e60249`; final `0600610` | CHANGES_REQUESTED ×2; corrección final no re-verificada |
 | MP-025b validación provisional | Codex `gpt-6.2-astra` · high | Claude `opus-5-5` · high | argv (revisor) | `6398707` | CHANGES_REQUESTED (2 B, 4 A) |
-| MP-025b correcciones | **Sustitución:** Codex `gpt-6.2-sol` · medium (en lugar de Astra High) | Claude `opus-5-5` · high (una verificación del delta) | recibo; lanzador programado 14:36 | pendiente | pendiente |
+| MP-025b correcciones | **Sustitución:** Codex `gpt-6.2-sol` · medium (en lugar de Astra High) | Claude `opus-5-5` · high (una verificación del delta) | recibo; despachado por el lanzador programado a las 14:36 | `cc7181b` | APPROVED (del informe provisional; **no** valida el motor ni cierra FR-01) |
 
 ## Sustituciones y bloqueos de cuota (registrados, no reintentados)
 - **MP-025b correcciones (2026-11-26):** se reasignan de Astra High a **Sol Medium** por economía (cambios de documento y tests, sin tocar datos ni métricas existentes; condición: resultados previos idénticos con `cmp`). Mismo proveedor, revisor sin cambios; la independencia se conserva. La cuota de Codex es de cuenta, así que el cambio de modelo no adelanta la reapertura (14:35).
