@@ -33,20 +33,28 @@ INPUT_KEYS = (
 )
 
 
+def gps_speed(a, b, horizon):
+    if a is None or b is None:
+        return None, "missing_gps"
+    seconds = (b.observed - a.observed).total_seconds()
+    if seconds == 0:
+        return None, "zero_gps_interval"
+    if not 0 < seconds <= horizon:
+        return None, "outside_gps_interval"
+    if (a.trip, a.day) != (b.trip, b.day) or a.projected is None or b.projected is None:
+        return None, "incomparable_gps"
+    return abs(b.projected - a.projected) * 3.6 / seconds, None
+
+
 def labels(state, a, b, frozen, speed_limit, horizon):
-    seconds = (b.observed - a.observed).total_seconds() if a and b else None
-    if (
-        a
-        and b
-        and a.projected is not None
-        and b.projected is not None
-        and (a.trip, a.day) == (b.trip, b.day)
-        and 0 < seconds <= horizon
-    ):
-        speed = abs(b.projected - a.projected) * 3.6 / seconds
-        plausibility = "le_160" if speed <= speed_limit else "gt_160"
-    else:
-        plausibility = "speed_unavailable"
+    speed, _ = gps_speed(a, b, horizon)
+    plausibility = (
+        "speed_unavailable"
+        if speed is None
+        else "le_160"
+        if speed <= speed_limit
+        else "gt_160"
+    )
     streak = (
         ("frozen" if frozen else "no_streak")
         if frozen is not None
@@ -65,12 +73,17 @@ def parsed(record):
     fields = dict(record)
     for key in ("observed", "visible"):
         fields[key] = datetime.fromisoformat(fields[key])
-    if fields["plan"]:
-        fields["plan"] = dict(fields["plan"])
-        for key in ("reference_at", "dwell_until", "cap_reached_at"):
-            value = fields["plan"][key]
-            fields["plan"][key] = datetime.fromisoformat(value) if value else None
-        fields["plan"] = ProgressEnvelope(**fields["plan"])
+    for key in ("plan", "effective_plan"):
+        envelope = fields.get(key)
+        fields[key] = None
+        if envelope:
+            envelope = dict(envelope)
+            for stamp in ("reference_at", "dwell_until", "cap_reached_at"):
+                value = envelope[stamp]
+                envelope[stamp] = datetime.fromisoformat(value) if value else None
+            fields[key] = ProgressEnvelope(**envelope)
+    fields.setdefault("effective_anchor_at", None)
+    fields.setdefault("effective_frozen_m", None)
     return SimpleNamespace(**fields)
 
 
@@ -140,23 +153,124 @@ def magnitude_change(old, new):
     return "increased" if new > old else "decreased"
 
 
+def gps_repeated(a, b):
+    if (
+        a is None
+        or not same_gps_circulation(a, b)
+        or a.raw_xy is None
+        or b.raw_xy is None
+    ):
+        return None
+    return a.raw_xy == b.raw_xy
+
+
+def threshold_crossing(old, new):
+    if old <= 200 < new:
+        return "crossed_above_200"
+    if new <= 200 < old:
+        return "crossed_at_or_below_200"
+    return None
+
+
+def paired_flow(counts, tags, old, new):
+    old, new = abs(old), abs(new)
+    direction = magnitude_change(old, new)
+    crossing = threshold_crossing(old, new)
+    for tag in tags:
+        counts[tag][direction] += 1
+        if crossing:
+            counts[tag][crossing] += 1
+    return direction, crossing
+
+
+class RetainedAnchorDiscrepancy:
+    def __init__(self):
+        self.samples = {variant: [] for variant in VARIANTS}
+        self.flows = defaultdict(Counter)
+        self.exclusions = Counter()
+        self.cases = []
+        self.baseline_candidates = []
+        self.prediction_sources = Counter()
+
+    def add(self, a, b, c, tags, segment):
+        old = a.plan.progress_at(b.observed) - b.projected
+        self.baseline_candidates.append(abs(old))
+        if not c.previous_anchor_used:
+            self.exclusions["no_retained_anchor"] += 1
+            return
+        if c.effective_plan is not None:
+            predicted = c.effective_plan.progress_at(b.observed)
+            source = "envelope"
+        elif c.effective_frozen_m is not None:
+            predicted = c.effective_frozen_m
+            source = "frozen"
+        else:
+            self.exclusions["no_effective_envelope_or_frozen_progress"] += 1
+            return
+        self.prediction_sources[source] += 1
+
+        repeated = gps_repeated(a, b)
+        next_gps = (
+            "unknown" if repeated is None else "frozen" if repeated else "changed"
+        )
+        tags = (*tags, f"next_gps/{next_gps}")
+        new = predicted - b.projected
+        paired_flow(self.flows, tags, old, new)
+        case = {
+            "segment": segment,
+            "vehicle": a.vehicle,
+            "a": a.observed.isoformat(),
+            "b": b.observed.isoformat(),
+            "retained_anchor_at": c.effective_anchor_at,
+            "correction_prediction_source": source,
+            "a_projected_m": a.projected,
+            "b_projected_m": b.projected,
+            "raw_xy_a": a.raw_xy,
+            "raw_xy_b": b.raw_xy,
+            "baseline_minus_gps_m": old,
+            "correction_minus_gps_m": new,
+            "strata": tags,
+        }
+        self.cases.append(case)
+        for variant, value in zip(VARIANTS, (old, new)):
+            self.samples[variant].append((tags, value, case))
+
+    def result(self):
+        return {
+            "candidate_pairs": len(self.baseline_candidates),
+            "baseline_all_candidates": {
+                **distribution(self.baseline_candidates),
+                "gt_200": sum(value > 200 for value in self.baseline_candidates),
+            },
+            "prediction_sources": self.prediction_sources,
+            "exclusions": self.exclusions,
+            "strata": {key: summarize(values) for key, values in self.samples.items()},
+            "flows": self.flows,
+            "cases": self.cases,
+        }
+
+
 def compare_gps(segments, horizon, speed_limit):
     metrics = {name: [] for name in (*VARIANTS, "common_baseline", "common_correction")}
     excluded, paired = Counter(), defaultdict(Counter)
+    retained = RetainedAnchorDiscrepancy()
+    available_plans = Counter()
     for index, (before, after) in enumerate(segments, start=1):
         for vehicle, old_group in before.items():
             new_group = after[vehicle]
-            frozen = False
+            frozen = None
             for (a, b), (c, d) in zip(
                 pairwise(old_group), pairwise(new_group), strict=True
             ):
                 tags = labels(a.status, a, b, frozen, speed_limit, horizon)
-                frozen = (
-                    a.raw_xy is not None
-                    and a.raw_xy == b.raw_xy
-                    and same_gps_circulation(a, b)
-                )
+                frozen = gps_repeated(a, b)
                 reasons = tuple(exclusion(x, y, horizon) for x, y in ((a, b), (c, d)))
+                if a.plan is not None and c.plan is not None:
+                    available_plans["both"] += 1
+                    if a.plan != c.plan:
+                        available_plans["different"] += 1
+                if reasons == (None, "sin_plan_del_ancla"):
+                    retained.add(a, b, c, tags, index)
                 if reasons == (None, None):
                     errors = [
                         abs(left.plan.progress_at(right.observed) - right.projected)
@@ -191,6 +305,8 @@ def compare_gps(segments, horizon, speed_limit):
         },
         "strata": {name: summarize(samples) for name, samples in metrics.items()},
         "paired_magnitude_change": paired,
+        "own_plans_available": available_plans,
+        "retained_anchor_discrepancy": retained.result(),
     }
 
 
@@ -202,14 +318,7 @@ def row_index(groups):
             key = (vehicle, a.trip, a.observed.isoformat(), a.digest)
             rows[key] = a
             identities[vehicle][(a.trip, a.observed.isoformat())].add(a.digest)
-            streaks[key] = (
-                None
-                if prev is None
-                or not same_gps_circulation(prev, a)
-                or a.raw_xy is None
-                or prev.raw_xy is None
-                else prev.raw_xy == a.raw_xy
-            )
+            streaks[key] = gps_repeated(prev, a)
             prev = a
     return rows, identities, streaks
 
@@ -228,6 +337,11 @@ def compare_frames(segments, groups, horizon, speed_limit):
     paired, reacquisition_strata = defaultdict(Counter), defaultdict(Counter)
     deltas, reanchors, cases, recovery_seen = [], [], [], set()
     presentation_extremes = {}
+    threshold_cases = []
+    by_vehicle = defaultdict(Counter)
+    exclusive = {variant: [] for variant in VARIANTS}
+    exclusive_reasons = {variant: Counter() for variant in VARIANTS}
+    unknown_speed = defaultdict(Counter)
     for index, ((baseline, correction), (gps, _)) in enumerate(
         zip(segments, groups), start=1
     ):
@@ -254,6 +368,7 @@ def compare_frames(segments, groups, horizon, speed_limit):
                     speed_limit,
                     horizon,
                 )
+                _, speed_reason = gps_speed(a, b, horizon)
                 case = {
                     "segment": index,
                     "vehicle": vid,
@@ -274,6 +389,8 @@ def compare_frames(segments, groups, horizon, speed_limit):
                         if ids == [None, None]
                         else anchor_delta(*ids)
                     )
+                    if speed_reason and reason != "no_confirmed_anchor":
+                        unknown_speed["anchor"][speed_reason] += 1
                     for tag in tags:
                         anchors[tag]["candidate_frames"] += 1
                         anchors[tag][reason] += 1
@@ -292,24 +409,52 @@ def compare_frames(segments, groups, horizon, speed_limit):
 
                 values = [presentation(p, f) for p, f in zip(previous, frames)]
                 if all(value is not None for value, _ in values):
+                    if speed_reason:
+                        unknown_speed["presentation_common"][speed_reason] += 1
                     old_jump, new_jump = (value for value, _ in values)
-                    direction = magnitude_change(abs(old_jump), abs(new_jump))
-                    for tag in tags:
-                        paired[tag][direction] += 1
+                    direction, crossing = paired_flow(paired, tags, old_jump, new_jump)
+                    delta_m = abs(new_jump) - abs(old_jump)
+                    counts = by_vehicle[vid]
+                    counts["pairs"] += 1
+                    counts[direction] += 1
+                    counts["baseline_gt_200"] += abs(old_jump) > 200
+                    counts["correction_gt_200"] += abs(new_jump) > 200
+                    counts["net_magnitude_delta_m"] += delta_m
                     if direction != "same":
-                        delta_m = abs(new_jump) - abs(old_jump)
+                        detail = {
+                            **case,
+                            "strata": tags,
+                            "delta_m": delta_m,
+                            "baseline_jump_m": old_jump,
+                            "correction_jump_m": new_jump,
+                            "baseline_before": previous[0],
+                            "baseline_after": frames[0],
+                            "correction_before": previous[1],
+                            "correction_after": frames[1],
+                        }
                         extreme = presentation_extremes.get(direction)
                         if extreme is None or abs(delta_m) > abs(extreme["delta_m"]):
-                            presentation_extremes[direction] = {
-                                **case,
-                                "delta_m": delta_m,
-                                "baseline_jump_m": old_jump,
-                                "correction_jump_m": new_jump,
-                                "baseline_before": previous[0],
-                                "baseline_after": frames[0],
-                                "correction_before": previous[1],
-                                "correction_after": frames[1],
-                            }
+                            presentation_extremes[direction] = detail
+                        if crossing:
+                            counts[crossing] += 1
+                            threshold_cases.append({**detail, "crossing": crossing})
+                elif (values[0][0] is None) != (values[1][0] is None):
+                    present = int(values[0][0] is None)
+                    other = 1 - present
+                    variant = VARIANTS[present]
+                    other_reason = values[other][1]
+                    exclusive_reasons[variant][other_reason] += 1
+                    detail = {
+                        **case,
+                        "strata": tags,
+                        "jump_m": values[present][0],
+                        "other_exclusion": other_reason,
+                        "baseline_before": previous[0],
+                        "baseline_after": frames[0],
+                        "correction_before": previous[1],
+                        "correction_after": frames[1],
+                    }
+                    exclusive[variant].append((tags, values[present][0], detail))
                 for name, (value, reason), p, f in zip(
                     VARIANTS, values, previous, frames
                 ):
@@ -381,6 +526,21 @@ def compare_frames(segments, groups, horizon, speed_limit):
             ]
         ),
         "paired_presentation_extremes": presentation_extremes,
+        "paired_presentation_threshold_cases": threshold_cases,
+        "paired_presentation_increases_by_vehicle": {
+            vid: counts
+            for vid, counts in by_vehicle.items()
+            if counts["correction_gt_200"] > counts["baseline_gt_200"]
+        },
+        "exclusive_presentation": {
+            variant: {
+                "strata": summarize(samples),
+                "other_exclusions": exclusive_reasons[variant],
+                "cases": [case for _, _, case in samples],
+            }
+            for variant, samples in exclusive.items()
+        },
+        "unknown_frame_speed": unknown_speed,
         "reacquisition_strata": reacquisition_strata,
         "paired_presentation_magnitude_change": paired,
         "reanchors": reanchors,
@@ -444,6 +604,11 @@ def compare(baseline, correction):
         paired_groups.append(groups)
         paired_frames.append((old["ticks"], new["ticks"]))
     gps = compare_gps(paired_groups, horizon, speed_limit)
+    changed_fields = sorted(
+        key
+        for key, value in baseline["replay"].items()
+        if value != correction["replay"][key]
+    )
     historical = {}
     for name, trace in zip(VARIANTS, (baseline, correction)):
         result = trace["replay"]
@@ -468,6 +633,8 @@ def compare(baseline, correction):
                     "m7_retenciones",
                     "jumps_by_state",
                     "h1_strata",
+                    "frozen_rewind_m",
+                    "latency_s",
                 )
             },
             "gate": gate(observed),
@@ -476,8 +643,13 @@ def compare(baseline, correction):
         "inputs": {
             **{key: baseline[key] for key in inputs},
             "heads": dict(zip(VARIANTS, (baseline["head"], correction["head"]))),
+            "module_origins": {
+                name: trace["module_origins"]
+                for name, trace in zip(VARIANTS, (baseline, correction))
+            },
         },
         "mp025b": historical,
+        "mp025b_changed_fields": changed_fields,
         "gps": gps,
         **compare_frames(paired_frames, paired_groups, horizon, speed_limit),
     }

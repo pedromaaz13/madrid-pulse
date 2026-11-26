@@ -14,7 +14,12 @@ analysis="$capture/analysis"
 dump="$analysis/session-1-20261126T090138Z.dump"
 manifest="$capture/session-1/manifest.json"
 output="$analysis/mp038-$3.json"
-container=mp038-evaluation
+port="${MP038_PORT:-5470}"
+case "$port" in
+    5470|5471) ;;
+    *) echo 'MP038_PORT debe ser 5470 o 5471' >&2; exit 2 ;;
+esac
+container="mp038-evaluation-$port"
 python_bin="$(command -v "${MP038_PYTHON:-python}")"
 test -f "$gtfs"
 test ! -e "$output"
@@ -23,8 +28,8 @@ if docker ps -a --filter "name=^/${container}$" --format '{{.Names}}' | grep -q 
     echo "El nombre del contenedor está ocupado: $container" >&2
     exit 1
 fi
-if lsof -nP -iTCP:5470 -sTCP:LISTEN; then
-    echo 'El puerto local 5470 está ocupado' >&2
+if lsof -nP "-iTCP:$port" -sTCP:LISTEN; then
+    echo "El puerto local $port está ocupado" >&2
     exit 1
 fi
 
@@ -39,7 +44,7 @@ cleanup() {
         docker rm -fv "$container_id" || code=1
         if docker inspect "$container_id" >/dev/null 2>&1 ||
            docker volume inspect "$volume" >/dev/null 2>&1 ||
-           lsof -nP -iTCP:5470 -sTCP:LISTEN; then
+           lsof -nP "-iTCP:$port" -sTCP:LISTEN; then
             code=1
         fi
     fi
@@ -59,15 +64,16 @@ shasum -a 256 -c "$dump.sha256"
 printf '%s  %s\n' 95b578603f6cd8f0faee93f7207c2313b61c51056dd72fe13f2bbfb452922ea1 "$dump" \
     5de84ef60f84769cf962f05e20fd1b7ba910832441e13a2883f9c2eaf2cdbb6e "$manifest" |
     shasum -a 256 -c -
-shasum -a 256 "$analysis"/*.json "$analysis"/*.dump* "$capture"/session-1/*.json > "$tmp/originals.sha256"
+find "$capture" -type f -exec shasum -a 256 {} + > "$tmp/originals.sha256"
+shasum -a 256 "$gtfs" >> "$tmp/originals.sha256"
 cp "$dump" "$tmp/copy.dump"
 cmp "$dump" "$tmp/copy.dump"
 
 container_id="$(docker run --pull=never --name "$container" --label madrid-pulse.task=MP-038 -d \
-    -p 127.0.0.1:5470:5432 -e POSTGRES_DB=mp038 -e POSTGRES_USER=mp_test \
+    -p "127.0.0.1:$port:5432" -e POSTGRES_DB=mp038 -e POSTGRES_USER=mp_test \
     -e POSTGRES_PASSWORD=mp_local postgis/postgis:17-3.5)"
 volume="$(docker inspect -f '{{range .Mounts}}{{.Name}}{{end}}' "$container_id")"
-test "$(docker port "$container_id" 5432/tcp)" = '127.0.0.1:5470'
+test "$(docker port "$container_id" 5432/tcp)" = "127.0.0.1:$port"
 for ((n = 0; n < 60; n++)); do
     if docker exec "$container_id" pg_isready -h 127.0.0.1 -U mp_test -d mp038 >/dev/null; then
         break
@@ -80,7 +86,8 @@ for migration in "$root"/infra/migrations/*.up.sql; do
 done
 
 export MADRID_PULSE_ENV=replay MADRID_PULSE_MODE=replay MADRID_PULSE_SHORT_NAME=""
-export MADRID_PULSE_DATABASE_URL=postgresql://mp_test:mp_local@127.0.0.1:5470/mp038
+export MP038_PORT="$port"
+export MADRID_PULSE_DATABASE_URL="postgresql://mp_test:mp_local@127.0.0.1:$port/mp038"
 export MADRID_PULSE_GTFS_SOURCE="$gtfs" PYTHONPATH="$root"
 cd "$root"
 "$python_bin" -m infra.operate.mark_disposable_db

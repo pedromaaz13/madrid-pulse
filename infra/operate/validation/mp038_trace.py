@@ -4,6 +4,7 @@ import argparse
 import json
 import os
 import subprocess
+import sys
 from collections import defaultdict
 from contextlib import ExitStack, contextmanager
 from dataclasses import asdict
@@ -18,9 +19,10 @@ from apps.api.config import ApiConfig
 from apps.api.gtfs_source import load_network
 from packages.database import require_disposable_database
 from packages.geo.corridor import Corridor
+from packages.movement import engine
 from packages.movement.profile import anchor_profile
 
-from . import replay
+from . import metrics, replay, segments
 
 
 class Trace:
@@ -50,6 +52,8 @@ class Trace:
                 if r.coordinate_space == "map_matched"
                 else None,
                 "method": r.rendering_method,
+                "coordinate_space": r.coordinate_space,
+                "reason": r.reason,
                 "flags": v.quality.flags,
             }
         self.segments[-1]["ticks"].append([at, vehicles])
@@ -58,14 +62,27 @@ class Trace:
     def identify(self, a, v, network, limits):
         self.identify_original(a, v, network, limits)
         row = asdict(a)
+        if a.previous_anchor_used:
+            rendered = v.rendered
+            row["effective_anchor_at"] = rendered.anchor_observed_at
+            if rendered.progress_envelope is not None:
+                row["effective_plan"] = rendered.progress_envelope.model_dump()
+            elif (
+                rendered.coordinate_space == "map_matched"
+                and rendered.rendering_method == "stale_frozen"
+            ):
+                row["effective_frozen_m"] = rendered.progress_m
         self.segments[-1]["rows"][a.vehicle].append(row)
 
 
 def check_target(config):
+    port = os.environ.get("MP038_PORT", "5470")
+    if port not in ("5470", "5471"):
+        raise ValueError("MP038_PORT debe ser 5470 o 5471")
     url = urlsplit(config.database_dsn)
     if (
         (url.scheme, url.hostname, url.port, url.path)
-        != ("postgresql", "127.0.0.1", 5470, "/mp038")
+        != ("postgresql", "127.0.0.1", int(port), "/mp038")
         or url.query
         or url.fragment
         or (os.environ.get("MADRID_PULSE_ENV"), config.mode, config.short_name)
@@ -92,9 +109,28 @@ def memoized_projections():
         yield
 
 
+def module_origins():
+    roots = {
+        "harness": Path(__file__).resolve().parents[3],
+        "checkout": Path.cwd().resolve(),
+    }
+    origins = {}
+    for origin, modules in (
+        ("harness", (__file__, replay.__file__, metrics.__file__, segments.__file__)),
+        ("checkout", (snapshot.__file__, engine.__file__)),
+    ):
+        for filename in modules:
+            location = Path(filename).resolve()
+            relative = location.relative_to(roots[origin]).as_posix()
+            origins[relative] = origin
+            print(f"{origin} {location}", file=sys.stderr)
+    return origins
+
+
 def run(manifest_path, dump):
     config = ApiConfig.from_env()
     check_target(config)
+    origins = module_origins()
     manifest = json.loads(manifest_path.read_text())
     trace = Trace()
     trace.analyze_original = replay.analyze
@@ -134,6 +170,7 @@ def run(manifest_path, dump):
             "head": subprocess.check_output(
                 ["git", "rev-parse", "HEAD"], text=True
             ).strip(),
+            "module_origins": origins,
             "manifest_sha256": replay.sha(manifest_path),
             "dump_sha256": replay.sha(dump),
             "gtfs_version": network.gtfs_version,

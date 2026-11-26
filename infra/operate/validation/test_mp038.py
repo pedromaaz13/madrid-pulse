@@ -29,6 +29,9 @@ def gps(second, progress, *, plan=True, rejected=False):
         raw_xy=(40.0, -3.0 + progress / 100_000),
         digest=f"gps-{second}",
         previous_anchor_used=rejected,
+        effective_plan=None,
+        effective_anchor_at=None,
+        effective_frozen_m=None,
         plan=ProgressEnvelope(at, progress, 0, progress, 180, None) if plan else None,
     )
 
@@ -62,6 +65,76 @@ class ComparableReplayTests(unittest.TestCase):
             strata["common_correction"]["global"]["worst"][1]["b_previous_anchor_used"]
         )
         self.assertEqual(data["exclusions"]["correction/sin_plan_del_ancla"], 1)
+
+    def test_retained_plan_is_separate_from_h1_and_tracks_repeated_b(self):
+        a, b, c = gps(0, 0), gps(30, 100), gps(60, 100)
+        rejected = gps(30, 100, plan=False, rejected=True)
+        rejected.effective_plan = ProgressEnvelope(a.observed, 0, 10, 500, 180, None)
+        rejected.effective_anchor_at = a.observed.isoformat()
+        data = compare_gps([({"v": [a, b, c]}, {"v": [a, rejected, c]})], 180, 160)
+        self.assertEqual(
+            data["strata"]["common_baseline"]["streak/streak_unavailable"]["n"], 1
+        )
+        retained = data["retained_anchor_discrepancy"]
+        self.assertEqual(retained["candidate_pairs"], 1)
+        self.assertEqual(retained["strata"]["baseline"]["next_gps/frozen"]["p50"], 0)
+        self.assertEqual(
+            retained["strata"]["correction"]["next_gps/frozen"]["p50"], 400
+        )
+        self.assertEqual(retained["flows"]["next_gps/frozen"]["increased"], 1)
+
+    def test_retained_frozen_presentation_uses_the_published_progress(self):
+        a, b, c = gps(0, 0), gps(30, 110), gps(60, 110)
+        rejected = gps(30, 110, plan=False, rejected=True)
+        rejected.effective_frozen_m = 0.0
+        data = compare_gps([({"v": [a, b, c]}, {"v": [a, rejected, c]})], 180, 160)
+        retained = data["retained_anchor_discrepancy"]
+        self.assertEqual(retained["cases"][0]["correction_minus_gps_m"], -110)
+        self.assertEqual(retained["prediction_sources"]["frozen"], 1)
+
+    def test_presentation_keeps_threshold_crossings_and_exclusive_pairs(self):
+        a, b, c = gps(0, 0), gps(30, 100), gps(60, 1000)
+        before = [
+            [r.observed.isoformat(), {"v": frame(r, r, shown)}]
+            for r, shown in ((a, 0), (b, 200), (c, None))
+        ]
+        after = [
+            [r.observed.isoformat(), {"v": frame(r, r, shown)}]
+            for r, shown in ((a, 0), (b, 201), (c, 501))
+        ]
+        result = compare_frames([(before, after)], [({"v": [a, b, c]}, {})], 180, 160)
+        self.assertEqual(
+            result["paired_presentation_magnitude_change"]["state/INCOMING_AT"][
+                "crossed_above_200"
+            ],
+            1,
+        )
+        self.assertEqual(
+            result["paired_presentation_threshold_cases"][0]["baseline_jump_m"], 200
+        )
+        self.assertEqual(
+            result["paired_presentation_increases_by_vehicle"]["v"][
+                "correction_gt_200"
+            ],
+            1,
+        )
+        exclusive = result["exclusive_presentation"]["correction"]
+        self.assertEqual(exclusive["strata"]["global"]["gt_200"], 1)
+        self.assertEqual(exclusive["other_exclusions"]["no_map_matched_progress"], 1)
+
+    @patch.dict(os.environ, {"MADRID_PULSE_ENV": "replay", "MP038_PORT": "5471"})
+    def test_authorized_reviewer_port_still_requires_matching_loopback_dsn(self):
+        config = SimpleNamespace(
+            database_dsn="postgresql://mp_test@127.0.0.1:5471/mp038",
+            mode="replay",
+            short_name="",
+        )
+        check_target(config)
+        with (
+            patch.dict(os.environ, {"MP038_PORT": "5466"}),
+            self.assertRaises(ValueError),
+        ):
+            check_target(config)
 
     def test_gps_speed_threshold_is_inclusive_and_raw_ties_are_unknown(self):
         a, b = gps(0, 0), gps(9, 400)
