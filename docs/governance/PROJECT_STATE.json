@@ -1543,18 +1543,21 @@
       ]
     },
     {
-      "implementation_status": "PLANNED",
-      "review_status": "NOT_REVIEWED",
+      "implementation_status": "IN_PROGRESS",
+      "review_status": "CHANGES_REQUESTED",
       "integration_status": "NOT_INTEGRATED",
       "deployment_status": "NOT_DEPLOYED",
-      "head": "UNKNOWN",
-      "evidence": [],
+      "head": "6398707",
+      "evidence": [
+        "docs/evidence/mp-025b/README.md",
+        "docs/adr/0014-amendment-owner-decision.md"
+      ],
       "pr": null,
       "merge_sha": null,
-      "review_date": null,
+      "review_date": "2026-11-26",
       "gate": "Aprobación humana donde indica docs/H4_MP_MAPPING.md; prueba RED en beb9434 y GREEN tras el fix",
-      "notes": "Planificada; implementación H4 no autorizada.",
-      "head_kind": "none",
+      "notes": "Validación PROVISIONAL del motor sobre la jornada 1 de MP-028 (1 de 3 jornadas; ~2 h efectivas tras excluir un hueco de 59,5 min por suspensión del equipo). Ejecutor Codex gpt-6.2-astra high (recibo de Orca; argv no verificable); revisor Claude Opus 5.5 high (argv verificado): CHANGES_REQUESTED (2 B, 4 A), reproducción exacta del harness y las cifras. Resultados (corregir la interpretación, pendiente): H1 cumple literalmente (11 425 pares, p50 0 m) pero NO es informativo: con avance >=100 m n=2 573 y p50 558,5 m; p90 1 143 m, p95 1 916 m, máx 23,6 km; STOPPED_AT con avance 19/7 001 planes (artefacto de cuantización del feed, no de R7/R8); M7 adversa 135/1 441; salidas retenidas 402/6 918 (latencia máx 49 s); F1 0/65 retrocesos. FR-01 NO se cierra. Hallazgo propuesto (no aceptado, tarea nueva): reaparición del GPS rechazado (engine.py:110-124; 416 tríadas A→B→A). BLOQUEO: las correcciones de B1/B2/A1-A4 quedaron pendientes porque Codex agotó su cuota (reapertura 14:35); no se reintenta ni se cambia de agente. Autorizada por el propietario el 2026-11-26. NO integrada; sin PR.",
+      "head_kind": "branch_tip",
       "id": "MP-025b",
       "title": "Validación Live del modelo de parada (H4-04)",
       "track": "PRODUCT",
