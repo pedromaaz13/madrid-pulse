@@ -2,17 +2,19 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
-from typing import Sequence
+from itertools import takewhile
 
 import psycopg
 from psycopg.pq import TransactionStatus
 from psycopg.rows import dict_row
 
 from packages.contracts.canonical import TripUpdateObservation, VehiclePositionObservation
+
+DEFAULT_ANCHOR_HISTORY_DEPTH = 256
 
 
 @contextmanager
@@ -65,6 +67,18 @@ class VehicleHistory:
     source_vehicle_id: str
     latest: ObservedRow
     previous: ObservedRow | None
+    earlier: tuple[ObservedRow, ...] = ()
+    truncated: bool = False
+
+    @property
+    def newest_first(self) -> tuple[ObservedRow, ...]:
+        if self.previous is None:
+            return (self.latest,)
+        return (self.latest, self.previous, *self.earlier)
+
+    def same_trip(self) -> Iterator[ObservedRow]:
+        trip = self.latest.position.source_trip_id
+        return takewhile(lambda row: row.position.source_trip_id == trip, self.newest_first)
 
 
 def _row_to_observed(row: dict) -> ObservedRow:
@@ -107,6 +121,7 @@ _KNOWN_UPDATE = """
     SELECT u.schedule_relationship, u.observed_at
     FROM trip_update_observation u JOIN source_ingestion_run r ON r.id = u.ingestion_run_id
     WHERE u.source_trip_id = v.source_trip_id AND r.started_at <= %(as_of)s
+      {row_filter}
       AND r.id <= COALESCE(%(max_run_id)s::bigint, r.id)
       AND u.observed_at >= %(cutoff)s
       AND u.observed_at <= COALESCE(%(observed_through)s, 'infinity'::timestamptz)
@@ -122,7 +137,7 @@ def known_trip_relationships(conn, trip_ids, *, as_of, observed_through=None, ma
         cur.execute(f"""
             SELECT v.source_trip_id, known.schedule_relationship, known.observed_at
             FROM unnest(%(trip_ids)s::text[]) AS v(source_trip_id)
-            CROSS JOIN LATERAL ({_KNOWN_UPDATE}) known
+            CROSS JOIN LATERAL ({_KNOWN_UPDATE.format(row_filter="")}) known
         """, dict(trip_ids=sorted(set(trip_ids)), as_of=as_of, max_run_id=max_run_id,
                   observed_through=observed_through, cutoff=trip_update_cutoff(as_of)))
         return {trip: (relationship, at) for trip, relationship, at in cur.fetchall()}
@@ -131,54 +146,113 @@ def known_trip_relationships(conn, trip_ids, *, as_of, observed_through=None, ma
 def latest_vehicle_histories(
     conn: psycopg.Connection, *, as_of: datetime, observed_through: datetime | None = None,
     max_run_id: int | None = None,
+    history_depth: int | None = None,
 ) -> list[VehicleHistory]:
-    """Las dos observaciones más recientes de cada vehículo distinto visto.
+    return _read_vehicle_histories(
+        conn, as_of=as_of, observed_through=observed_through, max_run_id=max_run_id,
+        history_depth=history_depth,
+    )
 
-    Sin corte de edad: un vehículo con último dato muy antiguo se devuelve
-    igualmente -- es responsabilidad del motor de movimiento (MP-012)
-    clasificarlo como `stale`/`scheduled`, no de esta capa ocultarlo.
-    `as_of` acota las ingestas. `observed_through` acota el reloj de origen en replay.
+
+def expand_vehicle_histories(
+    conn: psycopg.Connection,
+    histories: list[VehicleHistory],
+    vehicle_ids: Sequence[str],
+    *,
+    as_of: datetime,
+    observed_through: datetime | None,
+    history_depth: int,
+    max_run_id: int | None = None,
+) -> list[VehicleHistory]:
+    expanded = _read_vehicle_histories(
+        conn, as_of=as_of, observed_through=observed_through, max_run_id=max_run_id,
+        vehicle_ids=vehicle_ids, history_depth=history_depth,
+    )
+    by_vehicle = {h.source_vehicle_id: h for h in expanded}
+    return [by_vehicle.get(h.source_vehicle_id, h) for h in histories]
+
+
+def _read_vehicle_histories(
+    conn: psycopg.Connection, *, as_of: datetime, observed_through: datetime | None,
+    max_run_id: int | None = None,
+    vehicle_ids: Sequence[str] | None = None,
+    history_depth: int | None = None,
+) -> list[VehicleHistory]:
+    """Últimas observaciones por vehículo, en orden (observed_at, id) descendente.
+
+    Con profundidad explícita se reconstruye el tramo consecutivo del viaje
+    actual. Una fila adicional detecta si la cota cortó ese mismo viaje.
+    El valor por defecto conserva la lectura de dos filas para los llamadores
+    que solo consultan observaciones. Sin corte de edad para conservar GPS stale.
     """
+    if history_depth is not None and history_depth < 2:
+        raise ValueError("history_depth debe ser >= 2")
+    if vehicle_ids is not None and not vehicle_ids:
+        return []
+    vehicles = (
+        "SELECT unnest(%(vehicle_ids)s::text[])"
+        if vehicle_ids is not None
+        else """
+        SELECT min(source_vehicle_id) FROM vehicle_position_observation
+        UNION ALL
+        SELECT next_vehicle.source_vehicle_id FROM vehicles v
+        CROSS JOIN LATERAL (
+            SELECT source_vehicle_id FROM vehicle_position_observation
+            WHERE source_vehicle_id > v.source_vehicle_id ORDER BY source_vehicle_id LIMIT 1
+        ) next_vehicle
+        """
+    )
     with conn.cursor(row_factory=dict_row) as cur:
         cur.execute(
             f"""
             WITH RECURSIVE vehicles(source_vehicle_id) AS (
-                SELECT min(source_vehicle_id) FROM vehicle_position_observation
-                UNION ALL
-                SELECT next_vehicle.source_vehicle_id FROM vehicles v
-                CROSS JOIN LATERAL (
-                    SELECT source_vehicle_id FROM vehicle_position_observation
-                    WHERE source_vehicle_id > v.source_vehicle_id ORDER BY source_vehicle_id LIMIT 1
-                ) next_vehicle
+                {vehicles}
             ), ranked AS (
-                SELECT latest.*, row_number() OVER (
-                    PARTITION BY latest.source_vehicle_id ORDER BY latest.observed_at DESC, latest.id DESC
-                ) AS rank FROM vehicles
+                SELECT latest.*, row_number() OVER ordering AS rank,
+                       first_value(latest.source_trip_id) OVER ordering AS latest_trip
+                FROM vehicles
                 CROSS JOIN LATERAL (
                     SELECT v.id, v.source_vehicle_id, v.source_trip_id, v.observed_at, v.received_at,
                            v.latitude, v.longitude, v.current_status, v.current_stop_id,
                            v.speed_kmh, v.bearing, v.raw_vehicle_label, v.payload_hash,
-                           v.ingestion_run_id, r.anchor_profile, r.source_timestamp AS feed_published_at
+                           v.ingestion_run_id, r.source_timestamp AS feed_published_at
                     FROM vehicle_position_observation v
                     JOIN source_ingestion_run r ON r.id = v.ingestion_run_id
                     WHERE v.source_vehicle_id = vehicles.source_vehicle_id AND r.started_at <= %(as_of)s
                       AND r.id <= COALESCE(%(max_run_id)s::bigint, r.id)
                       AND v.observed_at <= COALESCE(%(observed_through)s, 'infinity'::timestamptz)
-                    ORDER BY v.observed_at DESC, v.id DESC LIMIT 2
+                    ORDER BY v.observed_at DESC, v.id DESC LIMIT %(row_limit)s
                 ) latest
+                WINDOW ordering AS (
+                    PARTITION BY latest.source_vehicle_id ORDER BY latest.observed_at DESC, latest.id DESC
+                )
+            ), trip_prefix AS (
+                SELECT ranked.*,
+                       min(rank) FILTER (WHERE source_trip_id <> latest_trip)
+                           OVER (PARTITION BY source_vehicle_id) AS trip_boundary
+                FROM ranked
+            ), relevant AS (
+                -- La huella del run se transmite una vez, aunque la usen muchos vehículos.
+                SELECT trip_prefix.*, row_number() OVER (PARTITION BY ingestion_run_id) AS run_row
+                FROM trip_prefix
+                WHERE NOT %(extended)s OR trip_boundary IS NULL OR rank < trip_boundary
             )
             SELECT v.*, prior.observed_at AS prior_at, prior.latitude AS prior_lat,
                    prior.longitude AS prior_lon, known.schedule_relationship AS known_relationship,
                    known.observed_at AS known_observed_at,
                    base.schedule_relationship AS base_relationship,
-                   base.ingestion_run_id AS base_run, base.observed_at AS base_observed_at
-            FROM ranked v
+                   base.ingestion_run_id AS base_run, base.observed_at AS base_observed_at,
+                   CASE WHEN v.run_row = 1 THEN r.anchor_profile END AS anchor_profile
+            FROM relevant v
+            JOIN source_ingestion_run r ON r.id = v.ingestion_run_id
             LEFT JOIN LATERAL (
                 SELECT u.schedule_relationship, u.ingestion_run_id, u.observed_at
                 FROM trip_update_observation u
                 JOIN source_ingestion_run r ON r.id = u.ingestion_run_id
                 WHERE u.source_trip_id = v.source_trip_id AND u.ingestion_run_id <= v.ingestion_run_id
                   AND (%(observed_through)s::timestamptz IS NOT NULL OR NOT r.is_retroactive)
+                  AND (%(observed_through)s::timestamptz IS NULL OR
+                       (r.started_at <= %(as_of)s AND u.observed_at <= %(observed_through)s))
                 ORDER BY u.ingestion_run_id DESC, u.observed_at DESC, u.id DESC LIMIT 1
             ) base ON true
             LEFT JOIN LATERAL (
@@ -186,25 +260,36 @@ def latest_vehicle_histories(
                 FROM vehicle_position_observation p
                 WHERE p.source_vehicle_id = v.source_vehicle_id
                   AND p.ingestion_run_id <= v.ingestion_run_id AND p.observed_at < v.observed_at
+                  AND (%(observed_through)s::timestamptz IS NULL OR EXISTS (
+                      SELECT FROM source_ingestion_run r WHERE r.id = p.ingestion_run_id
+                        AND r.started_at <= %(as_of)s
+                  ))
                 ORDER BY p.observed_at DESC, p.id DESC LIMIT 1
             ) prior ON prior.source_trip_id = v.source_trip_id
-            LEFT JOIN LATERAL ({_KNOWN_UPDATE}) known ON true
+            LEFT JOIN LATERAL ({_KNOWN_UPDATE.format(row_filter="AND v.rank = 1")}) known ON true
             ORDER BY source_vehicle_id, rank
             """,
             {"as_of": as_of, "observed_through": observed_through, "max_run_id": max_run_id,
-             "cutoff": trip_update_cutoff(as_of)},
+             "cutoff": trip_update_cutoff(as_of), "vehicle_ids": vehicle_ids,
+             "extended": history_depth is not None,
+             "row_limit": 2 if history_depth is None else history_depth + 1},
         )
         by_vehicle: dict[str, list[dict]] = {}
+        profiles: dict[int, str | None] = {}
         for row in cur.fetchall():
             by_vehicle.setdefault(row["source_vehicle_id"], []).append(row)
+            if row["run_row"] == 1:
+                profiles[row["ingestion_run_id"]] = row["anchor_profile"]
 
     histories: list[VehicleHistory] = []
     for vehicle_id, rows in by_vehicle.items():
-        rows.sort(key=lambda item: item["rank"])
-        latest = _row_to_observed(rows[0])
-        previous = _row_to_observed(rows[1]) if len(rows) > 1 else None
+        truncated = history_depth is not None and len(rows) > history_depth
+        latest, *older = (
+            _row_to_observed({**row, "anchor_profile": profiles[row["ingestion_run_id"]]})
+            for row in rows[:history_depth]
+        )
         histories.append(
-            VehicleHistory(source_vehicle_id=vehicle_id, latest=latest, previous=previous)
+            VehicleHistory(vehicle_id, latest, older[0] if older else None, tuple(older[1:]), truncated)
         )
     return histories
 
@@ -215,29 +300,13 @@ def vehicle_history(
     *,
     as_of: datetime,
     observed_through: datetime | None = None,
+    history_depth: int | None = None,
 ) -> VehicleHistory | None:
-    with conn.cursor(row_factory=dict_row) as cur:
-        cur.execute(
-            """
-            SELECT v.source_vehicle_id, v.source_trip_id, v.observed_at, v.received_at,
-                   v.latitude, v.longitude, v.current_status, v.current_stop_id,
-                   v.speed_kmh, v.bearing, v.raw_vehicle_label, v.payload_hash,
-                   r.source_timestamp AS feed_published_at
-            FROM vehicle_position_observation v
-            JOIN source_ingestion_run r ON r.id = v.ingestion_run_id
-            WHERE v.source_vehicle_id = %(vehicle_id)s AND r.started_at <= %(as_of)s
-              AND v.observed_at <= COALESCE(%(observed_through)s, 'infinity'::timestamptz)
-            ORDER BY v.observed_at DESC, v.id DESC
-            LIMIT 2
-            """,
-            {"vehicle_id": source_vehicle_id, "as_of": as_of, "observed_through": observed_through},
-        )
-        rows = cur.fetchall()
-    if not rows:
-        return None
-    latest = _row_to_observed(rows[0])
-    previous = _row_to_observed(rows[1]) if len(rows) > 1 else None
-    return VehicleHistory(source_vehicle_id=source_vehicle_id, latest=latest, previous=previous)
+    histories = _read_vehicle_histories(
+        conn, as_of=as_of, observed_through=observed_through,
+        vehicle_ids=[source_vehicle_id], history_depth=history_depth,
+    )
+    return histories[0] if histories else None
 
 
 def latest_trip_update(

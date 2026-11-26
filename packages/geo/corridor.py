@@ -9,8 +9,9 @@ extremo, se registra como ``gap`` en vez de fabricar una unión inexistente.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from functools import cached_property
 
-from .geometry import Projection, arc_length_to, haversine_m, project_point_to_polyline
+from .geometry import PolylineProjector, Projection, haversine_m
 from .overpass import RelationGeometry
 
 
@@ -56,6 +57,10 @@ class Corridor:
     def is_continuous(self) -> bool:
         return not self.gaps
 
+    @cached_property
+    def _segment_projectors(self) -> tuple[PolylineProjector, ...]:
+        return tuple(PolylineProjector(segment) for segment in self.segments if len(segment) >= 2)
+
     def project_station(self, lat: float, lon: float) -> tuple[Projection, float]:
         """Proyecta una coordenada real sobre el corredor.
 
@@ -65,16 +70,14 @@ class Corridor:
         atravesando un hueco real entre dos tramos desconectados.
         """
         best: Projection | None = None
-        best_segment: tuple[tuple[float, float], ...] | None = None
-        for segment in self.segments:
-            if len(segment) < 2:
-                continue
-            candidate = project_point_to_polyline(lat, lon, list(segment))
+        best_arc = 0.0
+        for projector in self._segment_projectors:
+            candidate, arc = projector.project(lat, lon)
             if best is None or candidate.distance_m < best.distance_m:
-                best, best_segment = candidate, segment
-        if best is None or best_segment is None:
+                best, best_arc = candidate, arc
+        if best is None:
             raise ValueError("el corredor no tiene ningún tramo geométrico válido")
-        return best, arc_length_to(list(best_segment), best)
+        return best, best_arc
 
 
 def build_corridor(geometry: RelationGeometry) -> Corridor:

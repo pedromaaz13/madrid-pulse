@@ -50,6 +50,7 @@ jobs:
         run: |
           python -m unittest \
             apps.api.tests.test_api_contract \
+            apps.api.tests.test_anchor_history \
             apps.api.tests.test_closure_matrix \
             apps.api.tests.test_history_contract \
             apps.api.tests.test_snapshot_consistency \

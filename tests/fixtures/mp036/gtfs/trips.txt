@@ -1,0 +1,3 @@
+route_id,service_id,trip_id,trip_headsign,wheelchair_accessible,block_id,shape_id
+10T0014C4a,1029J,1029J20231C4a,,1,1029J20231,10_C4a_INV
+10T0018C5,1029J,1029J20793C5,,2,1029J20793,10_C5_INV

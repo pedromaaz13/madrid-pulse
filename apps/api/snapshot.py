@@ -388,60 +388,57 @@ def _render_vehicle(
     if movement is not None and engine is not None and coverage is not None:
         assert coverage.corridor is not None
         schedule = engine.trip_schedule(latest.source_trip_id)
-        previous_anchor: AnchorSample | None = None
+        previous_anchor = (
+            AnchorSample(*movement.anchor_previous) if movement.anchor_previous is not None else None
+        )
         if (
-            history.previous is not None
-            and movement.anchor_payload_hash == latest.payload_hash
-            and movement.observed_at == latest.observed_at
-            and history.previous.position.source_trip_id == latest.source_trip_id
-        ):
-            previous_match = engine.map_match(history.previous.position)
-            if (
-                previous_match is not None
-                and previous_match.distance_from_track_m <= engine.thresholds.off_track_distance_m
-            ):
-                previous_anchor = AnchorSample(
-                    observed_at=history.previous.position.observed_at,
-                    progress_m=schedule.directed_progress(previous_match.physical_arc_m),
-                )
-        effective = history.latest
-        if (
-            history.previous
-            and history.previous.position.source_trip_id == latest.source_trip_id
-            and movement.anchor_payload_hash == history.previous.position.payload_hash
-            and movement.observed_at == history.previous.position.observed_at
-        ):
-            effective = history.previous
-        # Con búfer, el ancla futura solo autoriza interpolar en un tramo corto.
-        if (
-            previous_anchor
-            and display_at < latest.observed_at
+            movement.observed_at is not None
+            and display_at < movement.observed_at
             and (
-                display_at <= previous_anchor.observed_at
-                or (latest.observed_at - previous_anchor.observed_at).total_seconds()
+                previous_anchor is None
+                or display_at <= previous_anchor.observed_at
+                or (movement.observed_at - previous_anchor.observed_at).total_seconds()
                 > engine.thresholds.stale_after_s
             )
         ):
-            effective = history.previous
-            movement = engine.position(
-                trip_id=latest.source_trip_id,
-                service_date=service_date,
-                calculated_at=now,
-                latest=effective.position,
+            # Fuera de un tramo interpolable, resolver con la misma secuencia
+            # hasta el reloj de presentación, sin volver a validar una fila sola.
+            eligible = tuple(
+                row for row in history.same_trip()
+                if row.position.observed_at <= display_at
             )
+            if eligible:
+                first, *older = eligible
+                display_history = db.VehicleHistory(
+                    history.source_vehicle_id, first, older[0] if older else None,
+                    tuple(older[1:]), history.truncated,
+                )
+                movement = service.movement_from_history(
+                    engine, display_history, movement.route_id, now, service_date
+                )
+                assert movement is not None
+            else:
+                movement = engine.position(
+                    trip_id=latest.source_trip_id, service_date=service_date,
+                    calculated_at=display_at,
+                )
             previous_anchor = None
-        # Si ambas muestras quedan en el futuro, solo el horario ubica ese fotograma.
-        if (
-            movement.observed_at
-            and display_at < movement.observed_at
-            and (previous_anchor is None or display_at < previous_anchor.observed_at)
-        ):
-            movement = engine.position(
-                trip_id=latest.source_trip_id, service_date=service_date, calculated_at=display_at
-            )
-            previous_anchor = None
+        effective = next(
+            (row for row in history.newest_first if row.position is movement.anchor_observation),
+            history.latest,
+        )
         pos = effective.position
-        zone_sample = previous_anchor if effective.ingestion_run_id is None else None
+        zone_sample = None
+        if effective.ingestion_run_id is None and effective is history.latest:
+            previous = history.previous
+            if previous is not None and previous.position.source_trip_id == pos.source_trip_id:
+                previous_match = engine.map_match(previous.position)
+                if (previous_match is not None
+                        and previous_match.distance_from_track_m <= engine.thresholds.off_track_distance_m):
+                    zone_sample = AnchorSample(
+                        previous.position.observed_at,
+                        schedule.directed_progress(previous_match.physical_arc_m),
+                    )
         if effective.prior_gps is not None:
             prior_at, lat, lon = effective.prior_gps
             prior = pos.model_copy(update=dict(latitude=lat, longitude=lon, observed_at=prior_at))
@@ -487,13 +484,7 @@ def _render_vehicle(
             ),
             versions_match=profile_matches(effective.anchor_profile, network.gtfs_version, pattern_id,
                                            coverage.geometry_version, engine.thresholds),
-            anchor_distance_from_raw_m=(
-                map_matched.distance_from_raw_m
-                if effective is history.latest and map_matched
-                else previous_match.distance_from_track_m
-                if effective is history.previous and previous_anchor
-                else None
-            ),
+            anchor_distance_from_raw_m=movement.anchor_distance_from_raw_m,
         )
         return replace(rendered, calculated_at=now), map_matched
 
@@ -622,26 +613,7 @@ def _movement_for(
     engine = network.engine_for(coverage) if coverage is not None else None
     if engine is None:
         return None
-    latest = history.latest.position
-    previous = (
-        history.previous.position
-        if history.previous is not None
-        and history.previous.position.source_trip_id == latest.source_trip_id
-        else None
-    )
-    try:
-        return engine.position(
-            trip_id=latest.source_trip_id,
-            service_date=service_date,
-            calculated_at=now,
-            latest=latest,
-            previous=previous,
-            explicit_route_id=route_id,
-        )
-    except ValueError:
-        # Horario no resoluble sobre este corredor: se publica `raw`/`unlocated`
-        # con causa, nunca una posición inventada.
-        return None
+    return service.movement_from_history(engine, history, route_id, now, service_date)
 
 
 # --------------------------------------------------------------------------
@@ -723,10 +695,12 @@ def _snapshot_identity(
         digest.update(f"\0{gtfs_status}\0".encode())
     digest.update(f"\0{marker.scope}\0{marker.sequence}\0".encode())
     for history in sorted(histories, key=lambda item: item.source_vehicle_id):
-        digest.update(
-            f"{history.source_vehicle_id}\0{history.latest.position.payload_hash}"
-            f"\0{history.latest.position.observed_at.isoformat()}\0".encode()
-        )
+        digest.update(f"{history.source_vehicle_id}\0{history.truncated}\0".encode())
+        for row in history.same_trip():
+            digest.update(
+                f"{row.ingestion_run_id}\0{row.position.payload_hash}"
+                f"\0{row.position.observed_at.isoformat()}\0".encode()
+            )
     for trip_id in sorted(trip_updates):
         digest.update(f"{trip_id}\0{trip_updates[trip_id].payload_hash}\0".encode())
     for feed in sorted(health.feeds, key=lambda item: item.feed_name):
@@ -762,6 +736,12 @@ def resolve_clock(config: ApiConfig, network: LoadedNetwork, at: datetime | None
     return now
 
 
+def _has_movement_history(network: LoadedNetwork, history: db.VehicleHistory) -> bool:
+    trip = history.latest.position.source_trip_id
+    coverage = coverage_for_trip(network, trip, network.topology.resolve_trip_route_id(trip))
+    return coverage is not None and network.engine_for(coverage) is not None
+
+
 def build_snapshot(
     conn: psycopg.Connection,
     network: LoadedNetwork,
@@ -780,6 +760,13 @@ def build_snapshot(
         marker = db.revision_marker(conn, as_of=now)
         histories = db.latest_vehicle_histories(
             conn, as_of=now, observed_through=observed_through, max_run_id=marker.sequence
+        )
+        histories = db.expand_vehicle_histories(
+            conn, histories, [
+                h.source_vehicle_id for h in histories if _has_movement_history(network, h)
+            ],
+            as_of=now, observed_through=observed_through, max_run_id=marker.sequence,
+            history_depth=config.anchor_history_depth,
         )
         trip_updates = db.latest_trip_updates(
             conn,

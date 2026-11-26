@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from contextlib import asynccontextmanager
 from datetime import date, datetime, timezone
+from typing import Annotated
 
 import psycopg
 import logging
@@ -113,19 +114,23 @@ def health(
 
 @app.get("/api/v1/live/vehicles", response_model=list[VehicleOut])
 def live_vehicles(
+    config: Annotated[ApiConfig, Depends(get_config)],
     network: LoadedNetwork = Depends(get_network),
     conn: psycopg.Connection = Depends(get_connection),
 ) -> list[VehicleOut]:
-    return service.list_vehicles(conn, network, now_utc())
+    return service.list_vehicles(conn, network, now_utc(), history_depth=config.anchor_history_depth)
 
 
 @app.get("/api/v1/live/vehicles/{vehicle_id}", response_model=VehicleOut)
 def live_vehicle(
     vehicle_id: str,
+    config: Annotated[ApiConfig, Depends(get_config)],
     network: LoadedNetwork = Depends(get_network),
     conn: psycopg.Connection = Depends(get_connection),
 ) -> VehicleOut:
-    result = service.get_vehicle(conn, network, vehicle_id, now_utc())
+    result = service.get_vehicle(
+        conn, network, vehicle_id, now_utc(), history_depth=config.anchor_history_depth
+    )
     if result is None:
         raise HTTPException(status_code=404, detail="vehicle_id no encontrado")
     return result

@@ -11,7 +11,8 @@ en el rango de error que exige esta tarea (metros, no centímetros).
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
+from itertools import accumulate, pairwise
 
 _EARTH_RADIUS_M = 6_371_000.0
 
@@ -97,6 +98,49 @@ def arc_length_to(polyline: list[tuple[float, float]], projection: Projection) -
     lat_a, lon_a = polyline[projection.segment_index]
     total += haversine_m(lat_a, lon_a, projection.lat, projection.lon)
     return total
+
+
+class PolylineProjector:
+    """Acota la búsqueda con cajas de segmentos contiguos e indexa el arco."""
+
+    def __init__(self, points: tuple[tuple[float, float], ...]) -> None:
+        self._points = points
+        self._arc_m = tuple(accumulate(
+            (haversine_m(*first, *second) for first, second in pairwise(points)), initial=0.0
+        ))
+        self._blocks = []
+        block_size = 16
+        for start in range(0, len(points) - 1, block_size):
+            span = list(points[start:start + block_size + 1])
+            latitudes, longitudes = zip(*span)
+            self._blocks.append(
+                (min(latitudes), max(latitudes), min(longitudes), max(longitudes), start, span)
+            )
+
+    def project(self, lat: float, lon: float) -> tuple[Projection, float]:
+        candidates = []
+        for south, north, west, east, start, span in self._blocks:
+            # Misma métrica local que la proyección exacta. La caja contiene
+            # todos los segmentos del bloque, de modo que su distancia es
+            # una cota inferior, incluso cuando el GPS queda fuera de la vía.
+            x, y = _local_xy(
+                min(max(lat, south), north), min(max(lon, west), east),
+                origin_lat=lat, origin_lon=lon,
+            )
+            candidates.append((math.hypot(x, y), start, span))
+        best = None
+        for lower_bound, start, span in sorted(candidates):
+            if best is not None and lower_bound > best.distance_m + 1e-8:
+                break  # margen de redondeo para no descartar empates
+            local = project_point_to_polyline(lat, lon, span)
+            index = start + local.segment_index
+            if best is None or (local.distance_m, index) < (best.distance_m, best.segment_index):
+                best = replace(local, segment_index=index)
+        assert best is not None
+        arc = self._arc_m[best.segment_index] + haversine_m(
+            *self._points[best.segment_index], best.lat, best.lon
+        )
+        return best, arc
 
 
 def point_at_arc_length(
