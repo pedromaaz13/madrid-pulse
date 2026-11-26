@@ -65,3 +65,23 @@ def gate(jumps):
     if jumps["n"] < 500:
         return "insuficiente"
     return "cumple_umbral_mediana" if jumps["p50"] <= 200 else "incumple_umbral_mediana"
+
+
+def first_departure_frame(frames, a, b):
+    """Primera confirmación efectiva desde el GPS desplazado, en este segmento."""
+    for at, trip, day, stamp, confirmed, shown in frames:
+        if at < b.visible:
+            continue
+        if (trip, day) != (a.trip, a.day):
+            break
+        if stamp is None or stamp < b.observed or confirmed is None or shown is None:
+            continue
+        # Si la siguiente ancla efectiva vuelve a la posición inicial, el episodio
+        # terminó. Una salida posterior ya no mide la latencia de este GPS.
+        if (
+            confirmed > a.plan.progress_m_at_reference
+            and shown > a.plan.progress_m_at_reference
+        ):
+            return at
+        break
+    return None

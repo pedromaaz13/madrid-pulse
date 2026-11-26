@@ -20,7 +20,7 @@ from packages.movement.profile import anchor_profile
 from packages.movement.rendering import ProgressEnvelope
 from packages.movement.schedule import service_day_instant
 
-from .metrics import Anchor, distribution, exclusion, gate
+from .metrics import Anchor, distribution, exclusion, first_departure_frame, gate
 from .segments import isolate, windows
 
 
@@ -133,7 +133,7 @@ def analyze(conn, network, config, manifest, span=None):
             ticks.add(at)
     provenance, cancellations, board_counts = Counter(), Counter(), Counter()
     cohort = {a.digest for anchors in groups.values() for a in anchors}
-    visible_progress = {}
+    vehicle_frames = defaultdict(list)
     recovery, rewinds = [], []
     prior = {}
     recovery_cases = []
@@ -167,12 +167,20 @@ def analyze(conn, network, config, manifest, span=None):
         for a in arrivals[at]:
             vehicle = vehicles.get(a.vehicle)
             identify(a, vehicle, network, limits)
-            if a.matched_row and vehicle.rendered.coordinate_space == "map_matched":
-                visible_progress[a.digest] = vehicle.rendered.progress_m
         for vid, v in vehicles.items():
             if v.raw.payload_hash not in cohort:
                 continue
             r = v.rendered
+            vehicle_frames[vid].append(
+                (
+                    at,
+                    v.trip_id,
+                    v.service_date,
+                    r.anchor_observed_at,
+                    r.last_confirmed_progress_m,
+                    r.progress_m if r.coordinate_space == "map_matched" else None,
+                )
+            )
             env = r.progress_envelope
             state = r.stop_state
             provenance[
@@ -292,16 +300,16 @@ def analyze(conn, network, config, manifest, span=None):
                     if forecast == a.plan.progress_m_at_reference:
                         costs["retenida"] += 1
                         costs["retenida_100m"] += displacement >= 100
-                        if b.plan and visible_progress[b.digest] != a.plan.progress_at(
-                            min(b.visible, a.observed + stale)
-                        ):
-                            delay = (b.visible - b.observed).total_seconds()
+                        at = first_departure_frame(vehicle_frames[vid], a, b)
+                        if at is not None:
+                            delay = (at - b.observed).total_seconds()
                             latency.append(delay)
                             departure_events.append(
                                 [vid, b.observed.isoformat(), delay]
                             )
                         else:
                             costs["latencia_no_evaluable"] += 1
+                            departure_events.append([vid, b.observed.isoformat(), None])
     cycles = conn.execute(
         """SELECT count(*), count(*) FILTER (WHERE EXISTS
       (SELECT 1 FROM vehicle_position_observation v WHERE v.ingestion_run_id=r.id))
