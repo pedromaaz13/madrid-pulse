@@ -26,3 +26,11 @@ Base `origin/main` 4bc86128d44a9b83f8f9747df5cf83ce593f0194. Ejecutor: Codex `gp
 - [RED sobre b799b7a](review-RED-b799.txt): las dos suites de rótulos copiadas a una extracción limpia producen 13 fallos y 15 éxitos; uno de los fallos se debe a la función nueva `degradationText` ausente, los demás incluyen las aserciones de traducción y procedencia.
 - [GREEN](review-GREEN.txt): `npm run lint && npm run typecheck && npm test && npm run build`, Node 22.13.1; PASS, 140 tests en 14 archivos. Build verifica el worker MapLibre y avisa de chunks mayores de 500 kB.
 - NOT RUN: inspección visual, navegador real, lector de pantalla y móvil a 390 px; jsdom no valida composición ni desbordamiento. Queda pendiente la revisión visual delta de Claude.
+
+## Última corrección tras el delta `6e60249`
+
+El símbolo observado sobre corredor tiene contorno ancho y sin punto interior; el congelado, contorno fino y punto interior grande. La leyenda refleja ambos patrones y agrupa los pares congelados con el mismo rótulo; el botón de ampliar panel ocupa su propia fila y deja de flotar sobre los avisos.
+
+- [RED](final-RED.txt): en una extracción de `6e60249`, las dos pruebas nuevas fallan por la coincidencia de símbolos y la entrada duplicada; se eliminó la extracción temporal.
+- [GREEN](final-GREEN.txt): Node 22.13.1, `npm run lint && npm run typecheck && npm test && npm run build`: PASS, 142 tests en 15 archivos. El test de símbolos evalúa las expresiones reales de relleno, grosor del contorno y radio interior en los extremos de zoom 8 y 13, incluyendo observada bruta y sobre corredor, interpolada, extrapolada, horario y congelada.
+- NOT RUN: inspección visual y desbordamientos en navegador y móvil a 390 px, ni lector de pantalla. Esta corrección **no ha sido re-verificada por el revisor**; cualquier comprobación visual final queda a decisión del propietario.

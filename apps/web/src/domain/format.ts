@@ -21,7 +21,7 @@ export interface MethodStyle {
   /** Glifo que acompaña al código de línea sobre el mapa. */
   glyph: string;
   /** Clave de forma/contorno usada por las capas del mapa y la leyenda. */
-  shape: "solid" | "ring" | "dashed" | "hollow" | "absent";
+  shape: "solid" | "matched" | "ring" | "dashed" | "hollow" | "frozen" | "absent";
 }
 
 const BASE_METHOD_STYLES: Record<RenderingMethod, MethodStyle> = {
@@ -53,7 +53,7 @@ const BASE_METHOD_STYLES: Record<RenderingMethod, MethodStyle> = {
     label: "Congelada",
     detail: "Posición congelada; puede ser el final estimado autorizado",
     glyph: "◼",
-    shape: "ring",
+    shape: "frozen",
   },
   unlocated: {
     label: "Sin ubicar",
@@ -68,7 +68,7 @@ export const METHOD_STYLES = Object.fromEntries(
   Object.entries(BASE_METHOD_STYLES).map(([method, style]) => [method, {
     ...style,
     raw: method === "anchor" ? { ...style, label: "Observada en bruto", detail: "Posición GPS reportada por el operador sin proyectar al corredor" } : style,
-    map_matched: method === "anchor" ? { ...style, label: "Observada sobre corredor", detail: "Observación proyectada sobre el corredor; no es GPS bruto", shape: "ring", glyph: "●" } : style,
+    map_matched: method === "anchor" ? { ...style, label: "Observada sobre corredor", detail: "Observación proyectada sobre el corredor; no es GPS bruto", shape: "matched", glyph: "●" } : style,
     schedule: method === "anchor" ? { ...style, label: "Posición de horario", detail: "Coordenada de horario; no es GPS confirmado" } : style,
     none: method === "anchor" ? { ...style, label: "Sin coordenada", detail: "No hay espacio de coordenadas declarado" } : style,
   }]),
