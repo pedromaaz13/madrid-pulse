@@ -14,8 +14,6 @@ Ejecutor Codex `gpt-6.1-terra` · medium (sin navegador); revisor Claude Sonnet 
 #### Verified
 - 142 tests, lint, typecheck y build; inspección real en escritorio y móvil sobre el smoke de MP-028 (replay identificado). **No observados en navegador:** cancelado, terminal y demás motivos, `not_yet_valid`.
 
-### MP-026b — Lectura consistente de snapshot y tablero (ADR-0014 §4.7, FR-07) (rama `pedromaaz13/mp-026b-snapshot-consistente`, apilada sobre MP-025a; sin fusionar)
-
 ### MP-025b — Validación provisional del motor sobre la jornada 1 de MP-028 (rama `pedromaaz13/mp-025b-validacion`; sin fusionar)
 
 Harness e informe: Codex `gpt-6.2-astra` · high (recibo de Orca); correcciones: Codex `gpt-6.2-sol` · medium (sustitución registrada); revisor Claude Opus 5.5 · high (argv verificado): verificación del delta **APPROVED** — del **informe provisional**; **no valida el motor ni cierra FR-01**. **No integrada en `main`.**
