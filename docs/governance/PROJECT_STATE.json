@@ -1732,18 +1732,21 @@
       "priority": "P1"
     },
     {
-      "implementation_status": "PLANNED",
-      "review_status": "NOT_REVIEWED",
+      "implementation_status": "IMPLEMENTED_WITH_OPEN_GATE",
+      "review_status": "CHANGES_REQUESTED",
       "integration_status": "NOT_INTEGRATED",
       "deployment_status": "NOT_DEPLOYED",
-      "head": "UNKNOWN",
-      "evidence": [],
+      "head": "0600610",
+      "evidence": [
+        "docs/evidence/mp-030/README.md",
+        "docs/adr/0014-amendment-owner-decision.md"
+      ],
       "pr": null,
       "merge_sha": null,
-      "review_date": null,
+      "review_date": "2026-11-26",
       "gate": "Aprobación humana donde indica docs/H4_MP_MAPPING.md; prueba RED en beb9434 y GREEN tras el fix",
-      "notes": "Planificada; implementación H4 no autorizada.",
-      "head_kind": "none",
+      "notes": "Interfaz funcional mínima (procedencia por método y espacio, hold_reason, congelación F1, cancelación, degradación GTFS desde el snapshot); sin rediseño A/B/C. Ejecutor Codex gpt-6.1-terra medium (recibo de Orca; argv no verificable; sin navegador); revisor Claude Sonnet 5.5 high con Chrome DevTools MCP verificado (argv verificado). Revisión completa: CHANGES_REQUESTED (2 B, 7 A; inspección real escritorio 1440x900 y móvil 390x844 sobre el smoke de la captura MP-028). Verificación del delta (6e60249): B1, B2, A2-A7 RESUELTOS; A1 parcial con un hallazgo material (congelada indistinguible de observada sobre corredor en el mapa). Corrección final 0600610 (marcador de congelada distinto, leyenda fusionada, botón móvil): NO re-verificada por el revisor ni visualmente (NOT RUN). 142 tests, lint/typecheck/build verdes. Sin dictamen APPROVED. NOT RUN en navegador: cancelado, terminal y demás hold_reason, not_yet_valid (el smoke no los contiene). Capturas reales fuera de Git en data/capture/2026-11-26/mp030-capturas*. Autorizada por el propietario el 2026-11-26; PR en borrador sin merge automático; NO-GO público vigente.",
+      "head_kind": "branch_tip",
       "id": "MP-030",
       "title": "Interfaz: procedencia y rótulos veraces (H4-05)",
       "track": "PRODUCT",
