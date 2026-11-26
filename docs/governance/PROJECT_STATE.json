@@ -1509,7 +1509,7 @@
     {
       "implementation_status": "IMPLEMENTED",
       "review_status": "APPROVED",
-      "integration_status": "NOT_INTEGRATED",
+      "integration_status": "MERGED",
       "deployment_status": "NOT_DEPLOYED",
       "head": "0f0ce54",
       "evidence": [
@@ -1517,11 +1517,11 @@
         "docs/evidence/mp-025a/ronda2/README.md",
         "docs/adr/0014-amendment-owner-decision.md"
       ],
-      "pr": null,
-      "merge_sha": null,
+      "pr": 8,
+      "merge_sha": "c490f42",
       "review_date": "2026-11-25",
       "gate": "Aprobación humana donde indica docs/H4_MP_MAPPING.md; prueba RED en beb9434 y GREEN tras el fix",
-      "notes": "Implementación del motor aprobado (ADR-0014 enmienda 1: A con C como R8, F1, P-024 provisional). Ejecutor Codex gpt-6.2-astra high (recibo de Orca; argv no verificable); revisor Claude Opus 5.5 high (argv verificado): ronda 1 CHANGES_REQUESTED (3 B, 10 A); ronda 2 APPROVED sobre 0f0ce54. RED en beb9434 / GREEN; suite 315 tests con 18 skipped, Vitest 110. Incluye migraciones 0003 y 0004 (marca de carga retroactiva por trigger y huella de versión por run; idempotentes y reversibles; CAMBIO DE ESQUEMA persistente: no aplicar a la BD 5433 sin decisión del propietario), bloqueo de colector único y señalización de cancelaciones. NO cierra FR-01: se cierra solo con MP-025b sobre >=500 pares en vivo. Supuestos UNVERIFIED siguen sin validar (semántica en vivo IN_TRANSIT_TO/INCOMING_AT, latencia de salidas retenidas, salto de recuperación ~311 m, replay exacto por hora civil sin garantía). Recomendaciones documentadas sin implementar: A2 (bloqueo huérfano con SIGSTOP), A4, A8, A9, A10; descubrimiento no bloqueante: test_collector_without_gtfs_holds_from_first_frame no puede fallar. Rótulos de UI y vigencia desde snapshot siguen pendientes de MP-030. Actualiza 5 expectativas de pruebas previas, autorizadas y documentadas una a una. Autorizada por el propietario el 2026-11-25; PR en borrador sin merge automático; no cierra HG-H4-SCOPE.",
+      "notes": "Implementación del motor aprobado (ADR-0014 enmienda 1: A con C como R8, F1, P-024 provisional). Ejecutor Codex gpt-6.2-astra high (recibo de Orca; argv no verificable); revisor Claude Opus 5.5 high (argv verificado): ronda 1 CHANGES_REQUESTED (3 B, 10 A); ronda 2 APPROVED sobre 0f0ce54. RED en beb9434 / GREEN; suite 315 tests con 18 skipped, Vitest 110. Incluye migraciones 0003 y 0004 (marca de carga retroactiva por trigger y huella de versión por run; idempotentes y reversibles; CAMBIO DE ESQUEMA persistente: no aplicar a la BD 5433 sin decisión del propietario), bloqueo de colector único y señalización de cancelaciones. NO cierra FR-01: se cierra solo con MP-025b sobre >=500 pares en vivo. Supuestos UNVERIFIED siguen sin validar (semántica en vivo IN_TRANSIT_TO/INCOMING_AT, latencia de salidas retenidas, salto de recuperación ~311 m, replay exacto por hora civil sin garantía). Recomendaciones documentadas sin implementar: A2 (bloqueo huérfano con SIGSTOP), A4, A8, A9, A10; descubrimiento no bloqueante: test_collector_without_gtfs_holds_from_first_frame no puede fallar. Rótulos de UI y vigencia desde snapshot siguen pendientes de MP-030. Actualiza 5 expectativas de pruebas previas, autorizadas y documentadas una a una. Autorizada por el propietario el 2026-11-25. Integrada en main por PR #8 (merge commit c490f42, 2026-11-26) por autorización del propietario. Las migraciones 0003 y 0004 NO se aplican a la BD 5433. FR-01 sigue abierto hasta MP-025b; no cierra HG-H4-SCOPE.",
       "head_kind": "branch_tip",
       "id": "MP-025a",
       "title": "Modelo de estado de parada: cierre determinista (H4-04)",
@@ -1540,7 +1540,8 @@
       "priority": "P0",
       "requires_gates": [
         "HG-ADR-0014"
-      ]
+      ],
+      "integration_kind": "merge_commit"
     },
     {
       "implementation_status": "PLANNED",
@@ -1553,7 +1554,7 @@
       "merge_sha": null,
       "review_date": null,
       "gate": "Aprobación humana donde indica docs/H4_MP_MAPPING.md; prueba RED en beb9434 y GREEN tras el fix",
-      "notes": "Planificada; implementación H4 no autorizada.",
+      "notes": "Planificada; implementación H4 no autorizada. Autorizada por el propietario el 2026-11-26 (ejecución; sin hosting, publicación pública ni merge de PR nuevos; NO-GO público vigente).",
       "head_kind": "none",
       "id": "MP-025b",
       "title": "Validación Live del modelo de parada (H4-04)",
@@ -1608,18 +1609,18 @@
     {
       "implementation_status": "IMPLEMENTED",
       "review_status": "APPROVED",
-      "integration_status": "NOT_INTEGRATED",
+      "integration_status": "MERGED",
       "deployment_status": "NOT_DEPLOYED",
       "head": "ff5e6ad",
       "evidence": [
         "docs/evidence/mp-026b/README.md",
         "docs/adr/0014-amendment-owner-decision.md"
       ],
-      "pr": null,
-      "merge_sha": null,
+      "pr": 9,
+      "merge_sha": "4bc8612",
       "review_date": "2026-11-25",
       "gate": "Aprobación humana donde indica docs/H4_MP_MAPPING.md; prueba RED en beb9434 y GREEN tras el fix",
-      "notes": "Lectura consistente de snapshot y tablero (ADR-0014 enmienda §4.7, FR-07): una transacción REPEATABLE READ de solo lectura por petición. Ejecutor Codex gpt-6.2-sol high (recibo de Orca; argv no verificable); revisor Claude Opus 5.5 high (argv verificado): APPROVED en la 1ª ronda (0 B, 4 A). RED 8/8 contra 1d9a424 (carrera de AUD-06 reproducida) y GREEN; suite 323 tests con 18 skipped (+36 de gobernanza); snapshot p50/p95 con 300 000 runs 1 484,90/1 605,30 → 206,44/239,72 ms. Garantía INTRA-respuesta: sequence es una cota, no identidad; visibilidad histórica por hora civil sigue UNVERIFIED. Recomendaciones no bloqueantes sin aplicar: A1 (el desempate/snapshot_id del tablero no es identidad de contenido, preexistente), A2 (sin statement_timeout ni pool; MP-032/033), A3 (consistent_read lanza ValueError con conexión ya en transacción), A4 (_revision_scope solo degrada con InsufficientPrivilege). NO cierra FR-01 ni HG-H4-SCOPE. Apilada sobre MP-025a (PR #8): rama pedromaaz13/mp-026b-snapshot-consistente; PR en borrador sin merge automático.",
+      "notes": "Lectura consistente de snapshot y tablero (ADR-0014 enmienda §4.7, FR-07): una transacción REPEATABLE READ de solo lectura por petición. Ejecutor Codex gpt-6.2-sol high (recibo de Orca; argv no verificable); revisor Claude Opus 5.5 high (argv verificado): APPROVED en la 1ª ronda (0 B, 4 A). RED 8/8 contra 1d9a424 (carrera de AUD-06 reproducida) y GREEN; suite 323 tests con 18 skipped (+36 de gobernanza); snapshot p50/p95 con 300 000 runs 1 484,90/1 605,30 → 206,44/239,72 ms. Garantía INTRA-respuesta: sequence es una cota, no identidad; visibilidad histórica por hora civil sigue UNVERIFIED. Recomendaciones no bloqueantes sin aplicar: A1 (el desempate/snapshot_id del tablero no es identidad de contenido, preexistente), A2 (sin statement_timeout ni pool; MP-032/033), A3 (consistent_read lanza ValueError con conexión ya en transacción), A4 (_revision_scope solo degrada con InsufficientPrivilege). NO cierra FR-01 ni HG-H4-SCOPE. Apilada sobre MP-025a (PR #8): rama pedromaaz13/mp-026b-snapshot-consistente; Integrada en main por PR #9 (merge commit 4bc8612, 2026-11-26) tras #8.",
       "head_kind": "branch_tip",
       "id": "MP-026b",
       "title": "FR-07 snapshot consistente (H4-01)",
@@ -1638,7 +1639,8 @@
       "priority": "P0",
       "requires_gates": [
         "HG-ADR-0014"
-      ]
+      ],
+      "integration_kind": "merge_commit"
     },
     {
       "implementation_status": "PLANNED",
@@ -1671,7 +1673,7 @@
       ]
     },
     {
-      "implementation_status": "PLANNED",
+      "implementation_status": "IN_PROGRESS",
       "review_status": "NOT_REVIEWED",
       "integration_status": "NOT_INTEGRATED",
       "deployment_status": "NOT_DEPLOYED",
@@ -1681,7 +1683,7 @@
       "merge_sha": null,
       "review_date": null,
       "gate": "Aprobación humana donde indica docs/H4_MP_MAPPING.md; prueba RED en beb9434 y GREEN tras el fix",
-      "notes": "Planificada; implementación H4 no autorizada.",
+      "notes": "Planificada; implementación H4 no autorizada. Autorizada por el propietario el 2026-11-26 (ejecución; sin hosting, publicación pública ni merge de PR nuevos; NO-GO público vigente).",
       "head_kind": "none",
       "id": "MP-028",
       "title": "Captura en vivo (≥2 h, ≥3 días) (H4-12)",
@@ -1732,7 +1734,7 @@
       "priority": "P1"
     },
     {
-      "implementation_status": "PLANNED",
+      "implementation_status": "IN_PROGRESS",
       "review_status": "NOT_REVIEWED",
       "integration_status": "NOT_INTEGRATED",
       "deployment_status": "NOT_DEPLOYED",
@@ -1742,7 +1744,7 @@
       "merge_sha": null,
       "review_date": null,
       "gate": "Aprobación humana donde indica docs/H4_MP_MAPPING.md; prueba RED en beb9434 y GREEN tras el fix",
-      "notes": "Planificada; implementación H4 no autorizada.",
+      "notes": "Planificada; implementación H4 no autorizada. Autorizada por el propietario el 2026-11-26 (ejecución; sin hosting, publicación pública ni merge de PR nuevos; NO-GO público vigente).",
       "head_kind": "none",
       "id": "MP-030",
       "title": "Interfaz: procedencia y rótulos veraces (H4-05)",

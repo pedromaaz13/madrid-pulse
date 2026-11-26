@@ -13,6 +13,7 @@ Lee en este orden: [`../README.md`](../README.md) → este índice → [`STATUS.
 | [`roadmap/CROSSWALK.md`](roadmap/CROSSWALK.md) | Equivalencias F/H/MP/D/DES/FR y estudios ARC/DAT/GEO/UX/OPS |
 | [`governance/PROJECT_STATE.json`](governance/PROJECT_STATE.json) | **Fuente estructurada canónica** |
 | [`governance/UPDATE_PROTOCOL.md`](governance/UPDATE_PROTOCOL.md) | Transiciones, responsables y cierre |
+| [`governance/DISPATCH_LOG.md`](governance/DISPATCH_LOG.md) | Quién ejecutó y revisó cada tarea, modelo, esfuerzo y verificación |
 | [`DECISIONS.md`](DECISIONS.md), [`adr/`](adr/) | Decisiones (ADR-0014 y 0015 siguen `Propuesto`) |
 | [`CHANGELOG.md`](CHANGELOG.md) | Cambios confirmados |
 | [`ORCHESTRATION_POLICY.md`](ORCHESTRATION_POLICY.md), [`ORCHESTRATION_COMPATIBILITY.md`](ORCHESTRATION_COMPATIBILITY.md) | Política y capacidades de agentes |
