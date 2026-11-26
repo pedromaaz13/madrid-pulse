@@ -666,9 +666,9 @@ Dos ramas pueden avanzar en paralelo en worktrees independientes una vez resuelt
 | DES-07 | Comparativa de iconografía ferroviaria | DESIGN | PLANNED | DES-03 | codex | claude | — | — | [docs/design/DESIGN_DISCOVERY_A_B_C.md](design/DESIGN_DISCOVERY_A_B_C.md) | — |
 | DES-08 | Verificación comparativa A/B/C en navegador real (Claude + preflight; Codex audita código y artefactos) | DESIGN | PLANNED | DES-04, DES-05, DES-06, DES-07 | claude | codex | — | — | [docs/design/DESIGN_DISCOVERY_A_B_C.md](design/DESIGN_DISCOVERY_A_B_C.md) | — |
 | DES-09 | Índice comparativo y gate humano de elección | DESIGN | PLANNED | DES-08 | claude | codex | — | — | [docs/design/DESIGN_DISCOVERY_A_B_C.md](design/DESIGN_DISCOVERY_A_B_C.md) | — |
-| MP-036 | Fallback del motor: una observación rechazada no reaparece como ancla aceptada (A→B→A) | PRODUCT | IN_PROGRESS | — | codex | claude | — | — | [docs/roadmap/CROSSWALK.md](roadmap/CROSSWALK.md) | — |
-| MP-037 | Estudio de contradicciones de estado: M7 frente a R4 y STOPPED_AT incoherente con el GPS | PRODUCT | PLANNED | MP-025b | codex | claude | — | — | [docs/roadmap/CROSSWALK.md](roadmap/CROSSWALK.md) | — |
-| MP-038 | Evaluación comparable antes/después sobre las mismas entradas | PRODUCT | PLANNED | MP-025b, MP-036, MP-037 | codex | claude | — | — | [docs/roadmap/CROSSWALK.md](roadmap/CROSSWALK.md) | — |
+| MP-036 | Fallback del motor: una observación rechazada no reaparece como ancla aceptada (A→B→A) | PRODUCT | IN_PROGRESS | — | codex | claude | — | PR #15 | [docs/roadmap/CROSSWALK.md](roadmap/CROSSWALK.md) | UNKNOWN |
+| MP-037 | Estudio de contradicciones de estado: M7 frente a R4 y STOPPED_AT incoherente con el GPS | PRODUCT | IN_PROGRESS | MP-025b | codex | claude | — | PR #16 | [docs/roadmap/CROSSWALK.md](roadmap/CROSSWALK.md) | UNKNOWN |
+| MP-038 | Evaluación comparable antes/después sobre las mismas entradas | PRODUCT | IN_PROGRESS | MP-025b, MP-036, MP-037 | codex | claude | — | PR #17 | [docs/roadmap/CROSSWALK.md](roadmap/CROSSWALK.md) | UNKNOWN |
 
 ### Alias (mismo trabajo, otro identificador)
 
