@@ -1,0 +1,504 @@
+"""Compare the GPS, confirmed anchor and presentation traces independently."""
+
+import argparse
+import json
+from collections import Counter, defaultdict
+from datetime import datetime
+from itertools import pairwise
+from pathlib import Path
+from types import SimpleNamespace
+
+from packages.movement.rendering import ProgressEnvelope
+
+from .metrics import distribution, exclusion, gate
+
+VARIANTS = ("baseline", "correction")
+CASES = {
+    "20414": ("06:16:30", "06:18:40"),
+    "20418": ("06:31:30", "06:33:40"),
+    "20752": ("07:43:50", "07:46:00"),
+    "20231": ("06:21:29", "06:23:50"),
+    "20793": ("08:46:05", "08:49:10"),
+}
+INPUT_KEYS = (
+    "vehicle",
+    "trip",
+    "observed",
+    "visible",
+    "status",
+    "stop",
+    "digest",
+    "run",
+    "raw_xy",
+)
+
+
+def labels(state, a, b, frozen, speed_limit, horizon):
+    seconds = (b.observed - a.observed).total_seconds() if a and b else None
+    if (
+        a
+        and b
+        and a.projected is not None
+        and b.projected is not None
+        and (a.trip, a.day) == (b.trip, b.day)
+        and 0 < seconds <= horizon
+    ):
+        speed = abs(b.projected - a.projected) * 3.6 / seconds
+        plausibility = "le_160" if speed <= speed_limit else "gt_160"
+    else:
+        plausibility = "speed_unavailable"
+    streak = (
+        ("frozen" if frozen else "no_streak")
+        if frozen is not None
+        else "streak_unavailable"
+    )
+    return (
+        "global",
+        f"state/{state}",
+        f"speed/{plausibility}",
+        f"streak/{streak}",
+        f"cross/{state}/{plausibility}/{streak}",
+    )
+
+
+def parsed(record):
+    fields = dict(record)
+    for key in ("observed", "visible"):
+        fields[key] = datetime.fromisoformat(fields[key])
+    if fields["plan"]:
+        fields["plan"] = dict(fields["plan"])
+        for key in ("reference_at", "dwell_until", "cap_reached_at"):
+            value = fields["plan"][key]
+            fields["plan"][key] = datetime.fromisoformat(value) if value else None
+        fields["plan"] = ProgressEnvelope(**fields["plan"])
+    return SimpleNamespace(**fields)
+
+
+def same_gps_circulation(a, b):
+    return a.trip == b.trip and (not a.day or not b.day or a.day == b.day)
+
+
+def same_circulation(before, after):
+    return (before["trip"], before["day"]) == (after["trip"], after["day"])
+
+
+def confirmed(frame, identities):
+    if frame["confirmed_m"] is None or frame["confirmed_at"] is None:
+        return None
+    key = (frame["trip"], frame["confirmed_at"])
+    hashes = identities.get(key, set())
+    if len(hashes) != 1:
+        raise ValueError(
+            f"Identidad de ancla irresoluble: {key}, {len(hashes)} huellas"
+        )
+    return (frame["confirmed_at"], next(iter(hashes)))
+
+
+def anchor_delta(old, new):
+    if old == new:
+        return "same"
+    if old is None or new is None:
+        return "gained" if old is None else "lost"
+    if old[0] == new[0]:
+        return "different_hash"
+    return "newer" if old[0] < new[0] else "older"
+
+
+def presentation(before, after):
+    if before is None or after is None:
+        return None, "not_visible_in_both_ticks"
+    if not same_circulation(before, after):
+        return None, "different_circulation"
+    if before["shown_m"] is None or after["shown_m"] is None:
+        return None, "no_map_matched_progress"
+    if not before["geometry"] or before["geometry"] != after["geometry"]:
+        return None, "different_geometry"
+    return after["shown_m"] - before["shown_m"], None
+
+
+def summarize(samples):
+    by_label = defaultdict(list)
+    for tag, value, case in samples:
+        for label in tag:
+            by_label[label].append((value, case))
+    result = {}
+    for label, values in by_label.items():
+        magnitudes = [abs(value) for value, _ in values]
+        result[label] = {
+            **distribution(magnitudes),
+            "gt_200": sum(value > 200 for value in magnitudes),
+            "gt_5000": sum(value > 5000 for value in magnitudes),
+            "negative": sum(value < 0 for value, _ in values),
+            "worst": max(values, key=lambda row: abs(row[0])),
+        }
+    return result
+
+
+def magnitude_change(old, new):
+    if old == new:
+        return "same"
+    return "increased" if new > old else "decreased"
+
+
+def compare_gps(segments, horizon, speed_limit):
+    metrics = {name: [] for name in (*VARIANTS, "common_baseline", "common_correction")}
+    excluded, paired = Counter(), defaultdict(Counter)
+    for index, (before, after) in enumerate(segments, start=1):
+        for vehicle, old_group in before.items():
+            new_group = after[vehicle]
+            frozen = False
+            for (a, b), (c, d) in zip(
+                pairwise(old_group), pairwise(new_group), strict=True
+            ):
+                tags = labels(a.status, a, b, frozen, speed_limit, horizon)
+                frozen = (
+                    a.raw_xy is not None
+                    and a.raw_xy == b.raw_xy
+                    and same_gps_circulation(a, b)
+                )
+                reasons = tuple(exclusion(x, y, horizon) for x, y in ((a, b), (c, d)))
+                if reasons == (None, None):
+                    errors = [
+                        abs(left.plan.progress_at(right.observed) - right.projected)
+                        for left, right in ((a, b), (c, d))
+                    ]
+                    for tag in tags:
+                        paired[tag][magnitude_change(*errors)] += 1
+                for name, reason, (left, right) in zip(
+                    VARIANTS, reasons, ((a, b), (c, d))
+                ):
+                    if reason:
+                        excluded[(name, reason)] += 1
+                        continue
+                    forecast = left.plan.progress_at(right.observed)
+                    case = {
+                        "segment": index,
+                        "vehicle": vehicle,
+                        "a": left.observed.isoformat(),
+                        "b": right.observed.isoformat(),
+                        "gps_progress_m": right.projected,
+                        "predicted_m": forecast,
+                        "b_previous_anchor_used": right.previous_anchor_used,
+                    }
+                    sample = (tags, forecast - right.projected, case)
+                    metrics[name].append(sample)
+                    if reasons == (None, None):
+                        metrics[f"common_{name}"].append(sample)
+                excluded[("pair_eligibility", str(reasons))] += 1
+    return {
+        "exclusions": {
+            f"{name}/{reason}": count for (name, reason), count in excluded.items()
+        },
+        "strata": {name: summarize(samples) for name, samples in metrics.items()},
+        "paired_magnitude_change": paired,
+    }
+
+
+def row_index(groups):
+    rows, identities, streaks = {}, defaultdict(lambda: defaultdict(set)), {}
+    for vehicle, group in groups.items():
+        prev = None
+        for a in group:
+            key = (vehicle, a.trip, a.observed.isoformat(), a.digest)
+            rows[key] = a
+            identities[vehicle][(a.trip, a.observed.isoformat())].add(a.digest)
+            streaks[key] = (
+                None
+                if prev is None
+                or not same_gps_circulation(prev, a)
+                or a.raw_xy is None
+                or prev.raw_xy is None
+                else prev.raw_xy == a.raw_xy
+            )
+            prev = a
+    return rows, identities, streaks
+
+
+def frame_raw_key(vid, frame):
+    return vid, frame["trip"], frame["raw_at"], frame["raw_hash"]
+
+
+def compare_frames(segments, groups, horizon, speed_limit):
+    anchors, transitions, exclusions = (
+        defaultdict(Counter),
+        defaultdict(Counter),
+        Counter(),
+    )
+    jumps = {name: [] for name in (*VARIANTS, "common_baseline", "common_correction")}
+    paired, reacquisition_strata = defaultdict(Counter), defaultdict(Counter)
+    deltas, reanchors, cases, recovery_seen = [], [], [], set()
+    presentation_extremes = {}
+    for index, ((baseline, correction), (gps, _)) in enumerate(
+        zip(segments, groups), start=1
+    ):
+        rows, identities, streaks = row_index(gps)
+        prior = {}
+        for (clock, old_frames), (_, new_frames) in zip(
+            baseline, correction, strict=True
+        ):
+            for vid in sorted(old_frames.keys() | new_frames.keys() | prior.keys()):
+                frames = (old_frames.get(vid), new_frames.get(vid))
+                previous = prior.get(vid, (None, None))
+                exemplar = frames[0] or frames[1]
+                active = exemplar or previous[0] or previous[1]
+                key = frame_raw_key(vid, active)
+                b = rows[key]
+                prev = previous[0] or previous[1]
+                prev_key = frame_raw_key(vid, prev) if prev else None
+                a = rows.get(prev_key)
+                tags = labels(
+                    a.status if a else b.status,
+                    a,
+                    b,
+                    streaks.get(prev_key),
+                    speed_limit,
+                    horizon,
+                )
+                case = {
+                    "segment": index,
+                    "vehicle": vid,
+                    "tick": clock,
+                    "raw_at": b.observed.isoformat(),
+                }
+                if frames[0] is not None and frames[1] is not None:
+                    if (*frame_raw_key(vid, frames[0]), frames[0]["day"]) != (
+                        *frame_raw_key(vid, frames[1]),
+                        frames[1]["day"],
+                    ):
+                        raise ValueError(
+                            f"El replay no selecciona la misma entrada: {case}"
+                        )
+                    ids = [confirmed(f, identities[vid]) for f in frames]
+                    reason = (
+                        "no_confirmed_anchor"
+                        if ids == [None, None]
+                        else anchor_delta(*ids)
+                    )
+                    for tag in tags:
+                        anchors[tag]["candidate_frames"] += 1
+                        anchors[tag][reason] += 1
+                    if reason not in ("same", "no_confirmed_anchor"):
+                        deltas.append(
+                            {
+                                **case,
+                                "change": reason,
+                                "baseline": frames[0],
+                                "correction": frames[1],
+                                "identities": ids,
+                            }
+                        )
+                elif exemplar:
+                    exclusions["anchor_unpaired_frame"] += 1
+
+                values = [presentation(p, f) for p, f in zip(previous, frames)]
+                if all(value is not None for value, _ in values):
+                    old_jump, new_jump = (value for value, _ in values)
+                    direction = magnitude_change(abs(old_jump), abs(new_jump))
+                    for tag in tags:
+                        paired[tag][direction] += 1
+                    if direction != "same":
+                        delta_m = abs(new_jump) - abs(old_jump)
+                        extreme = presentation_extremes.get(direction)
+                        if extreme is None or abs(delta_m) > abs(extreme["delta_m"]):
+                            presentation_extremes[direction] = {
+                                **case,
+                                "delta_m": delta_m,
+                                "baseline_jump_m": old_jump,
+                                "correction_jump_m": new_jump,
+                                "baseline_before": previous[0],
+                                "baseline_after": frames[0],
+                                "correction_before": previous[1],
+                                "correction_after": frames[1],
+                            }
+                for name, (value, reason), p, f in zip(
+                    VARIANTS, values, previous, frames
+                ):
+                    if p is not None or f is not None:
+                        exclusions[f"{name}/{reason or 'comparable'}"] += 1
+                    if value is not None:
+                        sample = (tags, value, {**case, "before": p, "after": f})
+                        jumps[name].append(sample)
+                        if all(other is not None for other, _ in values):
+                            jumps[f"common_{name}"].append(sample)
+                    if p and f and same_circulation(p, f):
+                        # Compare confirmed timestamps within each variant. Their identity
+                        # was resolved above for every paired frame with confirmed progress.
+                        old = (
+                            p["confirmed_at"] if p["confirmed_m"] is not None else None
+                        )
+                        new = (
+                            f["confirmed_at"] if f["confirmed_m"] is not None else None
+                        )
+                        what = anchor_delta(
+                            (old,) if old else None, (new,) if new else None
+                        )
+                        for tag in tags:
+                            transitions[tag][
+                                f"{name}/{what if old or new else 'no_anchor'}"
+                            ] += 1
+                    if f and "anchor_reacquired" in f["flags"]:
+                        event = (
+                            name,
+                            index,
+                            vid,
+                            f["raw_at"],
+                            f["raw_hash"],
+                            f["confirmed_at"],
+                        )
+                        if event not in recovery_seen:
+                            recovery_seen.add(event)
+                            for tag in tags:
+                                reacquisition_strata[tag][name] += 1
+                            reanchors.append(
+                                {**case, "variant": name, "before": p, "after": f}
+                            )
+                if vid in CASES and CASES[vid][0] <= clock[11:19] <= CASES[vid][1]:
+                    cases.append(
+                        {
+                            **case,
+                            "baseline": frames[0],
+                            "correction": frames[1],
+                            "jumps_m": [v for v, _ in values],
+                        }
+                    )
+            prior = {
+                vid: (old_frames.get(vid), new_frames.get(vid))
+                for vid in old_frames.keys() | new_frames.keys()
+            }
+    return {
+        "anchor_strata": anchors,
+        "anchor_transitions": transitions,
+        "exclusions": exclusions,
+        "anchor_differences": deltas,
+        "additional_anchor_age_s": distribution(
+            [
+                (
+                    datetime.fromisoformat(entry["identities"][0][0])
+                    - datetime.fromisoformat(entry["identities"][1][0])
+                ).total_seconds()
+                for entry in deltas
+                if entry["change"] == "older"
+            ]
+        ),
+        "paired_presentation_extremes": presentation_extremes,
+        "reacquisition_strata": reacquisition_strata,
+        "paired_presentation_magnitude_change": paired,
+        "reanchors": reanchors,
+        "case_frames": cases,
+        "presentation_strata": {
+            name: summarize(samples) for name, samples in jumps.items()
+        },
+    }
+
+
+def compare(baseline, correction):
+    inputs = (
+        "manifest_sha256",
+        "dump_sha256",
+        "gtfs_version",
+        "catalog_version",
+        "thresholds",
+    )
+    if any(baseline[key] != correction[key] for key in inputs):
+        raise ValueError("Las dos revisiones tienen entradas distintas")
+    thresholds = baseline["thresholds"]
+    horizon, speed_limit = (
+        thresholds["stale_after_s"],
+        thresholds["max_estimated_speed_kmh"],
+    )
+    if speed_limit != 160:
+        raise ValueError(
+            "El estudio fija el tope de plausibilidad de producción en 160 km/h"
+        )
+    paired_groups, paired_frames = [], []
+    for old, new in zip(baseline["segments"], correction["segments"], strict=True):
+        if old["rows"].keys() != new["rows"].keys() or [t for t, _ in old["ticks"]] != [
+            t for t, _ in new["ticks"]
+        ]:
+            raise ValueError("El calendario o la población del replay difiere")
+        groups = []
+        for part in (old, new):
+            groups.append(
+                {
+                    vid: sorted(
+                        (parsed(row) for row in rr), key=lambda r: (r.observed, r.run)
+                    )
+                    for vid, rr in part["rows"].items()
+                }
+            )
+        for vehicle, group in groups[0].items():
+            for a, b in zip(group, groups[1][vehicle], strict=True):
+                if any(getattr(a, k) != getattr(b, k) for k in INPUT_KEYS):
+                    raise ValueError(
+                        f"El replay no contiene las mismas filas: {vehicle}, {a.observed}"
+                    )
+                if (a.day, a.matched_row, a.corridor, a.projected) != (
+                    b.day,
+                    b.matched_row,
+                    b.corridor,
+                    b.projected,
+                ):
+                    raise ValueError(
+                        f"El contexto y la proyección no coinciden: {vehicle}, {a.observed}"
+                    )
+        paired_groups.append(groups)
+        paired_frames.append((old["ticks"], new["ticks"]))
+    gps = compare_gps(paired_groups, horizon, speed_limit)
+    historical = {}
+    for name, trace in zip(VARIANTS, (baseline, correction)):
+        result = trace["replay"]
+        observed = gps["strata"][name]["global"]
+        if any(observed[key] != expected for key, expected in result["jumps"].items()):
+            raise ValueError(f"El cálculo H1 no coincide con el arnés original: {name}")
+        historical[name] = {
+            **{
+                key: result[key]
+                for key in (
+                    "rows",
+                    "pairs",
+                    "vehicles",
+                    "covered_vehicles",
+                    "frames",
+                    "gate",
+                    "jumps",
+                    "excluded",
+                    "separacion",
+                    "jump_tail",
+                    "departures",
+                    "m7_retenciones",
+                    "jumps_by_state",
+                    "h1_strata",
+                )
+            },
+            "gate": gate(observed),
+        }
+    return {
+        "inputs": {
+            **{key: baseline[key] for key in inputs},
+            "heads": dict(zip(VARIANTS, (baseline["head"], correction["head"]))),
+        },
+        "mp025b": historical,
+        "gps": gps,
+        **compare_frames(paired_frames, paired_groups, horizon, speed_limit),
+    }
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("baseline", type=Path)
+    parser.add_argument("correction", type=Path)
+    parser.add_argument("streaks", type=Path)
+    args = parser.parse_args()
+    result = compare(
+        json.loads(args.baseline.read_text()), json.loads(args.correction.read_text())
+    )
+    result["mp036_streaks"] = json.loads(args.streaks.read_text())
+    print(
+        json.dumps(
+            result, sort_keys=True, ensure_ascii=False, indent=2, allow_nan=False
+        )
+    )
+
+
+if __name__ == "__main__":
+    main()
