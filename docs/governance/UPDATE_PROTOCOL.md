@@ -48,3 +48,7 @@ preflight → rama propia → implementación → pruebas y artefactos → revis
 
 ## 9. Mecanismo y límites
 `sync_docs.py` regenera solo entre marcadores y es determinista; `check_docs.py` falla ante: IDs duplicados, dependencias inexistentes o cíclicas, `APPROVED`/`IMPLEMENTED` sin revisor o evidencia, fase/hito `CLOSED` sin gate, SHA o fechas inválidos, `MERGED` sin SHA, despliegue sin evidencia, aprobaciones humanas sin autor, rutas de evidencia inexistentes y bloques desincronizados. Corre en CI (job `governance`, sin red ni secretos). **Límite:** valida coherencia interna y las rutas/referencias estructuradas del JSON (no todos los enlaces Markdown), no la verdad del mundo real; «sin red» aplica al verificador local (el job de CI sí descarga el checkout y `setup-python`); la veracidad de cada dato sigue dependiendo de la evidencia enlazada y de la revisión humana.
+
+## Significado de `UNKNOWN` en `evidence`
+
+`evidence` solo admite rutas que existan en la rama que se valida o el literal `UNKNOWN`. `UNKNOWN` **no** significa «sin evidencia»: significa que la evidencia existe pero **todavía no está en esta rama** (p. ej. vive en la rama de un PR abierto) y por eso no se enlaza una ruta que aquí no existe. En esos casos el campo `notes` cita el PR y el commit exactos donde está el informe, y la entrada se sustituye por la ruta real cuando el PR se integra en `main`. Una tarea con `UNKNOWN` no se da por verificada por esta rama: la comprobación es la del PR citado.

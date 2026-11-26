@@ -2649,7 +2649,7 @@
       "merge_sha": null,
       "review_date": null,
       "gate": "Regresión RED/GREEN; reconstrucción determinista del historial sin cambiar el esquema; coste acotado y medido; una revisión completa y una verificación del delta",
-      "notes": "Defecto confirmado en la jornada 1 (vehículos 20231 y 20793, engine.py:110-124, origen MP-012). Las 416 tríadas A→B→A del harness NO son 416 fallos confirmados: se clasifican en la tarea. Ejecutor Codex gpt-6.2-sol high; revisor Claude Opus 5.5 high; escalar a Astra solo con un bloqueo concreto. Si la reconstrucción determinista no basta, se presentan alternativa y costes antes de introducir persistencia. Autorizada por el propietario el 2026-11-26; PR en borrador sin merge automático; FR-01 permanece abierto. RESULTADO (2026-11-26): reconstrucción determinista sin migraciones; re-anclaje K=2 configurable; 0/416 reapariciones; RED 9+5, GREEN 339/18 omitidos. Revisión Opus High: 1ª pasada CHANGES_REQUESTED (2 B, 8 A) → delta APPROVED (3 A residuales: 20752 sin recuperar, listado legado, coste del re-anclaje erróneo). PR #15 en borrador. Medido en MP-038: la retención se aleja del GPS bruto en 113/113 casos con GPS congelado. FR-01 abierto.",
+      "notes": "Defecto confirmado en la jornada 1 (vehículos 20231 y 20793, engine.py:110-124, origen MP-012). Las 416 tríadas A→B→A del harness NO son 416 fallos confirmados: se clasifican en la tarea. Ejecutor Codex gpt-6.2-sol high; revisor Claude Opus 5.5 high; escalar a Astra solo con un bloqueo concreto. Si la reconstrucción determinista no basta, se presentan alternativa y costes antes de introducir persistencia. Autorizada por el propietario el 2026-11-26; PR en borrador sin merge automático; FR-01 permanece abierto. RESULTADO (2026-11-26): reconstrucción determinista sin migraciones; re-anclaje K=2 configurable; 0/416 reapariciones; RED 9+5, GREEN 339/18 omitidos. Revisión Opus High: 1ª pasada CHANGES_REQUESTED (2 B, 8 A) → delta APPROVED (3 A residuales: 20752 sin recuperar, listado legado, coste del re-anclaje erróneo). PR #15 en borrador. Medido en MP-038: la retención se aleja del GPS bruto en 113/113 casos con GPS congelado. FR-01 abierto. Evidencia: informe docs/evidence/mp-036/README.md en el PR #15 (head 0c518fa; código revisado en 8c005c8); sigue en borrador hasta evaluar la jornada 2 (decisión del propietario 2026-11-27).",
       "head_kind": "branch_tip",
       "track": "PRODUCT",
       "milestone": "H4",
@@ -2662,19 +2662,19 @@
       "reviewer": "claude"
     },
     {
-      "implementation_status": "IN_PROGRESS",
+      "implementation_status": "IMPLEMENTED",
       "review_status": "APPROVED",
-      "integration_status": "NOT_INTEGRATED",
+      "integration_status": "MERGED",
       "deployment_status": "NOT_DEPLOYED",
       "head": "ebaea29",
       "evidence": [
-        "UNKNOWN"
+        "docs/evidence/mp-037/README.md"
       ],
       "pr": 16,
-      "merge_sha": null,
+      "merge_sha": "14709bba5280b71b2bd8b9c129a3e4ca10421681",
       "review_date": null,
       "gate": "Comparación de políticas sobre la captura existente; recomendación y, si cambia la precedencia aprobada del ADR, enmienda concreta para decisión del propietario antes de implementar",
-      "notes": "Evalúa los 19 planes positivos con STOPPED_AT incoherente y las 135 retenciones de M7 (todas desde INCOMING_AT en zona), sin asumir que M7 o R4 sea correcto; conserva los resultados con el criterio original; no implementa la regla universal «stop_id siempre gana» ni cambia umbrales; cualquier revisión del criterio requiere decisión explícita y validación con datos posteriores. Autorizada el 2026-11-26. FR-01 permanece abierto. RESULTADO (2026-11-26): estudio entregado; «conservar R4» = menos discontinuidades frente a un feed discretizado, no mayor exactitud (UNVERIFIED); parada_previa efecto mínimo; gps_previo intercambia discontinuidades; enmiendas solo CANDIDATAS pendientes de jornadas 2/3 y decisión del propietario (ADR intacto). Revisión Opus High: 1ª pasada CHANGES_REQUESTED (2 B, 5 A) → delta APPROVED. PR #16 en borrador.",
+      "notes": "Evalúa los 19 planes positivos con STOPPED_AT incoherente y las 135 retenciones de M7 (todas desde INCOMING_AT en zona), sin asumir que M7 o R4 sea correcto; conserva los resultados con el criterio original; no implementa la regla universal «stop_id siempre gana» ni cambia umbrales; cualquier revisión del criterio requiere decisión explícita y validación con datos posteriores. Autorizada el 2026-11-26. FR-01 permanece abierto. RESULTADO (2026-11-26): estudio entregado; «conservar R4» = menos discontinuidades frente a un feed discretizado, no mayor exactitud (UNVERIFIED); parada_previa efecto mínimo; gps_previo intercambia discontinuidades; enmiendas solo CANDIDATAS pendientes de jornadas 2/3 y decisión del propietario (ADR intacto). Revisión Opus High: 1ª pasada CHANGES_REQUESTED (2 B, 5 A) → delta APPROVED. PR #16 en borrador. INTEGRADA el 2026-11-27 por el propietario como ESTUDIO (merge commit 14709bba del PR #16, head revisado ebaea29): no implementa las alternativas ni modifica el ADR; las enmiendas siguen como candidatas.",
       "head_kind": "branch_tip",
       "track": "PRODUCT",
       "milestone": "H4",
@@ -2686,7 +2686,8 @@
         "MP-025b"
       ],
       "executor": "codex",
-      "reviewer": "claude"
+      "reviewer": "claude",
+      "integration_kind": "merge_commit"
     },
     {
       "implementation_status": "IN_PROGRESS",
@@ -2701,7 +2702,7 @@
       "merge_sha": null,
       "review_date": null,
       "gate": "Baseline y corrección sobre las mismas entradas; dump, manifiesto y resultados originales intactos; métricas globales y estratificadas con denominadores, exclusiones y casos adversos",
-      "notes": "Separa discrepancia frente al GPS bruto (incluso rechazado), cambio de ancla efectiva aceptada y discontinuidad de la posición presentada. No cambia retrospectivamente el criterio de aceptación. Autorizada el 2026-11-26. FR-01 permanece abierto. RESULTADO (2026-11-26): baseline 4bc8612 frente a corrección 0c518fa sobre la misma jornada 1; saltos presentados >200 m 2 935→2 771 (24 nuevos frente a 188 reducidos; 8 vehículos peores; STOPPED_AT 32↑/23↓); discrepancia frente al GPS bruto en 216 retenciones 674,5→1 845,6 m (se aleja con GPS congelado, 113/113). Revisión Opus High: 1ª pasada CHANGES_REQUESTED (2 B, 7 A) → delta APPROVED. PR #17 en borrador apilado sobre #15. FR-01 abierto.",
+      "notes": "Separa discrepancia frente al GPS bruto (incluso rechazado), cambio de ancla efectiva aceptada y discontinuidad de la posición presentada. No cambia retrospectivamente el criterio de aceptación. Autorizada el 2026-11-26. FR-01 permanece abierto. RESULTADO (2026-11-26): baseline 4bc8612 frente a corrección 0c518fa sobre la misma jornada 1; saltos presentados >200 m 2 935→2 771 (24 nuevos frente a 188 reducidos; 8 vehículos peores; STOPPED_AT 32↑/23↓); discrepancia frente al GPS bruto en 216 retenciones 674,5→1 845,6 m (se aleja con GPS congelado, 113/113). Revisión Opus High: 1ª pasada CHANGES_REQUESTED (2 B, 7 A) → delta APPROVED. PR #17 en borrador apilado sobre #15. FR-01 abierto. Evidencia: informe docs/evidence/mp-038/README.md en el PR #17 (head 39166da; revisado en 6615d53); sigue en borrador, apilado sobre el PR #15, hasta evaluar la jornada 2 (decisión del propietario 2026-11-27).",
       "head_kind": "branch_tip",
       "track": "PRODUCT",
       "milestone": "H4",

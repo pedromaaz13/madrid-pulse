@@ -24,8 +24,8 @@ Baseline de producto auditado: `beb9434`.
 | --- | --- | --- |
 | implementation_status | NOT_STARTED | 0 |
 | implementation_status | PLANNED | 30 |
-| implementation_status | IN_PROGRESS | 6 |
-| implementation_status | IMPLEMENTED | 35 |
+| implementation_status | IN_PROGRESS | 5 |
+| implementation_status | IMPLEMENTED | 36 |
 | implementation_status | IMPLEMENTED_WITH_OPEN_GATE | 2 |
 | implementation_status | BLOCKED | 0 |
 | implementation_status | DROPPED | 0 |
@@ -33,8 +33,8 @@ Baseline de producto auditado: `beb9434`.
 | review_status | IN_REVIEW | 0 |
 | review_status | CHANGES_REQUESTED | 1 |
 | review_status | APPROVED | 40 |
-| integration_status | NOT_INTEGRATED | 36 |
-| integration_status | MERGED | 37 |
+| integration_status | NOT_INTEGRATED | 35 |
+| integration_status | MERGED | 38 |
 | deployment_status | NOT_DEPLOYED | 53 |
 | deployment_status | NOT_APPLICABLE | 20 |
 | deployment_status | STAGING | 0 |
