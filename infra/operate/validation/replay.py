@@ -109,14 +109,19 @@ def analyze(conn, network, config, manifest, span=None):
         manifest["distinct_vehicles"],
     ):
         raise ValueError("La restauración no concuerda con la población del manifiesto")
-    ticks = {end} | {t for t in arrivals if t <= end}
+    # El microsegundo que permite incluir el último run en SQL no es tiempo
+    # observado. El último fotograma pertenece al propio borde del hueco.
+    last_frame = end
+    if span and end < datetime.fromisoformat(manifest["period"]["end_utc"]):
+        last_frame -= timedelta(microseconds=1)
+    ticks = {last_frame} | {t for t in arrivals if t <= last_frame}
     stale = timedelta(seconds=limits.stale_after_s)
     for anchors in groups.values():
         for i, a in enumerate(anchors):
             expiry = a.observed + stale
             successor = anchors[i + 1].visible if i + 1 < len(anchors) else end
             after = expiry + timedelta(milliseconds=1)
-            if a.visible <= expiry and after < min(successor, end):
+            if a.visible <= expiry and after < min(successor, last_frame):
                 ticks.update((expiry, after))
     cancels = conn.execute(
         """
@@ -129,7 +134,7 @@ def analyze(conn, network, config, manifest, span=None):
     cancel_times = defaultdict(list)
     for trip, at in cancels:
         cancel_times[at].append(trip)
-        if at <= end:
+        if at <= last_frame:
             ticks.add(at)
     provenance, cancellations, board_counts = Counter(), Counter(), Counter()
     cohort = {a.digest for anchors in groups.values() for a in anchors}
