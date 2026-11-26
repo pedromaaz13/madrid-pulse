@@ -75,7 +75,8 @@ export interface Frame {
 /**
  * Coordenada a dibujar en el instante `atMs`.
  *
- * El cliente solo avanza cuando el backend publicó una envolvente **y** un
+ * Una posición `stale_frozen` se conserva tal como la publicó el backend.
+ * En los demás casos el cliente solo avanza cuando publicó una envolvente y un
  * patrón con corredor, y únicamente hasta `rendered.valid_until`. Agotado el
  * horizonte se congela: nunca se extrapola más allá de lo que el contrato
  * autoriza, y jamás se interpola lat/lon en recta entre dos puntos.

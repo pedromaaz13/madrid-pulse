@@ -123,14 +123,14 @@ export function TrainPanel({
         <p className="notice notice--warn" role="status">Viaje cancelado según el operador. La envolvente vigente puede seguir avanzando hasta su límite.</p>
       )}
       {holding && envelope && (
-        <p className="notice" role="status">Retención: {HOLD_LABELS[envelope.hold_reason ?? ""] ?? envelope.hold_reason ?? "motivo desconocido"}. La coordenada no avanza durante la retención.</p>
+        <p className="notice" role="status">Retención: {envelope.hold_reason ? HOLD_LABELS[envelope.hold_reason] ?? "motivo no reconocido" : "motivo desconocido"}. La coordenada no avanza durante la retención.</p>
       )}
       {rendered.stop_state && (
-        <p className="meta">Estado de parada: {rendered.stop_state.operator_status ?? "desconocido"} · fuente {rendered.stop_state.source}{rendered.stop_state.operator_stop_id ? ` · parada ${rendered.stop_state.operator_stop_id}` : ""}{rendered.stop_state.coherent === false ? " · no coherente con el recorrido" : ""}.</p>
+        <p className="meta">Estado de parada: {({ STOPPED_AT: "detenido en la parada", INCOMING_AT: "llegando a la parada", IN_TRANSIT_TO: "en camino a la parada" } as Record<string, string>)[rendered.stop_state.operator_status ?? ""] ?? "desconocido"} · fuente {({operator: "operador", trip_update: "actualización del viaje", schedule: "horario"} as Record<string, string>)[rendered.stop_state.source] ?? "no identificada"}{rendered.stop_state.operator_stop_id ? ` · parada ${index.stationsById.get(rendered.stop_state.operator_stop_id)?.name ?? rendered.stop_state.operator_stop_id}` : ""}{rendered.stop_state.coherent === false ? " · no coherente con el recorrido" : ""}.</p>
       )}
       {rendered.rendering_method === "stale_frozen" && (
         <p className="notice notice--warn" role="status">
-          Posición congelada. {rendered.frozen_basis === "authorized_envelope_end" ? "Se muestra el final estimado autorizado" : rendered.frozen_basis === "anchor_version_changed" ? "Se muestra el ancla por cambio de versión" : "Base de congelación desconocida"}. Última posición confirmada: {rendered.last_confirmed_progress_m == null ? "progreso desconocido" : `${Math.round(rendered.last_confirmed_progress_m)} m sobre el patrón`} · {formatIsoClock(rendered.last_confirmed_at ?? rendered.anchor_observed_at)}.
+          Posición congelada. {rendered.frozen_basis === "authorized_envelope_end" ? "Se muestra el final estimado autorizado" : rendered.frozen_basis === "anchor_version_changed" ? "Se muestra el ancla disponible" : "Base de congelación desconocida"}. Última posición confirmada: {rendered.last_confirmed_progress_m == null ? "progreso desconocido" : `${Math.round(rendered.last_confirmed_progress_m)} m sobre el patrón`} · {formatIsoClock(rendered.last_confirmed_at ?? rendered.anchor_observed_at)}.
         </p>
       )}
       {expired && rendered.rendering_method !== "stale_frozen" && (

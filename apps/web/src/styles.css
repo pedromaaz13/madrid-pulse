@@ -224,6 +224,8 @@ h2 {
   border-right: 1px solid var(--line);
 }
 
+.mobile-train-summary { display: none; }
+
 .map-column {
   position: relative;
   background: var(--map);
@@ -824,6 +826,12 @@ button.pill {
 /* --- Móvil ------------------------------------------------------------ */
 
 @media (max-width: 740px) {
+  .mobile-train-summary {
+    display: block;
+    margin: 4px 0 8px;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
   .topbar {
     height: 52px;
     padding: 0 10px;

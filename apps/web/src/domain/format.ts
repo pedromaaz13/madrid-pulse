@@ -3,8 +3,10 @@ import type {
   CoordinateSpace,
   Eta,
   HistoryCoverage,
+  HoldReason,
   RenderingMethod,
   SnapshotDelay,
+  SnapshotDegradation,
   SnapshotVehicle,
 } from "./contract";
 
@@ -36,7 +38,7 @@ const BASE_METHOD_STYLES: Record<RenderingMethod, MethodStyle> = {
     shape: "ring",
   },
   extrapolated_from_last_anchor: {
-    label: "Proyectada",
+    label: "Extrapolada",
     detail: "Avance estimado desde la última observación; no es una lectura GPS",
     glyph: "▸",
     shape: "dashed",
@@ -65,8 +67,8 @@ const BASE_METHOD_STYLES: Record<RenderingMethod, MethodStyle> = {
 export const METHOD_STYLES = Object.fromEntries(
   Object.entries(BASE_METHOD_STYLES).map(([method, style]) => [method, {
     ...style,
-    raw: style,
-    map_matched: method === "anchor" ? { ...style, label: "Observada proyectada", detail: "Observación proyectada sobre el corredor; no es GPS bruto" } : style,
+    raw: method === "anchor" ? { ...style, label: "Observada en bruto", detail: "Posición GPS reportada por el operador sin proyectar al corredor" } : style,
+    map_matched: method === "anchor" ? { ...style, label: "Observada sobre corredor", detail: "Observación proyectada sobre el corredor; no es GPS bruto", shape: "ring", glyph: "●" } : style,
     schedule: method === "anchor" ? { ...style, label: "Posición de horario", detail: "Coordenada de horario; no es GPS confirmado" } : style,
     none: method === "anchor" ? { ...style, label: "Sin coordenada", detail: "No hay espacio de coordenadas declarado" } : style,
   }]),
@@ -76,13 +78,35 @@ export function methodStyle(method: RenderingMethod, space: CoordinateSpace | nu
   return METHOD_STYLES[method][space ?? "none"];
 }
 
-export const HOLD_LABELS: Record<string, string> = {
+export const HOLD_LABELS: Record<HoldReason, string> = {
   operator_stopped_at: "Detenido según el operador",
   before_first_departure: "Antes de la primera salida",
   terminal: "En la estación terminal",
   trip_canceled: "Viaje cancelado",
   anchor_version_changed: "Cambió la versión del ancla",
+  operator_incoming_at: "Llegando a la parada según el operador",
+  schedule_incoherent: "Horario incoherente para este recorrido",
+  outside_schedule_extent: "Fuera del tramo cubierto por el horario",
+  schedule_stop_zone: "En zona de parada programada",
+  horizon_exhausted: "Horizonte de estimación agotado",
 };
+
+export function degradationText(item: SnapshotDegradation): string {
+  if (item.resource === "gtfs") return `GTFS · ${item.status === "stale" ? "aviso" : item.status === "error" ? "error" : "vigencia desconocida"}: ${item.reason}`;
+  const resource = ({ vehicles: "Posiciones", delays_and_eta: "Retrasos y próximas llegadas", alerts: "Avisos del operador" } as Record<string, string>)[item.resource] ?? "Información del servicio";
+  const reason = item.reason
+    .replaceAll("feed trip_updates", "fuente de actualizaciones de viajes")
+    .replaceAll("feed vehicle_positions", "fuente de posiciones de trenes")
+    .replaceAll("feed alerts", "fuente de avisos del operador")
+    .replaceAll("trip_updates", "actualizaciones de viajes")
+    .replaceAll("vehicle_positions", "posiciones de trenes")
+    .replaceAll("service_alerts", "avisos del operador")
+    .replaceAll("alerts", "avisos del operador")
+    .replaceAll("estado stale", "estado desactualizado")
+    .replaceAll("estado error", "estado de error")
+    .replaceAll("estado unknown", "estado desconocido");
+  return `${resource}: ${reason}`;
+}
 
 export const CIRCULATION_LABELS: Record<SnapshotVehicle["circulation_status"], string> = {
   active: "En servicio hoy",

@@ -1,10 +1,8 @@
-import { DegradationNotice } from "./ui/DegradationNotice";
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type {
   BoardEntry,
   HistoryCirculation,
   HistoryFilter,
-  RenderingMethod,
   Snapshot,
   SnapshotVehicle,
 } from "./domain/contract";
@@ -29,6 +27,9 @@ import { useStationBoard } from "./hooks/useStationBoard";
 import { useUrlState, type UrlState, type View } from "./hooks/useUrlState";
 import { hasWebGL } from "./map/webgl";
 import { ExploreView } from "./ui/ExploreView";
+import { DegradationNotice } from "./ui/DegradationNotice";
+import { HOLD_LABELS, methodStyle } from "./domain/format";
+import { phase } from "./domain/movement";
 import { HistoryView } from "./ui/HistoryView";
 import { Legend } from "./ui/Legend";
 import { LineFilter } from "./ui/LineFilter";
@@ -136,7 +137,6 @@ export default function App() {
     if (previous !== null && previous.snapshot_id === current.snapshot_id) return;
     const derived = deriveNews(current, previous);
     previousSnapshotRef.current = current;
-    if (derived.length === 0) return;
     setNews((existing) => mergeNews(existing, derived));
   }, [snapshot.data]);
 
@@ -175,9 +175,12 @@ export default function App() {
   }, [vehicles]);
 
   const presentMethods = useMemo(() => {
-    const present = new Set<RenderingMethod>();
-    for (const vehicle of visibleVehicles) present.add(vehicle.rendered.rendering_method);
-    return present;
+    const present = new Map<string, { method: SnapshotVehicle["rendered"]["rendering_method"]; space: SnapshotVehicle["rendered"]["coordinate_space"] }>();
+    for (const vehicle of visibleVehicles) {
+      const { rendering_method: method, coordinate_space: space } = vehicle.rendered;
+      present.set(`${method}:${space ?? "none"}`, { method, space });
+    }
+    return [...present.values()];
   }, [visibleVehicles]);
 
   // --- Navegación -------------------------------------------------------
@@ -554,10 +557,19 @@ export default function App() {
               {panelExpanded ? "Recoger panel" : "Ampliar panel"}
             </button>
           )}
+          {!isArchiveView && selectedVehicle && (
+            <p className="mobile-train-summary" role="status">{selectedVehicle.line ?? "Sin línea"} · {selectedVehicle.vehicle_id} · {methodStyle(selectedVehicle.rendered.rendering_method, selectedVehicle.rendered.coordinate_space).label}{selectedVehicle.schedule_relationship === "CANCELED" ? " · Viaje cancelado" : ""}{selectedVehicle.rendered.progress_envelope && phase(selectedVehicle.rendered.progress_envelope, panelNowMs).startsWith("hold:") ? ` · Retención: ${selectedVehicle.rendered.progress_envelope.hold_reason ? HOLD_LABELS[selectedVehicle.rendered.progress_envelope.hold_reason] ?? "motivo no reconocido" : "motivo desconocido"}` : ""}{selectedVehicle.rendered.rendering_method === "stale_frozen" ? " · Posición congelada" : ""}</p>
+          )}
           {/* Búsqueda, filtro de líneas y avisos del snapshot son de Live: en
               el archivo filtrarían un dato que no se está sondeando. */}
           {!isArchiveView && (
             <>
+              {snapshot.error !== null && (
+                <p className="notice notice--warn" role="status">El snapshot no se pudo actualizar ({snapshot.error}). Se conserva el último válido y su edad sigue avanzando.</p>
+              )}
+              {snapshot.data?.degraded.filter(item => item.resource === "gtfs").map(item => (
+                <DegradationNotice item={item} key={`gtfs-${item.feed_name ?? "none"}`} />
+              ))}
               <SearchBox
                 index={catalog.index}
                 onPickStation={selectStation}
@@ -571,12 +583,14 @@ export default function App() {
                 onToggle={toggleLine}
                 onClear={clearLines}
               />
-              {snapshot.error !== null && (
-                <p className="notice notice--warn" role="status">El snapshot no se pudo actualizar ({snapshot.error}). Se conserva el último válido y su edad sigue avanzando.</p>
+              {snapshot.data && snapshot.data.degraded.some(item => item.resource !== "gtfs") && (
+                <details className="details">
+                  <summary>Fuentes con información degradada ({snapshot.data.degraded.filter(item => item.resource !== "gtfs").length})</summary>
+                  {snapshot.data.degraded.filter(item => item.resource !== "gtfs").map(item => (
+                    <DegradationNotice item={item} key={`${item.resource}-${item.feed_name ?? "none"}`} />
+                  ))}
+                </details>
               )}
-              {snapshot.data?.degraded.map((item, i) => (
-                <DegradationNotice item={item} key={`${item.resource}-${item.feed_name ?? i}`} />
-              ))}
             </>
           )}
           {panel}
