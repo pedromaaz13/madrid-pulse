@@ -21,3 +21,16 @@
 
 ## Autorizaciones que acompañan a la decisión
 - **MP-025a** (Codex `gpt-6.2-astra` · high → revisor Claude Opus High) y **MP-026b** (Codex `gpt-6.2-sol` · high → revisor Claude Opus High), con estos requisitos: pruebas de regresión rojas en `beb9434` y equivalencia Python↔TypeScript del ADR; F1 con final estimado y última posición confirmada distinguidos; **control efectivo de colector único** antes de operar con la garantía y **exclusión de cargas retroactivas del directo**; **cancelaciones conocidas señalizadas** aunque la envolvente no cambie; **no declarar resuelta la reproducción exacta por hora civil** sin evidencia de publicación/visibilidad y su prueba; **limitaciones por cambio de geometría o versión explícitas** (`anchor_version_changed`); rótulos de interfaz y vigencia desde el snapshot **pendientes de MP-030**. Los PR de desarrollo nuevos quedan para revisión, **sin merge automático**.
+
+## Alcance de la decisión sobre ADR-0014 base (aclaración del 2026-11-26)
+La decisión del 2026-11-25 aprueba la **dirección de la enmienda**. Su efecto sobre cada sección de [`0014-snapshot-and-temporal-contract.md`](0014-snapshot-and-temporal-contract.md) es el siguiente; **no se aprueba ninguna otra sección por deducción** y el ADR base conserva su estado `Propuesto` en lo no listado como sustituido.
+
+| Sección de ADR-0014 base | Efecto de la decisión del propietario |
+|---|---|
+| §2 La envolvente, no una trayectoria (fórmula de progreso) | **Sustituida** por la enmienda §4.3 (con `dwell_until`, fases, `hold_reason`, `cap_*`) y las reglas §4.1, §4.2, §4.4 y §4.6 (A con C como R8, F1, P-024 provisional). |
+| §3 Seis métodos de presentación | **Enmendada** por la enmienda §4.5 y R-SPACE (el par `rendering_method`/`coordinate_space`; sin nuevos valores del enum). |
+| §5 Identidad de snapshot vs revisión ordenable | **Sustituida** por la enmienda §4.7 (lectura consistente; `sequence` como cota, no identidad). Su implementación (MP-026b) la autorizó el propietario el 2026-11-25. |
+| §1, §4, §6, §7, §8 y las secciones de alternativas y consecuencias del ADR base | **No decididas por esta decisión**: siguen `Propuesto` (la regla única de movimiento, los bloques `raw`/`map_matched`/`rendered`, el catálogo cacheable, la ETA con procedencia y el tablero por servicios). Son compatibles con lo implementado, pero su promoción requiere decisión expresa del propietario. |
+| Estado global de ADR-0014 | **`Propuesto`**. No se promueve a `Aceptado`. |
+
+Esta aclaración no convierte en APPROVED el dictamen histórico de Codex Astra High (CHANGES_REQUESTED parcial), no valida los supuestos `UNVERIFIED` ni cierra `HG-H4-SCOPE`.
