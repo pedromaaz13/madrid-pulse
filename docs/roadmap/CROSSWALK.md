@@ -70,6 +70,8 @@ Subtareas internas de discovery; **no** son tareas MP ni autorización de H4. Co
 | OPS-03 soak 72 h y carga | MP-032 / MP-033 |
 | REL-01 release-readiness | MP-035 |
 
+> **Actualización 2026-11-26:** por autorización del propietario se registran **MP-036** (fallback del motor), **MP-037** (estudio de contradicciones de estado) y **MP-038** (evaluación comparable antes/después). Las propuestas `PROPOSAL-*` de abajo siguen sin ID.
+
 ## 7. Extensiones posibles — solo propuestas, sin reservar ningún número `MP-`
 Registradas en `proposed_extensions` de `PROJECT_STATE.json`; el propietario decide si existen y qué ID reciben:
 1. **PROPOSAL-STAGING-LIVE** — staging Live (Docker/Caddy/backups) como tarea propia; solo si MP-032 se desborda.
