@@ -135,9 +135,31 @@ class LoadedNetwork:
         if existing is not None:
             return existing
         cache = self._schedule_caches.setdefault(coverage.geometry_version, {})
-        engine = MovementEngine(self.topology, coverage.corridor, thresholds=self.engine.thresholds, schedule_cache=cache)
+        engine = MovementEngine(
+            self.topology, coverage.corridor, thresholds=self.engine.thresholds,
+            schedule_cache=cache, anchor_reacquire_samples=self.engine.anchor_reacquire_samples,
+        )
         self._engines[coverage.geometry_version] = engine
         return engine
+
+
+def coverage_for_trip(
+    network: LoadedNetwork, trip_id: str, route_id: str | None
+) -> CorridorCoverage | None:
+    """Patrón catalogado de una circulación viva, por identidad real.
+
+    La identidad es ``route_id`` + secuencia ordenada de ``stop_id`` del
+    ``trip_id`` (MP-018 no inventa ``direction_id`` porque el GTFS de Renfe no
+    lo publica). Un refuerzo sin trip estático, o un trip ausente de la fixture
+    cargada, devuelve ``None``.
+    """
+    if route_id is None:
+        return None
+    times = network.topology.stop_times_for_trip(trip_id)
+    if not times:
+        return None
+    stop_ids = tuple(item.stop_id for item in times)
+    return network.corridor_catalog.coverage_for_stops(route_id, stop_ids)
 
 
 def load_network(config: ApiConfig) -> LoadedNetwork:
@@ -160,7 +182,10 @@ def load_network(config: ApiConfig) -> LoadedNetwork:
     )
     geometry = load_relation_geometry_json(config.osm_relation_path)
     corridor = build_corridor(geometry)
-    engine = MovementEngine(topology, corridor, thresholds=config.thresholds, schedule_cache={})
+    engine = MovementEngine(
+        topology, corridor, thresholds=config.thresholds, schedule_cache={},
+        anchor_reacquire_samples=config.anchor_reacquire_samples,
+    )
     parse_date = lambda value: datetime.strptime(value, "%Y%m%d").date()  # noqa: E731
     valid_from = min(parse_date(item.start_date) for item in topology.calendar)
     valid_until = max(parse_date(item.end_date) for item in topology.calendar)

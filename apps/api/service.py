@@ -19,7 +19,7 @@ from packages.movement import (
 )
 
 from . import db
-from .gtfs_source import LoadedNetwork
+from .gtfs_source import LoadedNetwork, coverage_for_trip
 from .schemas import (
     CoordinateOut,
     DelayOut,
@@ -226,8 +226,10 @@ def _movement_position(
     route_id: str,
     now: datetime,
     service_date: date,
+    *,
+    engine: MovementEngine | None = None,
 ) -> MovementPosition | None:
-    return movement_from_history(network.engine, history, route_id, now, service_date)
+    return movement_from_history(engine or network.engine, history, route_id, now, service_date)
 
 
 def _circulation_status(
@@ -271,8 +273,11 @@ def vehicle_to_out(
         network, source_trip_id, route_id, resolver.scheduled_service_ids(service_date)
     )
 
+    coverage = coverage_for_trip(network, source_trip_id, route_id)
+    engine = network.engine_for(coverage) if coverage is not None else None
     movement = (
-        _movement_position(network, history, route_id, now, service_date) if route_id else None
+        _movement_position(network, history, route_id, now, service_date, engine=engine)
+        if route_id and engine is not None else None
     )
 
     # La edad de la OBSERVACIÓN cruda es siempre calculable a partir de su
@@ -321,6 +326,14 @@ def vehicle_to_out(
     )
 
 
+def _needs_movement_history(network: LoadedNetwork, history: db.VehicleHistory) -> bool:
+    trip = history.latest.position.source_trip_id
+    if history.previous is None or history.previous.position.source_trip_id != trip:
+        return False
+    coverage = coverage_for_trip(network, trip, network.topology.resolve_trip_route_id(trip))
+    return coverage is not None and network.engine_for(coverage) is not None
+
+
 def list_vehicles(
     conn: psycopg.Connection, network: LoadedNetwork, now: datetime, *,
     history_depth: int = db.DEFAULT_ANCHOR_HISTORY_DEPTH,
@@ -334,11 +347,12 @@ def list_vehicles(
     `id DESC` de ADR-0010 -- en una sola consulta por lote.
     """
     observed_through = now if network.mode == "replay" else None
-    histories = db.latest_vehicle_histories(conn, as_of=now, observed_through=observed_through)
+    histories = db.latest_vehicle_histories(
+        conn, as_of=now, observed_through=observed_through, include_anchor_metadata=False,
+    )
     histories = db.expand_vehicle_histories(
         conn, histories, [
-            h.source_vehicle_id for h in histories
-            if network.topology.resolve_trip_route_id(h.latest.position.source_trip_id) is not None
+            h.source_vehicle_id for h in histories if _needs_movement_history(network, h)
         ],
         as_of=now, observed_through=observed_through, history_depth=history_depth,
     )
@@ -368,10 +382,17 @@ def get_vehicle(
 ) -> VehicleOut | None:
     observed_through = now if network.mode == "replay" else None
     history = db.vehicle_history(
-        conn, vehicle_id, as_of=now, observed_through=observed_through, history_depth=history_depth
+        conn, vehicle_id, as_of=now, observed_through=observed_through, include_anchor_metadata=False
     )
     if history is None:
         return None
+    if _needs_movement_history(network, history):
+        expanded = db.vehicle_history(
+            conn, vehicle_id, as_of=now, observed_through=observed_through,
+            history_depth=history_depth, include_anchor_metadata=False,
+        )
+        if expanded is not None:
+            history = expanded
     trip_update = db.latest_trip_update(
         conn, history.latest.position.source_trip_id, observed_after=_trip_update_cutoff(now),
         as_of=now, observed_through=observed_through,

@@ -45,7 +45,7 @@ from packages.movement import (
 
 from . import db, service
 from .config import ApiConfig
-from .gtfs_source import LoadedNetwork
+from .gtfs_source import LoadedNetwork, coverage_for_trip as coverage_for_trip
 from .schemas import (
     BoardCoverageOut,
     BoardEntryOut,
@@ -231,25 +231,6 @@ def catalog_ref(network: LoadedNetwork) -> CatalogRefOut:
 # --------------------------------------------------------------------------
 
 
-def coverage_for_trip(
-    network: LoadedNetwork, trip_id: str, route_id: str | None
-) -> CorridorCoverage | None:
-    """Patrón catalogado de una circulación viva, por identidad real.
-
-    La identidad es ``route_id`` + secuencia ordenada de ``stop_id`` del
-    ``trip_id`` (MP-018 no inventa ``direction_id`` porque el GTFS de Renfe no
-    lo publica). Un refuerzo sin trip estático, o un trip ausente de la fixture
-    cargada, devuelve ``None``.
-    """
-    if route_id is None:
-        return None
-    times = network.topology.stop_times_for_trip(trip_id)
-    if not times:
-        return None
-    stop_ids = tuple(item.stop_id for item in times)
-    return network.corridor_catalog.coverage_for_stops(route_id, stop_ids)
-
-
 def _legacy_position(movement: MovementPosition | None, rendered: RenderedPosition | None = None) -> PositionOut | None:
     if movement is None or (rendered and rendered.rendering_method is RenderingMethod.UNLOCATED):
         return None
@@ -346,15 +327,83 @@ def _valid_relationship(relationship, observed_at, anchor_at, now, cancel_max_ag
     return relationship
 
 
+@dataclass(frozen=True)
+class _PreparedMovement:
+    current: MovementPosition
+    display: MovementPosition
+    anchor: db.ObservedRow
+    previous_anchor: AnchorSample | None
+
+
+def _prepare_movement(
+    network: LoadedNetwork,
+    history: db.VehicleHistory,
+    coverage: CorridorCoverage | None,
+    route_id: str | None,
+    service_date: date,
+    now: datetime,
+    display_at: datetime,
+) -> _PreparedMovement | None:
+    engine = network.engine_for(coverage) if coverage is not None else None
+    if engine is None or route_id is None:
+        return None
+    movement = service.movement_from_history(engine, history, route_id, now, service_date)
+    if movement is None:
+        return None
+    current = movement
+    latest = history.latest.position
+    previous_anchor = (
+        AnchorSample(*movement.anchor_previous) if movement.anchor_previous is not None else None
+    )
+    if (
+        movement.observed_at is not None
+        and display_at < movement.observed_at
+        and (
+            previous_anchor is None
+            or display_at <= previous_anchor.observed_at
+            or (movement.observed_at - previous_anchor.observed_at).total_seconds()
+            > engine.thresholds.stale_after_s
+        )
+    ):
+        # Fuera de un tramo interpolable, resolver con la misma secuencia
+        # hasta el reloj de presentación, sin volver a validar una fila sola.
+        eligible = tuple(
+            row for row in history.same_trip()
+            if row.position.observed_at <= display_at
+        )
+        if eligible:
+            first, *older = eligible
+            display_history = db.VehicleHistory(
+                history.source_vehicle_id, first, older[0] if older else None,
+                tuple(older[1:]), history.truncated,
+            )
+            movement = service.movement_from_history(
+                engine, display_history, movement.route_id, now, service_date
+            )
+            assert movement is not None
+        else:
+            movement = engine.position(
+                trip_id=latest.source_trip_id, service_date=service_date,
+                calculated_at=display_at,
+            )
+        previous_anchor = None
+    effective = next(
+        (row for row in history.newest_first if row.position is movement.anchor_observation),
+        history.latest,
+    )
+    return _PreparedMovement(current, movement, effective, previous_anchor)
+
+
 def _render_vehicle(
     network: LoadedNetwork,
     history: db.VehicleHistory,
     coverage: CorridorCoverage | None,
-    movement: MovementPosition | None,
+    prepared: _PreparedMovement | None,
     service_date: date,
     now: datetime,
     display_at: datetime,
     known_relationship: str | None,
+    metadata: dict[int, dict],
 ) -> tuple[RenderedPosition, MapMatchedOut | None]:
     latest = history.latest.position
     pattern_id = coverage.identity.pattern_id if coverage is not None else None
@@ -385,48 +434,14 @@ def _render_vehicle(
             geometry_version=match.geometry_version,
         )
 
-    if movement is not None and engine is not None and coverage is not None:
+    if prepared is not None and engine is not None and coverage is not None:
         assert coverage.corridor is not None
         schedule = engine.trip_schedule(latest.source_trip_id)
-        previous_anchor = (
-            AnchorSample(*movement.anchor_previous) if movement.anchor_previous is not None else None
-        )
-        if (
-            movement.observed_at is not None
-            and display_at < movement.observed_at
-            and (
-                previous_anchor is None
-                or display_at <= previous_anchor.observed_at
-                or (movement.observed_at - previous_anchor.observed_at).total_seconds()
-                > engine.thresholds.stale_after_s
-            )
-        ):
-            # Fuera de un tramo interpolable, resolver con la misma secuencia
-            # hasta el reloj de presentación, sin volver a validar una fila sola.
-            eligible = tuple(
-                row for row in history.same_trip()
-                if row.position.observed_at <= display_at
-            )
-            if eligible:
-                first, *older = eligible
-                display_history = db.VehicleHistory(
-                    history.source_vehicle_id, first, older[0] if older else None,
-                    tuple(older[1:]), history.truncated,
-                )
-                movement = service.movement_from_history(
-                    engine, display_history, movement.route_id, now, service_date
-                )
-                assert movement is not None
-            else:
-                movement = engine.position(
-                    trip_id=latest.source_trip_id, service_date=service_date,
-                    calculated_at=display_at,
-                )
-            previous_anchor = None
-        effective = next(
-            (row for row in history.newest_first if row.position is movement.anchor_observation),
-            history.latest,
-        )
+        movement = prepared.display
+        previous_anchor = prepared.previous_anchor
+        effective = prepared.anchor
+        if effective.row_id in metadata:
+            effective = db.with_anchor_metadata(effective, metadata[effective.row_id])
         pos = effective.position
         zone_sample = None
         if effective.ingestion_run_id is None and effective is history.latest:
@@ -534,6 +549,9 @@ def build_vehicle_entry(
     now: datetime,
     display_at: datetime,
     resolver: service.ServiceDateResolver,
+    *,
+    prepared: _PreparedMovement | None = None,
+    metadata: dict[int, dict] | None = None,
 ) -> SnapshotVehicleOut:
     latest = history.latest.position
     source_trip_id = latest.source_trip_id
@@ -547,11 +565,9 @@ def build_vehicle_entry(
         else None
     )
     coverage = coverage_for_trip(network, source_trip_id, route_id)
-    movement = (
-        _movement_for(network, coverage, history, route_id, now, service_date)
-        if route_id
-        else None
-    )
+    if prepared is None:
+        prepared = _prepare_movement(network, history, coverage, route_id, service_date, now, display_at)
+    movement = prepared.current if prepared is not None else None
     known = history.latest.known_relationship
     known_at = history.latest.known_observed_at
     if history.latest.ingestion_run_id is None and trip_update is not None:
@@ -559,7 +575,7 @@ def build_vehicle_entry(
     relationship = _valid_relationship(known, known_at, latest.observed_at, now,
                                        config.thresholds.cancel_max_age_s)
     rendered, map_matched = _render_vehicle(
-        network, history, coverage, movement, service_date, now, display_at, relationship
+        network, history, coverage, prepared, service_date, now, display_at, relationship, metadata or {}
     )
 
     stale = rendered.rendering_method in (
@@ -600,20 +616,6 @@ def build_vehicle_entry(
         delay=_delay_out(trip_update, now, max_age_s=config.operator_delay_max_age_s),
         quality=QualityOut(stale=stale, flags=flags),
     )
-
-
-def _movement_for(
-    network: LoadedNetwork,
-    coverage: CorridorCoverage | None,
-    history: db.VehicleHistory,
-    route_id: str,
-    now: datetime,
-    service_date: date,
-) -> MovementPosition | None:
-    engine = network.engine_for(coverage) if coverage is not None else None
-    if engine is None:
-        return None
-    return service.movement_from_history(engine, history, route_id, now, service_date)
 
 
 # --------------------------------------------------------------------------
@@ -691,6 +693,7 @@ def _snapshot_identity(
     """
     digest = hashlib.sha256()
     digest.update(network.catalog_version.encode())
+    digest.update(f"\0{network.engine.anchor_reacquire_samples}\0".encode())
     if gtfs_status is not None:
         digest.update(f"\0{gtfs_status}\0".encode())
     digest.update(f"\0{marker.scope}\0{marker.sequence}\0".encode())
@@ -736,12 +739,6 @@ def resolve_clock(config: ApiConfig, network: LoadedNetwork, at: datetime | None
     return now
 
 
-def _has_movement_history(network: LoadedNetwork, history: db.VehicleHistory) -> bool:
-    trip = history.latest.position.source_trip_id
-    coverage = coverage_for_trip(network, trip, network.topology.resolve_trip_route_id(trip))
-    return coverage is not None and network.engine_for(coverage) is not None
-
-
 def build_snapshot(
     conn: psycopg.Connection,
     network: LoadedNetwork,
@@ -759,14 +756,32 @@ def build_snapshot(
     with db.consistent_read(conn):
         marker = db.revision_marker(conn, as_of=now)
         histories = db.latest_vehicle_histories(
-            conn, as_of=now, observed_through=observed_through, max_run_id=marker.sequence
+            conn, as_of=now, observed_through=observed_through, max_run_id=marker.sequence,
+            include_anchor_metadata=False,
         )
         histories = db.expand_vehicle_histories(
             conn, histories, [
-                h.source_vehicle_id for h in histories if _has_movement_history(network, h)
+                h.source_vehicle_id for h in histories if service._needs_movement_history(network, h)
             ],
             as_of=now, observed_through=observed_through, max_run_id=marker.sequence,
             history_depth=config.anchor_history_depth,
+        )
+        prepared = {}
+        for history in histories:
+            trip = history.latest.position.source_trip_id
+            route_id = network.topology.resolve_trip_route_id(trip)
+            placement = _prepare_movement(
+                network, history, coverage_for_trip(network, trip, route_id), route_id,
+                resolver.for_trip(trip), now, display_at,
+            )
+            if placement is not None:
+                prepared[history.source_vehicle_id] = placement
+        metadata = db.anchor_metadata(
+            conn, [
+                item.anchor.row_id for item in prepared.values()
+                if item.display.anchor_observation is not None and item.anchor.row_id is not None
+            ],
+            as_of=now, observed_through=observed_through,
         )
         trip_updates = db.latest_trip_updates(
             conn,
@@ -789,6 +804,8 @@ def build_snapshot(
             now,
             display_at,
             resolver,
+            prepared=prepared.get(history.source_vehicle_id),
+            metadata=metadata,
         )
         for history in sorted(histories, key=lambda item: item.source_vehicle_id)
     ]

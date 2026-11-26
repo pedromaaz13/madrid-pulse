@@ -21,6 +21,9 @@ from .model import (
 from .schedule import TripSchedule, build_trip_schedule, service_seconds
 
 
+DEFAULT_ANCHOR_REACQUIRE_SAMPLES = 2
+
+
 class MovementEngine:
     def __init__(
         self,
@@ -29,12 +32,16 @@ class MovementEngine:
         *,
         thresholds: MovementThresholds = MovementThresholds(),
         schedule_cache: MutableMapping[str, TripSchedule] | None = None,
+        anchor_reacquire_samples: int = DEFAULT_ANCHOR_REACQUIRE_SAMPLES,
     ) -> None:
         if not corridor.is_continuous or len(corridor.segments) != 1:
             raise ValueError("el motor requiere un corredor continuo para un trip")
         self.topology = topology
         self.corridor = corridor
         self.thresholds = thresholds
+        if anchor_reacquire_samples != 0 and not 2 <= anchor_reacquire_samples <= 1024:
+            raise ValueError("la recuperación requiere 0 o entre 2 y 1024 muestras")
+        self.anchor_reacquire_samples = anchor_reacquire_samples
         self._schedule_cache = schedule_cache
         """Caché opcional e inyectable de `TripSchedule` (MP-019, ADR-0014).
 
@@ -117,6 +124,8 @@ class MovementEngine:
         accepted_match = prior_match = None
         anomalies = ()
         matches: dict[tuple[float | None, float | None], MapMatch | None] = {}
+        recovery: list[tuple[VehiclePositionObservation, MapMatch, float]] = []
+        recovery_coordinates: set[tuple[float | None, float | None]] = set()
         for sample in (*reversed(earlier), previous, latest):
             if sample is None:
                 continue
@@ -131,7 +140,48 @@ class MovementEngine:
             if sample is latest:
                 anomalies = self._anomalies(trip_id, schedule, sample, match, accepted, accepted_match)
             if match is None or self._is_unusable(schedule, sample, match, accepted, accepted_match):
+                if match is None or accepted is None or accepted_match is None:
+                    recovery.clear()
+                    recovery_coordinates.clear()
+                    continue
+                progress = schedule.directed_progress(match.physical_arc_m)
+                if (
+                    not self.anchor_reacquire_samples
+                    or match.distance_from_track_m > self.thresholds.off_track_distance_m
+                    or sample.observed_at <= accepted.observed_at
+                    or progress >= (
+                        schedule.directed_progress(accepted_match.physical_arc_m)
+                        - self.thresholds.unusable_backward_jump_m
+                    )
+                ):
+                    recovery.clear()
+                    recovery_coordinates.clear()
+                    continue
+                if recovery:
+                    last_sample, last_match, last_progress = recovery[-1]
+                    if (
+                        coordinates in recovery_coordinates
+                        or progress < last_progress
+                        or self._is_unusable(schedule, sample, match, last_sample, last_match)
+                    ):
+                        recovery.clear()
+                        recovery_coordinates.clear()
+                recovery.append((sample, match, progress))
+                recovery_coordinates.add(coordinates)
+                if len(recovery) == self.anchor_reacquire_samples:
+                    accepted, accepted_match, _ = recovery[0]
+                    # No interpolar ni extrapolar velocidad a través del salto de reanclaje.
+                    prior = prior_match = None
+                    recovery.clear()
+                    recovery_coordinates.clear()
+                    if sample is latest:
+                        anomalies += (MovementAnomaly("anchor_reacquired", {
+                            "samples": self.anchor_reacquire_samples,
+                            "anchor_observed_at": accepted.observed_at.isoformat(),
+                        }),)
                 continue
+            recovery.clear()
+            recovery_coordinates.clear()
             prior, prior_match = accepted, accepted_match
             accepted, accepted_match = sample, match
 

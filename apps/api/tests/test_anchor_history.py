@@ -11,8 +11,9 @@ import unittest
 from dataclasses import replace
 from datetime import datetime, timedelta
 from pathlib import Path
+from unittest.mock import patch
 
-from apps.api import snapshot
+from apps.api import db, snapshot
 from apps.api.config import ApiConfig
 from apps.api.gtfs_source import load_network
 from packages.contracts.canonical import VehiclePositionObservation
@@ -77,9 +78,9 @@ class AnchorHistoryTests(unittest.TestCase):
         self.insert(position, start, max(at, start), at)
         return position
 
-    def frame(self, at, vehicle=VEHICLE, *, lag=0, config=None):
+    def frame(self, at, vehicle=VEHICLE, *, lag=0, config=None, network=None):
         result = snapshot.build_snapshot(
-            self.conn, self.network, config or self.config, at, display_lag_s=lag
+            self.conn, network or self.network, config or self.config, at, display_lag_s=lag
         )
         return next(row for row in result.vehicles if row.vehicle_id == vehicle)
 
@@ -142,6 +143,69 @@ class AnchorHistoryTests(unittest.TestCase):
         # por retroceso si se comparara con el ancla inicial a 3000 m.
         self.assert_anchor(self.frame(b.observed_at), b, b.observed_at)
         self.assert_anchor(self.frame(c.observed_at), c, c.observed_at)
+
+    def test_reacquires_after_a_plausible_but_wrong_forward_jump(self):
+        self.synthetic(0, 1000)
+        self.synthetic(30, 1010)
+        wrong = self.synthetic(60, 3000)
+        samples = [
+            self.synthetic(90 + 30 * i, 1040 + 30 * i, started=125 if i == 1 else None)
+            for i in range(8)
+        ]
+        self.assert_anchor(self.frame(samples[0].observed_at), wrong, samples[0].observed_at)
+        self.assert_anchor(self.frame(samples[1].observed_at), wrong, samples[1].observed_at)
+        confirmed_at = BASE + timedelta(seconds=125)
+        recovered = self.frame(confirmed_at)
+        self.assert_anchor(recovered, samples[0], confirmed_at)
+        self.assertIn("anchor_reacquired", recovered.quality.flags)
+        self.assertEqual(recovered.raw.payload_hash, samples[1].payload_hash)
+        for sample in samples[2:]:
+            self.assert_anchor(self.frame(sample.observed_at), sample, sample.observed_at)
+
+    def test_recovery_requires_distinct_consecutive_monotone_coordinates(self):
+        wrong = self.synthetic(0, 3000)
+        samples = [self.synthetic(30 + 30 * i, progress) for i, progress in enumerate(
+            (1300, 1200, 1200, 1200, 1230)
+        )]
+        for sample in samples[:-1]:
+            self.assert_anchor(self.frame(sample.observed_at), wrong, sample.observed_at)
+        self.assert_anchor(self.frame(samples[-1].observed_at), samples[-2], samples[-1].observed_at)
+
+    def test_recovery_size_can_be_configured(self):
+        with patch.dict(os.environ, MADRID_PULSE_ANCHOR_REACQUIRE_SAMPLES="3"):
+            configured = ApiConfig.from_env()
+        wrong = self.synthetic(0, 3000)
+        samples = [self.synthetic(30 + 30 * i, 1040 + 30 * i) for i in range(3)]
+        config = self.config
+        if hasattr(configured, "anchor_reacquire_samples"):
+            config = replace(config, anchor_reacquire_samples=configured.anchor_reacquire_samples)
+        network = load_network(config)
+        self.assert_anchor(self.frame(samples[1].observed_at, network=network), wrong, samples[1].observed_at)
+        self.assert_anchor(self.frame(samples[2].observed_at, network=network), samples[0], samples[2].observed_at)
+
+    def test_history_depth_boundary(self):
+        config = replace(self.config, anchor_history_depth=2)
+        self.synthetic(30, 1000)
+        b = self.synthetic(60, 1010)
+        self.assert_anchor(self.frame(b.observed_at, config=config), b, b.observed_at)
+        self.synthetic(0, 24000, trip=OTHER_TRIP)
+        self.assert_anchor(self.frame(b.observed_at, config=config), b, b.observed_at)
+
+    def test_snapshot_enriches_only_the_effective_row(self):
+        a = self.synthetic(0, 1000)
+        self.synthetic(1, 11000)
+        c = self.synthetic(2, 11020)
+        row_ids = [
+            row[0] for row in self.conn.execute(
+                "SELECT id FROM vehicle_position_observation WHERE source_vehicle_id = %s ORDER BY id",
+                (VEHICLE,),
+            ).fetchall()
+        ]
+        with patch.object(db, "anchor_metadata", wraps=getattr(db, "anchor_metadata", None),
+                          create=True) as read_metadata:
+            self.assert_anchor(self.frame(c.observed_at), a, c.observed_at)
+        read_metadata.assert_called_once()
+        self.assertEqual(set(row_ids) & set(read_metadata.call_args.args[1]), {row_ids[0]})
 
     def test_trip_change_breaks_history_even_if_trip_id_repeats(self):
         self.synthetic(0, 24000)
@@ -229,3 +293,14 @@ with TestClient(app) as client:
                 (self.run_ids,),
             )
             self.conn.execute("DELETE FROM source_ingestion_run WHERE id = ANY(%s)", (self.run_ids,))
+
+
+class AnchorConfigTests(unittest.TestCase):
+    def test_history_depth_range(self):
+        for raw, expected in (("1", None), ("2", 2), ("1024", 1024), ("1025", None), ("abc", None)):
+            with self.subTest(raw=raw), patch.dict(os.environ, MADRID_PULSE_ANCHOR_HISTORY_DEPTH=raw):
+                if expected is None:
+                    with self.assertRaises(ValueError):
+                        ApiConfig.from_env()
+                else:
+                    self.assertEqual(ApiConfig.from_env().anchor_history_depth, expected)
