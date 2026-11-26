@@ -6,7 +6,10 @@ import argparse
 import hashlib
 import json
 import re
+import subprocess
+import tempfile
 from collections import Counter
+from contextlib import suppress
 from datetime import datetime, timezone
 from itertools import pairwise
 from pathlib import Path
@@ -16,6 +19,11 @@ MADRID = ZoneInfo("Europe/Madrid")
 FEEDS = ("vehicle_positions", "trip_updates", "alerts")
 OBSERVATIONS = ("vehicle_position_observation", "trip_update_observation", "service_alert")
 DATABASE_URL = "postgresql://mp028_capture:mp028_capture_local@127.0.0.1:5466/mp028_capture"
+CONTAINER = "mp028-capture"
+DATABASE = "mp028_capture"
+UNEXPLAINED_ERRORS = {
+    "unexpected_cycle_failure", "database_lost", "geometry_unverified", "unclassified_error",
+}
 
 
 def utcnow():
@@ -32,12 +40,48 @@ def profile_digest(profile):
     return "sha256:" + hashlib.sha256(profile.encode()).hexdigest()
 
 
+def file_sha256(path):
+    with path.open("rb") as stream:
+        return hashlib.file_digest(stream, "sha256").hexdigest()
+
+
+def dump_database(directory, *, container=CONTAINER, database=DATABASE, role=DATABASE):
+    dump = directory / "capture.dump"
+    checksum = directory / "capture.dump.sha256"
+    if checksum.exists() and not dump.exists():
+        raise RuntimeError("Existe el SHA-256 pero falta capture.dump")
+    with tempfile.TemporaryDirectory(dir=directory) as scratch:
+        temporary = Path(scratch)
+        if not dump.exists():
+            candidate = temporary / dump.name
+            with candidate.open("wb") as stream:
+                candidate.chmod(0o600)
+                subprocess.run(
+                    ["docker", "exec", "-e", "PGOPTIONS=-c default_transaction_read_only=on",
+                     container, "pg_dump", "--format=custom", "--no-password",
+                     "--username", role, "--dbname", database],
+                    stdout=stream, check=True, timeout=600,
+                )
+            with suppress(FileExistsError):
+                dump.hardlink_to(candidate)
+        digest = file_sha256(dump)
+        expected = f"{digest}  {dump.name}\n"
+        if not checksum.exists():
+            candidate = temporary / checksum.name
+            candidate.write_text(expected)
+            with suppress(FileExistsError):
+                checksum.hardlink_to(candidate)
+        if checksum.read_text() != expected:
+            raise RuntimeError("El SHA-256 de capture.dump no coincide")
+    return {"path": dump.name, "sha256": digest, "checksum_path": checksum.name}
+
+
 def log_counts(log_path):
     errors = Counter()
     unexpected = Counter()
     for line in log_path.read_text(errors="replace").splitlines():
         # Contar mensajes del colector, sin copiar cuerpos ni texto de excepciones.
-        record = re.match(r"^\d{4}-\d{2}-\d{2} [\d:,]+ (WARNING|ERROR) (.*)", line)
+        record = re.match(r"^\d{4}-\d{2}-\d{2} [\d:,]+ (WARNING|ERROR|CRITICAL) (.*)", line)
         if not record:
             continue
         message = record[2]
@@ -53,6 +97,8 @@ def log_counts(log_path):
             errors["database_lost"] += 1
         elif message.startswith("Geometría sin verificar"):
             errors["geometry_unverified"] += 1
+        elif record[1] in {"ERROR", "CRITICAL"}:
+            errors["unclassified_error"] += 1
     return errors, unexpected
 
 
@@ -122,13 +168,11 @@ def collect(conn, start, end):
     return runs, rows, vehicles, {flag["flag"]: flag["rows"] for flag in quality}
 
 
-def build_manifest(metadata, session, runs, rows, vehicles, flags, errors, unexpected):
+def manifest_summary(metadata, session):
     start = datetime.fromisoformat(session["started_at_utc"])
     end = datetime.fromisoformat(session["finished_at_utc"])
-    measured = summarize(runs, start, end, metadata["profile"]["anchor_profile"], unexpected)
-    profiles = measured.pop("run_profiles")
     return {
-        "manifest_version": 1,
+        "manifest_version": 2 if "effective_coverage_s" in session else 1,
         **metadata,
         "session": session,
         "period": {
@@ -137,7 +181,19 @@ def build_manifest(metadata, session, runs, rows, vehicles, flags, errors, unexp
             "start_europe_madrid": start.astimezone(MADRID).isoformat(),
             "end_europe_madrid": end.astimezone(MADRID).isoformat(),
             "duration_seconds": (end - start).total_seconds(),
+            **{key: session[key] for key in ("civil_duration_s", "effective_coverage_s")
+               if key in session},
         },
+    }
+
+
+def build_manifest(metadata, session, runs, rows, vehicles, flags, errors, unexpected):
+    start = datetime.fromisoformat(session["started_at_utc"])
+    end = datetime.fromisoformat(session["finished_at_utc"])
+    measured = summarize(runs, start, end, metadata["profile"]["anchor_profile"], unexpected)
+    profiles = measured.pop("run_profiles")
+    return {
+        **manifest_summary(metadata, session),
         **measured,
         "errors_by_type": dict(errors),
         "hot_rows": rows,
@@ -146,19 +202,24 @@ def build_manifest(metadata, session, runs, rows, vehicles, flags, errors, unexp
     }
 
 
-def write_manifest(directory):
+def read_manifest(directory, metadata, session):
     import psycopg
     from psycopg.rows import dict_row
 
-    metadata = json.loads((directory / "metadata.json").read_text())
-    session = json.loads((directory / "session.json").read_text())
     start = datetime.fromisoformat(session["started_at_utc"])
     end = datetime.fromisoformat(session["finished_at_utc"])
     errors, unexpected = log_counts(directory / "collector.log")
-    with psycopg.connect(DATABASE_URL, row_factory=dict_row, connect_timeout=5) as conn:
+    with psycopg.connect(DATABASE_URL, row_factory=dict_row, connect_timeout=5,
+                         options="-c statement_timeout=15000") as conn:
         conn.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ READ ONLY")
         measured = collect(conn, start, end)
-    manifest = build_manifest(metadata, session, *measured, errors, unexpected)
+    return build_manifest(metadata, session, *measured, errors, unexpected)
+
+
+def write_manifest(directory):
+    metadata = json.loads((directory / "metadata.json").read_text())
+    session = json.loads((directory / "session.json").read_text())
+    manifest = read_manifest(directory, metadata, session)
     write_json(directory / "manifest.json", manifest)
     return manifest
 

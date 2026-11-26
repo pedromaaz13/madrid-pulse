@@ -4,9 +4,12 @@ from collections import Counter
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from unittest.mock import Mock, patch
 
+import capture_manifest
 from capture_manifest import (
     build_manifest,
+    collect,
     log_counts,
     profile_digest,
     summarize,
@@ -105,6 +108,53 @@ class CaptureManifestTest(unittest.TestCase):
             "unexpected_cycle_failure": 1, "database_lost": 1, "geometry_unverified": 1,
         })
         self.assertEqual(unexpected, {"alerts": 1})
+
+    def test_collect_scopes_observations_by_run_and_events_by_utc_window(self):
+        run = {"id": 32, **self.run_row("vehicle_positions", 1)}
+        conn = Mock()
+        conn.execute.side_effect = [
+            Mock(**{"fetchall.return_value": [run]}),
+            Mock(**{"fetchone.return_value": {"rows": 5, "vehicles": 2}}),
+            Mock(**{"fetchone.return_value": {"rows": 4}}),
+            Mock(**{"fetchone.return_value": {"rows": 3}}),
+            Mock(**{"fetchall.return_value": [{"flag": "stale", "rows": 2}]}),
+        ]
+        runs, rows, vehicles, flags = collect(conn, self.start, self.end)
+        first, *counts, last = [call.args for call in conn.execute.call_args_list]
+        self.assertIn("started_at >= %s AND started_at < %s", first[0])
+        self.assertEqual(first[1], (self.start, self.end))
+        for sql, args in counts:
+            self.assertIn("ingestion_run_id = ANY", sql)
+            self.assertEqual(args, ([32],))
+        self.assertIn("occurred_at >= %s AND occurred_at < %s", last[0])
+        self.assertEqual(last[1], (self.start, self.end))
+        self.assertEqual(runs, [run])
+        self.assertEqual(rows, {
+            "source_ingestion_run": 1, "vehicle_position_observation": 5,
+            "trip_update_observation": 4, "service_alert": 3, "data_quality_event": 2,
+        })
+        self.assertEqual((vehicles, flags), (2, {"stale": 2}))
+
+    def test_dump_is_checksummed_idempotent_and_refuses_to_overwrite(self):
+        def dump(argv, *, stdout, check, timeout):
+            self.assertIn("PGOPTIONS=-c default_transaction_read_only=on", argv)
+            self.assertIn("--format=custom", argv)
+            stdout.write(b"abc")
+
+        with TemporaryDirectory() as directory, patch(
+            "subprocess.run", side_effect=dump,
+        ) as command:
+            directory = Path(directory)
+            evidence = capture_manifest.dump_database(directory)
+            self.assertEqual(evidence["sha256"],
+                             "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad")
+            self.assertEqual(capture_manifest.dump_database(directory), evidence)
+            self.assertEqual(command.call_count, 1)
+            (directory / evidence["checksum_path"]).write_text("wrong")
+            with self.assertRaisesRegex(RuntimeError, "SHA-256"):
+                capture_manifest.dump_database(directory)
+            self.assertEqual((directory / evidence["checksum_path"]).read_text(), "wrong")
+            self.assertEqual((directory / evidence["path"]).read_bytes(), b"abc")
 
 
 if __name__ == "__main__":
