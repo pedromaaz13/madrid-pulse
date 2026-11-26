@@ -11,9 +11,9 @@ Harness e informe: Codex `gpt-6.2-astra` · high (recibo de Orca); correcciones:
 #### Added
 - `infra/operate/validation/` (harness reproducible sobre replay identificado, con producción como motor) y `docs/evidence/mp-025b/README.md`. Jornada 1 de 3 (~2 h efectivas): H1 cumple literalmente pero no es informativo; **no cumple en movimiento** (p50 963,5 m); `STOPPED_AT` con avance 19/7 001 (artefacto de cuantización del feed); guarda M7 135/1 441; F1 sin retrocesos (0/65). Hallazgos propuestos: GPS rechazado que reaparece y preferencia del `stop_id` con `STOPPED_AT`.
 
-### MP-026b — Lectura consistente de snapshot y tablero (ADR-0014 §4.7, FR-07) (rama `pedromaaz13/mp-026b-snapshot-consistente`, apilada sobre MP-025a; sin fusionar)
+### MP-026b — Lectura consistente de snapshot y tablero (ADR-0014 §4.7, FR-07) (integrada por PR #9, merge `4bc8612`)
 
-Ejecutor Codex `gpt-6.2-sol` · high (recibo de Orca); revisor Claude Opus 5.5 · high (argv verificado): APPROVED en la 1ª ronda sobre `ff5e6ad`. **No integrada en `main`.**
+Ejecutor Codex `gpt-6.2-sol` · high (recibo de Orca); revisor Claude Opus 5.5 · high (argv verificado): APPROVED en la 1ª ronda sobre `ff5e6ad`. **Integrada en `main`** (PR #9, merge commit `4bc8612`, 2026-11-26).
 
 #### Fixed
 - `/api/v1/snapshot` y `/api/v1/stations/{id}/board` leen marcador, vehículos, `trip_update` y salud en una única transacción REPEATABLE READ de solo lectura por petición: la carrera de AUD-06 ya no mezcla estados. La `revision`/`sequence` es una cota, no una identidad; **no hay garantía de reproducción exacta por hora civil** (sigue `UNVERIFIED`).
@@ -21,9 +21,9 @@ Ejecutor Codex `gpt-6.2-sol` · high (recibo de Orca); revisor Claude Opus 5.5 �
 #### Verified
 - RED 8/8 contra `1d9a424` y GREEN; 323 tests con 18 skipped; con 300 000 runs el snapshot baja de p50/p95 1 484,90/1 605,30 ms a 206,44/239,72 ms. Pendiente: Actions remoto.
 
-### MP-025a — Modelo de estado de parada aprobado (ADR-0014 enmienda 1) (rama `pedromaaz13/mp-025a-estado-parada`, en revisión del propietario; sin fusionar)
+### MP-025a — Modelo de estado de parada aprobado (ADR-0014 enmienda 1) (integrada por PR #8, merge `c490f42`)
 
-Ejecutor Codex `gpt-6.2-astra` · high (recibo de Orca); revisor Claude Opus 5.5 · high (argv verificado): ronda 1 CHANGES_REQUESTED, ronda 2 APPROVED sobre `0f0ce54`. **No integrada en `main`. No cierra FR-01**: eso exige MP-025b sobre ≥ 500 pares en vivo.
+Ejecutor Codex `gpt-6.2-astra` · high (recibo de Orca); revisor Claude Opus 5.5 · high (argv verificado): ronda 1 CHANGES_REQUESTED, ronda 2 APPROVED sobre `0f0ce54`. **Integrada en `main`** (PR #8, merge commit `c490f42`, 2026-11-26). **No cierra FR-01**: eso exige MP-025b sobre ≥ 500 pares en vivo.
 
 #### Changed
 - Motor de presentación con estado de parada del operador (A) y degradación por horario (C como R8), congelación F1 en el final autorizado distinguiendo la última posición confirmada, perfil P-024 parametrizado (provisional), envolvente inmutable por run, señalización de cancelaciones conocidas y límites explícitos por cambio de versión. Equivalencia Python↔TypeScript verificada.
