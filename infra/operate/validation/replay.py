@@ -1,4 +1,5 @@
 """python -m infra.operate.validation.replay MANIFEST DUMP > resultado.json"""
+
 import hashlib
 import json
 import subprocess
@@ -47,8 +48,11 @@ def identify(a, v, network, limits):
     if r.stop_state:
         a.coherent = r.stop_state.coherent
     stops = schedule.stops
-    declared = min((s for s in stops if s.stop_id == a.stop),
-                   key=lambda s: (abs(s.progress_m - a.projected), s.stop_sequence), default=None)
+    declared = min(
+        (s for s in stops if s.stop_id == a.stop),
+        key=lambda s: (abs(s.progress_m - a.projected), s.stop_sequence),
+        default=None,
+    )
     if not declared:
         return
     gap = declared.progress_m - a.projected
@@ -57,8 +61,14 @@ def identify(a, v, network, limits):
         if abs(gap) > radius:
             a.classification = "fuera_zona_declarada"
         elif declared == stops[0]:
-            departure = service_day_instant(date.fromisoformat(a.day), declared.departure_s)
-            a.classification = "pre_salida" if a.observed < departure else "origen_tras_salida_programada"
+            departure = service_day_instant(
+                date.fromisoformat(a.day), declared.departure_s
+            )
+            a.classification = (
+                "pre_salida"
+                if a.observed < departure
+                else "origen_tras_salida_programada"
+            )
         else:
             a.classification = "terminal" if declared == stops[-1] else "intermedia"
     elif gap < -radius:
@@ -66,39 +76,54 @@ def identify(a, v, network, limits):
     elif abs(gap) <= radius:
         a.classification = "en_zona"
     else:
-        following = next((s for s in stops if s.progress_m > a.projected + radius), None)
+        following = next(
+            (s for s in stops if s.progress_m > a.projected + radius), None
+        )
         a.classification = "siguiente" if declared == following else "posterior"
 
 
 def analyze(conn, network, config, manifest):
-    start, end = (datetime.fromisoformat(manifest["period"][k]) for k in ("start_utc", "end_utc"))
+    start, end = (
+        datetime.fromisoformat(manifest["period"][k]) for k in ("start_utc", "end_utc")
+    )
     limits = config.thresholds
-    records = conn.execute("""
+    records = conn.execute(
+        """
         SELECT source_vehicle_id,source_trip_id,observed_at,greatest(observed_at,started_at),
                current_status,current_stop_id,v.payload_hash,ingestion_run_id
         FROM vehicle_position_observation v JOIN source_ingestion_run r ON r.id=v.ingestion_run_id
-        WHERE started_at BETWEEN %s AND %s ORDER BY source_vehicle_id,observed_at,v.id
-    """, (start, end)).fetchall()
+        WHERE started_at >= %s AND started_at < %s ORDER BY source_vehicle_id,observed_at,v.id
+    """,
+        (start, end),
+    ).fetchall()
     groups = defaultdict(list)
     arrivals = defaultdict(list)
     for row in records:
         a = Anchor(*row)
         groups[a.vehicle].append(a)
         arrivals[a.visible].append(a)
+    if (len(records), len(groups)) != (
+        manifest["hot_rows"]["vehicle_position_observation"],
+        manifest["distinct_vehicles"],
+    ):
+        raise ValueError("La restauración no concuerda con la población del manifiesto")
     ticks = {end} | {t for t in arrivals if t <= end}
     stale = timedelta(seconds=limits.stale_after_s)
     for anchors in groups.values():
         for i, a in enumerate(anchors):
             expiry = a.observed + stale
-            successor = anchors[i+1].visible if i+1 < len(anchors) else end
+            successor = anchors[i + 1].visible if i + 1 < len(anchors) else end
             after = expiry + timedelta(milliseconds=1)
             if a.visible <= expiry and after < min(successor, end):
                 ticks.update((expiry, after))
-    cancels = conn.execute("""
+    cancels = conn.execute(
+        """
         SELECT u.source_trip_id,greatest(u.observed_at,r.started_at)
         FROM trip_update_observation u JOIN source_ingestion_run r ON r.id=u.ingestion_run_id
-        WHERE r.started_at BETWEEN %s AND %s AND u.schedule_relationship='CANCELED'
-    """, (start, end)).fetchall()
+        WHERE r.started_at >= %s AND r.started_at < %s AND u.schedule_relationship='CANCELED'
+    """,
+        (start, end),
+    ).fetchall()
     cancel_times = defaultdict(list)
     for trip, at in cancels:
         cancel_times[at].append(trip)
@@ -110,11 +135,19 @@ def analyze(conn, network, config, manifest):
     recovery, rewinds = [], []
     prior = {}
     for at in sorted(ticks):
-        vehicles = {v.vehicle_id: v for v in build_snapshot(conn, network, config, at, display_lag_s=0).vehicles}
+        vehicles = {
+            v.vehicle_id: v
+            for v in build_snapshot(conn, network, config, at, display_lag_s=0).vehicles
+        }
         for trip in cancel_times[at]:
             entries = [v for v in vehicles.values() if v.trip_id == trip]
-            key = ("sin_vehiculo" if not entries else "señalizada" if
-                   all(v.schedule_relationship == "CANCELED" for v in entries) else "sin_señal")
+            key = (
+                "sin_vehiculo"
+                if not entries
+                else "señalizada"
+                if all(v.schedule_relationship == "CANCELED" for v in entries)
+                else "sin_señal"
+            )
             cancellations[key] += 1
             calls = network.topology.stop_times_for_trip(trip)
             entries = []
@@ -122,7 +155,9 @@ def analyze(conn, network, config, manifest):
                 board = build_station_board(conn, network, config, station, at)
                 entries.extend(e for e in board.entries if e.trip_id == trip)
             board_counts["llamadas_visibles"] += len(entries)
-            board_counts["llamadas_señalizadas"] += sum(e.schedule_relationship == "CANCELED" for e in entries)
+            board_counts["llamadas_señalizadas"] += sum(
+                e.schedule_relationship == "CANCELED" for e in entries
+            )
             board_counts["filas_sin_llamada_visible"] += not entries
         for a in arrivals[at]:
             vehicle = vehicles.get(a.vehicle)
@@ -135,16 +170,37 @@ def analyze(conn, network, config, manifest):
             r = v.rendered
             env = r.progress_envelope
             state = r.stop_state
-            provenance["/".join(str(x) for x in (r.rendering_method, r.coordinate_space,
-                       env.hold_reason if env else None, r.frozen_basis,
-                       state.operator_status if state else None))] += 1
+            provenance[
+                "/".join(
+                    str(x)
+                    for x in (
+                        r.rendering_method,
+                        r.coordinate_space,
+                        env.hold_reason if env else None,
+                        r.frozen_basis,
+                        state.operator_status if state else None,
+                    )
+                )
+            ] += 1
             old = prior.get(vid)
             if old and old.trip_id == v.trip_id and old.service_date == v.service_date:
                 p = old.rendered
-                if p.progress_m is not None and r.progress_m is not None and p.geometry_version == r.geometry_version and r.geometry_version:
-                    if r.rendering_method == "stale_frozen" and p.anchor_observed_at == r.anchor_observed_at and p.valid_until == p.display_at:
+                if (
+                    p.progress_m is not None
+                    and r.progress_m is not None
+                    and p.geometry_version == r.geometry_version
+                    and r.geometry_version
+                ):
+                    if (
+                        r.rendering_method == "stale_frozen"
+                        and p.anchor_observed_at == r.anchor_observed_at
+                        and p.valid_until == p.display_at
+                    ):
                         rewinds.append(max(0, p.progress_m - r.progress_m))
-                    if p.rendering_method == "stale_frozen" and r.anchor_observed_at != p.anchor_observed_at:
+                    if (
+                        p.rendering_method == "stale_frozen"
+                        and r.anchor_observed_at != p.anchor_observed_at
+                    ):
                         recovery.append(abs(r.progress_m - p.progress_m))
             prior[vid] = v
 
@@ -160,7 +216,13 @@ def analyze(conn, network, config, manifest):
             trips.add(a.trip)
             if a.corridor:
                 covered.add(a.trip)
-            speed = "sin_plan" if not a.plan else "positiva" if a.plan.speed_mps > 0 else "cero"
+            speed = (
+                "sin_plan"
+                if not a.plan
+                else "positiva"
+                if a.plan.speed_mps > 0
+                else "cero"
+            )
             states[f"{a.status}/{a.classification}/{a.coherent}/{speed}"] += 1
         for a, b in pairwise(anchors):
             intervals.append((b.observed - a.observed).total_seconds())
@@ -175,10 +237,25 @@ def analyze(conn, network, config, manifest):
             jumps.append(jump)
             strata[f"{a.status}/{a.classification}/{a.coherent}"].append(jump)
             displacement = b.projected - a.projected
+            if a.status in ("IN_TRANSIT_TO", "INCOMING_AT") and displacement >= 100:
+                costs["transito_avance_100m"] += 1
+                costs["transito_retenido_100m"] += (
+                    forecast == a.plan.progress_m_at_reference
+                )
             if jump > 200:
-                adverse.append(dict(vehicle=vid, at=b.observed.isoformat(), jump_m=jump,
-                                    displacement_m=displacement, predicted_m=forecast-a.plan.progress_m_at_reference,
-                                    status=a.status, hold=a.plan.hold_reason, classification=a.classification))
+                adverse.append(
+                    dict(
+                        vehicle=vid,
+                        at=b.observed.isoformat(),
+                        jump_m=jump,
+                        displacement_m=displacement,
+                        predicted_m=forecast - a.plan.progress_m_at_reference,
+                        status=a.status,
+                        hold=a.plan.hold_reason,
+                        classification=a.classification,
+                        plan_nuevo=b.plan is not None,
+                    )
+                )
             if a.status == "STOPPED_AT":
                 costs["pares_stopped"] += 1
                 if displacement > 0:
@@ -186,27 +263,52 @@ def analyze(conn, network, config, manifest):
                     if forecast == a.plan.progress_m_at_reference:
                         costs["retenida"] += 1
                         costs["retenida_100m"] += displacement >= 100
-                        if (b.plan and visible_progress[b.digest] != a.plan.progress_at(min(
-                                b.visible, a.observed + stale))):
+                        if b.plan and visible_progress[b.digest] != a.plan.progress_at(
+                            min(b.visible, a.observed + stale)
+                        ):
                             delay = (b.visible - b.observed).total_seconds()
                             latency.append(delay)
-                            departure_events.append([vid, b.observed.isoformat(), delay])
+                            departure_events.append(
+                                [vid, b.observed.isoformat(), delay]
+                            )
                         else:
                             costs["latencia_no_evaluable"] += 1
-    cycles = conn.execute("""SELECT count(*), count(*) FILTER (WHERE EXISTS
+    cycles = conn.execute(
+        """SELECT count(*), count(*) FILTER (WHERE EXISTS
       (SELECT 1 FROM vehicle_position_observation v WHERE v.ingestion_run_id=r.id))
-      FROM source_ingestion_run r WHERE feed_name='vehicle_positions' AND started_at BETWEEN %s AND %s""",
-                          (start, end)).fetchone()
-    return dict(rows=len(records), vehicles=len(groups), trips=len(trips), covered_trips=len(covered),
-                covered_vehicles=sum(any(a.corridor for a in group) for group in groups.values()),
-                gps_cycles=cycles, feeds=manifest["coverage_by_feed"], states=states, frames=len(ticks),
-                provenance=provenance, pairs=len(records)-len(groups), excluded=excluded,
-                jumps=distribution(jumps), gate=gate(distribution(jumps)), adverse=adverse,
-                jumps_by_state={k: distribution(v) for k,v in strata.items()}, departures=costs,
-                latency_s=distribution(latency), frozen_rewind_m=distribution(rewinds),
-                recovery_m=distribution(recovery), canceled_rows=len(cancels), canceled=cancellations,
-                board=board_counts, unavailable=unavailable, intervals_s=distribution(intervals),
-                departure_events=departure_events)
+      FROM source_ingestion_run r WHERE feed_name='vehicle_positions' AND started_at >= %s AND started_at < %s""",
+        (start, end),
+    ).fetchone()
+    return dict(
+        rows=len(records),
+        vehicles=len(groups),
+        trips=len(trips),
+        covered_trips=len(covered),
+        covered_vehicles=sum(
+            any(a.corridor for a in group) for group in groups.values()
+        ),
+        gps_cycles=cycles,
+        feeds=manifest["coverage_by_feed"],
+        states=states,
+        frames=len(ticks),
+        provenance=provenance,
+        pairs=len(records) - len(groups),
+        excluded=excluded,
+        jumps=distribution(jumps),
+        gate=gate(distribution(jumps)),
+        adverse=adverse,
+        jumps_by_state={k: distribution(v) for k, v in strata.items()},
+        departures=costs,
+        latency_s=distribution(latency),
+        frozen_rewind_m=distribution(rewinds),
+        recovery_m=distribution(recovery),
+        canceled_rows=len(cancels),
+        canceled=cancellations,
+        board=board_counts,
+        unavailable=unavailable,
+        intervals_s=distribution(intervals),
+        departure_events=departure_events,
+    )
 
 
 def main():
@@ -215,19 +317,36 @@ def main():
     config = ApiConfig.from_env()
     url = urlsplit(config.database_dsn)
     if (url.hostname, url.port, url.path, config.mode, config.short_name) != (
-        "127.0.0.1", 5456, "/mp025b", "replay", ""
+        "127.0.0.1",
+        5456,
+        "/mp025b",
+        "replay",
+        "",
     ) or url.query:
         raise ValueError("Se requiere replay local MP-025b con núcleo completo")
     network = load_network(config)
-    profile = anchor_profile(network.gtfs_version, network.corridor_catalog, config.thresholds)
-    if network.catalog_version != manifest["catalog_version"] or profile != manifest["profile"]["anchor_profile"]:
+    profile = anchor_profile(
+        network.gtfs_version, network.corridor_catalog, config.thresholds
+    )
+    if (
+        network.catalog_version != manifest["catalog_version"]
+        or profile != manifest["profile"]["anchor_profile"]
+    ):
         raise ValueError("Catálogo o perfil distinto al de captura")
-    with psycopg.connect(config.database_dsn, autocommit=True, options="-c default_transaction_read_only=on") as conn:
+    with psycopg.connect(
+        config.database_dsn,
+        autocommit=True,
+        options="-c default_transaction_read_only=on",
+    ) as conn:
         require_disposable_database(conn)
         result = analyze(conn, network, config, manifest)
-    result.update(head=subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip(),
-                  manifest_sha256=sha(manifest_path), dump_sha256=sha(dump),
-                  gtfs_version=network.gtfs_version, period=manifest["period"])
+    result.update(
+        head=subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip(),
+        manifest_sha256=sha(manifest_path),
+        dump_sha256=sha(dump),
+        gtfs_version=network.gtfs_version,
+        period=manifest["period"],
+    )
     print(json.dumps(result, sort_keys=True, ensure_ascii=False, indent=2))
 
 

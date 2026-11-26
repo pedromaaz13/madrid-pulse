@@ -1,4 +1,5 @@
 """Agregación del replay MP-025b. Las distancias son progreso dirigido en metros."""
+
 from dataclasses import dataclass
 from datetime import datetime
 from math import ceil, floor
@@ -28,10 +29,16 @@ class Anchor:
 def distribution(values):
     ordered = sorted(values)
     result = {"n": len(ordered)}
-    for label, q in (("p50", .50), ("p90", .90), ("p95", .95), ("max", 1)):
+    for label, q in (("p50", 0.50), ("p90", 0.90), ("p95", 0.95), ("max", 1)):
         index = (len(ordered) - 1) * q
-        result[label] = (ordered[floor(index)] + (index % 1) *
-                         (ordered[ceil(index)] - ordered[floor(index)])) if ordered else None
+        result[label] = (
+            (
+                ordered[floor(index)]
+                + (index % 1) * (ordered[ceil(index)] - ordered[floor(index)])
+            )
+            if ordered
+            else None
+        )
     return result
 
 
