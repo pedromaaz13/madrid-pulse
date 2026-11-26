@@ -21,6 +21,7 @@ from packages.movement.rendering import ProgressEnvelope
 from packages.movement.schedule import service_day_instant
 
 from .metrics import Anchor, distribution, exclusion, gate
+from .segments import isolate, windows
 
 
 def sha(path):
@@ -83,8 +84,8 @@ def identify(a, v, network, limits):
         a.classification = "siguiente" if declared == following else "posterior"
 
 
-def analyze(conn, network, config, manifest):
-    start, end = (
+def analyze(conn, network, config, manifest, span=None):
+    start, end = span or (
         datetime.fromisoformat(manifest["period"][k]) for k in ("start_utc", "end_utc")
     )
     limits = config.thresholds
@@ -103,7 +104,7 @@ def analyze(conn, network, config, manifest):
         a = Anchor(*row)
         groups[a.vehicle].append(a)
         arrivals[a.visible].append(a)
-    if (len(records), len(groups)) != (
+    if not span and (len(records), len(groups)) != (
         manifest["hot_rows"]["vehicle_position_observation"],
         manifest["distinct_vehicles"],
     ):
@@ -135,6 +136,9 @@ def analyze(conn, network, config, manifest):
     visible_progress = {}
     recovery, rewinds = [], []
     prior = {}
+    recovery_cases = []
+    stopped_adverse = []
+    m7_cases = Counter()
     for at in sorted(ticks):
         vehicles = {
             v.vehicle_id: v
@@ -203,6 +207,16 @@ def analyze(conn, network, config, manifest):
                         and r.anchor_observed_at != p.anchor_observed_at
                     ):
                         recovery.append(abs(r.progress_m - p.progress_m))
+                        recovery_cases.append(
+                            [
+                                vid,
+                                at.isoformat(),
+                                recovery[-1],
+                                p.frozen_basis,
+                                r.rendering_method,
+                                r.reason,
+                            ]
+                        )
             prior[vid] = v
 
     excluded, states, costs, strata = Counter(), Counter(), Counter(), defaultdict(list)
@@ -224,6 +238,18 @@ def analyze(conn, network, config, manifest):
                 if a.plan.speed_mps > 0
                 else "cero"
             )
+            if a.status == "STOPPED_AT" and a.plan and a.plan.speed_mps > 0:
+                stopped_adverse.append(
+                    [
+                        vid,
+                        a.observed.isoformat(),
+                        a.stop,
+                        a.classification,
+                        a.coherent,
+                        a.plan.hold_reason,
+                        a.plan.speed_mps,
+                    ]
+                )
             states[f"{a.status}/{a.classification}/{a.coherent}/{speed}"] += 1
         for a, b in pairwise(anchors):
             intervals.append((b.observed - a.observed).total_seconds())
@@ -240,6 +266,8 @@ def analyze(conn, network, config, manifest):
             displacement = b.projected - a.projected
             if a.status in ("IN_TRANSIT_TO", "INCOMING_AT") and displacement >= 100:
                 costs["transito_avance_100m"] += 1
+                if forecast == a.plan.progress_m_at_reference:
+                    m7_cases[f"{a.status}/{a.classification}/{a.plan.hold_reason}"] += 1
                 costs["transito_retenido_100m"] += (
                     forecast == a.plan.progress_m_at_reference
                 )
@@ -280,7 +308,10 @@ def analyze(conn, network, config, manifest):
       FROM source_ingestion_run r WHERE feed_name='vehicle_positions' AND started_at >= %s AND started_at < %s""",
         (start, end),
     ).fetchone()
-    return {
+    result = {
+        "m7_retenciones": m7_cases,
+        "stopped_adverse": stopped_adverse,
+        "recovery_cases": recovery_cases,
         "rows": len(records),
         "vehicles": len(groups),
         "trips": len(trips),
@@ -310,6 +341,112 @@ def analyze(conn, network, config, manifest):
         "intervals_s": distribution(intervals),
         "departure_events": departure_events,
     }
+    if span:
+        result["_samples"] = {
+            "jumps": jumps,
+            "latency_s": latency,
+            "intervals_s": intervals,
+            "recovery_m": recovery,
+            "frozen_rewind_m": rewinds,
+        }
+        result["_strata"] = strata
+        result["_identities"] = {
+            "vehicles": set(groups),
+            "trips": trips,
+            "covered_trips": covered,
+            "covered_vehicles": {
+                vid for vid, aa in groups.items() if any(a.corridor for a in aa)
+            },
+        }
+    return result
+
+
+def analyze_segments(conn, network, config, manifest, spans):
+    start, end = spans[0][0], spans[-1][1]
+    population = conn.execute(
+        """SELECT count(*),count(distinct source_vehicle_id)
+        FROM public.vehicle_position_observation v JOIN public.source_ingestion_run r
+        ON v.ingestion_run_id=r.id WHERE r.started_at >= %s AND r.started_at < %s""",
+        (start, end),
+    ).fetchone()
+    if population != (
+        manifest["hot_rows"]["vehicle_position_observation"],
+        manifest["distinct_vehicles"],
+    ):
+        raise ValueError("Población de captura distinta del manifiesto")
+    all_canceled = conn.execute(
+        """SELECT count(*) FROM public.trip_update_observation u
+        JOIN public.source_ingestion_run r ON r.id=u.ingestion_run_id WHERE r.started_at >= %s
+        AND r.started_at < %s AND u.schedule_relationship='CANCELED'""",
+        (start, end),
+    ).fetchone()[0]
+    parts = []
+    for i, (left, right) in enumerate(spans):
+        # La única escritura es DDL temporal sobre la copia marcada.
+        conn.execute("SET default_transaction_read_only = off")
+        isolate(conn, left, right, i > 0)
+        conn.execute("SET default_transaction_read_only = on")
+        parts.append(analyze(conn, network, config, manifest, (left, right)))
+    result = {}
+    for key in ("rows", "frames", "pairs", "canceled_rows"):
+        result[key] = sum(p[key] for p in parts)
+    for key in (
+        "states",
+        "provenance",
+        "excluded",
+        "departures",
+        "board",
+        "canceled",
+        "m7_retenciones",
+    ):
+        result[key] = sum((Counter(p[key]) for p in parts), Counter())
+    for key in (
+        "adverse",
+        "departure_events",
+        "unavailable",
+        "recovery_cases",
+        "stopped_adverse",
+    ):
+        result[key] = [item for p in parts for item in p[key]]
+    for key in parts[0]["_samples"]:
+        result[key] = distribution(
+            [value for p in parts for value in p["_samples"][key]]
+        )
+    for key in parts[0]["_identities"]:
+        result[key] = len(set.union(*(p["_identities"][key] for p in parts)))
+    strata = defaultdict(list)
+    for p in parts:
+        for k, values in p["_strata"].items():
+            strata[k].extend(values)
+    result["jumps_by_state"] = {k: distribution(v) for k, v in strata.items()}
+    result["separacion"] = {
+        "filas_gps_fuera": population[0] - result["rows"],
+        "cancelaciones_fuera": all_canceled - result["canceled_rows"],
+        "enlaces_entre_segmentos_descartados": sum(p["vehicles"] for p in parts)
+        - result["vehicles"],
+        "segmentos": [
+            {
+                k: p[k]
+                for k in (
+                    "rows",
+                    "vehicles",
+                    "trips",
+                    "covered_vehicles",
+                    "gps_cycles",
+                    "pairs",
+                    "jumps",
+                    "excluded",
+                    "frozen_rewind_m",
+                    "recovery_m",
+                )
+            }
+            for p in parts
+        ],
+    }
+    result["gps_cycles"] = list(map(sum, zip(*(p["gps_cycles"] for p in parts))))
+    result["gate"] = gate(result["jumps"])
+    result["feeds"] = manifest["coverage_by_feed"]
+    return result
 
 
 def main():
@@ -340,7 +477,12 @@ def main():
         options="-c default_transaction_read_only=on",
     ) as conn:
         require_disposable_database(conn)
-        result = analyze(conn, network, config, manifest)
+        spans = windows(manifest)
+        result = (
+            analyze_segments(conn, network, config, manifest, spans)
+            if len(spans) > 1
+            else analyze(conn, network, config, manifest)
+        )
     result.update(
         head=subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip(),
         manifest_sha256=sha(manifest_path),
