@@ -220,6 +220,16 @@ def movement_from_history(
         return None
 
 
+def _movement_position(
+    network: LoadedNetwork,
+    history: db.VehicleHistory,
+    route_id: str,
+    now: datetime,
+    service_date: date,
+) -> MovementPosition | None:
+    return movement_from_history(network.engine, history, route_id, now, service_date)
+
+
 def _circulation_status(
     network: LoadedNetwork, source_trip_id: str, route_id: str | None, active_service_ids: frozenset[str]
 ) -> str:
@@ -262,8 +272,7 @@ def vehicle_to_out(
     )
 
     movement = (
-        movement_from_history(network.engine, history, route_id, now, service_date)
-        if route_id else None
+        _movement_position(network, history, route_id, now, service_date) if route_id else None
     )
 
     # La edad de la OBSERVACIÓN cruda es siempre calculable a partir de su
