@@ -50,3 +50,20 @@ def isolate(conn, start, end, after_gap):
                 "WHERE ingestion_run_id IN (SELECT id FROM pg_temp.source_ingestion_run){}"
             ).format(source, source, stamp)
         )
+
+
+def check_segment(conn, start, end, after_gap):
+    """Contrastar las vistas con las filas originales; comprueba faltantes y extras."""
+    for table in ("vehicle_position_observation", "trip_update_observation"):
+        query = sql.SQL("""
+            WITH expected AS (
+                SELECT v.id FROM public.{table} v JOIN public.source_ingestion_run r
+                  ON r.id=v.ingestion_run_id
+                WHERE r.started_at >= %s AND r.started_at < %s
+                  AND (NOT %s OR v.observed_at >= %s)
+            ), actual AS (SELECT id FROM pg_temp.{table})
+            SELECT EXISTS ((SELECT * FROM expected EXCEPT SELECT * FROM actual)
+                  UNION ALL (SELECT * FROM actual EXCEPT SELECT * FROM expected))
+        """).format(table=sql.Identifier(table))
+        if conn.execute(query, (start, end, after_gap, start)).fetchone()[0]:
+            raise ValueError(f"Población incorrecta en el segmento: {table}")

@@ -20,8 +20,16 @@ from packages.movement.profile import anchor_profile
 from packages.movement.rendering import ProgressEnvelope
 from packages.movement.schedule import service_day_instant
 
-from .metrics import Anchor, distribution, exclusion, first_departure_frame, gate
-from .segments import isolate, windows
+from .metrics import (
+    Anchor,
+    distribution,
+    exclusion,
+    first_departure_frame,
+    gate,
+    jump_strata,
+    movement_opportunity,
+)
+from .segments import check_segment, isolate, windows
 
 
 def sha(path):
@@ -57,6 +65,7 @@ def identify(a, v, network, limits):
     )
     if not declared:
         return
+    a.declared_progress = declared.progress_m
     gap = declared.progress_m - a.projected
     radius = limits.stop_zone_radius_m
     if a.status == "STOPPED_AT":
@@ -92,7 +101,7 @@ def analyze(conn, network, config, manifest, span=None):
     records = conn.execute(
         """
         SELECT source_vehicle_id,source_trip_id,observed_at,greatest(observed_at,started_at),
-               current_status,current_stop_id,v.payload_hash,ingestion_run_id
+               current_status,current_stop_id,v.payload_hash,ingestion_run_id,latitude,longitude
         FROM vehicle_position_observation v JOIN source_ingestion_run r ON r.id=v.ingestion_run_id
         WHERE started_at >= %s AND started_at < %s ORDER BY source_vehicle_id,observed_at,v.id
     """,
@@ -101,7 +110,11 @@ def analyze(conn, network, config, manifest, span=None):
     groups = defaultdict(list)
     arrivals = defaultdict(list)
     for row in records:
-        a = Anchor(*row)
+        lat, lon = row[-2:]
+        a = Anchor(
+            *row[:-2],
+            raw_xy=(lat, lon) if lat is not None and lon is not None else None,
+        )
         groups[a.vehicle].append(a)
         arrivals[a.visible].append(a)
     if not span and (len(records), len(groups)) != (
@@ -232,6 +245,9 @@ def analyze(conn, network, config, manifest, span=None):
                         )
             prior[vid] = v
 
+    stratified = defaultdict(list)
+    ghost_checks = []
+    aba = 0
     excluded, states, costs, strata = Counter(), Counter(), Counter(), defaultdict(list)
     jumps, latency, adverse = [], [], []
     unavailable = []
@@ -264,6 +280,37 @@ def analyze(conn, network, config, manifest, span=None):
                     ]
                 )
             states[f"{a.status}/{a.classification}/{a.coherent}/{speed}"] += 1
+        for first, middle, last in zip(anchors, anchors[1:], anchors[2:]):
+            if (
+                first.trip == middle.trip == last.trip
+                and first.raw_xy is not None
+                and middle.raw_xy is not None
+                and first.raw_xy == last.raw_xy != middle.raw_xy
+            ):
+                aba += 1
+        for i, a in enumerate(anchors):
+            if a.status == "STOPPED_AT" and a.plan and a.plan.speed_mps > 0:
+                nxt = anchors[i + 1] if i + 1 < len(anchors) else None
+                comparable = (
+                    nxt
+                    and nxt.trip == a.trip
+                    and nxt.day == a.day
+                    and nxt.projected is not None
+                    and a.declared_progress is not None
+                )
+                ghost_checks.append(
+                    {
+                        "vehicle": vid,
+                        "at": a.observed.isoformat(),
+                        "stop": a.stop,
+                        "projection": a.projected,
+                        "declared": a.declared_progress,
+                        "next_minus_declared": nxt.projected - a.declared_progress
+                        if comparable
+                        else None,
+                        "next_stop": nxt.stop if nxt else None,
+                    }
+                )
         for a, b in pairwise(anchors):
             intervals.append((b.observed - a.observed).total_seconds())
             reason = exclusion(a, b, limits.stale_after_s)
@@ -277,7 +324,10 @@ def analyze(conn, network, config, manifest, span=None):
             jumps.append(jump)
             strata[f"{a.status}/{a.classification}/{a.coherent}"].append(jump)
             displacement = b.projected - a.projected
-            if a.status in ("IN_TRANSIT_TO", "INCOMING_AT") and displacement >= 100:
+            for label in jump_strata(a, b):
+                stratified[label].append(jump)
+            opportunity = movement_opportunity(a.status, displacement)
+            if opportunity == "M7":
                 costs["transito_avance_100m"] += 1
                 if forecast == a.plan.progress_m_at_reference:
                     m7_cases[f"{a.status}/{a.classification}/{a.plan.hold_reason}"] += 1
@@ -300,7 +350,7 @@ def analyze(conn, network, config, manifest, span=None):
                 )
             if a.status == "STOPPED_AT":
                 costs["pares_stopped"] += 1
-                if displacement > 0:
+                if opportunity == "salida":
                     costs["avance_positivo"] += 1
                     if forecast == a.plan.progress_m_at_reference:
                         costs["retenida"] += 1
@@ -322,6 +372,9 @@ def analyze(conn, network, config, manifest, span=None):
         (start, end),
     ).fetchone()
     result = {
+        "h1_strata": {k: distribution(v) for k, v in stratified.items()},
+        "ghost_checks": ghost_checks,
+        "triples_aba": aba,
         "m7_retenciones": m7_cases,
         "stopped_adverse": stopped_adverse,
         "recovery_cases": recovery_cases,
@@ -363,6 +416,7 @@ def analyze(conn, network, config, manifest, span=None):
             "frozen_rewind_m": rewinds,
         }
         result["_strata"] = strata
+        result["_h1"] = stratified
         result["_identities"] = {
             "vehicles": set(groups),
             "trips": trips,
@@ -399,9 +453,10 @@ def analyze_segments(conn, network, config, manifest, spans):
         conn.execute("SET default_transaction_read_only = off")
         isolate(conn, left, right, i > 0)
         conn.execute("SET default_transaction_read_only = on")
+        check_segment(conn, left, right, i > 0)
         parts.append(analyze(conn, network, config, manifest, (left, right)))
     result = {}
-    for key in ("rows", "frames", "pairs", "canceled_rows"):
+    for key in ("rows", "frames", "pairs", "canceled_rows", "triples_aba"):
         result[key] = sum(p[key] for p in parts)
     for key in (
         "states",
@@ -417,6 +472,7 @@ def analyze_segments(conn, network, config, manifest, spans):
         "adverse",
         "departure_events",
         "unavailable",
+        "ghost_checks",
         "recovery_cases",
         "stopped_adverse",
     ):
@@ -432,6 +488,11 @@ def analyze_segments(conn, network, config, manifest, spans):
         for k, values in p["_strata"].items():
             strata[k].extend(values)
     result["jumps_by_state"] = {k: distribution(v) for k, v in strata.items()}
+    labels = {label for part in parts for label in part["_h1"]}
+    result["h1_strata"] = {
+        label: distribution([v for part in parts for v in part["_h1"][label]])
+        for label in labels
+    }
     result["separacion"] = {
         "filas_gps_fuera": population[0] - result["rows"],
         "cancelaciones_fuera": all_canceled - result["canceled_rows"],
@@ -490,12 +551,41 @@ def main():
         options="-c default_transaction_read_only=on",
     ) as conn:
         require_disposable_database(conn)
+        start, end = (
+            datetime.fromisoformat(manifest["period"][k])
+            for k in ("start_utc", "end_utc")
+        )
+        quant = conn.execute(
+            """
+            WITH coords AS (
+                SELECT latitude,longitude,count(*) AS n,count(distinct source_vehicle_id) AS vehicles
+                FROM public.vehicle_position_observation v JOIN public.source_ingestion_run r
+                ON r.id=v.ingestion_run_id WHERE started_at >= %s AND started_at < %s
+                AND latitude IS NOT NULL AND longitude IS NOT NULL GROUP BY latitude,longitude
+            ) SELECT coalesce(sum(n),0)::int,count(*),count(*) FILTER (WHERE n>=20),
+                     coalesce(sum(n) FILTER (WHERE n>=20),0)::int,max(vehicles) FROM coords
+        """,
+            (start, end),
+        ).fetchone()
         spans = windows(manifest)
         result = (
             analyze_segments(conn, network, config, manifest, spans)
             if len(spans) > 1
             else analyze(conn, network, config, manifest)
         )
+    result["raw_quantization"] = dict(
+        zip(
+            (
+                "positioned_rows",
+                "distinct_coordinates",
+                "coordinates_ge20",
+                "rows_ge20",
+                "max_vehicles",
+            ),
+            quant,
+            strict=True,
+        )
+    )
     result.update(
         head=subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip(),
         manifest_sha256=sha(manifest_path),
