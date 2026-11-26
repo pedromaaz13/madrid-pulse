@@ -33,8 +33,8 @@ Baseline de producto auditado: `beb9434`.
 | review_status | IN_REVIEW | 0 |
 | review_status | CHANGES_REQUESTED | 1 |
 | review_status | APPROVED | 37 |
-| integration_status | NOT_INTEGRATED | 37 |
-| integration_status | MERGED | 36 |
+| integration_status | NOT_INTEGRATED | 36 |
+| integration_status | MERGED | 37 |
 | deployment_status | NOT_DEPLOYED | 53 |
 | deployment_status | NOT_APPLICABLE | 20 |
 | deployment_status | STAGING | 0 |
