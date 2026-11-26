@@ -193,7 +193,7 @@ Los datos y el resultado JSON se guardan fuera de Git, en el directorio original
 | `session-1/manifest.json` | `5de84ef60f84769cf962f05e20fd1b7ba910832441e13a2883f9c2eaf2cdbb6e` |
 | `fomento_transit.zip` | `58ac554356acddfffb2411f48ada26b5ff4655549e6957372906cf7a38e4ba4e` |
 | Primera ronda, `analysis/mp038-jornada1.json` | `1450a64fc58ea97bdda36a631fb1192298288a2173a6360250910f345a7ac5fe` |
-| Preliminar, solo envolventes activas, `analysis/mp038-delta-r2.json` | `0bfbcc5e0383532ca0b8885222aacc7c13dd47219c62f9ec7164858ee3153694` |
+| Preliminar, solo envolventes activas, `analysis/mp038-delta-r2.json` | `809619dd676c9b957b36017a6eec52c4ea9ec2f569d4efe297ba7bc542fc7b63` |
 | Delta final, `analysis/mp038-delta-r2-replica.json` y `analysis/mp038-delta-r2-verificado.json` | `c72629a8f7dfbe913509ddd0abf09717de2ed77f89c4fc8beb42eb2b24e1bfae` |
 
 El resultado preliminar solo pudo evaluar 192 envolventes activas. El primer `cmp` con el delta dio distinto al incorporar los 27 progresos congelados. La reproducción independiente compara las dos salidas del arnés corregido.
