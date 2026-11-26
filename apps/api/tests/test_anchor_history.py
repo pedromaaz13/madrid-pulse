@@ -171,6 +171,15 @@ class AnchorHistoryTests(unittest.TestCase):
             self.assert_anchor(self.frame(sample.observed_at), wrong, sample.observed_at)
         self.assert_anchor(self.frame(samples[-1].observed_at), samples[-2], samples[-1].observed_at)
 
+    def test_return_does_not_confirm_b_when_a_was_also_rejected(self):
+        wrong = self.synthetic(0, 3000)
+        self.synthetic(30, 1300)
+        self.synthetic(60, 1200)
+        returned = self.synthetic(90, 1300)
+        next_sample = self.synthetic(120, 1330)
+        self.assert_anchor(self.frame(returned.observed_at), wrong, returned.observed_at)
+        self.assert_anchor(self.frame(next_sample.observed_at), returned, next_sample.observed_at)
+
     def test_recovery_size_can_be_configured(self):
         with patch.dict(os.environ, MADRID_PULSE_ANCHOR_REACQUIRE_SAMPLES="3"):
             configured = ApiConfig.from_env()

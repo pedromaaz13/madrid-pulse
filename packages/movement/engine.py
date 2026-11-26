@@ -126,6 +126,7 @@ class MovementEngine:
         matches: dict[tuple[float | None, float | None], MapMatch | None] = {}
         recovery: list[tuple[VehiclePositionObservation, MapMatch, float]] = []
         recovery_coordinates: set[tuple[float | None, float | None]] = set()
+        previous_coordinates = penultimate_coordinates = None
         for sample in (*reversed(earlier), previous, latest):
             if sample is None:
                 continue
@@ -134,6 +135,8 @@ class MovementEngine:
             if sample.observed_at > latest.observed_at:
                 raise ValueError("la historia contiene una muestra posterior a latest")
             coordinates = (sample.latitude, sample.longitude)
+            returns_to_a = coordinates == penultimate_coordinates and coordinates != previous_coordinates
+            penultimate_coordinates, previous_coordinates = previous_coordinates, coordinates
             if coordinates not in matches:
                 matches[coordinates] = self.map_match(sample)
             match = matches[coordinates]
@@ -160,7 +163,8 @@ class MovementEngine:
                 if recovery:
                     last_sample, last_match, last_progress = recovery[-1]
                     if (
-                        coordinates in recovery_coordinates
+                        returns_to_a
+                        or coordinates in recovery_coordinates
                         or progress < last_progress
                         or self._is_unusable(schedule, sample, match, last_sample, last_match)
                     ):
