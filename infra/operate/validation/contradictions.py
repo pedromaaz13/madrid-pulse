@@ -16,7 +16,12 @@ import psycopg
 from apps.api import snapshot
 from apps.api.config import ApiConfig
 from apps.api.gtfs_source import load_network
-from packages.database import require_disposable_database
+from packages.database import (
+    SHARED_DEV_PORT,
+    database_settings_from_env,
+    require_disposable_database,
+)
+from packages.geo import haversine_m
 from packages.movement import rendering
 from packages.movement.profile import anchor_profile
 
@@ -29,9 +34,10 @@ from .metrics import (
 )
 from .segments import windows
 
-POLICIES = ("control", "gps_en_zona", "sin_r4", "r4_r8", "r4_dos_gps", "parada_previa")
+POLICIES = ("control", "sin_r4", "r4_r8", "r4_dos_gps", "parada_previa", "gps_previo")
 SAME_FIX_M = 1  # Estrato de MP-025b, no se usa para decidir.
 JUMP_M = 200  # Umbral descriptivo de MP-025b.
+SHARED_VEHICLES = 3  # Estrato descriptivo de coordenadas compartidas.
 
 
 def alternatives(envelope, inputs):
@@ -54,6 +60,7 @@ def alternatives(envelope, inputs):
     fresh = age is not None and 0 < age <= inputs["thresholds"].stale_after_s
 
     if reason == "operator_incoming_at":
+        # Invariante de R4, comprobado antes de formar los contrafactuales.
         if declared is None or abs(declared.progress_m - anchor) > radius:
             raise ValueError("R4 sin confirmación del GPS efectivo")
         plans["sin_r4"] = ENVELOPE(**(inputs | {"status": "IN_TRANSIT_TO"}))
@@ -76,6 +83,11 @@ def alternatives(envelope, inputs):
             cap_reached_at=None,
             dwell_basis=None,
             envelope_id=None,
+        )
+        plans["gps_previo"] = replace(
+            plans["parada_previa"],
+            progress_m_at_reference=prior.progress_m,
+            max_progress_m=prior.progress_m,
         )
     return plans
 
@@ -178,6 +190,7 @@ class Trace:
         for vid, group in sorted(self.groups.items()):
             group.sort(key=lambda a: a.observed)
             frames = self.frames[vid]
+            streaks = coordinate_streaks(group)
             for i, a in enumerate(group):
                 if a.plan:
                     following = group[i + 1] if i + 1 < len(group) else None
@@ -188,11 +201,29 @@ class Trace:
                 if reason:
                     excluded[reason] += 1
                 else:
-                    pairs.append(pair_row(self, a, b, frames))
+                    pairs.append(pair_row(self, a, b, frames, streaks[id(a)]))
         return anchors, pairs, excluded
 
 
 replay_identify = replay.identify
+
+
+def coordinate_streaks(group):
+    """Tiempo desde la primera muestra idéntica consecutiva en el segmento."""
+    streaks = {}
+    previous = None
+    for a in group:
+        if (
+            previous is None
+            or a.trip != previous.trip
+            or (a.day and previous.day and a.day != previous.day)
+            or a.raw_xy is None
+            or a.raw_xy != previous.raw_xy
+        ):
+            start = a.observed
+        streaks[id(a)] = (a.observed - start).total_seconds()
+        previous = a
+    return streaks
 
 
 def raw_row(trace, a):
@@ -236,6 +267,8 @@ def anchor_row(trace, a, prior, b, frames):
         valid_until = p.reference_at + timedelta(seconds=p.horizon_s)
         last = min(end, valid_until)
         values[name] = {
+            "offset_from_effective_gps_m": initial
+            - plans["control"].progress_m_at_reference,
             "speed_mps": p.speed_mps,
             "hold": p.hold_reason,
             "dwell_basis": p.dwell_basis,
@@ -292,7 +325,7 @@ def handoff(a, b, before, after, plan, policy):
     return after.shown[policy] - plan.progress_at(min(b.visible, end))
 
 
-def pair_row(trace, a, b, frames):
+def pair_row(trace, a, b, frames, frozen_a_s):
     plans = trace.own_plans[id(a)]
     index = trace.indices[b.vehicle, b.visible]
     after = frames[index]
@@ -328,6 +361,7 @@ def pair_row(trace, a, b, frames):
         "class": a.classification,
         "opportunity": opportunity,
         "interval_s": (b.observed - a.observed).total_seconds(),
+        "frozen_a_s": frozen_a_s,
         "observed_delta_m": displacement,
         "policies": values,
     }
@@ -393,7 +427,139 @@ def cohorts(anchors, pairs):
     return stopped, m7
 
 
+def m7_strata(pairs, top_speed_kmh):
+    """Cruza velocidad aparente y racha previa sobre toda la población H1 de M7."""
+    strata = {
+        f"{speed}/{streak}": {
+            "todos_h1": [],
+            "oportunidades_m7": [],
+            "retenciones_control": [],
+        }
+        for speed in ("plausible", "sobre_tope")
+        for streak in ("sin_racha", "con_racha")
+    }
+    for pair in pairs:
+        if pair["a"]["status"] not in ("INCOMING_AT", "IN_TRANSIT_TO"):
+            continue
+        speed = abs(pair["observed_delta_m"]) * 3.6 / pair["interval_s"]
+        speed_stratum = "plausible" if speed <= top_speed_kmh else "sobre_tope"
+        streak = "con_racha" if pair["frozen_a_s"] > 0 else "sin_racha"
+        populations = strata[f"{speed_stratum}/{streak}"]
+        populations["todos_h1"].append(pair)
+        if pair["opportunity"] == "M7":
+            populations["oportunidades_m7"].append(pair)
+            if pair["policies"]["control"]["retained"]:
+                populations["retenciones_control"].append(pair)
+    for prefix, axis in (
+        ("plausible", 0),
+        ("sobre_tope", 0),
+        ("sin_racha", 1),
+        ("con_racha", 1),
+    ):
+        strata[prefix] = {
+            population: [
+                pair
+                for key, groups in strata.items()
+                if "/" in key and key.split("/")[axis] == prefix
+                for pair in groups[population]
+            ]
+            for population in ("todos_h1", "oportunidades_m7", "retenciones_control")
+        }
+    return strata
+
+
+def coordinate_counts(conn, period):
+    start, end = (datetime.fromisoformat(period[k]) for k in ("start_utc", "end_utc"))
+    rows = conn.execute(
+        """
+        WITH fixes AS (
+            SELECT latitude, longitude, source_vehicle_id,
+                   (r.started_at >= %s AND r.started_at < %s) AS in_session
+            FROM public.vehicle_position_observation v
+            JOIN public.source_ingestion_run r ON r.id = v.ingestion_run_id
+            WHERE latitude IS NOT NULL AND longitude IS NOT NULL
+        )
+        SELECT latitude, longitude, count(*), count(DISTINCT source_vehicle_id),
+               count(*) FILTER (WHERE in_session),
+               count(DISTINCT source_vehicle_id) FILTER (WHERE in_session)
+        FROM fixes GROUP BY latitude, longitude ORDER BY latitude, longitude
+        """,
+        (start, end),
+    ).fetchall()
+    counts, summary = {}, {}
+    for scope, n_col, vehicles_col in (("dump", 2, 3), ("session", 4, 5)):
+        counts[scope] = {(r[0], r[1]): r[vehicles_col] for r in rows if r[n_col]}
+        summary[scope] = {
+            "coordinates": len(counts[scope]),
+            "positioned_rows": sum(r[n_col] for r in rows),
+            "shared_rows": sum(
+                r[n_col] for r in rows if r[vehicles_col] >= SHARED_VEHICLES
+            ),
+        }
+    return counts, summary
+
+
+def nearest_stops(stopped, stops):
+    """Contexto estático para A. La proximidad espacial no identifica el tren."""
+    result = {}
+    for case in stopped:
+        a = case["a"]
+        if a["stop"] not in result:
+            result[a["stop"]] = {}
+        lat_lon = a["raw_xy"]
+        if lat_lon not in result[a["stop"]]:
+            distance, stop_id, name = min(
+                (haversine_m(*lat_lon, s.latitude, s.longitude), s.stop_id, s.name)
+                for s in stops
+            )
+            result[a["stop"]][lat_lon] = {
+                "raw_xy": lat_lon,
+                "gtfs_stop": stop_id,
+                "name": name,
+                "distance_m": distance,
+                "anchors": 0,
+            }
+        result[a["stop"]][lat_lon]["anchors"] += 1
+    return {stop: list(points.values()) for stop, points in result.items()}
+
+
+def stopped_deltas(stopped, pairs):
+    starts, ends = {}, {}
+    for p in pairs:
+        for index, edge in ((starts, "a"), (ends, "b")):
+            a = p[edge]
+            index[p["vehicle"], a["run"], a["gps_at"]] = p
+    changed = []
+    for case in stopped:
+        if case["policies"]["parada_previa"] == case["policies"]["control"]:
+            continue
+        a = case["a"]
+        key = (case["vehicle"], a["run"], a["gps_at"])
+        changed.append(
+            {
+                "vehicle": case["vehicle"],
+                "gps_at": a["gps_at"],
+                "arrival": ends.get(key),
+                "departure": starts.get(key),
+            }
+        )
+    return {
+        "changed": changed,
+        "prior_same_raw_xy": sum(
+            c["prior"] is not None and c["prior"]["raw_xy"] == c["a"]["raw_xy"]
+            for c in stopped
+        ),
+        "advance_before_replacement_total_m": {
+            name: sum(
+                c["policies"][name]["advance_before_replacement_m"] for c in stopped
+            )
+            for name in ("control", "parada_previa", "gps_previo")
+        },
+    }
+
+
 def compare(conn, network, config, manifest):
+    coordinates, quantization = coordinate_counts(conn, manifest["period"])
     traces = []
 
     def analyze_part(*args):
@@ -446,6 +612,14 @@ def compare(conn, network, config, manifest):
             "stopped_positive_control": summarize(stopped, [], policy),
             "retained_m7_control": summarize([], m7, policy),
         }
+    m7_breakdown = m7_strata(pairs, config.thresholds.max_estimated_speed_kmh)
+    for scope, counts in coordinates.items():
+        quantization[scope]["m7_retained_a_shared"] = sum(
+            counts.get(p["a"]["raw_xy"], 0) >= SHARED_VEHICLES for p in m7
+        )
+        quantization[scope]["m7_retained_b_shared"] = sum(
+            counts.get(p["b"]["raw_xy"], 0) >= SHARED_VEHICLES for p in m7
+        )
     return {
         "population": {
             key: baseline[key] for key in ("rows", "pairs", "vehicles", "frames")
@@ -455,6 +629,24 @@ def compare(conn, network, config, manifest):
         "summary": summary,
         "stopped_cases": stopped,
         "m7_cases": m7,
+        "m7_strata": {
+            key: {
+                population: {
+                    policy: summarize([], group, policy) for policy in POLICIES
+                }
+                for population, group in populations.items()
+            }
+            for key, populations in m7_breakdown.items()
+        },
+        "m7_retained_apparent_speed_mps": distribution(
+            p["observed_delta_m"] / p["interval_s"] for p in m7
+        ),
+        "m7_retained_prior_streak_s": distribution(
+            p["frozen_a_s"] for p in m7 if p["frozen_a_s"] > 0
+        ),
+        "quantization": quantization,
+        "stopped_fixed_points": nearest_stops(stopped, network.topology.stops),
+        "stopped_deltas": stopped_deltas(stopped, pairs),
         "worst": {
             policy: {
                 status: {
@@ -477,6 +669,21 @@ def compare(conn, network, config, manifest):
     }
 
 
+def validate_endpoint(dsn, environment, mode, short_name):
+    url = urlsplit(dsn)
+    if (
+        (url.hostname, environment, mode, short_name)
+        != ("127.0.0.1", "replay", "replay", "")
+        or url.port in (None, SHARED_DEV_PORT, 5466)
+        or not url.path.removeprefix("/")
+        or url.query
+        or url.fragment
+    ):
+        raise ValueError(
+            "Se requiere replay del núcleo en un PostGIS local con puerto y base explícitos"
+        )
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("manifest", type=Path)
@@ -487,15 +694,8 @@ def main():
         raise ValueError("SHA-256 incorrecto para el volcado")
     manifest = json.loads(args.manifest.read_text())
     config = ApiConfig.from_env()
-    url = urlsplit(config.database_dsn)
-    if (url.hostname, url.port, url.path, config.mode, config.short_name) != (
-        "127.0.0.1",
-        5468,
-        "/mp037",
-        "replay",
-        "",
-    ) or url.query:
-        raise ValueError("Se requiere el PostGIS desechable local de MP-037")
+    _, environment = database_settings_from_env()
+    validate_endpoint(config.database_dsn, environment, config.mode, config.short_name)
     network = load_network(config)
     profile = anchor_profile(
         network.gtfs_version, network.corridor_catalog, config.thresholds
