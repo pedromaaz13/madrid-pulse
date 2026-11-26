@@ -19,6 +19,7 @@ from packages.database import require_disposable_database
 from packages.movement.profile import anchor_profile
 from packages.movement.rendering import ProgressEnvelope
 from packages.movement.schedule import service_day_instant
+
 from .metrics import Anchor, distribution, exclusion, gate
 
 
@@ -244,17 +245,17 @@ def analyze(conn, network, config, manifest):
                 )
             if jump > 200:
                 adverse.append(
-                    dict(
-                        vehicle=vid,
-                        at=b.observed.isoformat(),
-                        jump_m=jump,
-                        displacement_m=displacement,
-                        predicted_m=forecast - a.plan.progress_m_at_reference,
-                        status=a.status,
-                        hold=a.plan.hold_reason,
-                        classification=a.classification,
-                        plan_nuevo=b.plan is not None,
-                    )
+                    {
+                        "vehicle": vid,
+                        "at": b.observed.isoformat(),
+                        "jump_m": jump,
+                        "displacement_m": displacement,
+                        "predicted_m": forecast - a.plan.progress_m_at_reference,
+                        "status": a.status,
+                        "hold": a.plan.hold_reason,
+                        "classification": a.classification,
+                        "plan_nuevo": b.plan is not None,
+                    }
                 )
             if a.status == "STOPPED_AT":
                 costs["pares_stopped"] += 1
@@ -279,36 +280,36 @@ def analyze(conn, network, config, manifest):
       FROM source_ingestion_run r WHERE feed_name='vehicle_positions' AND started_at >= %s AND started_at < %s""",
         (start, end),
     ).fetchone()
-    return dict(
-        rows=len(records),
-        vehicles=len(groups),
-        trips=len(trips),
-        covered_trips=len(covered),
-        covered_vehicles=sum(
+    return {
+        "rows": len(records),
+        "vehicles": len(groups),
+        "trips": len(trips),
+        "covered_trips": len(covered),
+        "covered_vehicles": sum(
             any(a.corridor for a in group) for group in groups.values()
         ),
-        gps_cycles=cycles,
-        feeds=manifest["coverage_by_feed"],
-        states=states,
-        frames=len(ticks),
-        provenance=provenance,
-        pairs=len(records) - len(groups),
-        excluded=excluded,
-        jumps=distribution(jumps),
-        gate=gate(distribution(jumps)),
-        adverse=adverse,
-        jumps_by_state={k: distribution(v) for k, v in strata.items()},
-        departures=costs,
-        latency_s=distribution(latency),
-        frozen_rewind_m=distribution(rewinds),
-        recovery_m=distribution(recovery),
-        canceled_rows=len(cancels),
-        canceled=cancellations,
-        board=board_counts,
-        unavailable=unavailable,
-        intervals_s=distribution(intervals),
-        departure_events=departure_events,
-    )
+        "gps_cycles": cycles,
+        "feeds": manifest["coverage_by_feed"],
+        "states": states,
+        "frames": len(ticks),
+        "provenance": provenance,
+        "pairs": len(records) - len(groups),
+        "excluded": excluded,
+        "jumps": distribution(jumps),
+        "gate": gate(distribution(jumps)),
+        "adverse": adverse,
+        "jumps_by_state": {k: distribution(v) for k, v in strata.items()},
+        "departures": costs,
+        "latency_s": distribution(latency),
+        "frozen_rewind_m": distribution(rewinds),
+        "recovery_m": distribution(recovery),
+        "canceled_rows": len(cancels),
+        "canceled": cancellations,
+        "board": board_counts,
+        "unavailable": unavailable,
+        "intervals_s": distribution(intervals),
+        "departure_events": departure_events,
+    }
 
 
 def main():

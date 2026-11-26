@@ -2,8 +2,9 @@ import unittest
 from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 
-from .metrics import Anchor, distribution, exclusion, gate
 from packages.movement.rendering import ProgressEnvelope
+
+from .metrics import Anchor, distribution, exclusion, gate
 
 
 class Metrics(unittest.TestCase):
@@ -41,13 +42,13 @@ class Metrics(unittest.TestCase):
         self.assertIsNone(exclusion(a, b, 180))
         self.assertEqual(abs(a.plan.progress_at(b.observed) - b.projected), 90)
         for changes, expected in [
-            (dict(trip="2"), "otra_circulacion"),
-            (dict(day="2026-01-03"), "otra_circulacion"),
-            (dict(observed=t), "empate_reloj"),
-            (dict(observed=t + timedelta(seconds=181)), "intervalo_largo"),
-            (dict(matched_row=False), "fila_no_seleccionada"),
-            (dict(corridor=False), "sin_corredor"),
-            (dict(projected=None), "sin_proyeccion_valida"),
+            ({"trip": "2"}, "otra_circulacion"),
+            ({"day": "2026-01-03"}, "otra_circulacion"),
+            ({"observed": t}, "empate_reloj"),
+            ({"observed": t + timedelta(seconds=181)}, "intervalo_largo"),
+            ({"matched_row": False}, "fila_no_seleccionada"),
+            ({"corridor": False}, "sin_corredor"),
+            ({"projected": None}, "sin_proyeccion_valida"),
         ]:
             with self.subTest(changes=changes):
                 self.assertEqual(exclusion(a, replace(b, **changes), 180), expected)
