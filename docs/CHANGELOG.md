@@ -4,6 +4,13 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 
 ## [Unreleased]
 
+### MP-028 — Captura real aislada: preparación y smoke (rama `pedromaaz13/mp-028-captura`; sin fusionar)
+
+Ejecutor Codex `gpt-6.2-sol` · medium (recibo de Orca); revisor Claude Sonnet 5.5 · high (argv verificado): **APPROVED** para preparación y smoke. **No integrada en `main`.** **Las sesiones de ≥ 2 h en ≥ 3 días NO están completadas** (0 de 3).
+
+#### Added
+- `docs/operations/CAPTURE_PROTOCOL.md` y `infra/operate/capture/` (preparación de la base dedicada `mp028-capture` en el puerto 5466 con volumen persistente, sesión supervisada, manifiesto por sesión). Smoke real: 300,09 s, 10/10 ciclos por feed, 212 posiciones, 24 vehículos. Los datos no se publican.
+
 ### MP-025b — Validación provisional del motor sobre la jornada 1 de MP-028 (rama `pedromaaz13/mp-025b-validacion`; sin fusionar)
 
 Harness e informe: Codex `gpt-6.2-astra` · high (recibo de Orca); correcciones: Codex `gpt-6.2-sol` · medium (sustitución registrada); revisor Claude Opus 5.5 · high (argv verificado): verificación del delta **APPROVED** — del **informe provisional**; **no valida el motor ni cierra FR-01**. **No integrada en `main`.**

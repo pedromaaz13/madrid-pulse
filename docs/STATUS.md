@@ -29,10 +29,10 @@ Baseline de producto auditado: `beb9434`.
 | implementation_status | IMPLEMENTED_WITH_OPEN_GATE | 2 |
 | implementation_status | BLOCKED | 0 |
 | implementation_status | DROPPED | 0 |
-| review_status | NOT_REVIEWED | 32 |
+| review_status | NOT_REVIEWED | 31 |
 | review_status | IN_REVIEW | 0 |
 | review_status | CHANGES_REQUESTED | 1 |
-| review_status | APPROVED | 37 |
+| review_status | APPROVED | 38 |
 | integration_status | NOT_INTEGRATED | 34 |
 | integration_status | MERGED | 36 |
 | deployment_status | NOT_DEPLOYED | 50 |
