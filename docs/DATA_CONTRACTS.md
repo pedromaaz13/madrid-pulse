@@ -529,6 +529,13 @@ Toda respuesta de vehículo en vivo **debe** incluir:
 - `quality.flags`: lista de flags activos (puede estar vacía, nunca ausente).
 - `circulation_status` (MP-017): uno de `active | expired | unresolved` — separa "¿el `service_id` de este viaje está programado para la fecha de servicio actual?" de `quality.stale` (que solo mide antigüedad del GPS). `unresolved` cuando el `route_id` no resuelve; nunca se fabrica `active`/`expired` sin resolución real.
 
+En movimiento, `implausible_speed`, `backward_jump` y `station_skip_anomaly`
+comparan la última fila con el ancla aceptada. `anchor_history_truncated`
+indica degradación a horario por falta del comienzo del viaje en la ventana
+leída. `anchor_reacquired` indica que la fila nueva confirmó el reanclaje
+en la primera muestra de la racha. `raw` conserva la última fila del operador
+y `rendered.last_confirmed_at` identifica el ancla publicada cuando existe.
+
 ### Ejemplo sintético — salud de feed (`/api/v1/health`)
 
 ```json

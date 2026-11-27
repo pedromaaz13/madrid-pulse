@@ -142,8 +142,10 @@ export interface MapMatched {
   geometry_version: string;
 }
 
+export type HoldReason = "anchor_version_changed" | "trip_canceled" | "operator_stopped_at" | "operator_incoming_at" | "schedule_incoherent" | "outside_schedule_extent" | "terminal" | "before_first_departure" | "schedule_stop_zone" | "horizon_exhausted";
+
 export interface ProgressEnvelope {
-  hold_reason?: string | null;
+  hold_reason?: HoldReason | null;
   cap_stop_id?: string | null;
   cap_kind?: "stop" | "horizon" | null;
   cap_reached_at?: string | null;

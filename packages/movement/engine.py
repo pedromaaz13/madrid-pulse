@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import MutableMapping, Sequence
 from dataclasses import replace
 from datetime import date, datetime
-from typing import MutableMapping
 
 from packages.contracts.canonical import VehiclePositionObservation, require_utc
 from packages.geo import Corridor, point_at_arc_length
@@ -21,6 +21,9 @@ from .model import (
 from .schedule import TripSchedule, build_trip_schedule, service_seconds
 
 
+DEFAULT_ANCHOR_REACQUIRE_SAMPLES = 2
+
+
 class MovementEngine:
     def __init__(
         self,
@@ -29,12 +32,16 @@ class MovementEngine:
         *,
         thresholds: MovementThresholds = MovementThresholds(),
         schedule_cache: MutableMapping[str, TripSchedule] | None = None,
+        anchor_reacquire_samples: int = DEFAULT_ANCHOR_REACQUIRE_SAMPLES,
     ) -> None:
         if not corridor.is_continuous or len(corridor.segments) != 1:
             raise ValueError("el motor requiere un corredor continuo para un trip")
         self.topology = topology
         self.corridor = corridor
         self.thresholds = thresholds
+        if anchor_reacquire_samples != 0 and not 2 <= anchor_reacquire_samples <= 1024:
+            raise ValueError("la recuperación requiere 0 o entre 2 y 1024 muestras")
+        self.anchor_reacquire_samples = anchor_reacquire_samples
         self._schedule_cache = schedule_cache
         """Caché opcional e inyectable de `TripSchedule` (MP-019, ADR-0014).
 
@@ -79,8 +86,11 @@ class MovementEngine:
         calculated_at: datetime,
         latest: VehiclePositionObservation | None = None,
         previous: VehiclePositionObservation | None = None,
+        earlier: Sequence[VehiclePositionObservation] = (),
+        history_truncated: bool = False,
         explicit_route_id: str | None = None,
     ) -> MovementPosition:
+        """Reconstruye desde el comienzo del tramo; `earlier` va de nuevo a antiguo."""
         require_utc(calculated_at)
         route_id = self.topology.resolve_trip_route_id(
             trip_id, explicit_route_id=explicit_route_id
@@ -96,43 +106,122 @@ class MovementEngine:
             )
         if latest.source_trip_id != trip_id:
             raise ValueError("latest pertenece a otro trip")
-        if previous is not None and previous.source_trip_id != trip_id:
-            raise ValueError("previous pertenece a otro trip")
         age_s = (calculated_at - latest.observed_at).total_seconds()
         if age_s < 0:
             raise ValueError("latest está en el futuro respecto a calculated_at")
 
-        latest_match = self.map_match(latest)
-        previous_match = self.map_match(previous) if previous is not None else None
-        anomalies = self._anomalies(
-            trip_id, schedule, latest, latest_match, previous, previous_match
-        )
-        if latest_match is None or self._is_unusable(
-            schedule, latest, latest_match, previous, previous_match
-        ):
-            # Una observación nueva imposible no borra la última posición
-            # plausible. Reutilizamos explícitamente la anterior con su edad
-            # real y conservamos los flags de la muestra rechazada.
-            if previous is not None and previous.source_trip_id == trip_id:
-                fallback = self.position(
-                    trip_id=trip_id,
-                    service_date=service_date,
-                    calculated_at=calculated_at,
-                    latest=previous,
-                    explicit_route_id=explicit_route_id,
-                )
-                return replace(fallback, anomalies=anomalies + fallback.anomalies)
+        if history_truncated:
             return self._scheduled(
-                trip_id,
-                route_id,
-                schedule,
-                calculated_at,
-                now_s,
-                anomalies=anomalies,
+                trip_id, route_id, schedule, calculated_at, now_s,
+                anomalies=(MovementAnomaly("anchor_history_truncated"),),
                 unusable_age_s=age_s,
                 unusable_observed_at=latest.observed_at,
             )
 
+        # La historia llega de más a menos reciente. Solo una muestra aceptada
+        # puede autorizar o rechazar la siguiente. Un rechazo no avanza el ancla.
+        accepted = prior = None
+        accepted_match = prior_match = None
+        anomalies = ()
+        matches: dict[tuple[float | None, float | None], MapMatch | None] = {}
+        recovery: list[tuple[VehiclePositionObservation, MapMatch, float]] = []
+        recovery_coordinates: set[tuple[float | None, float | None]] = set()
+        previous_coordinates = penultimate_coordinates = None
+        for sample in (*reversed(earlier), previous, latest):
+            if sample is None:
+                continue
+            if sample.source_trip_id != trip_id or sample.source_vehicle_id != latest.source_vehicle_id:
+                raise ValueError("la historia pertenece a otro viaje o vehículo")
+            if sample.observed_at > latest.observed_at:
+                raise ValueError("la historia contiene una muestra posterior a latest")
+            coordinates = (sample.latitude, sample.longitude)
+            returns_to_a = coordinates == penultimate_coordinates and coordinates != previous_coordinates
+            penultimate_coordinates, previous_coordinates = previous_coordinates, coordinates
+            if coordinates not in matches:
+                matches[coordinates] = self.map_match(sample)
+            match = matches[coordinates]
+            if sample is latest:
+                anomalies = self._anomalies(trip_id, schedule, sample, match, accepted, accepted_match)
+            if match is None or self._is_unusable(schedule, sample, match, accepted, accepted_match):
+                if match is None or accepted is None or accepted_match is None:
+                    recovery.clear()
+                    recovery_coordinates.clear()
+                    continue
+                progress = schedule.directed_progress(match.physical_arc_m)
+                if (
+                    not self.anchor_reacquire_samples
+                    or match.distance_from_track_m > self.thresholds.off_track_distance_m
+                    or sample.observed_at <= accepted.observed_at
+                    or progress >= (
+                        schedule.directed_progress(accepted_match.physical_arc_m)
+                        - self.thresholds.unusable_backward_jump_m
+                    )
+                ):
+                    recovery.clear()
+                    recovery_coordinates.clear()
+                    continue
+                if recovery:
+                    last_sample, last_match, last_progress = recovery[-1]
+                    if (
+                        returns_to_a
+                        or coordinates in recovery_coordinates
+                        or progress < last_progress
+                        or self._is_unusable(schedule, sample, match, last_sample, last_match)
+                    ):
+                        recovery.clear()
+                        recovery_coordinates.clear()
+                recovery.append((sample, match, progress))
+                recovery_coordinates.add(coordinates)
+                if len(recovery) == self.anchor_reacquire_samples:
+                    accepted, accepted_match, _ = recovery[0]
+                    # No interpolar ni extrapolar velocidad a través del salto de reanclaje.
+                    prior = prior_match = None
+                    recovery.clear()
+                    recovery_coordinates.clear()
+                    if sample is latest:
+                        anomalies += (MovementAnomaly("anchor_reacquired", {
+                            "samples": self.anchor_reacquire_samples,
+                            "anchor_observed_at": accepted.observed_at.isoformat(),
+                        }),)
+                continue
+            recovery.clear()
+            recovery_coordinates.clear()
+            prior, prior_match = accepted, accepted_match
+            accepted, accepted_match = sample, match
+
+        if accepted is None or accepted_match is None:
+            return self._scheduled(
+                trip_id, route_id, schedule, calculated_at, now_s, anomalies=anomalies,
+                unusable_age_s=age_s, unusable_observed_at=latest.observed_at,
+            )
+        result = self._position_at_anchor(
+            trip_id, route_id, service_date, calculated_at, now_s, schedule,
+            accepted, accepted_match, prior, prior_match, anomalies,
+        )
+        return replace(
+            result, anchor_observation=accepted,
+            anchor_distance_from_raw_m=accepted_match.distance_from_track_m,
+            anchor_previous=(
+                (prior.observed_at, schedule.directed_progress(prior_match.physical_arc_m))
+                if prior is not None and prior_match is not None else None
+            ),
+        )
+
+    def _position_at_anchor(
+        self,
+        trip_id: str,
+        route_id: str,
+        service_date: date,
+        calculated_at: datetime,
+        now_s: float,
+        schedule: TripSchedule,
+        latest: VehiclePositionObservation,
+        latest_match: MapMatch,
+        previous: VehiclePositionObservation | None,
+        previous_match: MapMatch | None,
+        anomalies: tuple[MovementAnomaly, ...],
+    ) -> MovementPosition:
+        age_s = (calculated_at - latest.observed_at).total_seconds()
         latest_progress = schedule.directed_progress(latest_match.physical_arc_m)
         if age_s <= self.thresholds.observed_max_age_s:
             confidence = 1.0 - 0.25 * age_s / max(self.thresholds.observed_max_age_s, 1.0)

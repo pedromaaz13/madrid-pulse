@@ -6,9 +6,12 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
+from packages.database import database_settings_from_env
+from packages.movement.engine import DEFAULT_ANCHOR_REACQUIRE_SAMPLES
 from packages.movement.model import MovementThresholds
 from packages.movement.profile import thresholds_from_env
-from packages.database import database_settings_from_env
+
+from .db import DEFAULT_ANCHOR_HISTORY_DEPTH
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
@@ -33,6 +36,8 @@ class ApiConfig:
 
     gtfs_expiring_days: int = 7
     thresholds: MovementThresholds = MovementThresholds()
+    anchor_history_depth: int = DEFAULT_ANCHOR_HISTORY_DEPTH
+    anchor_reacquire_samples: int = DEFAULT_ANCHOR_REACQUIRE_SAMPLES
 
     @classmethod
     def from_env(cls) -> "ApiConfig":
@@ -40,6 +45,16 @@ class ApiConfig:
         gtfs_expiring_days = int(os.environ.get("MADRID_PULSE_GTFS_EXPIRING_DAYS", "7"))
         if gtfs_expiring_days < 0:
             raise ValueError("MADRID_PULSE_GTFS_EXPIRING_DAYS debe ser un entero no negativo")
+        anchor_history_depth = int(os.environ.get(
+            "MADRID_PULSE_ANCHOR_HISTORY_DEPTH", str(DEFAULT_ANCHOR_HISTORY_DEPTH)
+        ))
+        if not 2 <= anchor_history_depth <= 1024:
+            raise ValueError("MADRID_PULSE_ANCHOR_HISTORY_DEPTH debe estar entre 2 y 1024")
+        anchor_reacquire_samples = int(os.environ.get(
+            "MADRID_PULSE_ANCHOR_REACQUIRE_SAMPLES", str(DEFAULT_ANCHOR_REACQUIRE_SAMPLES)
+        ))
+        if anchor_reacquire_samples != 0 and not 2 <= anchor_reacquire_samples <= 1024:
+            raise ValueError("MADRID_PULSE_ANCHOR_REACQUIRE_SAMPLES debe ser 0 o estar entre 2 y 1024")
         return cls(
             database_dsn=database_url,
             network_id=os.environ.get("MADRID_PULSE_NETWORK_ID", "10"),
@@ -72,4 +87,6 @@ class ApiConfig:
             ),
             gtfs_expiring_days=gtfs_expiring_days,
             thresholds=thresholds_from_env(),
+            anchor_history_depth=anchor_history_depth,
+            anchor_reacquire_samples=anchor_reacquire_samples,
         )

@@ -42,20 +42,20 @@ rejected          nº de entidades descartadas por validación
 
 | Flag | Condición (a calibrar) | Acción |
 |---|---|---|
-| `implausible_speed` | velocidad instantánea implica desplazamiento físicamente imposible entre dos observaciones consecutivas | marcar observación, no descartarla silenciosamente |
-
-> **Nota (MP-005/ADR-0009):** Renfe no emite un campo `speed_kmh` en ningún payload real observado hasta ahora. `implausible_speed` debe calcularse en Madrid Pulse a partir de `distancia(posición_n, posición_n-1) / (observed_at_n - observed_at_n-1)` entre observaciones consecutivas del mismo vehículo, no leerse de un campo de origen. Si en el futuro Renfe empezara a emitir `speed_kmh`/`bearing` (campos opcionales en el esquema canónico, ver `packages/contracts/canonical.py`), podrían usarse como señal adicional, nunca como sustituto único del cálculo propio.
-
+| `implausible_speed` | en ingestión, desplazamiento por unidad de tiempo entre observaciones consecutivas del vehículo. En movimiento, cambio absoluto de progreso sobre la vía por unidad de tiempo entre la muestra y el ancla aceptada | marcar la observación y conservar el GPS bruto |
 | `off_track` | posición se desvía más de una distancia umbral de la geometría ferroviaria esperada | marcar para revisión de map-matching |
-| `backward_jump` | progreso acumulado sobre el shape retrocede de forma no explicable por parada | marcar, no corregir automáticamente sin registro |
-| `station_skip_anomaly` | salto de `current_stop_sequence` que omite paradas intermedias esperadas | marcar para revisión |
+| `backward_jump` | progreso dirigido retrocede respecto al ancla aceptada más allá del umbral de marcado | conservar la observación y aplicar el umbral de rechazo del motor |
+| `station_skip_anomaly` | salto de secuencia de parada respecto al ancla aceptada que omite paradas intermedias esperadas | marcar para revisión |
+| `anchor_history_truncated` | el límite de filas corta el mismo viaje y falta el comienzo de su secuencia | derivar la posición del horario, con `last_confirmed_at` nulo |
+| `anchor_reacquired` | la muestra nueva confirma una racha de rechazos por retroceso que cumple la regla MP-036 | presentar la primera muestra de la racha como ancla con su hora original |
 
-`off_track`, `backward_jump` y `station_skip_anomaly` no forman parte de MP-008.
-MP-012 ya los calcula mediante map-matching/topología y los expone en
-`MovementPosition.anomalies`. No se persisten todavía en `data_quality_event`:
-ese esquema v1 pertenece a observaciones crudas y no existe aún una tabla/clave
-para resultados de movimiento derivados. ADR-0012 documenta esta frontera; una
-persistencia futura exige migración explícita, no ampliar el `CHECK` a ciegas.
+Renfe no ha emitido `speed_kmh` en los payloads observados en MP-005.
+Las dos comprobaciones calculan la velocidad a partir de las muestras
+admisibles para su capa. `bearing` y `speed_kmh` quedan como campos opcionales.
+
+El motor expone sus señales derivadas en `MovementPosition.anomalies` y en
+`quality.flags` de la API. `data_quality_event` v1 conserva las señales de
+ingestión de observaciones crudas, según ADR-0012.
 
 ## Posiciones repetidas y snapshots duplicados
 

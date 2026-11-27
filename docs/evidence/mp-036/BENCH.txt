@@ -1,0 +1,61 @@
+DSN postgresql://mp_test:mp_local@127.0.0.1:5459/mp036_bench
+PYTHONPATH=. python -u docs/evidence/mp-036/bench.py
+
+Primera pareja, con carga concurrente · base 4bc8612
+source_ingestion_run: 300000
+vehicle_position_observation: 100000
+trip_update_observation: 100000
+Python 3.12.3, macOS-26.6.2-arm64-arm-64bit
+/api/v1/snapshot?at=2026-11-19T04:20:00Z: sequence=300000
+{'vehicles_total': 100, 'by_rendering_method': {'schedule_only': 1, 'stale_frozen': 99}, 'by_coordinate_space': {'raw': 99, 'schedule': 1}, 'with_operator_delay': 1, 'without_operator_delay': 99}
+{"iterations": 60, "max_ms": 7839.93, "mean_ms": 1122.11, "min_ms": 269.5, "p50_ms": 699.72, "p95_ms": 2677.83, "path": "/api/v1/snapshot?at=2026-11-19T04:20:00Z", "response_bytes": 151892, "status_codes": [200]}
+/api/v1/stations/18000/board?at=2026-11-19T04:20:00Z: sequence=300000
+{'scheduled_calls': 4, 'returned': 4, 'observed_circulations': 1, 'with_operator_delay': 1, 'eta_from_operator': 1, 'eta_from_schedule': 3, 'eta_unavailable': 0, 'operator_delay_coverage_pct': 25.0}
+{"iterations": 60, "max_ms": 5417.83, "mean_ms": 793.54, "min_ms": 220.28, "p50_ms": 461.44, "p95_ms": 2042.12, "path": "/api/v1/stations/18000/board?at=2026-11-19T04:20:00Z", "response_bytes": 6009, "status_codes": [200]}
+
+Primera pareja, con carga concurrente · corrección 2f2955a
+source_ingestion_run: 300000
+vehicle_position_observation: 100000
+trip_update_observation: 100000
+Python 3.12.3, macOS-26.6.2-arm64-arm-64bit
+/api/v1/snapshot?at=2026-11-19T04:20:00Z: sequence=300000
+{'vehicles_total': 100, 'by_rendering_method': {'schedule_only': 1, 'stale_frozen': 99}, 'by_coordinate_space': {'raw': 99, 'schedule': 1}, 'with_operator_delay': 1, 'without_operator_delay': 99}
+{"iterations": 60, "max_ms": 2659.53, "mean_ms": 530.6, "min_ms": 253.18, "p50_ms": 428.53, "p95_ms": 940.08, "path": "/api/v1/snapshot?at=2026-11-19T04:20:00Z", "response_bytes": 151885, "status_codes": [200]}
+/api/v1/stations/18000/board?at=2026-11-19T04:20:00Z: sequence=300000
+{'scheduled_calls': 4, 'returned': 4, 'observed_circulations': 1, 'with_operator_delay': 1, 'eta_from_operator': 1, 'eta_from_schedule': 3, 'eta_unavailable': 0, 'operator_delay_coverage_pct': 25.0}
+{"iterations": 60, "max_ms": 1031.78, "mean_ms": 355.58, "min_ms": 173.86, "p50_ms": 298.11, "p95_ms": 728.22, "path": "/api/v1/stations/18000/board?at=2026-11-19T04:20:00Z", "response_bytes": 6009, "status_codes": [200]}
+Lectura adicional (60 muestras): p50=58.70 ms p95=142.40 ms
+
+Repetición secuencial · base 4bc8612
+source_ingestion_run: 300000
+vehicle_position_observation: 100000
+trip_update_observation: 100000
+Python 3.12.3, macOS-26.6.2-arm64-arm-64bit
+/api/v1/snapshot?at=2026-11-19T04:20:00Z: sequence=300000
+{'vehicles_total': 100, 'by_rendering_method': {'schedule_only': 1, 'stale_frozen': 99}, 'by_coordinate_space': {'raw': 99, 'schedule': 1}, 'with_operator_delay': 1, 'without_operator_delay': 99}
+{"iterations": 60, "max_ms": 351.04, "mean_ms": 222.8, "min_ms": 190.38, "p50_ms": 211.41, "p95_ms": 271.73, "path": "/api/v1/snapshot?at=2026-11-19T04:20:00Z", "response_bytes": 151892, "status_codes": [200]}
+/api/v1/stations/18000/board?at=2026-11-19T04:20:00Z: sequence=300000
+{'scheduled_calls': 4, 'returned': 4, 'observed_circulations': 1, 'with_operator_delay': 1, 'eta_from_operator': 1, 'eta_from_schedule': 3, 'eta_unavailable': 0, 'operator_delay_coverage_pct': 25.0}
+{"iterations": 60, "max_ms": 267.47, "mean_ms": 174.41, "min_ms": 151.16, "p50_ms": 169.89, "p95_ms": 206.04, "path": "/api/v1/stations/18000/board?at=2026-11-19T04:20:00Z", "response_bytes": 6009, "status_codes": [200]}
+
+Repetición secuencial · corrección ee92097
+source_ingestion_run: 300000
+vehicle_position_observation: 100000
+trip_update_observation: 100000
+Python 3.12.3, macOS-26.6.2-arm64-arm-64bit
+/api/v1/snapshot?at=2026-11-19T04:20:00Z: sequence=300000
+{'vehicles_total': 100, 'by_rendering_method': {'schedule_only': 1, 'stale_frozen': 99}, 'by_coordinate_space': {'raw': 99, 'schedule': 1}, 'with_operator_delay': 1, 'without_operator_delay': 99}
+{"iterations": 60, "max_ms": 286.46, "mean_ms": 250.06, "min_ms": 226.09, "p50_ms": 248.37, "p95_ms": 267.98, "path": "/api/v1/snapshot?at=2026-11-19T04:20:00Z", "response_bytes": 151885, "status_codes": [200]}
+/api/v1/stations/18000/board?at=2026-11-19T04:20:00Z: sequence=300000
+{'scheduled_calls': 4, 'returned': 4, 'observed_circulations': 1, 'with_operator_delay': 1, 'eta_from_operator': 1, 'eta_from_schedule': 3, 'eta_unavailable': 0, 'operator_delay_coverage_pct': 25.0}
+{"iterations": 60, "max_ms": 176.77, "mean_ms": 153.56, "min_ms": 146.19, "p50_ms": 152.61, "p95_ms": 162.68, "path": "/api/v1/stations/18000/board?at=2026-11-19T04:20:00Z", "response_bytes": 6009, "status_codes": [200]}
+Lectura adicional (60 muestras): p50=45.65 ms p95=52.86 ms
+
+Sonda adicional del constructor de snapshot en la copia de la jornada 1
+HEAD ee92097, reloj 2026-11-26T08:47:40.042598Z.
+Total ms, vehículos, (lote ms, vehículos solicitados). Primera fila en frío.
+2923.09 360 (1320.58, 142)
+857.02 360 (518.66, 142)
+825.14 360 (520.43, 142)
+950.7 360 (641.06, 142)
+788.22 360 (490.73, 142)

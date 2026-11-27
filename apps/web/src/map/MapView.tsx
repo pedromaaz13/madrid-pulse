@@ -3,6 +3,7 @@ import * as maplibregl from "maplibre-gl";
 import type { GeoJSONSource, Map as MapLibreMap, MapMouseEvent } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import type { CatalogIndex } from "../domain/catalogIndex";
+import { methodStyle } from "../domain/format";
 import type { SnapshotVehicle } from "../domain/contract";
 import { vehicleKey } from "../domain/identity";
 import type { Clock } from "../hooks/useClock";
@@ -446,7 +447,7 @@ export function MapView(props: MapViewProps) {
     // efecto no se repetía nunca. Defecto real encontrado mirando el
     // navegador en MP-021, no detectado por ningún test.
     const vehicle = vehicles.find((item) => vehicleKey(item) === selectedVehicleKey);
-    const label = `${vehicle?.line ?? "Sin línea"} · ${selectedVehicleKey.split("|")[0]}`;
+    const label = `${vehicle?.line ?? "Sin línea"} · ${selectedVehicleKey.split("|")[0]}${vehicle ? ` · ${methodStyle(vehicle.rendered.rendering_method, vehicle.rendered.coordinate_space).label}` : ""}`;
     if (existing !== undefined) {
       existing.getElement().textContent = label;
       return;

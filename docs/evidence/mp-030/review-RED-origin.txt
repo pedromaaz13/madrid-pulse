@@ -1,0 +1,32 @@
+
+ RUN  v5.1.1 /private/tmp/mp030-review-red.VHFndB/apps/web
+
+ ❯ src/App.gtfs.test.tsx (1 test | 1 failed) 81ms
+   × App sigue la vigencia del snapshot al conservar el catálogo cacheado 80ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/App.gtfs.test.tsx > App sigue la vigencia del snapshot al conservar el catálogo cacheado
+AssertionError: expected '∕∕Madrid PulseLiveHistoryExploreREPLA…' to contain 'GTFS · aviso: El catálogo GTFS vence …'
+
+Expected: "GTFS · aviso: El catálogo GTFS vence el 18 de diciembre."
+Received: "∕∕Madrid PulseLiveHistoryExploreREPLAY03:48:56snapshot 13:00Líneas · RenfeTodasC501 recurso(s) degradado(s): se conserva el último dato válido con su hora.Red · RenfeCercanías Madrid1 líneas y variantes · 103 patrones · 95 estaciones. GTFS sha256:c5b40823c5cacbec6d9a21d88ec0530d9604a6d4331df98c330e608f0bacb11e, vigencia 2026-11-20 a 2026-12-19.Trazado verificado en 28 patrones; 3 parcial y 72 sin corredor cargado. Las circulaciones de un patrón sin corredor se dibujan con su GPS bruto etiquetado, no se proyectan sobre un trazado ajeno.Circulaciones en el snapshotNinguna circulación coincide con el filtro. El snapshot trae 0 en total.Estaciones del catálogoAlcalá de HenaresAlcalá de Henares-UniversidadAlcobendas-San Sebastián de los ReyesAlcorcónC5AlpedreteAlucheC5AranjuezAravacaAsamblea de Madrid-EntrevíasAzuquecaCercedillaCiempozuelosCollado MedianoColmenar ViejoCosladaCuatro VientosC5DeliciasDoce de OctubreC5El Barrial-Centro Comercial PozueloEl CasarEl EscorialEl GolosoEl PozoEmbajadoresC5FuencarralFuenlabradaC5Fuente de la MoraGalapagar-La NavataGetafe-CentroGetafe-IndustrialGetafe-Sector 3GuadalajaraHumanesC5La GarenaLa Serna-FuenlabradaC5LagunaC5Las ÁguilasC5Las MargaritasLas MatasLas RetamasC5Las RozasLas Zorreras-NavalquejigoLeganésC5Los CotosLos Molinos-GuadarramaLos NegralesMadrid-Aeropuerto T4Madrid-Atocha CercaníasC5Madrid-Chamartín-Clara CampoamorMadrid-Nuevos MinisteriosMadrid-Príncipe PíoMadrid-Ramón y CajalMadrid-RecoletosMadrid-Villaverde AltoC5Madrid-Villaverde BajoMaestra Justa Freire-Polidep. AlucheC5MajadahondaMecoMéndez Álvaro P.V.C5Mirasierra-Paco de LucíaMóstolesC5Móstoles-El SotoC5OrcasitasC5ParlaParque PolvorancaC5Pinar de las RozasPintoPirámidesPitisPozueloPuente AlcocerC5Puerto de NavacerradaRobledo de ChavelaSan Cristóbal de los ÁngelesSan Cristóbal IndustrialSan Fernando de HenaresSan José de ValderasC5San YagoSanta EugeniaSanta María de la Alameda-PeguerinosSolSoto del HenaresTorrejón de ArdozTorrelodonesTres CantosUniversidad Pontificia de ComillasUniversidad-CantoblancoValdebebasValdelasfuentesValdemoroVallecasVicálvaroVillalba de GuadarramaZarzalejoZarzaquemadaC5Mapa no disponibleEste navegador no ofrece WebGLLa navegación sigue siendo completa: busca una estación, abre su tablero y selecciona una circulación desde el panel.Novedadesgtfs: El catálogo GTFS vence el 18 de diciembre.1/1PausarVer listagtfs: El catálogo GTFS vence el 18 de diciembre.Vista de rednone"
+
+ ❯ src/App.gtfs.test.tsx:43:33
+     41|   const root = createRoot(container);
+     42|   await act(async () => { root.render(<App />); });
+     43|   expect(container.textContent).toContain("GTFS · aviso: El catálogo G…
+       |                                 ^
+     44|   expect(catalogRequests).toBe(1);
+     45|   seq = 2; item = {...item!, status: "error", reason: "El catálogo GTF…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed (1)
+   Start at  03:48:55
+   Duration  985ms (environment 59%, transform 22%, tests 10%, import 10%)
+
+
+Exit: 1 (fallo esperado)

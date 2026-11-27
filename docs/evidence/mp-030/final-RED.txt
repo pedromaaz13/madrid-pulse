@@ -1,0 +1,55 @@
+
+ RUN  v5.1.1 /private/tmp/mp030-final-red.hCGfB5/apps/web
+
+ ❯ src/map/provenance.test.tsx (2 tests | 2 failed) 10ms
+   × ningún método localizado comparte el mismo relleno, contorno y marca interior 4ms
+   × fusiona congeladas de distintos espacios en una sola entrada 5ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/map/provenance.test.tsx > ningún método localizado comparte el mismo relleno, contorno y marca interior
+AssertionError: expected 4 to be 6 // Object.is equality
+
+- Expected
++ Received
+
+- 6
++ 4
+
+ ❯ src/map/provenance.test.tsx:39:38
+     37|       return JSON.stringify([evaluate(body["circle-color"], shape, zoo…
+     38|     });
+     39|     expect(new Set(signatures).size).toBe(signatures.length);
+       |                                      ^
+     40|   }
+     41| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  src/map/provenance.test.tsx > fusiona congeladas de distintos espacios en una sola entrada
+AssertionError: expected [ 'Congelada', 'Congelada' ] to have a length of 1 but got 2
+
+- Expected
++ Received
+
+- 1
++ 2
+
+ ❯ src/map/provenance.test.tsx:45:36
+     43| it("fusiona congeladas de distintos espacios en una sola entrada", () …
+     44|   const html = renderToStaticMarkup(<Legend present={[{method: "stale_…
+     45|   expect(html.match(/Congelada/g)).toHaveLength(1);
+       |                                    ^
+     46| });
+     47|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed (2)
+   Start at  03:55:25
+   Duration  188ms (transform 48%, import 33%, tests 14%, worker 4%)
+
+
+Exit: 1 (fallo esperado sobre 6e60249)

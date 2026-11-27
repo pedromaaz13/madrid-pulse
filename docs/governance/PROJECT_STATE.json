@@ -1681,17 +1681,20 @@
     },
     {
       "implementation_status": "IN_PROGRESS",
-      "review_status": "NOT_REVIEWED",
-      "integration_status": "NOT_INTEGRATED",
+      "review_status": "APPROVED",
+      "integration_status": "MERGED",
       "deployment_status": "NOT_DEPLOYED",
-      "head": "UNKNOWN",
-      "evidence": [],
-      "pr": null,
-      "merge_sha": null,
-      "review_date": null,
+      "head": "172aa1b",
+      "evidence": [
+        "docs/operations/CAPTURE_PROTOCOL.md",
+        "docs/adr/0014-amendment-owner-decision.md"
+      ],
+      "pr": 12,
+      "merge_sha": "2ffaee4fe51ed03937b01cadaa8e69dd5f86e711",
+      "review_date": "2026-11-26",
       "gate": "Aprobación humana donde indica docs/H4_MP_MAPPING.md; prueba RED en beb9434 y GREEN tras el fix",
-      "notes": "Planificada; implementación H4 no autorizada. Autorizada por el propietario el 2026-11-26 (ejecución; sin hosting, publicación pública ni merge de PR nuevos; NO-GO público vigente). Autorizado el 2026-11-26: corregir el supervisor (detección de suspensión, duración civil frente a cobertura efectiva, cierre limpio, HEAD del collector por sesión, GTFS con hash sin sobrescribir) en el PR #12, para revisión antes de merge; las jornadas 2 y 3 requieren que el propietario confirme la ventana con el equipo despierto (no armada).",
-      "head_kind": "none",
+      "notes": "Preparación y smoke de la captura real aislada: APPROVED (alcance preparación+smoke) por Claude Sonnet 5.5 high (argv verificado), 0 B y 8 A no bloqueantes; ejecutor Codex gpt-6.2-sol medium (recibo de Orca). Base dedicada mp028-capture en 127.0.0.1:5466 con volumen persistente (la BD 5433 no se toca). SMOKE ejecutado el 2026-11-26: 300,09 s, 10/10 ciclos correctos por feed (100 %), 212 posiciones, 142 actualizaciones, 19 alertas, 27 eventos de calidad, 24 vehículos. GTFS: ZIP SHA 58ac5543… con vigencia calculada 2026-11-19..2026-12-18. SESIONES >=2 h en >=3 días: PENDIENTES (0 de 3 completadas); jornada 1 programada para las 07:00 Europe/Madrid del 2026-11-26 mediante un lanzador supervisado; jornadas 2 y 3 sin armar. Los datos no se publican. Recomendaciones sin aplicar: A1 colector huérfano tras SIGKILL, A2 suspensión del equipo, A3-A6, A8. NO integrada: rama pedromaaz13/mp-028-captura; el criterio de MP-025b (>=500 pares) no se cumple con el smoke. SUPERVISOR CORREGIDO (172aa1b, autorizado el 2026-11-26): detección de suspensión por reloj de pared con suspension_gaps, duración civil frente a cobertura efectiva (huecos nunca cuentan como datos), cierre limpio con código 0 solo con cobertura objetivo, diagnóstico del colector huérfano, GTFS fijado por hash y vigencia sin sobrescribir, HEAD del colector y volcado pg_dump con SHA-256 por sesión, manifiesto v2. Ejecutor Codex gpt-6.2-sol medium (recibo de Orca); verificación única del delta por Claude Sonnet 5.5 high (argv no visible desde la sesión del revisor): APPROVED (18 pruebas, 13 regresiones que fallan en a5ddc9b, simulación de 2 h efectivas con 59 min de suspensión en 0,03 s). NO verificado: suspensión real del equipo ni una sesión real con main() completo (no se lanzó ninguna). Las jornadas 2 y 3 siguen NO armadas: requieren que el propietario confirme la ventana con el equipo despierto (enchufado y con la tapa abierta). || AUTORIZACIONES Y CONTEXTO (rama de documentación): Autorizado el 2026-11-26: corregir el supervisor (detección de suspensión, duración civil frente a cobertura efectiva, cierre limpio, HEAD del collector por sesión, GTFS con hash sin sobrescribir) en el PR #12, para revisión antes de merge; las jornadas 2 y 3 requieren que el propietario confirme la ventana con el equipo despierto (no armada). INTEGRADA el 2026-11-27 por decisión del propietario (PR #12, merge commit 2ffaee4f). Integrar NO es validar ni publicar: FR-01 y el NO-GO público siguen abiertos.",
+      "head_kind": "branch_tip",
       "id": "MP-028",
       "title": "Captura en vivo (≥2 h, ≥3 días) (H4-12)",
       "track": "PRODUCT",
@@ -1709,7 +1712,8 @@
       "priority": "P1",
       "requires_gates": [
         "HG-CAPTURE"
-      ]
+      ],
+      "integration_kind": "merge_commit"
     },
     {
       "implementation_status": "PLANNED",
@@ -1741,18 +1745,21 @@
       "priority": "P1"
     },
     {
-      "implementation_status": "IN_PROGRESS",
-      "review_status": "NOT_REVIEWED",
-      "integration_status": "NOT_INTEGRATED",
+      "implementation_status": "IMPLEMENTED",
+      "review_status": "APPROVED",
+      "integration_status": "MERGED",
       "deployment_status": "NOT_DEPLOYED",
-      "head": "UNKNOWN",
-      "evidence": [],
-      "pr": null,
-      "merge_sha": null,
-      "review_date": null,
+      "head": "0600610",
+      "evidence": [
+        "docs/evidence/mp-030/README.md",
+        "docs/adr/0014-amendment-owner-decision.md"
+      ],
+      "pr": 11,
+      "merge_sha": "359932dbe8e6706e42b7a96c49acdc2afba535b5",
+      "review_date": "2026-11-26",
       "gate": "Aprobación humana donde indica docs/H4_MP_MAPPING.md; prueba RED en beb9434 y GREEN tras el fix",
-      "notes": "Planificada; implementación H4 no autorizada. Autorizada por el propietario el 2026-11-26 (ejecución; sin hosting, publicación pública ni merge de PR nuevos; NO-GO público vigente). Autorizada el 2026-11-26 una comprobación visual excepcional y focalizada del marcador congelado y de los estados cancelado y terminal (escritorio y móvil), con evidencia real y simulada separadas; no se atribuye navegador a Terra. #11 sigue pendiente hasta superarla.",
-      "head_kind": "none",
+      "notes": "Interfaz funcional mínima (procedencia por método y espacio, hold_reason, congelación F1, cancelación, degradación GTFS desde el snapshot); sin rediseño A/B/C. Ejecutor Codex gpt-6.1-terra medium (recibo de Orca; sin navegador); revisor Claude Sonnet 5.5 high con Chrome DevTools MCP verificado (argv verificado). Revisión completa: CHANGES_REQUESTED (2 B, 7 A). Verificación del delta (6e60249): B1, B2, A2-A7 resueltos; A1 parcial con un hallazgo material (congelada indistinguible de observada sobre corredor). Corrección final 0600610 (Terra, 142 tests). COMPROBACIÓN VISUAL EXCEPCIONAL (autorizada por el propietario, 2026-11-26): PASS en escritorio 1440x900 y móvil 390x844 con navegador real (Chrome DevTools MCP) sobre HEAD 35489b2 (apps/web idéntico a 0600610): la congelada (authorized_envelope_end y anchor_version_changed) se distingue de observada sobre corredor, extrapolada y bruta por contorno y punto interior, no solo por color; leyenda sin duplicado; Ampliar panel sin solapar el aviso GTFS. Cancelado y terminal EXISTEN en los datos reales de la jornada 1 (20226, 75303, 20797; terminal 20710 y 19601): evidencia REAL. Solo el motivo terminal en la fixture de 20797 es SIMULADO (identificado y separado). 0 B, 3 A no bloqueantes: A1 un cancelado muestra Estado: En servicio hoy; A2 mensajes contradictorios (puede seguir avanzando frente a no avanza); A3 en el mapa un cancelado es indistinguible de un congelado (solo lo dice el panel). NOT RUN: schedule_incoherent, outside_schedule_extent, horizon_exhausted, not_yet_valid, lector de pantalla y otros navegadores. Capturas fuera de Git en data/capture/2026-11-26/mp030-visual-final/. Autorizada por el propietario; PR #11 en borrador sin merge automático; NO-GO público vigente. || AUTORIZACIONES Y CONTEXTO (rama de documentación): Autorizada el 2026-11-26 una comprobación visual excepcional y focalizada del marcador congelado y de los estados cancelado y terminal (escritorio y móvil), con evidencia real y simulada separadas; no se atribuye navegador a Terra. #11 sigue pendiente hasta superarla. INTEGRADA el 2026-11-27 por decisión del propietario (PR #11, merge commit 359932db). Integrar NO es validar ni publicar: FR-01 y el NO-GO público siguen abiertos.",
+      "head_kind": "branch_tip",
       "id": "MP-030",
       "title": "Interfaz: procedencia y rótulos veraces (H4-05)",
       "track": "PRODUCT",
@@ -1775,7 +1782,8 @@
         ],
         "kind": "coordinacion_de_archivos",
         "note": "No existe dependencia técnica de MP-030 con la demo opcional: MP-030 depende del contrato de MP-024. Solo hay solape de archivos (apps/web/src/ui/*, App.tsx, MapView.tsx); si D-03/D-04 están activas a la vez, se secuencian las ramas. La demo no bloquea el frontend Live."
-      }
+      },
+      "integration_kind": "merge_commit"
     },
     {
       "implementation_status": "PLANNED",
@@ -2637,19 +2645,19 @@
       "requires_gates": []
     },
     {
-      "implementation_status": "IN_PROGRESS",
+      "implementation_status": "IMPLEMENTED",
       "review_status": "APPROVED",
-      "integration_status": "NOT_INTEGRATED",
+      "integration_status": "MERGED",
       "deployment_status": "NOT_DEPLOYED",
       "head": "8c005c8",
       "evidence": [
-        "UNKNOWN"
+        "docs/evidence/mp-036/README.md"
       ],
       "pr": 15,
-      "merge_sha": null,
+      "merge_sha": "d3be45dc5523a36ade751fd6e2aad28700e19c44",
       "review_date": null,
       "gate": "Regresión RED/GREEN; reconstrucción determinista del historial sin cambiar el esquema; coste acotado y medido; una revisión completa y una verificación del delta",
-      "notes": "Defecto confirmado en la jornada 1 (vehículos 20231 y 20793, engine.py:110-124, origen MP-012). Las 416 tríadas A→B→A del harness NO son 416 fallos confirmados: se clasifican en la tarea. Ejecutor Codex gpt-6.2-sol high; revisor Claude Opus 5.5 high; escalar a Astra solo con un bloqueo concreto. Si la reconstrucción determinista no basta, se presentan alternativa y costes antes de introducir persistencia. Autorizada por el propietario el 2026-11-26; PR en borrador sin merge automático; FR-01 permanece abierto. RESULTADO (2026-11-26): reconstrucción determinista sin migraciones; re-anclaje K=2 configurable; 0/416 reapariciones; RED 9+5, GREEN 339/18 omitidos. Revisión Opus High: 1ª pasada CHANGES_REQUESTED (2 B, 8 A) → delta APPROVED (3 A residuales: 20752 sin recuperar, listado legado, coste del re-anclaje erróneo). PR #15 en borrador. Medido en MP-038: la retención se aleja del GPS bruto en 113/113 casos con GPS congelado. FR-01 abierto. Evidencia: informe docs/evidence/mp-036/README.md en el PR #15 (head 0c518fa; código revisado en 8c005c8); sigue en borrador hasta evaluar la jornada 2 (decisión del propietario 2026-11-27).",
+      "notes": "Defecto confirmado en la jornada 1 (vehículos 20231 y 20793, engine.py:110-124, origen MP-012). Las 416 tríadas A→B→A del harness NO son 416 fallos confirmados: se clasifican en la tarea. Ejecutor Codex gpt-6.2-sol high; revisor Claude Opus 5.5 high; escalar a Astra solo con un bloqueo concreto. Si la reconstrucción determinista no basta, se presentan alternativa y costes antes de introducir persistencia. Autorizada por el propietario el 2026-11-26; PR en borrador sin merge automático; FR-01 permanece abierto. RESULTADO (2026-11-26): reconstrucción determinista sin migraciones; re-anclaje K=2 configurable; 0/416 reapariciones; RED 9+5, GREEN 339/18 omitidos. Revisión Opus High: 1ª pasada CHANGES_REQUESTED (2 B, 8 A) → delta APPROVED (3 A residuales: 20752 sin recuperar, listado legado, coste del re-anclaje erróneo). PR #15 en borrador. Medido en MP-038: la retención se aleja del GPS bruto en 113/113 casos con GPS congelado. FR-01 abierto. Evidencia: informe docs/evidence/mp-036/README.md en el PR #15 (head 0c518fa; código revisado en 8c005c8); sigue en borrador hasta evaluar la jornada 2 (decisión del propietario 2026-11-27). INTEGRADA el 2026-11-27 por decisión del propietario (PR #15, merge commit d3be45dc). Integrar NO es validar ni publicar: FR-01 y el NO-GO público siguen abiertos.",
       "head_kind": "branch_tip",
       "track": "PRODUCT",
       "milestone": "H4",
@@ -2659,7 +2667,8 @@
       "title": "Fallback del motor: una observación rechazada no reaparece como ancla aceptada (A→B→A)",
       "depends_on": [],
       "executor": "codex",
-      "reviewer": "claude"
+      "reviewer": "claude",
+      "integration_kind": "merge_commit"
     },
     {
       "implementation_status": "IMPLEMENTED",
@@ -2690,19 +2699,20 @@
       "integration_kind": "merge_commit"
     },
     {
-      "implementation_status": "IN_PROGRESS",
+      "implementation_status": "IMPLEMENTED",
       "review_status": "APPROVED",
-      "integration_status": "NOT_INTEGRATED",
+      "integration_status": "MERGED",
       "deployment_status": "NOT_DEPLOYED",
       "head": "b7aed67",
       "evidence": [
-        "UNKNOWN"
+        "docs/evidence/mp-038/README.md",
+        "docs/evidence/mp-038/JORNADA2.md"
       ],
       "pr": 17,
-      "merge_sha": null,
+      "merge_sha": "453a5eb53f53c1f5c45314b1a77d1aae7daa06f0",
       "review_date": null,
       "gate": "Baseline y corrección sobre las mismas entradas; dump, manifiesto y resultados originales intactos; métricas globales y estratificadas con denominadores, exclusiones y casos adversos",
-      "notes": "Separa discrepancia frente al GPS bruto (incluso rechazado), cambio de ancla efectiva aceptada y discontinuidad de la posición presentada. No cambia retrospectivamente el criterio de aceptación. Autorizada el 2026-11-26. FR-01 permanece abierto. RESULTADO (2026-11-26): baseline 4bc8612 frente a corrección 0c518fa sobre la misma jornada 1; saltos presentados >200 m 2 935→2 771 (24 nuevos frente a 188 reducidos; 8 vehículos peores; STOPPED_AT 32↑/23↓); discrepancia frente al GPS bruto en 216 retenciones 674,5→1 845,6 m (se aleja con GPS congelado, 113/113). Revisión Opus High: 1ª pasada CHANGES_REQUESTED (2 B, 7 A) → delta APPROVED. PR #17 en borrador apilado sobre #15. FR-01 abierto. Evidencia: informe docs/evidence/mp-038/README.md en el PR #17 (head 39166da; revisado en 6615d53); sigue en borrador, apilado sobre el PR #15, hasta evaluar la jornada 2 (decisión del propietario 2026-11-27). JORNADA 2 (2026-11-27, captura 07:54–09:54 UTC: 7 230 s efectivos, 0 huecos, feeds 235/235): baseline 4bc8612 frente a MP-036 0c518fa con la configuración actual (K=2, cota 256, sin ajustes): reapariciones A→B→A 5→0 sobre 373 tríadas; saltos comunes >200 m 2 587→2 461 sobre 39 973 pares; COSTES: ancla más antigua en 1 932/40 117 fotogramas (mediana +78 s, máx 220 s), retenciones >180 s 3→12 (7 censuradas), p90 de recuperación 30,9→61,7 s, discrepancia frente al GPS bruto mayor en 52/52 pares con coordenada repetida. Verificación única Opus High: APPROVED (2 observaciones no bloqueantes, resueltas). Informe docs/evidence/mp-038/JORNADA2.md en el PR #17 (head b7aed67; verificado en dc59299). FR-01 abierto: una jornada más no cierra nada.",
+      "notes": "Separa discrepancia frente al GPS bruto (incluso rechazado), cambio de ancla efectiva aceptada y discontinuidad de la posición presentada. No cambia retrospectivamente el criterio de aceptación. Autorizada el 2026-11-26. FR-01 permanece abierto. RESULTADO (2026-11-26): baseline 4bc8612 frente a corrección 0c518fa sobre la misma jornada 1; saltos presentados >200 m 2 935→2 771 (24 nuevos frente a 188 reducidos; 8 vehículos peores; STOPPED_AT 32↑/23↓); discrepancia frente al GPS bruto en 216 retenciones 674,5→1 845,6 m (se aleja con GPS congelado, 113/113). Revisión Opus High: 1ª pasada CHANGES_REQUESTED (2 B, 7 A) → delta APPROVED. PR #17 en borrador apilado sobre #15. FR-01 abierto. Evidencia: informe docs/evidence/mp-038/README.md en el PR #17 (head 39166da; revisado en 6615d53); sigue en borrador, apilado sobre el PR #15, hasta evaluar la jornada 2 (decisión del propietario 2026-11-27). JORNADA 2 (2026-11-27, captura 07:54–09:54 UTC: 7 230 s efectivos, 0 huecos, feeds 235/235): baseline 4bc8612 frente a MP-036 0c518fa con la configuración actual (K=2, cota 256, sin ajustes): reapariciones A→B→A 5→0 sobre 373 tríadas; saltos comunes >200 m 2 587→2 461 sobre 39 973 pares; COSTES: ancla más antigua en 1 932/40 117 fotogramas (mediana +78 s, máx 220 s), retenciones >180 s 3→12 (7 censuradas), p90 de recuperación 30,9→61,7 s, discrepancia frente al GPS bruto mayor en 52/52 pares con coordenada repetida. Verificación única Opus High: APPROVED (2 observaciones no bloqueantes, resueltas). Informe docs/evidence/mp-038/JORNADA2.md en el PR #17 (head b7aed67; verificado en dc59299). FR-01 abierto: una jornada más no cierra nada. INTEGRADA el 2026-11-27 por decisión del propietario (PR #17, merge commit 453a5eb5). Integrar NO es validar ni publicar: FR-01 y el NO-GO público siguen abiertos.",
       "head_kind": "branch_tip",
       "track": "PRODUCT",
       "milestone": "H4",
@@ -2716,7 +2726,8 @@
         "MP-037"
       ],
       "executor": "codex",
-      "reviewer": "claude"
+      "reviewer": "claude",
+      "integration_kind": "merge_commit"
     }
   ],
   "proposed_extensions": [
