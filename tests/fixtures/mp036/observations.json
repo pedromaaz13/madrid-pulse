@@ -1,0 +1,84 @@
+{
+  "20231": [
+    {
+      "source_vehicle_id": "20231",
+      "source_trip_id": "1029J20231C4a",
+      "observed_at": "2026-11-26T06:21:30+00:00",
+      "received_at": "2026-11-26T06:21:33.861643+00:00",
+      "latitude": 40.24143,
+      "longitude": -3.769159,
+      "current_status": "STOPPED_AT",
+      "current_stop_id": "37012",
+      "payload_hash": "43db3ce7279284f8eb6a697a9285f9f22a80a2c1629088ec2e0002001db8d15d",
+      "started_at": "2026-11-26T06:21:33.713160+00:00",
+      "source_timestamp": "2026-11-26T06:21:31+00:00"
+    },
+    {
+      "source_vehicle_id": "20231",
+      "source_trip_id": "1029J20231C4a",
+      "observed_at": "2026-11-26T06:21:52+00:00",
+      "received_at": "2026-11-26T06:22:04.719755+00:00",
+      "latitude": 40.309868,
+      "longitude": -3.733689,
+      "current_status": "STOPPED_AT",
+      "current_stop_id": "37012",
+      "payload_hash": "4298c458d445b4eb3ef1015e3a3333a6b759fadf9229dd471dd99d345466e9de",
+      "started_at": "2026-11-26T06:22:04.583433+00:00",
+      "source_timestamp": "2026-11-26T06:21:52+00:00"
+    },
+    {
+      "source_vehicle_id": "20231",
+      "source_trip_id": "1029J20231C4a",
+      "observed_at": "2026-11-26T06:22:30+00:00",
+      "received_at": "2026-11-26T06:22:35.568163+00:00",
+      "latitude": 40.24143,
+      "longitude": -3.769159,
+      "current_status": "STOPPED_AT",
+      "current_stop_id": "37012",
+      "payload_hash": "38001bae4bc8fb12a9301e7ae1cc723e0ecb042c3fcb617fc2a5cb63e65b2250",
+      "started_at": "2026-11-26T06:22:35.444589+00:00",
+      "source_timestamp": "2026-11-26T06:22:30+00:00"
+    }
+  ],
+  "20793": [
+    {
+      "source_vehicle_id": "20793",
+      "source_trip_id": "1029J20793C5",
+      "observed_at": "2026-11-26T08:46:30+00:00",
+      "received_at": "2026-11-26T08:46:38.668446+00:00",
+      "latitude": 40.34086,
+      "longitude": -3.7482634,
+      "current_status": "STOPPED_AT",
+      "current_stop_id": "35009",
+      "payload_hash": "6ddd262c7f19c9285eedf5e1d8019b951131c8e15294854966d08811646b491e",
+      "started_at": "2026-11-26T08:46:38.558676+00:00",
+      "source_timestamp": "2026-11-26T08:46:30+00:00"
+    },
+    {
+      "source_vehicle_id": "20793",
+      "source_trip_id": "1029J20793C5",
+      "observed_at": "2026-11-26T08:46:51+00:00",
+      "received_at": "2026-11-26T08:47:09.366300+00:00",
+      "latitude": 40.381268,
+      "longitude": -3.7802126,
+      "current_status": "IN_TRANSIT_TO",
+      "current_stop_id": "35009",
+      "payload_hash": "fb01189f6e3500a92c0bdd56ced1ac7c5e42af53da652c41839ad23988ea2836",
+      "started_at": "2026-11-26T08:47:09.258616+00:00",
+      "source_timestamp": "2026-11-26T08:46:52+00:00"
+    },
+    {
+      "source_vehicle_id": "20793",
+      "source_trip_id": "1029J20793C5",
+      "observed_at": "2026-11-26T08:47:30+00:00",
+      "received_at": "2026-11-26T08:47:40.174981+00:00",
+      "latitude": 40.34086,
+      "longitude": -3.7482634,
+      "current_status": "IN_TRANSIT_TO",
+      "current_stop_id": "35009",
+      "payload_hash": "ac3c2b3c281fe09d3cda4926a272df5e69ab4a64f4f2204d29c632adfbebf03b",
+      "started_at": "2026-11-26T08:47:40.042598+00:00",
+      "source_timestamp": "2026-11-26T08:47:30+00:00"
+    }
+  ]
+}

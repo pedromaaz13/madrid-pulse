@@ -1,0 +1,111 @@
+DSN postgresql://mp_test:mp_local@127.0.0.1:5459/{mp036_bench,mp036_capture}
+
+truncated · 4bc8612
+
+source_ingestion_run: 300000
+vehicle_position_observation: 100000
+trip_update_observation: 100000
+Python 3.12.3, macOS-26.6.2-arm64-arm-64bit
+/api/v1/snapshot?at=2026-11-19T04:20:00Z: sequence=300000
+{'vehicles_total': 100, 'by_rendering_method': {'schedule_only': 1, 'stale_frozen': 99}, 'by_coordinate_space': {'raw': 99, 'schedule': 1}, 'with_operator_delay': 1, 'without_operator_delay': 99}
+{"iterations": 60, "max_ms": 256.88, "mean_ms": 209.65, "min_ms": 188.2, "p50_ms": 209.75, "p95_ms": 226.47, "path": "/api/v1/snapshot?at=2026-11-19T04:20:00Z", "response_bytes": 151892, "status_codes": [200]}
+/api/v1/stations/18000/board?at=2026-11-19T04:20:00Z: sequence=300000
+{'scheduled_calls': 4, 'returned': 4, 'observed_circulations': 1, 'with_operator_delay': 1, 'eta_from_operator': 1, 'eta_from_schedule': 3, 'eta_unavailable': 0, 'operator_delay_coverage_pct': 25.0}
+{"iterations": 60, "max_ms": 186.45, "mean_ms": 156.12, "min_ms": 147.46, "p50_ms": 153.94, "p95_ms": 170.31, "path": "/api/v1/stations/18000/board?at=2026-11-19T04:20:00Z", "response_bytes": 6009, "status_codes": [200]}
+
+truncated · a7e01b8
+
+source_ingestion_run: 300000
+vehicle_position_observation: 100000
+trip_update_observation: 100000
+Python 3.12.3, macOS-26.6.2-arm64-arm-64bit
+/api/v1/snapshot?at=2026-11-19T04:20:00Z: sequence=300000
+{'vehicles_total': 100, 'by_rendering_method': {'schedule_only': 1, 'stale_frozen': 99}, 'by_coordinate_space': {'raw': 99, 'schedule': 1}, 'with_operator_delay': 1, 'without_operator_delay': 99}
+{"iterations": 60, "max_ms": 292.37, "mean_ms": 250.07, "min_ms": 218.43, "p50_ms": 247.06, "p95_ms": 274.79, "path": "/api/v1/snapshot?at=2026-11-19T04:20:00Z", "response_bytes": 151885, "status_codes": [200]}
+/api/v1/stations/18000/board?at=2026-11-19T04:20:00Z: sequence=300000
+{'scheduled_calls': 4, 'returned': 4, 'observed_circulations': 1, 'with_operator_delay': 1, 'eta_from_operator': 1, 'eta_from_schedule': 3, 'eta_unavailable': 0, 'operator_delay_coverage_pct': 25.0}
+{"iterations": 60, "max_ms": 188.75, "mean_ms": 156.74, "min_ms": 146.77, "p50_ms": 153.84, "p95_ms": 176.29, "path": "/api/v1/stations/18000/board?at=2026-11-19T04:20:00Z", "response_bytes": 6009, "status_codes": [200]}
+expand_vehicle_histories p50=45.99 ms p95=51.07 ms filas o vehículos solicitados: [1]
+
+truncated · 121c438
+
+source_ingestion_run: 300000
+vehicle_position_observation: 100000
+trip_update_observation: 100000
+Python 3.12.3, macOS-26.6.2-arm64-arm-64bit
+/api/v1/snapshot?at=2026-11-19T04:20:00Z: sequence=300000
+{'vehicles_total': 100, 'by_rendering_method': {'schedule_only': 1, 'stale_frozen': 99}, 'by_coordinate_space': {'raw': 99, 'schedule': 1}, 'with_operator_delay': 1, 'without_operator_delay': 99}
+{"iterations": 60, "max_ms": 300.54, "mean_ms": 211.58, "min_ms": 188.77, "p50_ms": 207.26, "p95_ms": 227.19, "path": "/api/v1/snapshot?at=2026-11-19T04:20:00Z", "response_bytes": 151885, "status_codes": [200]}
+/api/v1/stations/18000/board?at=2026-11-19T04:20:00Z: sequence=300000
+{'scheduled_calls': 4, 'returned': 4, 'observed_circulations': 1, 'with_operator_delay': 1, 'eta_from_operator': 1, 'eta_from_schedule': 3, 'eta_unavailable': 0, 'operator_delay_coverage_pct': 25.0}
+{"iterations": 60, "max_ms": 182.6, "mean_ms": 159.56, "min_ms": 150.08, "p50_ms": 158.1, "p95_ms": 180.36, "path": "/api/v1/stations/18000/board?at=2026-11-19T04:20:00Z", "response_bytes": 6009, "status_codes": [200]}
+expand_vehicle_histories p50=11.92 ms p95=16.40 ms filas o vehículos solicitados: [1]
+anchor_metadata p50=0.00 ms p95=0.00 ms filas o vehículos solicitados: [0]
+
+complete · 4bc8612
+
+source_ingestion_run: 300000
+vehicle_position_observation: 100000
+trip_update_observation: 100000
+Python 3.12.3, macOS-26.6.2-arm64-arm-64bit
+/api/v1/snapshot?at=2026-11-19T04:20:00Z: sequence=300000
+{'vehicles_total': 100, 'by_rendering_method': {'stale_frozen': 100}, 'by_coordinate_space': {'map_matched': 1, 'raw': 99}, 'with_operator_delay': 1, 'without_operator_delay': 99}
+{"iterations": 60, "max_ms": 251.97, "mean_ms": 211.21, "min_ms": 191.6, "p50_ms": 208.88, "p95_ms": 228.11, "path": "/api/v1/snapshot?at=2026-11-19T04:20:00Z", "response_bytes": 151541, "status_codes": [200]}
+/api/v1/stations/18000/board?at=2026-11-19T04:20:00Z: sequence=300000
+{'scheduled_calls': 4, 'returned': 4, 'observed_circulations': 1, 'with_operator_delay': 1, 'eta_from_operator': 1, 'eta_from_schedule': 3, 'eta_unavailable': 0, 'operator_delay_coverage_pct': 25.0}
+{"iterations": 60, "max_ms": 191.37, "mean_ms": 155.5, "min_ms": 144.76, "p50_ms": 153.8, "p95_ms": 168.44, "path": "/api/v1/stations/18000/board?at=2026-11-19T04:20:00Z", "response_bytes": 6009, "status_codes": [200]}
+
+complete · a7e01b8
+
+source_ingestion_run: 300000
+vehicle_position_observation: 100000
+trip_update_observation: 100000
+Python 3.12.3, macOS-26.6.2-arm64-arm-64bit
+/api/v1/snapshot?at=2026-11-19T04:20:00Z: sequence=300000
+{'vehicles_total': 100, 'by_rendering_method': {'stale_frozen': 100}, 'by_coordinate_space': {'map_matched': 1, 'raw': 99}, 'with_operator_delay': 1, 'without_operator_delay': 99}
+{"iterations": 60, "max_ms": 254.16, "mean_ms": 221.48, "min_ms": 206.14, "p50_ms": 216.86, "p95_ms": 247.92, "path": "/api/v1/snapshot?at=2026-11-19T04:20:00Z", "response_bytes": 151541, "status_codes": [200]}
+/api/v1/stations/18000/board?at=2026-11-19T04:20:00Z: sequence=300000
+{'scheduled_calls': 4, 'returned': 4, 'observed_circulations': 1, 'with_operator_delay': 1, 'eta_from_operator': 1, 'eta_from_schedule': 3, 'eta_unavailable': 0, 'operator_delay_coverage_pct': 25.0}
+{"iterations": 60, "max_ms": 289.58, "mean_ms": 157.9, "min_ms": 146.38, "p50_ms": 154.18, "p95_ms": 172.68, "path": "/api/v1/stations/18000/board?at=2026-11-19T04:20:00Z", "response_bytes": 6009, "status_codes": [200]}
+expand_vehicle_histories p50=16.55 ms p95=19.78 ms filas o vehículos solicitados: [1]
+
+complete · 121c438
+
+source_ingestion_run: 300000
+vehicle_position_observation: 100000
+trip_update_observation: 100000
+Python 3.12.3, macOS-26.6.2-arm64-arm-64bit
+/api/v1/snapshot?at=2026-11-19T04:20:00Z: sequence=300000
+{'vehicles_total': 100, 'by_rendering_method': {'stale_frozen': 100}, 'by_coordinate_space': {'map_matched': 1, 'raw': 99}, 'with_operator_delay': 1, 'without_operator_delay': 99}
+{"iterations": 60, "max_ms": 261.99, "mean_ms": 205.8, "min_ms": 170.18, "p50_ms": 204.45, "p95_ms": 226.1, "path": "/api/v1/snapshot?at=2026-11-19T04:20:00Z", "response_bytes": 151541, "status_codes": [200]}
+/api/v1/stations/18000/board?at=2026-11-19T04:20:00Z: sequence=300000
+{'scheduled_calls': 4, 'returned': 4, 'observed_circulations': 1, 'with_operator_delay': 1, 'eta_from_operator': 1, 'eta_from_schedule': 3, 'eta_unavailable': 0, 'operator_delay_coverage_pct': 25.0}
+{"iterations": 60, "max_ms": 201.59, "mean_ms": 156.65, "min_ms": 147.02, "p50_ms": 154.2, "p95_ms": 172.92, "path": "/api/v1/stations/18000/board?at=2026-11-19T04:20:00Z", "response_bytes": 6009, "status_codes": [200]}
+expand_vehicle_histories p50=8.09 ms p95=14.38 ms filas o vehículos solicitados: [1]
+anchor_metadata p50=5.05 ms p95=6.63 ms filas o vehículos solicitados: [1]
+
+real · 4bc8612
+
+snap 06:22:35.444589 193 vehículos frío 2708.91 ms mediana caliente 442.35 ms
+snap 08:47:40.042598 360 vehículos frío 2085.26 ms mediana caliente 860.40 ms
+vehicles 08:47:40.042598 360 vehículos frío 5427.38 ms mediana caliente 3889.62 ms
+
+real · a7e01b8
+
+snap 06:22:35.444589 193 vehículos frío 1384.85 ms mediana caliente 254.40 ms
+expand_vehicle_histories 122.99 ms filas o vehículos solicitados: [75]
+snap 08:47:40.042598 360 vehículos frío 1342.34 ms mediana caliente 835.61 ms
+expand_vehicle_histories 482.66 ms filas o vehículos solicitados: [142]
+vehicles 08:47:40.042598 360 vehículos frío 1740.92 ms mediana caliente 1606.50 ms
+expand_vehicle_histories 1034.09 ms filas o vehículos solicitados: [358]
+
+real · 121c438
+
+snap 06:22:35.444589 193 vehículos frío 1213.34 ms mediana caliente 158.05 ms
+expand_vehicle_histories 34.24 ms filas o vehículos solicitados: [74]
+anchor_metadata 6.40 ms filas o vehículos solicitados: [75]
+snap 08:47:40.042598 360 vehículos frío 574.77 ms mediana caliente 461.03 ms
+expand_vehicle_histories 160.52 ms filas o vehículos solicitados: [141]
+anchor_metadata 12.38 ms filas o vehículos solicitados: [142]
+vehicles 08:47:40.042598 360 vehículos frío 339.59 ms mediana caliente 337.15 ms
+expand_vehicle_histories 156.49 ms filas o vehículos solicitados: [141]

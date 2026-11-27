@@ -1,0 +1,3 @@
+route_id,route_short_name,route_long_name,route_type,route_color,route_text_color
+10T0014C4a,C4a,Parla                                   -Alcobendas-S.Sebast. de los Reyes,2,2C2A86,FFFFFF
+10T0018C5,C5,Humanes                                 -Mostoles el Soto,2,FECB00,FFFFFF

@@ -7,6 +7,8 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Any
 
+from packages.contracts.canonical import VehiclePositionObservation
+
 
 class PositionMode(StrEnum):
     OBSERVED = "observed"
@@ -110,6 +112,10 @@ class MovementPosition:
 
     anchor_payload_hash: str | None = None
     """Desempata observaciones del operador con el mismo observed_at."""
+
+    anchor_observation: VehiclePositionObservation | None = field(default=None, repr=False)
+    anchor_previous: tuple[datetime, float] | None = None
+    anchor_distance_from_raw_m: float | None = None
 
     def __post_init__(self) -> None:
         if not 0.0 <= self.confidence <= 1.0:
