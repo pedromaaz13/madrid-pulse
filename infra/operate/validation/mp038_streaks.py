@@ -18,6 +18,7 @@ from packages.movement.profile import anchor_profile
 
 from .mp038_trace import check_target, memoized_projections
 from .replay import sha
+from .segments import windows
 
 
 def sample_episode(rows, engine, network, config):
@@ -69,7 +70,7 @@ def sample_episode(rows, engine, network, config):
         }
 
 
-def samples(manifest_path):
+def samples(manifest_path, *, session_only=False):
     config = ApiConfig.from_env()
     check_target(config)
     manifest = json.loads(manifest_path.read_text())
@@ -91,12 +92,21 @@ def samples(manifest_path):
     ):
         require_disposable_database(conn)
         conn.row_factory = dict_row
-        rows = conn.execute("""
+        params = ()
+        where = ""
+        if session_only:
+            (params,) = windows(manifest)
+            where = "WHERE r.started_at >= %s AND r.started_at < %s"
+        rows = conn.execute(
+            f"""
             SELECT v.*, greatest(v.observed_at, r.started_at) AS visible_at
             FROM public.vehicle_position_observation v JOIN public.source_ingestion_run r
               ON r.id=v.ingestion_run_id
+            {where}
             ORDER BY v.source_vehicle_id, v.observed_at, v.id
-        """)
+        """,
+            params,
+        )
         result = []
         for _, series in groupby(rows, key=lambda row: row["source_vehicle_id"]):
             for trip, episode in groupby(series, key=lambda row: row["source_trip_id"]):
@@ -178,10 +188,11 @@ def frozen_runs(baseline, correction):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--session-only", action="store_true")
     parser.add_argument("paths", type=Path, nargs="+")
     args = parser.parse_args()
     if len(args.paths) == 1:
-        output = samples(*args.paths)
+        output = samples(*args.paths, session_only=args.session_only)
     elif len(args.paths) == 2:
         old, new = (json.loads(path.read_text()) for path in args.paths)
         if old["manifest_sha256"] != new["manifest_sha256"]:

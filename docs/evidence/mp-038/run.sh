@@ -3,8 +3,8 @@
 set -euo pipefail
 umask 077
 
-if [[ $# != 3 || ! "$3" =~ ^[a-zA-Z0-9_-]+$ ]]; then
-    echo "Uso: $0 CAPTURA GTFS_ZIP IDENTIFICADOR" >&2
+if [[ $# -lt 3 || $# -gt 5 || ! "$3" =~ ^[a-zA-Z0-9_-]+$ ]]; then
+    echo "Uso: $0 CAPTURA GTFS_ZIP IDENTIFICADOR [--operativa-j1 | --jornada2 DIRECTORIO_SESION]" >&2
     exit 2
 fi
 capture="$(cd "$1" && pwd -P)"
@@ -13,6 +13,23 @@ root="$(git -C "$(dirname "$0")" rev-parse --show-toplevel)"
 analysis="$capture/analysis"
 dump="$analysis/session-1-20261126T090138Z.dump"
 manifest="$capture/session-1/manifest.json"
+mode="${4:-}"
+dump_sha=95b578603f6cd8f0faee93f7207c2313b61c51056dd72fe13f2bbfb452922ea1
+manifest_sha=5de84ef60f84769cf962f05e20fd1b7ba910832441e13a2883f9c2eaf2cdbb6e
+case "$mode:$#" in
+    :3|--operativa-j1:4) ;;
+    --jornada2:5)
+        session="$(cd "$5" && pwd -P)"
+        dump="$analysis/session-2-20261127T095451Z.dump"
+        manifest="$session/manifest.json"
+        dump_sha=6a325074c48c021428084af9741772187204f8abc8862cd22376e7ff922ca75f
+        manifest_sha=60cabc28a997d8bc0b28c6c2ac11890214932c6091bcc06ebf1923fddab18cbe
+        (cd "$analysis" && shasum -a 256 -c "$(basename "$dump").sha256")
+        (cd "$session" && shasum -a 256 -c capture.dump.sha256)
+        cmp "$dump" "$session/capture.dump"
+        ;;
+    *) echo "Modo de replay no válido" >&2; exit 2 ;;
+esac
 output="$analysis/mp038-$3.json"
 port="${MP038_PORT:-5470}"
 case "$port" in
@@ -60,10 +77,10 @@ trap cleanup EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
 
-shasum -a 256 -c "$dump.sha256"
-printf '%s  %s\n' 95b578603f6cd8f0faee93f7207c2313b61c51056dd72fe13f2bbfb452922ea1 "$dump" \
-    5de84ef60f84769cf962f05e20fd1b7ba910832441e13a2883f9c2eaf2cdbb6e "$manifest" |
-    shasum -a 256 -c -
+if [[ "$mode" != --jornada2 ]]; then
+    shasum -a 256 -c "$dump.sha256"
+fi
+printf '%s  %s\n' "$dump_sha" "$dump" "$manifest_sha" "$manifest" | shasum -a 256 -c -
 find "$capture" -type f -exec shasum -a 256 {} + > "$tmp/originals.sha256"
 shasum -a 256 "$gtfs" >> "$tmp/originals.sha256"
 cp "$dump" "$tmp/copy.dump"
@@ -89,6 +106,11 @@ export MADRID_PULSE_ENV=replay MADRID_PULSE_MODE=replay MADRID_PULSE_SHORT_NAME=
 export MP038_PORT="$port"
 export MADRID_PULSE_DATABASE_URL="postgresql://mp_test:mp_local@127.0.0.1:$port/mp038"
 export MADRID_PULSE_GTFS_SOURCE="$gtfs" PYTHONPATH="$root"
+if [[ -n "$mode" ]]; then
+    unset MADRID_PULSE_STOP_ZONE_RADIUS_M MADRID_PULSE_MIN_DWELL_S MADRID_PULSE_CANCEL_MAX_AGE_S
+    export MADRID_PULSE_ANCHOR_HISTORY_DEPTH=256 MADRID_PULSE_ANCHOR_REACQUIRE_SAMPLES=2
+    git -C "$root" diff --exit-code 0c518fa -- apps packages services infra/migrations
+fi
 cd "$root"
 "$python_bin" -m infra.operate.mark_disposable_db
 docker exec "$container_id" psql -XAt -U mp_test -d mp038 -c \
@@ -104,15 +126,29 @@ for variant in baseline correction; do
     if [[ "$variant" = baseline ]]; then tree="$baseline"; fi
     (
         cd "$tree"
-        "$python_bin" -m infra.operate.validation.mp038_trace "$manifest" "$tmp/copy.dump" > "$tmp/$variant.json"
-        "$python_bin" -m infra.operate.validation.mp038_streaks "$manifest" > "$tmp/$variant-streaks.json"
+        trace_args=()
+        if [[ -n "$mode" ]]; then trace_args+=(--session-audit); fi
+        "$python_bin" -m infra.operate.validation.mp038_trace ${trace_args[@]+"${trace_args[@]}"} "$manifest" "$tmp/copy.dump" > "$tmp/$variant.json"
+        if [[ "$mode" == --jornada2 ]]; then
+            "$python_bin" -m infra.operate.validation.mp038_streaks --session-only "$manifest" > "$tmp/$variant-streaks.json"
+        elif [[ -z "$mode" ]]; then
+            "$python_bin" -m infra.operate.validation.mp038_streaks "$manifest" > "$tmp/$variant-streaks.json"
+        fi
     )
     echo "PASS replay $variant"
 done
-"$python_bin" -m infra.operate.validation.mp038_streaks "$tmp/baseline-streaks.json" \
-    "$tmp/correction-streaks.json" > "$tmp/streaks.json"
-"$python_bin" -m infra.operate.validation.mp038_compare "$tmp/baseline.json" \
-    "$tmp/correction.json" "$tmp/streaks.json" > "$tmp/result.json"
+if [[ -z "$mode" || "$mode" == --jornada2 ]]; then
+    "$python_bin" -m infra.operate.validation.mp038_streaks "$tmp/baseline-streaks.json" \
+        "$tmp/correction-streaks.json" > "$tmp/streaks.json"
+fi
+if [[ -n "$mode" ]]; then
+    "$python_bin" -m infra.operate.validation.mp038_session "$tmp/baseline.json" \
+        "$tmp/correction.json" "$tmp/result.json" "$tmp/streaks.json"
+else
+    "$python_bin" -m infra.operate.validation.mp038_compare "$tmp/baseline.json" \
+        "$tmp/correction.json" "$tmp/streaks.json" > "$tmp/result.json"
+fi
+if [[ "$mode" == --jornada2 ]]; then cmp "$dump" "$session/capture.dump"; fi
 cmp "$dump" "$tmp/copy.dump"
 shasum -a 256 -c "$tmp/originals.sha256"
 (

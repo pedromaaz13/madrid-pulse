@@ -127,7 +127,7 @@ def module_origins():
     return origins
 
 
-def run(manifest_path, dump):
+def run(manifest_path, dump, *, session_audit=False):
     config = ApiConfig.from_env()
     check_target(config)
     origins = module_origins()
@@ -156,6 +156,21 @@ def run(manifest_path, dump):
             )
         )
         require_disposable_database(conn)
+        if session_audit:
+            from .mp038_session import audit_runs
+
+            # Parameter-sensitive joins over the scoped views are much slower
+            # with a generic plan. SQL results and product config are identical.
+            conn.execute("SET plan_cache_mode = force_custom_plan")
+            print("plan_cache_mode=force_custom_plan", file=sys.stderr)
+
+            audit = audit_runs(conn, manifest)
+            audit["product"] = {
+                "anchor_history_depth": getattr(config, "anchor_history_depth", None),
+                "anchor_reacquire_samples": getattr(
+                    config, "anchor_reacquire_samples", None
+                ),
+            }
         result = replay.analyze_segments(
             conn, network, config, manifest, replay.windows(manifest)
         )
@@ -178,17 +193,19 @@ def run(manifest_path, dump):
             "thresholds": asdict(config.thresholds),
             "replay": result,
             "segments": trace.segments,
+            **({"session_audit": audit} if session_audit else {}),
         }
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--session-audit", action="store_true")
     parser.add_argument("manifest", type=Path)
     parser.add_argument("dump", type=Path)
     args = parser.parse_args()
     print(
         json.dumps(
-            run(args.manifest, args.dump),
+            run(args.manifest, args.dump, session_audit=args.session_audit),
             sort_keys=True,
             default=lambda d: d.isoformat(),
             allow_nan=False,
