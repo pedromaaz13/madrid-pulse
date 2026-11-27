@@ -38,6 +38,10 @@ REPO_PREFIXES = (
 REFERENCE_FIELDS = ("evidence", "gate_evidence", "source", "deployment_evidence")
 IMPLEMENTED = ("IMPLEMENTED", "IMPLEMENTED_WITH_OPEN_GATE")
 UNSTARTED = ("PLANNED", "NOT_STARTED")
+VALIDATION_STATUSES = ("NOT_VALIDATED", "PROVISIONAL", "VALIDATED")
+RESUME_TEXT_FIELDS = (
+    "done", "remaining", "not_closed_reason", "unblock_condition", "next_action", "branch",
+)
 
 
 def _invalid_constant(value: str) -> None:
@@ -177,6 +181,43 @@ def _check_task(task: Record, location: str) -> Iterator[str]:
             yield f"{location}: {implementation} es incompatible con MERGED"
     if integration == "MERGED" and not _sha(task.get("merge_sha")):
         yield f"{location}: MERGED exige merge_sha hexadecimal de 7–40 caracteres"
+    for field in RESUME_TEXT_FIELDS:
+        if field in task and not has_text(task[field]):
+            yield f"{location}: {field} debe ser un texto no vacío"
+    if "last_update" in task and not _date(task["last_update"]):
+        yield f"{location}: last_update debe ser una fecha ISO YYYY-MM-DD"
+    if "reviewed_head" in task and task["reviewed_head"] != "UNKNOWN" and not _sha(task["reviewed_head"]):
+        yield f"{location}: reviewed_head debe ser hexadecimal de 7–40 caracteres o UNKNOWN"
+    for field in ("blocked_by", "owner_decisions"):
+        if field in task and (not isinstance(task[field], list) or not all(map(has_text, task[field]))):
+            yield f"{location}: {field} debe ser una lista de textos no vacíos"
+    if "validation_status" in task and task["validation_status"] not in VALIDATION_STATUSES:
+        yield f"{location}: validation_status debe ser NOT_VALIDATED, PROVISIONAL o VALIDATED"
+
+
+def _check_deferred(state: Record, ids: dict[str, str]) -> Iterator[str]:
+    if "deferred_items" not in state:
+        return
+    if not isinstance(state["deferred_items"], list):
+        yield "PROJECT_STATE: deferred_items debe ser una lista"
+        return
+    for index, item in enumerate(state["deferred_items"]):
+        label = f"deferred_items[{index}]"
+        if not isinstance(item, dict):
+            yield f"{label}: debe ser un objeto"
+            continue
+        location = _entry_id(item, label)
+        for field in ("id", "source", "description", "reason", "resume_when"):
+            if not has_text(item.get(field)):
+                yield f"{location}: {field} debe ser un texto no vacío"
+        if has_text(item.get("id")):
+            if location in ids:
+                yield f"{location}: ID duplicado en {ids[location]} y deferred_items"
+            else:
+                ids[location] = "deferred_items"
+        if item.get("status") != "DEFERRED":
+            yield f"{location}: status debe ser DEFERRED"
+        yield from _check_references(item, location)
 
 
 def _check_links(
@@ -380,6 +421,9 @@ def validate_state(state: Record) -> list[str]:
         errors.extend(_check_links(task, location, "depends_on", tasks))
         errors.extend(_check_alias(task, location, tasks))
         errors.extend(_check_required_gates(task, location, gates))
+        for blocker in text_entries(task.get("blocked_by")):
+            if isinstance(task.get("blocked_by"), list) and (blocker == location or blocker not in ids):
+                errors.append(f"{location}: blocked_by referencia un ID inválido: {blocker!r}")
     for collection in ("milestones", "phases"):
         for record in records(state, collection):
             location = _entry_id(record, collection)
@@ -390,6 +434,7 @@ def validate_state(state: Record) -> list[str]:
                     if status in (*UNSTARTED, "IN_PROGRESS", "BLOCKED"):
                         errors.append(f"{location}: CLOSED contiene {task_id} en {status}")
     errors.extend(_cycles(tasks))
+    errors.extend(_check_deferred(state, ids))
     if isinstance(verdict, dict):
         errors.extend(_check_references(verdict, "product_verdict"))
     if isinstance(as_of, dict):
@@ -399,7 +444,7 @@ def validate_state(state: Record) -> list[str]:
 
 def repo_references(state: Record) -> Iterator[tuple[str, str, str]]:
     """Devuelve el ID, campo y ruta sin ancla para las referencias del repositorio."""
-    for collection in (*COLLECTIONS, "product_verdict", "as_of"):
+    for collection in (*COLLECTIONS, "deferred_items", "product_verdict", "as_of"):
         value = state.get(collection)
         items = (value,) if isinstance(value, dict) else records(state, collection)
         for record in items:

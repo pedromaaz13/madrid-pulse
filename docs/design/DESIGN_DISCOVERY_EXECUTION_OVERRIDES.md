@@ -1,6 +1,6 @@
 # DESIGN_DISCOVERY_EXECUTION_OVERRIDES.md — Adaptaciones vigentes del Design Discovery
 
-**Fecha:** 2026-11-25 · **Estado:** vigente para cualquier ejecución futura de `DES-00…DES-09`; **no autoriza ejecutarla**.
+**Fecha:** 2026-11-25 · **Actualización de vigencia:** 2026-11-27 (§6).
 **Documento original:** [`DESIGN_DISCOVERY_A_B_C.md`](DESIGN_DISCOVERY_A_B_C.md) (edición 2026-11-23). Se conserva **íntegro**: su matriz DES-00…DES-09 y sus permisos históricos no se alteran. Este fichero solo corrige lo que hoy ya no es verdad. En caso de contradicción, **manda este documento**.
 
 ## 1. Estado de las precondiciones
@@ -41,3 +41,13 @@ El antiguo **Premium Design Kit** (negro/lima/dashboard genérico, `~/Downloads/
 - DES-xx son **subtareas internas de discovery**, no tareas MP ni autorización de Hito 4 (`docs/roadmap/CROSSWALK.md`).
 - El trabajo visual corre en **worktree aislado** y no puede tocar los archivos de MVP 0 (D-03, D-04) ni de MP-030 (`apps/web/src/ui/*`, `App.tsx`, `MapView.tsx`).
 - Los tres conceptos (**A Titanium Control, B Immersive Rail Map, C Contemporary Signal**), los mockups navegables, las capturas BASELINE/CONCEPT y la comparación terminan en el **gate humano de elección** (DES-09).
+
+## 6. Inicio autorizado y sustitución temporal (2026-11-27)
+
+El propietario autorizó **iniciar DES-00…DES-09** el 2026-11-27. La autorización actualiza la condición de entrada de §1. La elección A/B/C sigue en `HG-DESIGN-CHOICE` (`OPEN`), y cualquier integración del rediseño al producto exige autorización expresa. La tercera jornada de MP-028 sigue pendiente y el prototipado puede empezar en paralelo.
+
+Por falta de cuota de Claude, con reapertura estimada para el domingo, el propietario autorizó a Codex a realizar las integraciones ya revisadas, el seguimiento del estado, el baseline y los materiales de discovery y los prototipos A/B/C aislados. Se utiliza **Sol Medium** para documentación y mecánica, **Terra o Sol High** para prototipos y **Astra** solo ante un bloqueo técnico concreto. Los modelos y esfuerzos efectivos se registran por despacho. Se mantiene la regla de autoría de Git.
+
+Las entregas nuevas de Codex quedan **IMPLEMENTADAS / PENDIENTES DE REVISIÓN** por Claude. Terra carece de navegador en Orca. El trabajo visual requiere preflight satisfactorio y ejecución real. Todo paso visual sin ejecutar queda **NOT RUN**, incluido el gate visual independiente mientras falte esa comprobación. La elección humana sigue siendo el cierre de discovery.
+
+El lote excluye la BD 5433, contratación, publicación de datasets, despliegue público, ampliaciones del motor, cambios de R4 y el grafo completo de MP-029.
