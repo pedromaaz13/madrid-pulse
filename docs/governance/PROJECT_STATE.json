@@ -3362,8 +3362,7 @@
       "validation_status": "PROVISIONAL",
       "executor": "codex",
       "reviewer": "claude",
-      "head": "f3e3b0a",
-      "head_kind": "branch_tip",
+      "head": "6aa02bf",
       "branch": "docs/tareas-lote-correccion",
       "pr": 14,
       "depends_on": [],
@@ -3381,7 +3380,8 @@
       "not_closed_reason": "Claude sin cuota; implementación pendiente de revisión.",
       "unblock_condition": "Claude vuelve a estar disponible.",
       "next_action": "Revisar el diff del PR #14 y repetir la suite de gobernanza sobre el HEAD entregado.",
-      "notes": "El HEAD indicado es la base verificada de este despacho (no el HEAD de revisión); el commit de entrega se identifica en la rama."
+      "notes": "Implementación comprobada en el worktree con 38 tests de gobernanza. El HEAD de revisión queda pendiente y no se registra como evaluado.",
+      "base_head": "f3e3b0a"
     }
   ],
   "proposed_extensions": [

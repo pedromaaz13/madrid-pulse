@@ -39,3 +39,18 @@
 - **Autorización del propietario:** inicio de Design Discovery; `HG-DESIGN-CHOICE` sigue OPEN, con integración de un rediseño sujeta a autorización. Sustitución temporal por cuota de Claude hasta aproximadamente el domingo. Codex realiza las integraciones ya revisadas, seguimiento, baseline y materiales y prototipos aislados. Sol Medium para documentación y mecánica, Terra o Sol High para prototipos; Astra solo ante bloqueo técnico concreto. Las entregas nuevas quedan **IMPLEMENTADAS / PENDIENTES DE REVISIÓN** por Claude. Terra sin navegador: pasos visuales sin ejecutar quedan NOT RUN.
 - **Seguimiento del plan (PR #14):** Codex `gpt-6.2-sol` · medium, identidad según recibo Orca (`task_775931bf652e`, `ctx_7ef1162056ed`). Base `f3e3b0a`, rama `docs/tareas-lote-correccion`. Dictamen **NOT_REVIEWED**; revisión de Claude pendiente.
 - **Restricciones del lote:** sin BD 5433, contratación, publicación de datasets, despliegue público, ampliación del motor, cambios en R4 ni inicio del grafo completo de MP-029. Jornada 3 de MP-028 sin programar; falta confirmar ventana.
+
+### Evidencia local del seguimiento del plan
+
+Commit de implementación `6aa02bf` en `docs/tareas-lote-correccion`. Python 3.12.3. Dictamen independiente pendiente.
+
+| Comando | Resultado |
+|---|---|
+| `python3 scripts/governance/sync_docs.py` | PASS (0), actualizó los bloques generados en STATUS, TASKS y MILESTONES |
+| `python3 scripts/governance/sync_docs.py --check` | PASS (0), sin salida |
+| `python3 scripts/governance/check_docs.py` | PASS (0), «Documentación de gobernanza correcta.» |
+| `python3 -m unittest tests.governance.test_governance -v` | PASS (0), «Ran 38 tests», «OK» |
+| `git diff --check` | PASS (0), sin salida |
+| Jornada 3, validación de producto y gate visual independiente | NO EJECUTADO en este despacho |
+
+Falta comprobar: acceso directo al manifiesto y al volcado privados de la jornada 2, acceso a capturas privadas de MP-030, suspensión real del Mac, nombre contractual del campo de cancelación y visibilidad histórica por hora civil. Los artefactos y resultados de las jornadas anteriores se citan desde su evidencia versionada.

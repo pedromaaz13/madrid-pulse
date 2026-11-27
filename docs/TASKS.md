@@ -1866,12 +1866,12 @@ Seguimiento recuperable del plan
 - **Ejecutor** · codex
 - **Revisor** · claude
 - **Rama** · docs/tareas-lote-correccion
-- **Commit de referencia** · f3e3b0a
+- **Commit de referencia** · 6aa02bf
 - **PR** · 14
 - **Ficha de alcance** · [docs/governance/UPDATE_PROTOCOL.md](governance/UPDATE_PROTOCOL.md)
 - **Evidencias** · [docs/governance/DISPATCH_LOG.md](governance/DISPATCH_LOG.md); [tests/governance/test_governance.py](../tests/governance/test_governance.py); [docs/STATUS.md](STATUS.md)
 
-El HEAD indicado es la base verificada de este despacho (no el HEAD de revisión); el commit de entrega se identifica en la rama.
+Implementación comprobada en el worktree con 38 tests de gobernanza. El HEAD de revisión queda pendiente y no se registra como evaluado.
 
 ### Registro de hallazgos y propuestas diferidas
 
