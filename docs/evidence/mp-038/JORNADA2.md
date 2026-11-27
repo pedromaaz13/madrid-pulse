@@ -9,6 +9,8 @@ Comparación de `4bc8612` con MP-036 (`0c518fa`) sobre **705 runs** de la segund
 
 La **discrepancia frente al GPS bruto** H1 fue idéntica en **9 916** pares comunes (p50 **0 m**). Entre **135** pares con ancla retenida, subió en **76** y bajó en **59**. Subió en los **52** donde el GPS siguiente repitió coordenada. **FR-01 sigue abierto**. La posición física permanece **UNVERIFIED**.
 
+**Costes de la corrección (nombrados como tales):** más anclas antiguas (mediana +78 s, máximo 220 s en 1 932 fotogramas), más retenciones de más de 180 s (3 → 12, 7 de ellas censuradas al cierre), un p90 de recuperación mayor (30,9 → 61,7 s) y mayor discrepancia frente al GPS bruto cuando la coordenada siguiente se repite (52 de 52 pares). La mejora en saltos de más de 200 m (2 587 → 2 461) es pequeña frente a los 39 973 pares comparados.
+
 ## Recuperación tras rechazos
 
 Se evalúa cada llegada de GPS seleccionada por la API para la misma fila bruta y con motor aplicable. Una retención comienza en la primera llegada rechazada que publica un ancla anterior confirmada, salvo cuando el motor señala un reanclaje en esa llegada. La recuperación es el primer recambio a un GPS propio aceptado o un reanclaje señalado. Se cuentan aparte las promociones de una muestra previamente rechazada sin señal de reanclaje, las pérdidas de confirmación y los episodios censurados. Un reanclaje deliberado con K=2 puede elegir una muestra antes rechazada. Queda identificado por la bandera `anchor_reacquired` de producción.
@@ -303,3 +305,6 @@ Los JSON y sus hashes están en el directorio original de capturas, fuera de Git
 | `docker rm -fv`, inspección de contenedores y volúmenes, `lsof -nP -iTCP:5470 -sTCP:LISTEN` y retirada de worktrees | **PASS**. Contenedores, volúmenes, escucha y checkouts temporales ausentes. |
 
 El GPS publicado por el feed permite medir discrepancias. La posición y la puntualidad físicas quedan **UNVERIFIED**, al igual que el efecto en el navegador con latencia e interpolación reales, la generalización a otros horarios, corredores y jornadas, y el cumplimiento integral de FR-01. Se mantienen el criterio de MP-025b y los parámetros prerregistrados. La entrega queda pendiente de la única verificación de Claude `claude-opus-5-5` · high. Orca registró Codex `gpt-6.2-sol` · medium para la ejecución.
+
+## Nota de reproducción
+El SHA-256 de `mp038-jornada2.json` se obtiene con un checkout del baseline/corrección en `39166da` y el arnés de `dc59299` superpuesto (módulos `mp038_*`). Los campos `inputs.heads` y `module_origins` del JSON no identifican por sí solos esa versión del arnés; la identifica el commit `dc59299` de esta rama. La verificación independiente reprodujo el mismo SHA con ese procedimiento.
