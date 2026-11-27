@@ -1,20 +1,124 @@
 # STATUS.md — Tablero vivo
 
+<!-- BEGIN GENERATED: recovery-board -->
+
+## Tablero de trabajo
+
+✅ cerrada según su criterio de aceptación · 🔄 en curso · ⏸️ en espera · 🚫 bloqueada · ⬜ pendiente
+
+**Dimensiones** · implementación / revisión / integración / validación / despliegue. Cada ID enlaza su ficha de reanudación cuando existe.
+
+**NO-GO público.** FR-01 abierto · FR-02 abierto
+
+[22 hallazgos y propuestas diferidas](TASKS.md#registro-de-hallazgos-y-propuestas-diferidas).
+
+### Gobernanza
+
+| Tarea | Dimensiones | Terminado | Pendiente | Motivo / ID | Próxima acción / condición |
+| --- | --- | --- | --- | --- | --- |
+| ⏸️ [GOV-TRACKING](TASKS.md#reanudar-gov-tracking) | IMPLEMENTED · NOT_REVIEWED · NOT_INTEGRATED (PR #14) · PROVISIONAL · NOT_APPLICABLE | Tablero, fichas de reanudación y registro de diferidos implementados. | Revisión de Claude pendiente. | Claude sin cuota; implementación pendiente de revisión. | Revisar el diff del PR #14 y repetir la suite de gobernanza sobre el HEAD entregado. · Claude vuelve a estar disponible. |
+
+### H4 · MP-023…MP-035
+
+**H4 · IN_PROGRESS · OPEN.** Autorización del propietario del alcance y la matriz; ADR-0014 enmendado aprobado antes de MP-025.
+
+| Tarea | Dimensiones | Terminado | Pendiente | Motivo / ID | Próxima acción / condición |
+| --- | --- | --- | --- | --- | --- |
+| ✅ [MP-023](TASKS.md#reanudar-mp-023) | IMPLEMENTED · APPROVED · MERGED (PR #5) · VALIDATED · NOT_DEPLOYED | Defaults seguros y fallo antes de conectar; PR #5. | — | — | — |
+| ⏸️ [MP-024](TASKS.md#reanudar-mp-024) | IMPLEMENTED · CHANGES_REQUESTED · MERGED (PR #7) · PROVISIONAL · NOT_DEPLOYED. **Integrada; validación pendiente** | Enmienda 1 y decisión de dirección integradas (#7); alcance del ADR base aclarado (#10). | Revisión independiente del ajuste final y evidencia de visibilidad histórica. | CHANGES_REQUESTED parcial (B2); corrección 68d7df7 sin re-verificación. | Revisar 68d7df7 y comprobar si hay evidencia de visibilidad por hora civil. · Revisor independiente disponible. |
+| ✅ [MP-025a](TASKS.md#reanudar-mp-025a) | IMPLEMENTED · APPROVED · MERGED (PR #8) · VALIDATED · NOT_DEPLOYED | Motor de parada y cierre determinista RED/GREEN; PR #8. | — | MP-024 | — |
+| ⏸️ [MP-025b](TASKS.md#reanudar-mp-025b) | IN_PROGRESS · APPROVED · MERGED (PR #13) · PROVISIONAL · NOT_DEPLOYED. **Integrada; validación pendiente** | Informe provisional de jornada 1 integrado (#13); comparación de jornada 2 en MP-038. | Validar motor con cohortes representativas y resolver FR-01. | H1 en movimiento no cumple; falta jornada 3 y revisión de representatividad. · MP-028 | Tras MP-028, completar el contraste de las tres jornadas con los umbrales originales. · Jornada 3 capturada y verificada. |
+| ⏸️ [MP-026a](TASKS.md#reanudar-mp-026a) | IMPLEMENTED · APPROVED · MERGED (PR #6) · PROVISIONAL · NOT_DEPLOYED. **Integrada; validación pendiente** | Correcciones de replay y vigencia integradas (#6); Actions del PR en verde. | Verificar el cierre de FR-02 y FR-19 en la validación integrada. | FR-02 sigue OPEN. Falta comprobar: cierre en validación integrada. | Reproducir el replay antes del primer dato y GTFS vencido en la validación integrada. · Replay de aceptación en un entorno integrado y aislado. |
+| ✅ [MP-026b](TASKS.md#reanudar-mp-026b) | IMPLEMENTED · APPROVED · MERGED (PR #9) · VALIDATED · NOT_DEPLOYED | Snapshot y tablero consistentes por respuesta; PR #9. | — | MP-024 | — |
+| ⬜ [MP-027](TASKS.md#reanudar-mp-027) | PLANNED · NOT_REVIEWED · NOT_INTEGRATED · NOT_VALIDATED · NOT_DEPLOYED | Alcance documentado. | Criterios de portada, atribución y teselas. | Alcance general H4 pendiente de autorización. · HG-H4-SCOPE, HG-TILES | Revisar condiciones y presentar proveedor de teselas. · Autorización de alcance y resolución de condiciones de la ficha. |
+| ⏸️ [MP-028](TASKS.md#reanudar-mp-028) | IN_PROGRESS · APPROVED · MERGED (PR #12) · PROVISIONAL · NOT_DEPLOYED. **Integrada; validación pendiente** | 2/3 jornadas completadas; supervisor corregido integrado (#12). | Jornada 3 pendiente de ejecución, sin programar. | Falta confirmar disponibilidad del Mac y ventana de servicio. | Acordar ventana y ejecutar el protocolo versionado. · Ventana confirmada para capturar antes de que venza el GTFS (2026-12-18). |
+| ⬜ [MP-029](TASKS.md#reanudar-mp-029) | PLANNED · NOT_REVIEWED · NOT_INTEGRATED · NOT_VALIDATED · NOT_DEPLOYED | Alcance documentado. | Corredores y ramales acotados; catálogo con cobertura explícita. | Alcance general H4 pendiente de autorización. · HG-H4-SCOPE | Delimitar los corredores y el modelo de segmentos; comprobar atribución OSM. · Autorización de alcance y resolución de condiciones de la ficha. |
+| ⏸️ [MP-030](TASKS.md#reanudar-mp-030) | IMPLEMENTED · CHANGES_REQUESTED · MERGED (PR #11) · PROVISIONAL · NOT_DEPLOYED. **Integrada; validación pendiente** | Interfaz mínima integrada (#11); delta visual focalizado PASS. | A1 cancelado «En servicio hoy»; A2 avance contradictorio; A3 cancelado y congelado iguales en el mapa. | Código final sin re-verificación independiente; quedan casos visuales NOT RUN. | Solicitar revisión del código final y repetir la matriz de navegador y accesibilidad. · Revisor independiente y navegador disponibles; autorización para corregir A1–A3. |
+| ⬜ [MP-031](TASKS.md#reanudar-mp-031) | PLANNED · NOT_REVIEWED · NOT_INTEGRATED · NOT_VALIDATED · NOT_DEPLOYED | Alcance documentado. | Métricas de cierre con denominadores y cobertura. | Alcance general H4 pendiente de autorización. · HG-H4-SCOPE, MP-028 | Preparar el contraste con la captura validada de MP-028. · Autorización de alcance y resolución de condiciones de la ficha. |
+| ⬜ [MP-032](TASKS.md#reanudar-mp-032) | PLANNED · NOT_REVIEWED · NOT_INTEGRATED · NOT_VALIDATED · NOT_DEPLOYED | Alcance documentado. | Medición de operación local supervisada. | Alcance general H4 pendiente de autorización. · HG-H4-SCOPE, HG-HOSTING | Definir el protocolo de operación y medir coste en entorno aislado. · Autorización de alcance y resolución de condiciones de la ficha. |
+| ⬜ [MP-033](TASKS.md#reanudar-mp-033) | PLANNED · NOT_REVIEWED · NOT_INTEGRATED · NOT_VALIDATED · NOT_DEPLOYED | Alcance documentado. | Medición de rendimiento y coste. | Alcance general H4 pendiente de autorización. · HG-H4-SCOPE, MP-032, HG-DEC-038, HG-DEC-004 | Medir carga tras MP-032 y documentar alternativas de pool y retención. · Autorización de alcance y resolución de condiciones de la ficha. |
+| ⬜ [MP-034](TASKS.md#reanudar-mp-034) | PLANNED · NOT_REVIEWED · NOT_INTEGRATED · NOT_VALIDATED · NOT_DEPLOYED | Alcance documentado. | Registro estructurado de hallazgos de auditoría. | Alcance general H4 pendiente de autorización. · HG-H4-SCOPE | Cruzar FINDINGS_REGISTER.md con correcciones y evidencia. · Autorización de alcance y resolución de condiciones de la ficha. |
+| ⬜ [MP-035](TASKS.md#reanudar-mp-035) | PLANNED · NOT_REVIEWED · NOT_INTEGRATED · NOT_VALIDATED · NOT_DEPLOYED | Alcance documentado. | Dictamen GO/NO-GO y gate de publicación. | NO-GO público y criterios de dependencias abiertos. · FR-01, FR-02, HG-LIVE-PUBLIC | Auditar criterios de cada dependencia y presentar dictamen al propietario. · Dictamen GO documentado y aprobación del propietario. |
+
+### Motor y evaluación · MP-036…MP-038
+
+| Tarea | Dimensiones | Terminado | Pendiente | Motivo / ID | Próxima acción / condición |
+| --- | --- | --- | --- | --- | --- |
+| ⏸️ [MP-036](TASKS.md#reanudar-mp-036) | IMPLEMENTED · APPROVED · MERGED (PR #15) · PROVISIONAL · NOT_DEPLOYED. **Integrada; validación pendiente** | Fallback determinista K=2 integrado (#15); 0/416 reapariciones en jornada 1. | Caracterizar recuperación, jitter y cota 256 en más datos. | El propietario aceptó los costes para desarrollo local; FR-01 sigue abierto. | Medir cota 256 y recuperación sobre una jornada completa antes de plantear ajustes. · Datos de una jornada completa y autorización para el contraste. |
+| ⏸️ [MP-037](TASKS.md#reanudar-mp-037) | IMPLEMENTED · APPROVED · MERGED (PR #16) · PROVISIONAL · NOT_DEPLOYED. **Integrada; validación pendiente** | Estudio M7/R4 y STOPPED_AT integrado (#16); R4 conservada. | Validar candidatas parada_previa, gps_previo y R7→R8 condicional con datos posteriores. | La evidencia no establece exactitud física; alternativas pendientes de decisión. | Contrastar la jornada 2 y añadir la 3 cuando exista; presentar los deltas al propietario. · Autorización del contraste y datos posteriores para decidir. |
+| ⏸️ [MP-038](TASKS.md#reanudar-mp-038) | IMPLEMENTED · APPROVED · MERGED (PR #17) · PROVISIONAL · NOT_DEPLOYED. **Integrada; validación pendiente** | Evaluación reproducible integrada (#17); jornadas 1 y 2 comparadas. | Completar evidencia de aceptación del motor tras la jornada 3. | La evaluación mide costes y discontinuidades; FR-01 abierto. · MP-028 | Repetir la comparación con entradas de jornada 3 y criterios congelados. · Jornada 3 capturada y artefactos verificados. |
+
+### Demo estática · D-01…D-06
+
+| Tarea | Dimensiones | Terminado | Pendiente | Motivo / ID | Próxima acción / condición |
+| --- | --- | --- | --- | --- | --- |
+| ⬜ [D-01](TASKS.md#reanudar-d-01) | PLANNED · NOT_REVIEWED · NOT_INTEGRATED · NOT_VALIDATED · NOT_DEPLOYED | Plan de demo documentado. | Captura de 90 min y manifiesto. | Ejecución de MVP 0 pendiente de autorización. · HG-CAPTURE | Confirmar autorización y preparar captura desechable propia. · Autorización de MVP 0 y precondiciones de la ficha. |
+| ⬜ [D-02](TASKS.md#reanudar-d-02) | PLANNED · NOT_REVIEWED · NOT_INTEGRATED · NOT_VALIDATED · NOT_DEPLOYED | Plan de demo documentado. | Contrato y exportador reproducible. | Ejecución de MVP 0 pendiente de autorización. | Definir contrato y verificar hash y paridad API del exportador. · Autorización de MVP 0 y precondiciones de la ficha. |
+| ⬜ [D-03](TASKS.md#reanudar-d-03) | PLANNED · NOT_REVIEWED · NOT_INTEGRATED · NOT_VALIDATED · NOT_DEPLOYED | Plan de demo documentado. | Adaptador, reloj y rótulos de demo. | Ejecución de MVP 0 pendiente de autorización. · D-02 | Construir el modo estático sobre el contrato D-02. · Autorización de MVP 0 y precondiciones de la ficha. |
+| ⬜ [D-04](TASKS.md#reanudar-d-04) | PLANNED · NOT_REVIEWED · NOT_INTEGRATED · NOT_VALIDATED · NOT_DEPLOYED | Plan de demo documentado. | Teselas y atribución de demo. | Ejecución de MVP 0 pendiente de autorización. · HG-TILES | Verificar condiciones de OpenFreeMap y proponer configuración. · Autorización de MVP 0 y precondiciones de la ficha. |
+| ⬜ [D-05](TASKS.md#reanudar-d-05) | PLANNED · NOT_REVIEWED · NOT_INTEGRATED · NOT_VALIDATED · NOT_DEPLOYED | Plan de demo documentado. | Build verificable y workflow Pages. | Ejecución de MVP 0 pendiente de autorización. · D-03, D-04 | Probar vite base y verify-build en entorno previo. · Autorización de MVP 0 y precondiciones de la ficha. |
+| ⬜ [D-06](TASKS.md#reanudar-d-06) | PLANNED · NOT_REVIEWED · NOT_INTEGRATED · NOT_VALIDATED · NOT_DEPLOYED | Plan de demo documentado. | Validación integrada y URL comprobada. | Ejecución de MVP 0 pendiente de autorización. · D-01, D-02, D-03, D-04, D-05, HG-MVP0-PUBLISH | Ejecutar contrato, build, capturas y atribuciones; presentar la demo. · Autorización de MVP 0 y precondiciones de la ficha. |
+
+### Design Discovery · DES-00…DES-09
+
+Autorización de inicio de DES-00…DES-09 el 2026-11-27; HG-DESIGN-CHOICE sigue OPEN.
+
+| Tarea | Dimensiones | Terminado | Pendiente | Motivo / ID | Próxima acción / condición |
+| --- | --- | --- | --- | --- | --- |
+| ⬜ [DES-00](TASKS.md#reanudar-des-00) | PLANNED · NOT_REVIEWED · NOT_INTEGRATED · NOT_VALIDATED · NOT_APPLICABLE | Inicio de discovery autorizado. | Baseline versionado y restricciones comprobadas. | Pendiente de despacho. | Verificar HEAD, worktrees y restricciones; redactar 00_BASELINE/STATE.md. · Despacho en worktree aislado y precondiciones acreditadas. |
+| ⬜ [DES-01](TASKS.md#reanudar-des-01) | PLANNED · NOT_REVIEWED · NOT_INTEGRATED · NOT_VALIDATED · NOT_APPLICABLE | Inicio de discovery autorizado. | Capturas desktop/móvil y consola del frontend actual. | Precondiciones del discovery pendientes. · DES-00 | Hacer preflight de navegador y capturar vistas; si falta, registrar NOT RUN. · Despacho en worktree aislado y precondiciones acreditadas. |
+| ⬜ [DES-02](TASKS.md#reanudar-des-02) | PLANNED · NOT_REVIEWED · NOT_INTEGRATED · NOT_VALIDATED · NOT_APPLICABLE | Inicio de discovery autorizado. | Comparativa de tres fuentes de diseño. | Precondiciones del discovery pendientes. · DES-00 | Comprobar versiones, licencias, hooks y permisos sin instalar. · Despacho en worktree aislado y precondiciones acreditadas. |
+| ⬜ [DES-03](TASKS.md#reanudar-des-03) | PLANNED · NOT_REVIEWED · NOT_INTEGRATED · NOT_VALIDATED · NOT_APPLICABLE | Inicio de discovery autorizado. | Brief factual y conceptos A/B/C. | Precondiciones del discovery pendientes. · DES-01, DES-02 | Redactar el brief desde baseline y revisión de fuentes. · Despacho en worktree aislado y precondiciones acreditadas. |
+| ⬜ [DES-04](TASKS.md#reanudar-des-04) | PLANNED · NOT_REVIEWED · NOT_INTEGRATED · NOT_VALIDATED · NOT_APPLICABLE | Inicio de discovery autorizado. | Prototipo A Titanium Control. | Precondiciones del discovery pendientes. · DES-03 | Montar A en su worktree aislado según el brief. · Despacho en worktree aislado y precondiciones acreditadas. |
+| ⬜ [DES-05](TASKS.md#reanudar-des-05) | PLANNED · NOT_REVIEWED · NOT_INTEGRATED · NOT_VALIDATED · NOT_APPLICABLE | Inicio de discovery autorizado. | Prototipo B Immersive Rail Map. | Precondiciones del discovery pendientes. · DES-03 | Montar B con jerarquía map-first en worktree aislado. · Despacho en worktree aislado y precondiciones acreditadas. |
+| ⬜ [DES-06](TASKS.md#reanudar-des-06) | PLANNED · NOT_REVIEWED · NOT_INTEGRATED · NOT_VALIDATED · NOT_APPLICABLE | Inicio de discovery autorizado. | Prototipo C Contemporary Signal. | Precondiciones del discovery pendientes. · DES-03 | Montar C con navegación propia en worktree aislado. · Despacho en worktree aislado y precondiciones acreditadas. |
+| ⬜ [DES-07](TASKS.md#reanudar-des-07) | PLANNED · NOT_REVIEWED · NOT_INTEGRATED · NOT_VALIDATED · NOT_APPLICABLE | Inicio de discovery autorizado. | Iconografía comparada y medición en MapLibre. | Precondiciones del discovery pendientes. · DES-03 | Probar variantes de iconos; medir solo con navegador verificado. · Despacho en worktree aislado y precondiciones acreditadas. |
+| ⬜ [DES-08](TASKS.md#reanudar-des-08) | PLANNED · NOT_REVIEWED · NOT_INTEGRATED · NOT_VALIDATED · NOT_APPLICABLE | Inicio de discovery autorizado. | Comparación en navegador; gate visual independiente NOT RUN. | Precondiciones del discovery pendientes. · DES-04, DES-05, DES-06, DES-07 | Preflight y revisión de flujos, responsive, teclado y reduced motion. · Despacho en worktree aislado y precondiciones acreditadas. |
+| ⬜ [DES-09](TASKS.md#reanudar-des-09) | PLANNED · NOT_REVIEWED · NOT_INTEGRATED · NOT_VALIDATED · NOT_APPLICABLE | Inicio de discovery autorizado. | Índice de evidencia, matriz A/B/C y elección. | Precondiciones del discovery pendientes. · DES-08, HG-DESIGN-CHOICE | Presentar comparación al propietario y esperar su elección. · Despacho en worktree aislado y precondiciones acreditadas. |
+
+### Preparación y despliegue Live · D-10…D-18
+
+| Tarea | Dimensiones | Terminado | Pendiente | Motivo / ID | Próxima acción / condición |
+| --- | --- | --- | --- | --- | --- |
+| ⬜ [D-11](TASKS.md#reanudar-d-11) | PLANNED · NOT_REVIEWED · NOT_INTEGRATED · NOT_VALIDATED · NOT_DEPLOYED | Subalcance propuesto documentado. | Dockerfiles, Compose y Caddy. | Staging sin autorización. · PROPOSAL-STAGING-LIVE, MP-023 | Confirmar alcance de staging y validar un arranque aislado. · Staging autorizado y precondiciones de despliegue acreditadas. |
+| ⬜ [D-12](TASKS.md#reanudar-d-12) | PLANNED · NOT_REVIEWED · NOT_INTEGRATED · NOT_VALIDATED · NOT_DEPLOYED | Subalcance propuesto documentado. | Migraciones idempotentes en arranque. | Staging sin autorización. · PROPOSAL-STAGING-LIVE, D-11 | Probar dos arranques en una base desechable. · Staging autorizado y precondiciones de despliegue acreditadas. |
+| ⬜ [D-14](TASKS.md#reanudar-d-14) | PLANNED · NOT_REVIEWED · NOT_INTEGRATED · NOT_VALIDATED · NOT_DEPLOYED | Subalcance propuesto documentado. | Purga y archivo en volumen. | Staging sin autorización. · PROPOSAL-STAGING-LIVE, D-11 | Medir crecimiento de la BD caliente y contrastar DEC-004. · Staging autorizado y precondiciones de despliegue acreditadas. |
+| ⬜ [D-15](TASKS.md#reanudar-d-15) | PLANNED · NOT_REVIEWED · NOT_INTEGRATED · NOT_VALIDATED · NOT_DEPLOYED | Subalcance propuesto documentado. | Rate limit y salud. | Staging sin autorización. · PROPOSAL-STAGING-LIVE, D-11 | Medir limitación de ráfagas y liveness sin BD. · Staging autorizado y precondiciones de despliegue acreditadas. |
+| ⬜ [D-16](TASKS.md#reanudar-d-16) | PLANNED · NOT_REVIEWED · NOT_INTEGRATED · NOT_VALIDATED · NOT_DEPLOYED | Subalcance propuesto documentado. | Backups y restauración. | Staging sin autorización. · PROPOSAL-STAGING-LIVE, D-11 | Restaurar un backup en una BD desechable y cuadrar filas. · Staging autorizado y precondiciones de despliegue acreditadas. |
+| ⬜ [D-17](TASKS.md#reanudar-d-17) | PLANNED · NOT_REVIEWED · NOT_INTEGRATED · NOT_VALIDATED · NOT_DEPLOYED | Subalcance propuesto documentado. | CD por SSH con aprobación manual. | Staging sin autorización. · PROPOSAL-STAGING-LIVE, D-11 | Verificar que el workflow requiere aprobación antes del despliegue. · Staging autorizado y precondiciones de despliegue acreditadas. |
+| ⬜ [D-18](TASKS.md#reanudar-d-18) | PLANNED · NOT_REVIEWED · NOT_INTEGRATED · NOT_VALIDATED · NOT_DEPLOYED | Subalcance propuesto documentado. | Operación supervisada durante ≥24 h. | Staging sin autorización. · PROPOSAL-STAGING-LIVE, D-11, D-12, D-14, D-15, D-16 | Medir continuidad, recursos y recuperación tras abrir el staging. · Staging autorizado y precondiciones de despliegue acreditadas. |
+
+**Equivalencias** · D-10 → MP-023 · D-13 → MP-026a
+
+### Hitos históricos y auditoría
+
+- **H0** · Hito 0 — Fundación y gobernanza (MP-001) · MERGED · CLOSED.
+- **H1** · Hito 1 — Datos, colector, calidad e histórico (MP-002→MP-009) · MERGED · CLOSED · gates heredados abiertos F3, F4.
+- **H2** · Hito 2 — Live Railway MVP local C5 (MP-010→MP-015) · MERGED · CLOSED · gates heredados abiertos F9.
+- **H3** · Hito 3 — Cercanías Madrid completo, solo local (MP-016→MP-022) · MERGED · OPEN.
+- **AUD** · Auditoría adversarial H3 (AUD-00→AUD-09) · MERGED · CLOSED.
+
+<!-- END GENERATED: recovery-board -->
+
+### Contexto histórico
+
 > **Integración del Hito 3 (2026-11-24):** `main` queda marcado como **versión local auditada, NO-GO para despliegue público**. Cadena `MP-016`→`MP-022` `DONE`; auditoría AUD-00…AUD-09 aprobada formalmente con **2 P0 abiertos y 16 P1 registrados (recuento por severidad de la auditoría; estados posteriores en `FINDINGS_REGISTER.md`)** (`docs/audits/hito-03/`). Hito 4 **planificado, no implementado**: `docs/H4_TASK_MATRIX.md` y correspondencia `H4-xx` ↔ `MP-023+` en `docs/H4_MP_MAPPING.md`. Política de agentes: `docs/ORCHESTRATION_POLICY.md`. ADR-0014 y ADR-0015 siguen `Propuesto`. Base 5433: datos de AUD-06 **conservados** por decisión del propietario (`docs/audits/hito-03/INCIDENT_5433.md`). No hay push/PR/merge efectuado por agentes.
 
 > Punto de entrada del estado actual. El detalle por tarea vive en `docs/TASKS.md`; el historial de cambios, en `docs/CHANGELOG.md`.
 
 ## Estado canónico (generado)
 
-> Esta sección se regenera desde `docs/governance/PROJECT_STATE.json` con `python scripts/governance/sync_docs.py`. No se edita a mano. El resto del documento es bitácora histórica.
+> El tablero y este resumen se regeneran desde `docs/governance/PROJECT_STATE.json` con `python scripts/governance/sync_docs.py`. Las bitácoras conservan su contexto histórico.
 
 <!-- BEGIN GENERATED: state-summary -->
 
-**Estado al 2026-11-25.** Despliegue público **NO-GO** · código integrado local **CONDITIONAL GO**. Fuente: [docs/audits/hito-03/AUDIT_EXECUTIVE_DECISION.md](audits/hito-03/AUDIT_EXECUTIVE_DECISION.md).
+**Estado al 2026-11-27.** Despliegue público **NO-GO** · código integrado local **CONDITIONAL GO**. Fuente: [docs/audits/hito-03/AUDIT_EXECUTIVE_DECISION.md](audits/hito-03/AUDIT_EXECUTIVE_DECISION.md).
 
 Etiqueta `h3-local-audited` → `7583ca5f4450aa70e5b6b05b7394aef4cc28f3a4`.
 
 Baseline de producto auditado: `beb9434`.
+
+Referencia de `origin/main` al corte: `359932dbe8e6706e42b7a96c49acdc2afba535b5`.
 
 **DONE ≠ MERGED ≠ LIVE. CI verde ≠ cero P0.**
 
@@ -25,18 +129,18 @@ Baseline de producto auditado: `beb9434`.
 | implementation_status | NOT_STARTED | 0 |
 | implementation_status | PLANNED | 30 |
 | implementation_status | IN_PROGRESS | 2 |
-| implementation_status | IMPLEMENTED | 39 |
+| implementation_status | IMPLEMENTED | 40 |
 | implementation_status | IMPLEMENTED_WITH_OPEN_GATE | 2 |
 | implementation_status | BLOCKED | 0 |
 | implementation_status | DROPPED | 0 |
-| review_status | NOT_REVIEWED | 30 |
+| review_status | NOT_REVIEWED | 31 |
 | review_status | IN_REVIEW | 0 |
-| review_status | CHANGES_REQUESTED | 1 |
-| review_status | APPROVED | 42 |
+| review_status | CHANGES_REQUESTED | 2 |
+| review_status | APPROVED | 41 |
 | integration_status | NOT_INTEGRATED | 31 |
-| integration_status | MERGED | 42 |
+| integration_status | MERGED | 43 |
 | deployment_status | NOT_DEPLOYED | 53 |
-| deployment_status | NOT_APPLICABLE | 20 |
+| deployment_status | NOT_APPLICABLE | 21 |
 | deployment_status | STAGING | 0 |
 | deployment_status | PUBLIC | 0 |
 
@@ -49,7 +153,7 @@ Baseline de producto auditado: `beb9434`.
 | H2 | Hito 2 — Live Railway MVP local C5 (MP-010→MP-015) | IMPLEMENTED_WITH_OPEN_GATE | APPROVED | MERGED | NOT_DEPLOYED | CLOSED · cierre histórico; gates abiertos heredados: F9 | PR #2 · 990c95d · 2026-11-20 | Cierre histórico: PR #2 fusionado por el propietario; checklist MVP_READINESS presentado; el gate F9 (aceptación expresa del checklist) sigue abierto | [docs/MVP_READINESS.md](MVP_READINESS.md) | No se localizó una aceptación expresa del checklist; consta la fusión del PR #2 y la promoción de ADR. |
 | H3 | Hito 3 — Cercanías Madrid completo, solo local (MP-016→MP-022) | IMPLEMENTED_WITH_OPEN_GATE | APPROVED | MERGED | NOT_DEPLOYED | OPEN | PR #3 · 7583ca5 · 2026-11-24 | Cierre técnico revisado; cierre de producto abierto: FR-01 y FR-02 (P0) sin corregir; NO-GO para despliegue público | [docs/audits/hito-03/AUDIT_EXECUTIVE_DECISION.md](audits/hito-03/AUDIT_EXECUTIVE_DECISION.md) | — |
 | AUD | Auditoría adversarial H3 (AUD-00→AUD-09) | IMPLEMENTED | APPROVED | MERGED | NOT_APPLICABLE | CLOSED | PR #3 · 7583ca5 · 2026-11-24 | Cierre formal técnico: AUD-09 aprobado por revisor de proveedor contrario. La aceptación humana del dictamen sigue OPEN (HG-AUDIT-DECISION) | [docs/audits/hito-03/AUDIT_EXECUTIVE_DECISION.md](audits/hito-03/AUDIT_EXECUTIVE_DECISION.md); [docs/audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md](audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md) | — |
-| H4 | Hito 4 — Corrección de P0 y base operativa (MP-023→MP-035) | PLANNED | NOT_REVIEWED | NOT_INTEGRATED | NOT_DEPLOYED | OPEN | — | Autorización del propietario del alcance y la matriz; ADR-0014 enmendado aprobado antes de MP-025 | [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md); [docs/H4_TASK_MATRIX.md](H4_TASK_MATRIX.md) | — |
+| H4 | Hito 4 — Corrección de P0 y base operativa (MP-023→MP-035) | IN_PROGRESS | NOT_REVIEWED | NOT_INTEGRATED | NOT_DEPLOYED | OPEN | — | Autorización del propietario del alcance y la matriz; ADR-0014 enmendado aprobado antes de MP-025 | [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md); [docs/H4_TASK_MATRIX.md](H4_TASK_MATRIX.md) | — |
 | MVP0 | MVP 0 — Primera URL de demostración estática (D-01→D-06) | PLANNED | NOT_REVIEWED | NOT_INTEGRATED | NOT_DEPLOYED | OPEN | — | Gate 0 en dos tiempos: (1) contrato, build y capturas en entorno previo; (2) tras HG-MVP0-PUBLISH, comprobación de la URL pública; no cerrado hasta el segundo tiempo | [docs/deployment/MVP0_IMPLEMENTATION_PLAN.md](deployment/MVP0_IMPLEMENTATION_PLAN.md); [docs/plans/MVP_LIVE_END_TO_END.md](plans/MVP_LIVE_END_TO_END.md) | — |
 | DESIGN | Design Discovery A/B/C (DES-00→DES-09) | PLANNED | NOT_REVIEWED | NOT_INTEGRATED | NOT_APPLICABLE | OPEN | — | Elección humana de concepto; no hay rediseño productivo antes | [docs/design/DESIGN_DISCOVERY_A_B_C.md](design/DESIGN_DISCOVERY_A_B_C.md); [docs/design/DESIGN_DISCOVERY_EXECUTION_OVERRIDES.md](design/DESIGN_DISCOVERY_EXECUTION_OVERRIDES.md) | — |
 | LIVE_STAGING | Live técnico supervisado en staging (D-10→D-19) | PLANNED | NOT_REVIEWED | NOT_INTEGRATED | NOT_DEPLOYED | OPEN | — | Gate 1; hosting y coste son decisión del propietario | [docs/deployment/MVP_RELEASE_CHECKLIST.md](deployment/MVP_RELEASE_CHECKLIST.md); [docs/plans/MVP_LIVE_END_TO_END.md](plans/MVP_LIVE_END_TO_END.md) | — |
@@ -76,8 +180,8 @@ Universo completo de hallazgos: `docs/audits/hito-03/FINDINGS_REGISTER.md` (hast
 | HG-DESIGN-CHOICE | Elección del concepto A/B/C | OPEN | — |
 | HG-MVP0-PUBLISH | Publicar la URL de demostración (MVP 0) | OPEN | — |
 | HG-HOSTING | Elección y contratación de hosting Live (VPS vs Railway) | OPEN | — |
-| HG-CAPTURE | Autorizar la captura continua local (D-01 y MP-028) | OPEN | — |
-| HG-DESIGN-START | Permiso para iniciar el Design Discovery (distinto de la elección A/B/C) | OPEN | — |
+| HG-CAPTURE | Autorizar la captura continua local (D-01 y MP-028) | OPEN | Captura continua local pendiente de autorización; las sesiones puntuales de MP-028 tienen seguimiento propio. Jornada 3 pendiente de confirmar ventana. |
+| HG-DESIGN-START | Permiso para iniciar el Design Discovery (distinto de la elección A/B/C) | APPROVED_BY_OWNER | Autorización de inicio de DES-00…DES-09 el 2026-11-27; HG-DESIGN-CHOICE sigue OPEN. |
 | HG-DEC-038 | DEC-038: pool de conexiones de la API (MP-033) | OPEN | — |
 | HG-TILES | Proveedor de teselas y condiciones | OPEN | — |
 | HG-DEC-004 | Retención del histórico detallado (DEC-004) | OPEN | — |
@@ -88,7 +192,7 @@ Universo completo de hallazgos: `docs/audits/hito-03/FINDINGS_REGISTER.md` (hast
 
 ## Hito autorizado actualmente
 
-> **Nota de vigencia (2026-11-25).** Los bloques «Hito 1», «Hito 2» y «Hito 3» de esta sección y las bitácoras siguientes son **histórico conservado**. A esta fecha **no hay ningún hito autorizado en curso**: H4 (MP-023…MP-035), MVP 0 y Design Discovery están planificados y requieren autorización explícita del propietario. El estado vigente es la sección generada «Estado canónico» de arriba.
+> **Nota de vigencia (2026-11-27).** Los bloques «Hito 1», «Hito 2» y «Hito 3» de esta sección y las bitácoras siguientes son histórico. El alcance general de H4 y la ejecución de MVP 0 siguen pendientes de autorización. Las entregas puntuales y el inicio autorizado de Design Discovery figuran en el tablero y en los gates del resumen canónico.
 
 **Hito 1 — `MP-002` → `MP-009`: completado, aprobado por revisión cruzada el `2026-11-19`, y fusionado a `main` por el propietario (`pedromaaz13`) el `2026-11-19`.** PR #1 (`mp-009-historical-export` → `main`), commit de merge `f567d3c`. Confirmado: `git merge-base --is-ancestor 8be1272 f567d3c` → `0` (el último commit de la cadena MP-009 es ancestro de `main`; nada quedó sin integrar).
 

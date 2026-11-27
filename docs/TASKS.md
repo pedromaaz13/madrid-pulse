@@ -1,6 +1,6 @@
-# TASKS.md — Backlog Madrid Pulse (MP-001 a MP-022 implementados; MP-023+ planificados)
+# TASKS.md — Backlog Madrid Pulse
 
-> **Estado a 2026-11-25:** MP-001…MP-022 implementadas y revisadas; integradas en `main` (`7583ca5`); **ninguna desplegada**. El índice de lo planificado (MP-023+, tracks MVP 0, Live staging y Design) está al final, generado desde [`governance/PROJECT_STATE.json`](governance/PROJECT_STATE.json). `DONE` en las fichas = implementación revisada, no integración ni despliegue (ver [`governance/UPDATE_PROTOCOL.md`](governance/UPDATE_PROTOCOL.md)).
+> El [tablero](STATUS.md#tablero-de-trabajo) resume el estado vigente. El [índice](#backlog-planificado-y-tracks-generado), las [fichas de reanudación](#fichas-de-reanudación) y el [registro de diferidos](#registro-de-hallazgos-y-propuestas-diferidas) se generan desde [`PROJECT_STATE.json`](governance/PROJECT_STATE.json). Las fichas históricas de MP-001…MP-022 documentan el cierre técnico de su alcance.
 
 Numeración y dependencias conservadas de `docs/research/deep-research-report.md`. Cualquier desviación de la numeración original debe justificarse aquí y registrarse en `docs/DECISIONS.md`.
 
@@ -629,15 +629,15 @@ Dos ramas pueden avanzar en paralelo en worktrees independientes una vez resuelt
 | AUD-08 | Reproducción y reconciliación | AUDIT | IMPLEMENTED | AUD-01, AUD-02, AUD-03, AUD-04, AUD-05, AUD-06, AUD-07 | codex | claude | — | PR #3 | [docs/audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md](audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md) | [docs/audits/hito-03/AUD08_REPRODUCTION.md](audits/hito-03/AUD08_REPRODUCTION.md); [docs/audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md](audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md) |
 | AUD-09 | Registro de hallazgos, decisión ejecutiva y propuesta H4 | AUDIT | IMPLEMENTED | AUD-08 | claude | codex | — | PR #3 | [docs/audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md](audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md) | [docs/audits/hito-03/AUDIT_EXECUTIVE_DECISION.md](audits/hito-03/AUDIT_EXECUTIVE_DECISION.md); [docs/audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md](audits/hito-03/ORCA_DISPATCH_AND_REVIEW_LOG.md) |
 | MP-023 | Eliminar defaults peligrosos de PostgreSQL (H4-11) | PRODUCT | IMPLEMENTED | — | codex | claude | Alias H4-11 | PR #5 | [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md) | [docs/evidence/mp-023/README.md](evidence/mp-023/README.md); [docs/evidence/mp-023/ROUND2.md](evidence/mp-023/ROUND2.md); [docs/operations/DATABASE_ISOLATION.md](operations/DATABASE_ISOLATION.md) |
-| MP-024 | Enmienda de ADR-0014 (estado de parada) (H4-00) | PRODUCT | IMPLEMENTED | — | claude | codex | Alias H4-00 | — | [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md) | [docs/adr/0014-amendment-stop-state.md](adr/0014-amendment-stop-state.md); [docs/evidence/mp-024/README.md](evidence/mp-024/README.md); [docs/evidence/mp-024/stop_state_comparison.py](evidence/mp-024/stop_state_comparison.py); [docs/adr/0014-amendment-owner-decision.md](adr/0014-amendment-owner-decision.md) |
+| MP-024 | Enmienda de ADR-0014 (estado de parada) (H4-00) | PRODUCT | IMPLEMENTED | — | claude | codex | Alias H4-00 | PR #7 | [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md) | [docs/adr/0014-amendment-stop-state.md](adr/0014-amendment-stop-state.md); [docs/evidence/mp-024/README.md](evidence/mp-024/README.md); [docs/evidence/mp-024/stop_state_comparison.py](evidence/mp-024/stop_state_comparison.py); [docs/adr/0014-amendment-owner-decision.md](adr/0014-amendment-owner-decision.md); [docs/governance/DISPATCH_LOG.md](governance/DISPATCH_LOG.md) |
 | MP-025a | Modelo de estado de parada: cierre determinista (H4-04) | PRODUCT | IMPLEMENTED | MP-024 | codex | claude | Alias H4-04 | PR #8 | [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md) | [docs/evidence/mp-025a/README.md](evidence/mp-025a/README.md); [docs/evidence/mp-025a/ronda2/README.md](evidence/mp-025a/ronda2/README.md); [docs/adr/0014-amendment-owner-decision.md](adr/0014-amendment-owner-decision.md) |
-| MP-025b | Validación Live del modelo de parada (H4-04) | PRODUCT | IN_PROGRESS | MP-025a, MP-028 | codex | claude | Alias H4-04 | PR #13 | [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md) | [docs/evidence/mp-025b/README.md](evidence/mp-025b/README.md); [docs/adr/0014-amendment-owner-decision.md](adr/0014-amendment-owner-decision.md) |
+| MP-025b | Validación Live del modelo de parada (H4-04) | PRODUCT | IN_PROGRESS | MP-025a, MP-028 | codex | claude | Alias H4-04 | PR #13 | [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md) | [docs/evidence/mp-025b/README.md](evidence/mp-025b/README.md); [docs/adr/0014-amendment-owner-decision.md](adr/0014-amendment-owner-decision.md); [docs/evidence/mp-038/JORNADA2.md](evidence/mp-038/JORNADA2.md) |
 | MP-026a | FR-02 replay ?at= y FR-19 vigencia GTFS (H4-01) | PRODUCT | IMPLEMENTED | — | codex | claude | Alias H4-01 | PR #6 | [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md) | [docs/evidence/mp-026a/README.md](evidence/mp-026a/README.md); [docs/operations/GTFS_STATIC_REFRESH.md](operations/GTFS_STATIC_REFRESH.md); [docs/DATA_CONTRACTS.md](DATA_CONTRACTS.md); [docs/evidence/mp-026a/CLOCK_ROBUSTNESS.md](evidence/mp-026a/CLOCK_ROBUSTNESS.md) |
 | MP-026b | FR-07 snapshot consistente (H4-01) | PRODUCT | IMPLEMENTED | MP-024 | codex | claude | Alias H4-01 | PR #9 | [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md) | [docs/evidence/mp-026b/README.md](evidence/mp-026b/README.md); [docs/adr/0014-amendment-owner-decision.md](adr/0014-amendment-owner-decision.md) |
 | MP-027 | Portada, legal y puertas falsables (H4-10) | PRODUCT | PLANNED | — | claude | codex | Alias H4-10 | — | [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md) | — |
-| MP-028 | Captura en vivo (≥2 h, ≥3 días) (H4-12) | PRODUCT | IN_PROGRESS | MP-023 | codex | claude | Alias H4-12 | PR #12 | [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md) | [docs/operations/CAPTURE_PROTOCOL.md](operations/CAPTURE_PROTOCOL.md); [docs/adr/0014-amendment-owner-decision.md](adr/0014-amendment-owner-decision.md) |
+| MP-028 | Captura en vivo (≥2 h, ≥3 días) (H4-12) | PRODUCT | IN_PROGRESS | MP-023 | codex | claude | Alias H4-12 | PR #12 | [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md) | [docs/operations/CAPTURE_PROTOCOL.md](operations/CAPTURE_PROTOCOL.md); [docs/evidence/mp-025b/README.md](evidence/mp-025b/README.md); [docs/evidence/mp-038/JORNADA2.md](evidence/mp-038/JORNADA2.md); [docs/governance/DISPATCH_LOG.md](governance/DISPATCH_LOG.md) |
 | MP-029 | Corredores, ramales y catálogo honesto (H4-03) | PRODUCT | PLANNED | MP-024 | codex | claude | Alias H4-03 | — | [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md) | — |
-| MP-030 | Interfaz: procedencia y rótulos veraces (H4-05) | PRODUCT | IMPLEMENTED | MP-024 | codex | claude | Alias H4-05 | PR #11 | [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md) | [docs/evidence/mp-030/README.md](evidence/mp-030/README.md); [docs/adr/0014-amendment-owner-decision.md](adr/0014-amendment-owner-decision.md) |
+| MP-030 | Interfaz: procedencia y rótulos veraces (H4-05) | PRODUCT | IMPLEMENTED | MP-024 | codex | claude | Alias H4-05 | PR #11 | [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md) | [docs/evidence/mp-030/README.md](evidence/mp-030/README.md); [docs/adr/0014-amendment-owner-decision.md](adr/0014-amendment-owner-decision.md); [docs/CHANGELOG.md](CHANGELOG.md); [docs/governance/DISPATCH_LOG.md](governance/DISPATCH_LOG.md) |
 | MP-031 | Métricas de cierre honestas (H4-06) | PRODUCT | PLANNED | MP-028 | claude | codex | Alias H4-06 | — | [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md) | — |
 | MP-032 | Operación supervisada local medida (H4-07) | PRODUCT | PLANNED | MP-023 | codex | claude | Alias H4-07 | — | [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md) | — |
 | MP-033 | Rendimiento y coste (H4-08) | PRODUCT | PLANNED | MP-026a, MP-026b, MP-032 | codex | claude | Alias H4-08 | — | [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md) | — |
@@ -656,19 +656,20 @@ Dos ramas pueden avanzar en paralelo en worktrees independientes una vez resuelt
 | D-16 | Backups con restauración probada | LIVE_STAGING | PLANNED | D-11 | codex | claude | Relacionadas MP-032 | — | [docs/deployment/MVP_RELEASE_CHECKLIST.md](deployment/MVP_RELEASE_CHECKLIST.md) | — |
 | D-17 | CD por SSH con aprobación manual | LIVE_STAGING | PLANNED | D-11 | codex | claude | Relacionadas MP-032 | — | [docs/deployment/MVP_RELEASE_CHECKLIST.md](deployment/MVP_RELEASE_CHECKLIST.md) | — |
 | D-18 | Operación supervisada ≥24 h (ideal 72 h) | LIVE_STAGING | PLANNED | D-11, D-12, D-14, D-15, D-16 | claude | codex | Relacionadas MP-032 | — | [docs/deployment/MVP_RELEASE_CHECKLIST.md](deployment/MVP_RELEASE_CHECKLIST.md) | — |
-| DES-00 | Baseline y verificación de restricciones | DESIGN | PLANNED | — | claude | codex | — | — | [docs/design/DESIGN_DISCOVERY_A_B_C.md](design/DESIGN_DISCOVERY_A_B_C.md) | — |
-| DES-01 | Inspección real y capturas del frontend existente (Claude + preflight de DevTools/Playwright) | DESIGN | PLANNED | DES-00 | claude | codex | — | — | [docs/design/DESIGN_DISCOVERY_A_B_C.md](design/DESIGN_DISCOVERY_A_B_C.md) | — |
-| DES-02 | Comparación de fuentes de diseño (frontend-design, Hallmark, Impeccable) | DESIGN | PLANNED | DES-00 | claude | codex | — | — | [docs/design/DESIGN_DISCOVERY_A_B_C.md](design/DESIGN_DISCOVERY_A_B_C.md) | — |
-| DES-03 | Brief y tres conceptos A/B/C | DESIGN | PLANNED | DES-01, DES-02 | claude | codex | — | — | [docs/design/DESIGN_DISCOVERY_A_B_C.md](design/DESIGN_DISCOVERY_A_B_C.md) | — |
-| DES-04 | Prototipo A Titanium Control | DESIGN | PLANNED | DES-03 | claude | codex | — | — | [docs/design/DESIGN_DISCOVERY_A_B_C.md](design/DESIGN_DISCOVERY_A_B_C.md) | — |
-| DES-05 | Prototipo B Immersive Rail Map | DESIGN | PLANNED | DES-03 | claude | codex | — | — | [docs/design/DESIGN_DISCOVERY_A_B_C.md](design/DESIGN_DISCOVERY_A_B_C.md) | — |
-| DES-06 | Prototipo C Contemporary Signal | DESIGN | PLANNED | DES-03 | claude | codex | — | — | [docs/design/DESIGN_DISCOVERY_A_B_C.md](design/DESIGN_DISCOVERY_A_B_C.md) | — |
-| DES-07 | Comparativa de iconografía ferroviaria | DESIGN | PLANNED | DES-03 | codex | claude | — | — | [docs/design/DESIGN_DISCOVERY_A_B_C.md](design/DESIGN_DISCOVERY_A_B_C.md) | — |
-| DES-08 | Verificación comparativa A/B/C en navegador real (Claude + preflight; Codex audita código y artefactos) | DESIGN | PLANNED | DES-04, DES-05, DES-06, DES-07 | claude | codex | — | — | [docs/design/DESIGN_DISCOVERY_A_B_C.md](design/DESIGN_DISCOVERY_A_B_C.md) | — |
-| DES-09 | Índice comparativo y gate humano de elección | DESIGN | PLANNED | DES-08 | claude | codex | — | — | [docs/design/DESIGN_DISCOVERY_A_B_C.md](design/DESIGN_DISCOVERY_A_B_C.md) | — |
-| MP-036 | Fallback del motor: una observación rechazada no reaparece como ancla aceptada (A→B→A) | PRODUCT | IMPLEMENTED | — | codex | claude | — | PR #15 | [docs/roadmap/CROSSWALK.md](roadmap/CROSSWALK.md) | [docs/evidence/mp-036/README.md](evidence/mp-036/README.md) |
+| DES-00 | Baseline y verificación de restricciones | DESIGN | PLANNED | — | claude | codex | — | — | [docs/design/DESIGN_DISCOVERY_A_B_C.md](design/DESIGN_DISCOVERY_A_B_C.md) | [docs/design/DESIGN_DISCOVERY_EXECUTION_OVERRIDES.md](design/DESIGN_DISCOVERY_EXECUTION_OVERRIDES.md) |
+| DES-01 | Inspección real y capturas del frontend existente (Claude + preflight de DevTools/Playwright) | DESIGN | PLANNED | DES-00 | claude | codex | — | — | [docs/design/DESIGN_DISCOVERY_A_B_C.md](design/DESIGN_DISCOVERY_A_B_C.md) | [docs/design/DESIGN_DISCOVERY_EXECUTION_OVERRIDES.md](design/DESIGN_DISCOVERY_EXECUTION_OVERRIDES.md) |
+| DES-02 | Comparación de fuentes de diseño (frontend-design, Hallmark, Impeccable) | DESIGN | PLANNED | DES-00 | claude | codex | — | — | [docs/design/DESIGN_DISCOVERY_A_B_C.md](design/DESIGN_DISCOVERY_A_B_C.md) | [docs/design/DESIGN_DISCOVERY_EXECUTION_OVERRIDES.md](design/DESIGN_DISCOVERY_EXECUTION_OVERRIDES.md) |
+| DES-03 | Brief y tres conceptos A/B/C | DESIGN | PLANNED | DES-01, DES-02 | claude | codex | — | — | [docs/design/DESIGN_DISCOVERY_A_B_C.md](design/DESIGN_DISCOVERY_A_B_C.md) | [docs/design/DESIGN_DISCOVERY_EXECUTION_OVERRIDES.md](design/DESIGN_DISCOVERY_EXECUTION_OVERRIDES.md) |
+| DES-04 | Prototipo A Titanium Control | DESIGN | PLANNED | DES-03 | claude | codex | — | — | [docs/design/DESIGN_DISCOVERY_A_B_C.md](design/DESIGN_DISCOVERY_A_B_C.md) | [docs/design/DESIGN_DISCOVERY_EXECUTION_OVERRIDES.md](design/DESIGN_DISCOVERY_EXECUTION_OVERRIDES.md) |
+| DES-05 | Prototipo B Immersive Rail Map | DESIGN | PLANNED | DES-03 | claude | codex | — | — | [docs/design/DESIGN_DISCOVERY_A_B_C.md](design/DESIGN_DISCOVERY_A_B_C.md) | [docs/design/DESIGN_DISCOVERY_EXECUTION_OVERRIDES.md](design/DESIGN_DISCOVERY_EXECUTION_OVERRIDES.md) |
+| DES-06 | Prototipo C Contemporary Signal | DESIGN | PLANNED | DES-03 | claude | codex | — | — | [docs/design/DESIGN_DISCOVERY_A_B_C.md](design/DESIGN_DISCOVERY_A_B_C.md) | [docs/design/DESIGN_DISCOVERY_EXECUTION_OVERRIDES.md](design/DESIGN_DISCOVERY_EXECUTION_OVERRIDES.md) |
+| DES-07 | Comparativa de iconografía ferroviaria | DESIGN | PLANNED | DES-03 | codex | claude | — | — | [docs/design/DESIGN_DISCOVERY_A_B_C.md](design/DESIGN_DISCOVERY_A_B_C.md) | [docs/design/DESIGN_DISCOVERY_EXECUTION_OVERRIDES.md](design/DESIGN_DISCOVERY_EXECUTION_OVERRIDES.md) |
+| DES-08 | Verificación comparativa A/B/C en navegador real (Claude + preflight; Codex audita código y artefactos) | DESIGN | PLANNED | DES-04, DES-05, DES-06, DES-07 | claude | codex | — | — | [docs/design/DESIGN_DISCOVERY_A_B_C.md](design/DESIGN_DISCOVERY_A_B_C.md) | [docs/design/DESIGN_DISCOVERY_EXECUTION_OVERRIDES.md](design/DESIGN_DISCOVERY_EXECUTION_OVERRIDES.md) |
+| DES-09 | Índice comparativo y gate humano de elección | DESIGN | PLANNED | DES-08 | claude | codex | — | — | [docs/design/DESIGN_DISCOVERY_A_B_C.md](design/DESIGN_DISCOVERY_A_B_C.md) | [docs/design/DESIGN_DISCOVERY_EXECUTION_OVERRIDES.md](design/DESIGN_DISCOVERY_EXECUTION_OVERRIDES.md) |
+| MP-036 | Fallback del motor: una observación rechazada no reaparece como ancla aceptada (A→B→A) | PRODUCT | IMPLEMENTED | — | codex | claude | — | PR #15 | [docs/roadmap/CROSSWALK.md](roadmap/CROSSWALK.md) | [docs/evidence/mp-036/README.md](evidence/mp-036/README.md); [docs/evidence/mp-038/JORNADA2.md](evidence/mp-038/JORNADA2.md) |
 | MP-037 | Estudio de contradicciones de estado: M7 frente a R4 y STOPPED_AT incoherente con el GPS | PRODUCT | IMPLEMENTED | MP-025b | codex | claude | — | PR #16 | [docs/roadmap/CROSSWALK.md](roadmap/CROSSWALK.md) | [docs/evidence/mp-037/README.md](evidence/mp-037/README.md) |
 | MP-038 | Evaluación comparable antes/después sobre las mismas entradas | PRODUCT | IMPLEMENTED | MP-025b, MP-036, MP-037 | codex | claude | — | PR #17 | [docs/roadmap/CROSSWALK.md](roadmap/CROSSWALK.md) | [docs/evidence/mp-038/README.md](evidence/mp-038/README.md); [docs/evidence/mp-038/JORNADA2.md](evidence/mp-038/JORNADA2.md) |
+| GOV-TRACKING | Seguimiento recuperable del plan | GOVERNANCE | IMPLEMENTED | — | codex | claude | — | PR #14 | [docs/governance/UPDATE_PROTOCOL.md](governance/UPDATE_PROTOCOL.md) | [docs/governance/DISPATCH_LOG.md](governance/DISPATCH_LOG.md); [tests/governance/test_governance.py](../tests/governance/test_governance.py); [docs/STATUS.md](STATUS.md) |
 
 ### Alias (mismo trabajo, otro identificador)
 
@@ -682,5 +683,1223 @@ Dos ramas pueden avanzar en paralelo en worktrees independientes una vez resuelt
 - **PROPUESTA sin ID asignado** · Staging Live en VPS (Docker, Caddy, backups) como tarea propia. El plan lo llama subalcance de MP-032; si MP-032 (operación medida) se desborda, separar evita mezclar medición con despliegue. Sin ID asignado hasta decisión del propietario. Origen: OPS-01, OPS-02, D-11, D-17.
 - **PROPUESTA sin ID asignado** · PoC de snapshot publisher y manifest versionado. SRV-01/SRV-02 no tienen tarea MP; el plan los difiere hasta que haya beta Live y métricas que lo justifiquen. Origen: SRV-01, SRV-02.
 - **PROPUESTA sin ID asignado** · Build geográfico reproducible (grafo OSM/Geofabrik). GEO-03 excede el alcance de MP-029 si el PoC de grafo (GEO-02) tiene éxito. Origen: GEO-02, GEO-03.
+
+### Fichas de reanudación
+
+#### Reanudar MP-007
+
+Collector idempotente
+
+- **Última actualización** · 2026-11-19
+- **Criterio de cierre** · Soak de 24 h de ingesta real (F3); conservar volcado, cobertura y errores.
+- **Implementación** · IMPLEMENTED_WITH_OPEN_GATE
+- **Revisión** · APPROVED
+- **Integración** · MERGED
+- **Validación** · PROVISIONAL
+- **Despliegue** · NOT_DEPLOYED
+- **Terminado** · Colector idempotente revisado; soak corto de 20 min (668 posiciones).
+- **Pendiente** · Evidencia de 24 h de ingesta.
+- **Motivo** · Gate F3 abierto; el soak disponible es corto.
+- **Dependencias** · MP-005, MP-006
+- **Condición para retomar** · MP-032 autorizado y entorno aislado disponible.
+- **Próxima acción** · Ejecutar y documentar el soak de 24 h en la operación aislada de MP-032.
+- **Ejecutor** · claude
+- **Revisor** · codex
+- **Fecha de revisión** · 2026-11-19
+- **HEAD revisado** · 6654516
+- **Rama** · mp-007-collector
+- **Commit de referencia** · 6654516
+- **PR** · 1
+- **Merge** · f567d3c
+- **Ficha de alcance** · [docs/TASKS.md](TASKS.md)
+- **Evidencias** · [docs/TASKS.md#mp-007--collector-idempotente](TASKS.md#mp-007--collector-idempotente)
+
+Gate literal de F3 (24 h de ingesta) sin evidencia: el soak real disponible es una ventana corta (668 filas). Ver MP-032.
+
+#### Reanudar MP-009
+
+Exportador histórico (Parquet particionado)
+
+- **Última actualización** · 2026-11-19
+- **Criterio de cierre** · Reproducir un día de servicio completo tras exportar a Parquet (F4).
+- **Implementación** · IMPLEMENTED_WITH_OPEN_GATE
+- **Revisión** · APPROVED
+- **Integración** · MERGED
+- **Validación** · PROVISIONAL
+- **Despliegue** · NOT_DEPLOYED
+- **Terminado** · Exportación y replay revisados sobre la ventana registrada.
+- **Pendiente** · Demostrar replay de un día de servicio completo.
+- **Motivo** · Gate F4 abierto; cobertura parcial.
+- **Dependencias** · MP-007, MP-008
+- **Condición para retomar** · Captura de un día con cobertura acreditada; ver MP-028/MP-032.
+- **Próxima acción** · Exportar y reproducir un día completo a partir de una captura con cobertura acreditada.
+- **Ejecutor** · claude
+- **Revisor** · codex
+- **Fecha de revisión** · 2026-11-19
+- **HEAD revisado** · 8be1272
+- **Rama** · mp-009-historical-export
+- **Commit de referencia** · 8be1272
+- **PR** · 1
+- **Merge** · f567d3c
+- **Ficha de alcance** · [docs/TASKS.md](TASKS.md)
+- **Evidencias** · [docs/TASKS.md#mp-009--exportador-histórico-parquet-particionado](TASKS.md#mp-009--exportador-histórico-parquet-particionado)
+
+Replay de 'un día completo' sin evidencia: el archivo real cubre la ventana de soak. Ver MP-028/MP-032.
+
+#### Reanudar MP-023
+
+Eliminar defaults peligrosos de PostgreSQL (H4-11)
+
+- **Última actualización** · 2026-11-27
+- **Criterio de cierre** · RED/GREEN y fallo seguro con DSN ausente o inválido en entorno desechable.
+- **Implementación** · IMPLEMENTED
+- **Revisión** · APPROVED
+- **Integración** · MERGED
+- **Validación** · VALIDATED
+- **Despliegue** · NOT_DEPLOYED
+- **Terminado** · Defaults seguros y fallo antes de conectar; PR #5.
+- **Ejecutor** · codex
+- **Revisor** · claude
+- **Fecha de revisión** · 2026-11-25
+- **HEAD revisado** · becaf7f
+- **Rama** · pedromaaz13/mp-023-db-segura
+- **Commit de referencia** · c005dcd
+- **PR** · 5
+- **Merge** · 4b80ce7
+- **Ficha de alcance** · [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md)
+- **Evidencias** · [docs/evidence/mp-023/README.md](evidence/mp-023/README.md); [docs/evidence/mp-023/ROUND2.md](evidence/mp-023/ROUND2.md); [docs/operations/DATABASE_ISOLATION.md](operations/DATABASE_ISOLATION.md)
+
+Implementada y aprobada por Claude Sonnet High en 2 rondas (0 B). Regresión RED en beb9434 / GREEN; suite de 28 módulos 283 tests/18 skipped sobre PostgreSQL desechable propio (puerto 5451; revisor 5461); 5433 no tocada. Recomendaciones registradas y no aplicadas: A5 (arnés de aislamiento no está en CI), A6 parcial (suite con entorno vacío: 12 errores, solo molestia local), A7 (reinicio del supervisor ante error de configuración), A10 (cambios menores en export.py y measure-cost.py). Integrada en main por PR #5 (merge commit 4b80ce7, 2026-11-25) por autorización del propietario.
+
+#### Reanudar MP-024
+
+Enmienda de ADR-0014 (estado de parada) (H4-00)
+
+- **Última actualización** · 2026-11-27
+- **Criterio de cierre** · Dirección autorizada por el propietario, comparación reproducible y revisión de la corrección final.
+- **Implementación** · IMPLEMENTED
+- **Revisión** · CHANGES_REQUESTED
+- **Integración** · MERGED
+- **Validación** · PROVISIONAL
+- **Despliegue** · NOT_DEPLOYED
+- **Terminado** · Enmienda 1 y decisión de dirección integradas (#7); alcance del ADR base aclarado (#10).
+- **Pendiente** · Revisión independiente del ajuste final y evidencia de visibilidad histórica.
+- **Motivo** · CHANGES_REQUESTED parcial (B2); corrección 68d7df7 sin re-verificación.
+- **Gates humanos** · HG-ADR-0014
+- **Condición para retomar** · Revisor independiente disponible.
+- **Próxima acción** · Revisar 68d7df7 y comprobar si hay evidencia de visibilidad por hora civil.
+- **Ejecutor** · claude
+- **Revisor** · codex
+- **Fecha de revisión** · 2026-11-25
+- **HEAD revisado** · c7b4df6
+- **Rama** · pedromaaz13/mp-024-adr-estado-parada
+- **Commit de referencia** · 68d7df7
+- **PR** · 7
+- **Merge** · 2b71d17a6623a54ff63fb57d7fe9203f80c61724
+- **Decisiones del propietario** · Resolver la promoción del ADR-0014 base: §§1, 4, 6, 7, 8, alternativas y consecuencias., Decidir el nombre contractual del campo de cancelación tras verificar el contrato de la fuente.
+- **Ficha de alcance** · [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md)
+- **Evidencias** · [docs/adr/0014-amendment-stop-state.md](adr/0014-amendment-stop-state.md); [docs/evidence/mp-024/README.md](evidence/mp-024/README.md); [docs/evidence/mp-024/stop_state_comparison.py](evidence/mp-024/stop_state_comparison.py); [docs/adr/0014-amendment-owner-decision.md](adr/0014-amendment-owner-decision.md); [docs/governance/DISPATCH_LOG.md](governance/DISPATCH_LOG.md)
+
+Propuesta de enmienda de ADR-0014 (estado Propuesto) con evidencia comparativa reproducible. Ejecutor Claude Opus High (argv verificado); revisor Codex Astra High (recibo de Orca; esfuerzo no verificable en argv). Ronda 1: CHANGES_REQUESTED (7 B, 4 A). Ronda 2: B1, B3, B4, B7, A1, A2, A4 resueltos; B2, B5, B6, A3 parciales. Verificación focalizada del delta final (autorizada por el propietario, sobre c7b4df6): B5, B6 y A3 RESUELTOS; B2 PARCIAL solo en la garantía de replay por hora (started_at vs visibilidad del commit). Corrección posterior (68d7df7): garantía de replay acotada a «reconstrucción exacta dado el identificador del ancla/run»; la visibilidad histórica por hora queda UNVERIFIED para MP-026b/MP-032; NO re-verificada. Sin dictamen APPROVED. DECISIÓN DEL PROPIETARIO (2026-11-25): dirección aprobada (A con C como R8, F1, P-024 provisional) con limitaciones aceptadas; HG-ADR-0014 = APPROVED_BY_OWNER solo para esa dirección. El dictamen de revisor sigue CHANGES_REQUESTED y los supuestos UNVERIFIED siguen sin validar. Integración verificada: PR #7 (2b71d17, 2026-11-25) incorporó la enmienda y decisión; PR #10 (a0267c8, 2026-11-26) incorporó la aclaración sobre ADR base. F1 para R-STALE ya se decidió; F2 deja de ser una decisión pendiente. El ADR base sigue Propuesto; sus decisiones residuales no bloquean la entrega de la enmienda.
+
+#### Reanudar MP-025a
+
+Modelo de estado de parada: cierre determinista (H4-04)
+
+- **Última actualización** · 2026-11-27
+- **Criterio de cierre** · Equivalencia Python↔TypeScript, RED en beb9434 y GREEN en cortes congelados; validación Live en MP-025b.
+- **Implementación** · IMPLEMENTED
+- **Revisión** · APPROVED
+- **Integración** · MERGED
+- **Validación** · VALIDATED
+- **Despliegue** · NOT_DEPLOYED
+- **Terminado** · Motor de parada y cierre determinista RED/GREEN; PR #8.
+- **Dependencias** · MP-024
+- **Gates humanos** · HG-ADR-0014
+- **Ejecutor** · codex
+- **Revisor** · claude
+- **Fecha de revisión** · 2026-11-25
+- **HEAD revisado** · 0f0ce54
+- **Rama** · pedromaaz13/mp-025a-estado-parada
+- **Commit de referencia** · 0f0ce54
+- **PR** · 8
+- **Merge** · c490f42
+- **Ficha de alcance** · [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md)
+- **Evidencias** · [docs/evidence/mp-025a/README.md](evidence/mp-025a/README.md); [docs/evidence/mp-025a/ronda2/README.md](evidence/mp-025a/ronda2/README.md); [docs/adr/0014-amendment-owner-decision.md](adr/0014-amendment-owner-decision.md)
+
+Implementación del motor aprobado (ADR-0014 enmienda 1: A con C como R8, F1, P-024 provisional). Ejecutor Codex gpt-6.2-astra high (recibo de Orca; argv no verificable); revisor Claude Opus 5.5 high (argv verificado): ronda 1 CHANGES_REQUESTED (3 B, 10 A); ronda 2 APPROVED sobre 0f0ce54. RED en beb9434 / GREEN; suite 315 tests con 18 skipped, Vitest 110. Incluye migraciones 0003 y 0004 (marca de carga retroactiva por trigger y huella de versión por run; idempotentes y reversibles; CAMBIO DE ESQUEMA persistente: no aplicar a la BD 5433 sin decisión del propietario), bloqueo de colector único y señalización de cancelaciones. NO cierra FR-01: se cierra solo con MP-025b sobre >=500 pares en vivo. Supuestos UNVERIFIED siguen sin validar (semántica en vivo IN_TRANSIT_TO/INCOMING_AT, latencia de salidas retenidas, salto de recuperación ~311 m, replay exacto por hora civil sin garantía). Recomendaciones documentadas sin implementar: A2 (bloqueo huérfano con SIGSTOP), A4, A8, A9, A10; descubrimiento no bloqueante: test_collector_without_gtfs_holds_from_first_frame no puede fallar. Rótulos de UI y vigencia desde snapshot siguen pendientes de MP-030. Actualiza 5 expectativas de pruebas previas, autorizadas y documentadas una a una. Autorizada por el propietario el 2026-11-25. Integrada en main por PR #8 (merge commit c490f42, 2026-11-26) por autorización del propietario. Las migraciones 0003 y 0004 NO se aplican a la BD 5433. FR-01 sigue abierto hasta MP-025b; no cierra HG-H4-SCOPE.
+
+#### Reanudar MP-025b
+
+Validación Live del modelo de parada (H4-04)
+
+- **Última actualización** · 2026-11-27
+- **Criterio de cierre** · Validación Live (≥500 pares, salto p50 ≤200 m), con estratos, salidas retenidas, F1 y dictamen sobre FR-01.
+- **Implementación** · IN_PROGRESS
+- **Revisión** · APPROVED
+- **Integración** · MERGED
+- **Validación** · PROVISIONAL
+- **Despliegue** · NOT_DEPLOYED
+- **Terminado** · Informe provisional de jornada 1 integrado (#13); comparación de jornada 2 en MP-038.
+- **Pendiente** · Validar motor con cohortes representativas y resolver FR-01.
+- **Motivo** · H1 en movimiento no cumple; falta jornada 3 y revisión de representatividad.
+- **Dependencias** · MP-025a, MP-028
+- **Bloqueos** · MP-028
+- **Condición para retomar** · Jornada 3 capturada y verificada.
+- **Próxima acción** · Tras MP-028, completar el contraste de las tres jornadas con los umbrales originales.
+- **Ejecutor** · codex
+- **Revisor** · claude
+- **Fecha de revisión** · 2026-11-26
+- **HEAD revisado** · cc7181b
+- **Rama** · pedromaaz13/mp-025b-validacion
+- **Commit de referencia** · cc7181b
+- **PR** · 13
+- **Merge** · d0dd0bc
+- **Ficha de alcance** · [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md)
+- **Evidencias** · [docs/evidence/mp-025b/README.md](evidence/mp-025b/README.md); [docs/adr/0014-amendment-owner-decision.md](adr/0014-amendment-owner-decision.md); [docs/evidence/mp-038/JORNADA2.md](evidence/mp-038/JORNADA2.md)
+
+Validación PROVISIONAL del motor sobre la jornada 1 de MP-028 (1 de 3 jornadas; ~2 h efectivas tras excluir un hueco de 59,5 min por suspensión del equipo). Ejecutor Codex gpt-6.2-astra high (harness e informe; recibo de Orca); correcciones por sustitución registrada: Codex gpt-6.2-sol medium (recibo de Orca; en lugar de Astra High por economía); revisor Claude Opus 5.5 high (argv verificado): revisión completa CHANGES_REQUESTED (2 B, 4 A); verificación del delta cc7181b APPROVED (B1, B2, A1-A4 resueltos; resultados previos idénticos con cmp; sin descubrimientos nuevos). APPROVED significa que el INFORME provisional es correcto y honesto; NO valida el motor ni cierra FR-01. Resultados: H1 cumple literalmente (11 425 pares, p50 0 m) pero no es informativo; H1 estratificado NO cumple en movimiento (p50 963,5 m con avance >=100 m, n=1 843; 499,8 m en IN_TRANSIT_TO, n=2 240); STOPPED_AT con avance 19/7 001 planes (GPS fantasma por cuantización del feed, semántica UNVERIFIED); M7 adversa 135/1 441; salidas retenidas 402/6 918 (latencia máx 49 s); F1 0/65 retrocesos. FR-01 permanece ABIERTO. Hallazgos propuestos (no aceptados, tareas nuevas): reaparición del GPS rechazado (engine.py:110-124; 416 tríadas A→B→A) y preferir stop_id con STOPPED_AT frente a un GPS incoherente. Pendientes: jornada 3 y revisión de representatividad; la jornada 2 se evalúa en MP-038. Autorizada por el propietario el 2026-11-26; Integrada en main por PR #13 (merge commit d0dd0bc, 2026-11-26) como informe PROVISIONAL por autorización del propietario: no valida el motor ni cierra FR-01.
+
+#### Reanudar MP-026a
+
+FR-02 replay ?at= y FR-19 vigencia GTFS (H4-01)
+
+- **Última actualización** · 2026-11-27
+- **Criterio de cierre** · RED/GREEN de edades negativas y vigencia GTFS; evidencia integrada para el cierre de los hallazgos.
+- **Implementación** · IMPLEMENTED
+- **Revisión** · APPROVED
+- **Integración** · MERGED
+- **Validación** · PROVISIONAL
+- **Despliegue** · NOT_DEPLOYED
+- **Terminado** · Correcciones de replay y vigencia integradas (#6); Actions del PR en verde.
+- **Pendiente** · Verificar el cierre de FR-02 y FR-19 en la validación integrada.
+- **Motivo** · FR-02 sigue OPEN. Falta comprobar: cierre en validación integrada.
+- **Condición para retomar** · Replay de aceptación en un entorno integrado y aislado.
+- **Próxima acción** · Reproducir el replay antes del primer dato y GTFS vencido en la validación integrada.
+- **Ejecutor** · codex
+- **Revisor** · claude
+- **Fecha de revisión** · 2026-11-25
+- **HEAD revisado** · ec45d95
+- **Rama** · pedromaaz13/mp-026a-replay-gtfs
+- **Commit de referencia** · ec45d95
+- **PR** · 6
+- **Merge** · 7a5312f
+- **Ficha de alcance** · [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md)
+- **Evidencias** · [docs/evidence/mp-026a/README.md](evidence/mp-026a/README.md); [docs/operations/GTFS_STATIC_REFRESH.md](operations/GTFS_STATIC_REFRESH.md); [docs/DATA_CONTRACTS.md](DATA_CONTRACTS.md); [docs/evidence/mp-026a/CLOCK_ROBUSTNESS.md](evidence/mp-026a/CLOCK_ROBUSTNESS.md)
+
+FR-02 (replay ?at=) y FR-19 (vigencia GTFS en ejecución) corregidos. Ejecutor Codex gpt-6.2-sol high (recibo de Orca; argv no verificable); revisor Claude Opus 5.5 high (argv verificado): ronda 1 CHANGES_REQUESTED (1 B, 6 A), ronda 2 APPROVED. RED en fe0ea85/beb9434 y GREEN; suite 296 tests con 18 skipped; web 89 tests. Contrato con 3 excepciones a «aditivo» declaradas y esquema 1.1. PROPUESTO (no aceptado): display_lag_s sin límite superior da 500 (preexistente). Robustez temporal (autorizada por el propietario): suite con reloj controlado en 8 fechas (2026-11-25 a 2027-01-15) con 298 tests/18 skipped; fechas de fixtures sin ampliar; replay histórico evalúa la vigencia contra el instante reproducido; delta de pruebas dd92247..ec45d95 APPROVED por Claude Opus High, aprobación del código funcional conservada en 70170c7. Rotulado de degradación integrado en MP-030; gh pr checks 6 confirmó frontend, governance y python en PASS. Integrada en main por PR #6 (merge commit 7a5312f, 2026-11-25) tras #5.
+
+#### Reanudar MP-026b
+
+FR-07 snapshot consistente (H4-01)
+
+- **Última actualización** · 2026-11-27
+- **Criterio de cierre** · RED/GREEN de carrera y lectura consistente intra-respuesta; medir coste.
+- **Implementación** · IMPLEMENTED
+- **Revisión** · APPROVED
+- **Integración** · MERGED
+- **Validación** · VALIDATED
+- **Despliegue** · NOT_DEPLOYED
+- **Terminado** · Snapshot y tablero consistentes por respuesta; PR #9.
+- **Dependencias** · MP-024
+- **Gates humanos** · HG-ADR-0014
+- **Ejecutor** · codex
+- **Revisor** · claude
+- **Fecha de revisión** · 2026-11-25
+- **HEAD revisado** · ff5e6ad
+- **Rama** · pedromaaz13/mp-026b-snapshot-consistente
+- **Commit de referencia** · ff5e6ad
+- **PR** · 9
+- **Merge** · 4bc8612
+- **Ficha de alcance** · [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md)
+- **Evidencias** · [docs/evidence/mp-026b/README.md](evidence/mp-026b/README.md); [docs/adr/0014-amendment-owner-decision.md](adr/0014-amendment-owner-decision.md)
+
+Lectura consistente de snapshot y tablero (ADR-0014 enmienda §4.7, FR-07): una transacción REPEATABLE READ de solo lectura por petición. Ejecutor Codex gpt-6.2-sol high (recibo de Orca; argv no verificable); revisor Claude Opus 5.5 high (argv verificado): APPROVED en la 1ª ronda (0 B, 4 A). RED 8/8 contra 1d9a424 (carrera de AUD-06 reproducida) y GREEN; suite 323 tests con 18 skipped (+36 de gobernanza); snapshot p50/p95 con 300 000 runs 1 484,90/1 605,30 → 206,44/239,72 ms. Garantía INTRA-respuesta: sequence es una cota, no identidad; visibilidad histórica por hora civil sigue UNVERIFIED. Recomendaciones no bloqueantes sin aplicar: A1 (el desempate/snapshot_id del tablero no es identidad de contenido, preexistente), A2 (sin statement_timeout ni pool; MP-032/033), A3 (consistent_read lanza ValueError con conexión ya en transacción), A4 (_revision_scope solo degrada con InsufficientPrivilege). NO cierra FR-01 ni HG-H4-SCOPE. Apilada sobre MP-025a (PR #8): rama pedromaaz13/mp-026b-snapshot-consistente; Integrada en main por PR #9 (merge commit 4bc8612, 2026-11-26) tras #8. gh pr checks 9 confirmó frontend, governance y python en PASS. La visibilidad histórica por hora permanece UNVERIFIED.
+
+#### Reanudar MP-027
+
+Portada, legal y puertas falsables (H4-10)
+
+- **Última actualización** · 2026-11-27
+- **Criterio de cierre** · Aprobación humana donde indica docs/H4_MP_MAPPING.md; prueba RED en beb9434 y GREEN tras el fix
+- **Implementación** · PLANNED
+- **Revisión** · NOT_REVIEWED
+- **Integración** · NOT_INTEGRATED
+- **Validación** · NOT_VALIDATED
+- **Despliegue** · NOT_DEPLOYED
+- **Terminado** · Alcance documentado.
+- **Pendiente** · Criterios de portada, atribución y teselas.
+- **Motivo** · Alcance general H4 pendiente de autorización.
+- **Gates humanos** · HG-TILES
+- **Bloqueos** · HG-H4-SCOPE, HG-TILES
+- **Condición para retomar** · Autorización de alcance y resolución de condiciones de la ficha.
+- **Próxima acción** · Revisar condiciones y presentar proveedor de teselas.
+- **Ejecutor** · claude
+- **Revisor** · codex
+- **Commit de referencia** · UNKNOWN
+- **Decisiones del propietario** · Autorizar alcance H4; elegir proveedor de teselas y confirmar condiciones, DEC-002/003 según la ficha.
+- **Ficha de alcance** · [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md)
+
+Planificada; implementación H4 no autorizada.
+
+#### Reanudar MP-028
+
+Captura en vivo (≥2 h, ≥3 días) (H4-12)
+
+- **Última actualización** · 2026-11-27
+- **Criterio de cierre** · Tres días distintos con ≥120 min efectivos por jornada, cierre limpio, manifiesto v2 y volcado con SHA-256.
+- **Implementación** · IN_PROGRESS
+- **Revisión** · APPROVED
+- **Integración** · MERGED
+- **Validación** · PROVISIONAL
+- **Despliegue** · NOT_DEPLOYED
+- **Terminado** · 2/3 jornadas completadas; supervisor corregido integrado (#12).
+- **Pendiente** · Jornada 3 pendiente de ejecución, sin programar.
+- **Motivo** · Falta confirmar disponibilidad del Mac y ventana de servicio.
+- **Dependencias** · MP-023
+- **Gates humanos** · HG-CAPTURE
+- **Condición para retomar** · Ventana confirmada para capturar antes de que venza el GTFS (2026-12-18).
+- **Próxima acción** · Acordar ventana y ejecutar el protocolo versionado.
+- **Ejecutor** · codex
+- **Revisor** · claude
+- **Fecha de revisión** · 2026-11-26
+- **HEAD revisado** · 172aa1b
+- **Rama** · pedromaaz13/mp-028-captura
+- **Commit de referencia** · 172aa1b
+- **PR** · 12
+- **Merge** · 2ffaee4fe51ed03937b01cadaa8e69dd5f86e711
+- **Decisiones del propietario** · Confirmar la ventana de servicio y disponibilidad del Mac para la jornada 3.
+- **Ficha de alcance** · [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md)
+- **Evidencias** · [docs/operations/CAPTURE_PROTOCOL.md](operations/CAPTURE_PROTOCOL.md); [docs/evidence/mp-025b/README.md](evidence/mp-025b/README.md); [docs/evidence/mp-038/JORNADA2.md](evidence/mp-038/JORNADA2.md); [docs/governance/DISPATCH_LOG.md](governance/DISPATCH_LOG.md)
+
+Preparación y smoke: Claude Sonnet 5.5 high aprobó a5ddc9b (300,09 s, 10/10 ciclos por feed, 212 posiciones y 24 vehículos). El delta 172aa1b recibió APPROVED para el supervisor (18 pruebas, 13 regresiones en a5ddc9b; suspensión simulada, falta comprobar: suspensión real del Mac). PR #12 integrado el 2026-11-27 (2ffaee4f). Jornada 1: 2026-11-26, ≥2 h efectivas tras excluir el hueco de suspensión (ver MP-025b). Jornada 2: 2026-11-27 07:54–09:54 UTC, 7 230 s efectivos, sin huecos, 235/235 ciclos por feed, volcado `session-2-20261127T095451Z.dump`, SHA-256 `6a325074c48c021428084af9741772187204f8abc8862cd22376e7ff922ca75f`, HEAD del colector `7300003`. Jornada 3 sigue prevista, pendiente de ejecución y sin programar. El prototipado de diseño puede empezar en paralelo. Preflight: Mac conectado al cargador y con tapa abierta, Docker y red operativos, ventana de servicio confirmada antes del fin de vigencia del GTFS (2026-12-18), worktree limpio y HEAD registrado. Desde el worktree de captura, seguir CAPTURE_PROTOCOL.md y lanzar desacoplado con `nohup caffeinate -i -s python infra/operate/capture/run-session.py 120 --max-civil-minutes 360 --gap-seconds 120 > jornada-3.log 2>&1 &` (usar el Python del entorno de captura). Verificar cierre y cobertura en `manifest.json` y ejecutar `shasum -a 256 -c capture.dump.sha256` desde el directorio de la sesión. Los datos quedan privados. Falta comprobar: verificación directa del manifiesto y SHA-256 privados en este worktree; constan en la evidencia de MP-038.
+
+#### Reanudar MP-029
+
+Corredores, ramales y catálogo honesto (H4-03)
+
+- **Última actualización** · 2026-11-27
+- **Criterio de cierre** · Aprobación humana donde indica docs/H4_MP_MAPPING.md; prueba RED en beb9434 y GREEN tras el fix
+- **Implementación** · PLANNED
+- **Revisión** · NOT_REVIEWED
+- **Integración** · NOT_INTEGRATED
+- **Validación** · NOT_VALIDATED
+- **Despliegue** · NOT_DEPLOYED
+- **Terminado** · Alcance documentado.
+- **Pendiente** · Corredores y ramales acotados; catálogo con cobertura explícita.
+- **Motivo** · Alcance general H4 pendiente de autorización.
+- **Dependencias** · MP-024
+- **Bloqueos** · HG-H4-SCOPE
+- **Condición para retomar** · Autorización de alcance y resolución de condiciones de la ficha.
+- **Próxima acción** · Delimitar los corredores y el modelo de segmentos; comprobar atribución OSM.
+- **Ejecutor** · codex
+- **Revisor** · claude
+- **Commit de referencia** · UNKNOWN
+- **Decisiones del propietario** · Autorizar alcance H4 y descargas OSM con atribución.
+- **Ficha de alcance** · [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md)
+
+Depende del modelo de segmentos (en MP-024 o ADR propio, H4_TASK_MATRIX). Alcance H4: mejoras sin rediseño y catálogo honesto. El PoC de grafo y la expansión por cobertura son trabajo posterior a la beta (propuestas). El grafo completo queda fuera del lote.
+
+#### Reanudar MP-030
+
+Interfaz: procedencia y rótulos veraces (H4-05)
+
+- **Última actualización** · 2026-11-27
+- **Criterio de cierre** · Procedencia, congelación, cancelación y vigencia inequívocas en escritorio y móvil; revisión del HEAD final.
+- **Implementación** · IMPLEMENTED
+- **Revisión** · CHANGES_REQUESTED
+- **Integración** · MERGED
+- **Validación** · PROVISIONAL
+- **Despliegue** · NOT_DEPLOYED
+- **Terminado** · Interfaz mínima integrada (#11); delta visual focalizado PASS.
+- **Pendiente** · A1 cancelado «En servicio hoy»; A2 avance contradictorio; A3 cancelado y congelado iguales en el mapa.
+- **Motivo** · Código final sin re-verificación independiente; quedan casos visuales NOT RUN.
+- **Dependencias** · MP-024
+- **Condición para retomar** · Revisor independiente y navegador disponibles; autorización para corregir A1–A3.
+- **Próxima acción** · Solicitar revisión del código final y repetir la matriz de navegador y accesibilidad.
+- **Ejecutor** · codex
+- **Revisor** · claude
+- **Fecha de revisión** · 2026-11-26
+- **HEAD revisado** · 6e60249
+- **Rama** · pedromaaz13/mp-030-interfaz-veraz
+- **Commit de referencia** · 0600610
+- **PR** · 11
+- **Merge** · 359932dbe8e6706e42b7a96c49acdc2afba535b5
+- **Ficha de alcance** · [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md)
+- **Evidencias** · [docs/evidence/mp-030/README.md](evidence/mp-030/README.md); [docs/adr/0014-amendment-owner-decision.md](adr/0014-amendment-owner-decision.md); [docs/CHANGELOG.md](CHANGELOG.md); [docs/governance/DISPATCH_LOG.md](governance/DISPATCH_LOG.md)
+
+Interfaz funcional mínima (procedencia por método y espacio, hold_reason, congelación F1, cancelación, degradación GTFS desde el snapshot); sin rediseño A/B/C. Ejecutor Codex gpt-6.1-terra medium (recibo de Orca; sin navegador); revisor Claude Sonnet 5.5 high con Chrome DevTools MCP verificado (argv verificado). Revisión completa: CHANGES_REQUESTED (2 B, 7 A). Verificación del delta (6e60249): B1, B2, A2-A7 resueltos; A1 parcial con un hallazgo material (congelada indistinguible de observada sobre corredor). Corrección final 0600610 (Terra, 142 tests). COMPROBACIÓN VISUAL EXCEPCIONAL (autorizada por el propietario, 2026-11-26): PASS en escritorio 1440x900 y móvil 390x844 con navegador real (Chrome DevTools MCP) sobre HEAD 35489b2 (apps/web idéntico a 0600610): la congelada (authorized_envelope_end y anchor_version_changed) se distingue de observada sobre corredor, extrapolada y bruta por contorno y punto interior, no solo por color; leyenda sin duplicado; Ampliar panel sin solapar el aviso GTFS. Cancelado y terminal EXISTEN en los datos reales de la jornada 1 (20226, 75303, 20797; terminal 20710 y 19601): evidencia REAL. Solo el motivo terminal en la fixture de 20797 es SIMULADO (identificado y separado). 0 B, 3 A no bloqueantes: A1 un cancelado muestra Estado: En servicio hoy; A2 mensajes contradictorios (puede seguir avanzando frente a no avanza); A3 en el mapa un cancelado es indistinguible de un congelado (solo lo dice el panel). NOT RUN: schedule_incoherent, outside_schedule_extent, horizon_exhausted, not_yet_valid, lector de pantalla y otros navegadores. Capturas fuera de Git en data/capture/2026-11-26/mp030-visual-final/. PR #11 integrado el 2026-11-27 (359932db). Se conserva CHANGES_REQUESTED sobre el delta de código 6e60249; la comprobación visual de 35489b2 (apps/web idéntico a 0600610) fue focalizada y no re-verificó el código final. Falta comprobar: acceso a las capturas privadas para reproducir la revisión visual.
+
+#### Reanudar MP-031
+
+Métricas de cierre honestas (H4-06)
+
+- **Última actualización** · 2026-11-27
+- **Criterio de cierre** · Aprobación humana donde indica docs/H4_MP_MAPPING.md; prueba RED en beb9434 y GREEN tras el fix
+- **Implementación** · PLANNED
+- **Revisión** · NOT_REVIEWED
+- **Integración** · NOT_INTEGRATED
+- **Validación** · NOT_VALIDATED
+- **Despliegue** · NOT_DEPLOYED
+- **Terminado** · Alcance documentado.
+- **Pendiente** · Métricas de cierre con denominadores y cobertura.
+- **Motivo** · Alcance general H4 pendiente de autorización.
+- **Dependencias** · MP-028
+- **Bloqueos** · HG-H4-SCOPE, MP-028
+- **Condición para retomar** · Autorización de alcance y resolución de condiciones de la ficha.
+- **Próxima acción** · Preparar el contraste con la captura validada de MP-028.
+- **Ejecutor** · claude
+- **Revisor** · codex
+- **Commit de referencia** · UNKNOWN
+- **Decisiones del propietario** · Autorizar alcance H4.
+- **Ficha de alcance** · [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md)
+
+Planificada; implementación H4 no autorizada.
+
+#### Reanudar MP-032
+
+Operación supervisada local medida (H4-07)
+
+- **Última actualización** · 2026-11-27
+- **Criterio de cierre** · Aprobación humana donde indica docs/H4_MP_MAPPING.md; prueba RED en beb9434 y GREEN tras el fix
+- **Implementación** · PLANNED
+- **Revisión** · NOT_REVIEWED
+- **Integración** · NOT_INTEGRATED
+- **Validación** · NOT_VALIDATED
+- **Despliegue** · NOT_DEPLOYED
+- **Terminado** · Alcance documentado.
+- **Pendiente** · Medición de operación local supervisada.
+- **Motivo** · Alcance general H4 pendiente de autorización.
+- **Dependencias** · MP-023
+- **Gates humanos** · HG-HOSTING
+- **Bloqueos** · HG-H4-SCOPE, HG-HOSTING
+- **Condición para retomar** · Autorización de alcance y resolución de condiciones de la ficha.
+- **Próxima acción** · Definir el protocolo de operación y medir coste en entorno aislado.
+- **Ejecutor** · codex
+- **Revisor** · claude
+- **Commit de referencia** · UNKNOWN
+- **Decisiones del propietario** · Autorizar alcance H4 y decidir host persistente y coste, sin contratación en este lote.
+- **Ficha de alcance** · [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md)
+
+Planificada; implementación H4 no autorizada.
+
+#### Reanudar MP-033
+
+Rendimiento y coste (H4-08)
+
+- **Última actualización** · 2026-11-27
+- **Criterio de cierre** · Aprobación humana donde indica docs/H4_MP_MAPPING.md; prueba RED en beb9434 y GREEN tras el fix
+- **Implementación** · PLANNED
+- **Revisión** · NOT_REVIEWED
+- **Integración** · NOT_INTEGRATED
+- **Validación** · NOT_VALIDATED
+- **Despliegue** · NOT_DEPLOYED
+- **Terminado** · Alcance documentado.
+- **Pendiente** · Medición de rendimiento y coste.
+- **Motivo** · Alcance general H4 pendiente de autorización.
+- **Dependencias** · MP-026a, MP-026b, MP-032
+- **Gates humanos** · HG-DEC-038, HG-DEC-004
+- **Bloqueos** · HG-H4-SCOPE, MP-032, HG-DEC-038, HG-DEC-004
+- **Condición para retomar** · Autorización de alcance y resolución de condiciones de la ficha.
+- **Próxima acción** · Medir carga tras MP-032 y documentar alternativas de pool y retención.
+- **Ejecutor** · codex
+- **Revisor** · claude
+- **Commit de referencia** · UNKNOWN
+- **Decisiones del propietario** · Autorizar alcance H4 y decidir pool (DEC-038) y retención (DEC-004).
+- **Ficha de alcance** · [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md)
+
+Planificada; implementación H4 no autorizada.
+
+#### Reanudar MP-034
+
+Registro estructurado de hallazgos (H4-13)
+
+- **Última actualización** · 2026-11-27
+- **Criterio de cierre** · Aprobación humana donde indica docs/H4_MP_MAPPING.md; prueba RED en beb9434 y GREEN tras el fix
+- **Implementación** · PLANNED
+- **Revisión** · NOT_REVIEWED
+- **Integración** · NOT_INTEGRATED
+- **Validación** · NOT_VALIDATED
+- **Despliegue** · NOT_DEPLOYED
+- **Terminado** · Alcance documentado.
+- **Pendiente** · Registro estructurado de hallazgos de auditoría.
+- **Motivo** · Alcance general H4 pendiente de autorización.
+- **Bloqueos** · HG-H4-SCOPE
+- **Condición para retomar** · Autorización de alcance y resolución de condiciones de la ficha.
+- **Próxima acción** · Cruzar FINDINGS_REGISTER.md con correcciones y evidencia.
+- **Ejecutor** · codex
+- **Revisor** · claude
+- **Commit de referencia** · UNKNOWN
+- **Decisiones del propietario** · Autorizar alcance H4.
+- **Ficha de alcance** · [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md)
+
+Planificada; implementación H4 no autorizada.
+
+#### Reanudar MP-035
+
+Gate de publicación (H4-09)
+
+- **Última actualización** · 2026-11-27
+- **Criterio de cierre** · Todas las tareas MP-023…MP-034 cerradas o con BLOCKED documentado; decisión humana GO/NO-GO de publicación
+- **Implementación** · PLANNED
+- **Revisión** · NOT_REVIEWED
+- **Integración** · NOT_INTEGRATED
+- **Validación** · NOT_VALIDATED
+- **Despliegue** · NOT_DEPLOYED
+- **Terminado** · Alcance documentado.
+- **Pendiente** · Dictamen GO/NO-GO y gate de publicación.
+- **Motivo** · NO-GO público y criterios de dependencias abiertos.
+- **Dependencias** · MP-023, MP-024, MP-025a, MP-025b, MP-026a, MP-026b, MP-027, MP-028, MP-029, MP-030, MP-031, MP-032, MP-033, MP-034
+- **Gates humanos** · HG-LIVE-PUBLIC
+- **Bloqueos** · FR-01, FR-02, HG-LIVE-PUBLIC
+- **Condición para retomar** · Dictamen GO documentado y aprobación del propietario.
+- **Próxima acción** · Auditar criterios de cada dependencia y presentar dictamen al propietario.
+- **Ejecutor** · codex
+- **Revisor** · claude
+- **Commit de referencia** · UNKNOWN
+- **Decisiones del propietario** · Autorizar expresamente despliegue Live público tras dictamen GO.
+- **Ficha de alcance** · [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md)
+
+Planificada; implementación H4 no autorizada.
+
+#### Reanudar D-01
+
+Captura local de 90 min con BD desechable y manifest
+
+- **Última actualización** · 2026-11-27
+- **Criterio de cierre** · Gate 0 de docs/plans/MVP_LIVE_END_TO_END.md en dos tiempos: (1) contrato, build y capturas en entorno previo; (2) tras HG-MVP0-PUBLISH, comprobación de la URL pública. No se da por cerrado hasta el segundo tiempo
+- **Implementación** · PLANNED
+- **Revisión** · NOT_REVIEWED
+- **Integración** · NOT_INTEGRATED
+- **Validación** · NOT_VALIDATED
+- **Despliegue** · NOT_DEPLOYED
+- **Terminado** · Plan de demo documentado.
+- **Pendiente** · Captura de 90 min y manifiesto.
+- **Motivo** · Ejecución de MVP 0 pendiente de autorización.
+- **Dependencias** · MP-023
+- **Gates humanos** · HG-CAPTURE
+- **Bloqueos** · HG-CAPTURE
+- **Condición para retomar** · Autorización de MVP 0 y precondiciones de la ficha.
+- **Próxima acción** · Confirmar autorización y preparar captura desechable propia.
+- **Ejecutor** · claude
+- **Revisor** · codex
+- **Commit de referencia** · UNKNOWN
+- **Decisiones del propietario** · Autorizar captura continua local para D-01.
+- **Ficha de alcance** · [docs/deployment/MVP0_IMPLEMENTATION_PLAN.md](deployment/MVP0_IMPLEMENTATION_PLAN.md)
+
+Planificada; no autorizada. La demo no condiciona ni bloquea los P0 de Live.
+
+#### Reanudar D-02
+
+Contrato de demo estática y exportador determinista
+
+- **Última actualización** · 2026-11-27
+- **Criterio de cierre** · Gate 0 de docs/plans/MVP_LIVE_END_TO_END.md en dos tiempos: (1) contrato, build y capturas en entorno previo; (2) tras HG-MVP0-PUBLISH, comprobación de la URL pública. No se da por cerrado hasta el segundo tiempo
+- **Implementación** · PLANNED
+- **Revisión** · NOT_REVIEWED
+- **Integración** · NOT_INTEGRATED
+- **Validación** · NOT_VALIDATED
+- **Despliegue** · NOT_DEPLOYED
+- **Terminado** · Plan de demo documentado.
+- **Pendiente** · Contrato y exportador reproducible.
+- **Motivo** · Ejecución de MVP 0 pendiente de autorización.
+- **Condición para retomar** · Autorización de MVP 0 y precondiciones de la ficha.
+- **Próxima acción** · Definir contrato y verificar hash y paridad API del exportador.
+- **Ejecutor** · codex
+- **Revisor** · claude
+- **Commit de referencia** · UNKNOWN
+- **Ficha de alcance** · [docs/deployment/MVP0_IMPLEMENTATION_PLAN.md](deployment/MVP0_IMPLEMENTATION_PLAN.md)
+
+Planificada; no autorizada. La demo no condiciona ni bloquea los P0 de Live.
+
+#### Reanudar D-03
+
+Adaptador estático, reloj en bucle, banner y pie
+
+- **Última actualización** · 2026-11-27
+- **Criterio de cierre** · Gate 0 de docs/plans/MVP_LIVE_END_TO_END.md en dos tiempos: (1) contrato, build y capturas en entorno previo; (2) tras HG-MVP0-PUBLISH, comprobación de la URL pública. No se da por cerrado hasta el segundo tiempo
+- **Implementación** · PLANNED
+- **Revisión** · NOT_REVIEWED
+- **Integración** · NOT_INTEGRATED
+- **Validación** · NOT_VALIDATED
+- **Despliegue** · NOT_DEPLOYED
+- **Terminado** · Plan de demo documentado.
+- **Pendiente** · Adaptador, reloj y rótulos de demo.
+- **Motivo** · Ejecución de MVP 0 pendiente de autorización.
+- **Dependencias** · D-02
+- **Bloqueos** · D-02
+- **Condición para retomar** · Autorización de MVP 0 y precondiciones de la ficha.
+- **Próxima acción** · Construir el modo estático sobre el contrato D-02.
+- **Ejecutor** · claude
+- **Revisor** · codex
+- **Commit de referencia** · UNKNOWN
+- **Ficha de alcance** · [docs/deployment/MVP0_IMPLEMENTATION_PLAN.md](deployment/MVP0_IMPLEMENTATION_PLAN.md)
+
+Planificada; no autorizada. La demo no condiciona ni bloquea los P0 de Live.
+
+#### Reanudar D-04
+
+Teselas configurables y estilo OpenFreeMap
+
+- **Última actualización** · 2026-11-27
+- **Criterio de cierre** · Gate 0 de docs/plans/MVP_LIVE_END_TO_END.md en dos tiempos: (1) contrato, build y capturas en entorno previo; (2) tras HG-MVP0-PUBLISH, comprobación de la URL pública. No se da por cerrado hasta el segundo tiempo
+- **Implementación** · PLANNED
+- **Revisión** · NOT_REVIEWED
+- **Integración** · NOT_INTEGRATED
+- **Validación** · NOT_VALIDATED
+- **Despliegue** · NOT_DEPLOYED
+- **Terminado** · Plan de demo documentado.
+- **Pendiente** · Teselas y atribución de demo.
+- **Motivo** · Ejecución de MVP 0 pendiente de autorización.
+- **Gates humanos** · HG-TILES
+- **Bloqueos** · HG-TILES
+- **Condición para retomar** · Autorización de MVP 0 y precondiciones de la ficha.
+- **Próxima acción** · Verificar condiciones de OpenFreeMap y proponer configuración.
+- **Ejecutor** · claude
+- **Revisor** · codex
+- **Commit de referencia** · UNKNOWN
+- **Decisiones del propietario** · Confirmar proveedor y condiciones de teselas.
+- **Ficha de alcance** · [docs/deployment/MVP0_IMPLEMENTATION_PLAN.md](deployment/MVP0_IMPLEMENTATION_PLAN.md)
+
+Planificada; no autorizada. La demo no condiciona ni bloquea los P0 de Live.
+
+#### Reanudar D-05
+
+vite base, verify-build demo y pages.yml
+
+- **Última actualización** · 2026-11-27
+- **Criterio de cierre** · Gate 0 de docs/plans/MVP_LIVE_END_TO_END.md en dos tiempos: (1) contrato, build y capturas en entorno previo; (2) tras HG-MVP0-PUBLISH, comprobación de la URL pública. No se da por cerrado hasta el segundo tiempo
+- **Implementación** · PLANNED
+- **Revisión** · NOT_REVIEWED
+- **Integración** · NOT_INTEGRATED
+- **Validación** · NOT_VALIDATED
+- **Despliegue** · NOT_DEPLOYED
+- **Terminado** · Plan de demo documentado.
+- **Pendiente** · Build verificable y workflow Pages.
+- **Motivo** · Ejecución de MVP 0 pendiente de autorización.
+- **Dependencias** · D-03, D-04
+- **Bloqueos** · D-03, D-04
+- **Condición para retomar** · Autorización de MVP 0 y precondiciones de la ficha.
+- **Próxima acción** · Probar vite base y verify-build en entorno previo.
+- **Ejecutor** · codex
+- **Revisor** · claude
+- **Commit de referencia** · UNKNOWN
+- **Decisiones del propietario** · Autorizar Pages y despliegue de la demo cuando se apruebe.
+- **Ficha de alcance** · [docs/deployment/MVP0_IMPLEMENTATION_PLAN.md](deployment/MVP0_IMPLEMENTATION_PLAN.md)
+
+Planificada; no autorizada. La demo no condiciona ni bloquea los P0 de Live.
+
+#### Reanudar D-06
+
+Validación integrada de la demo y aprobación del propietario
+
+- **Última actualización** · 2026-11-27
+- **Criterio de cierre** · Gate 0 de docs/plans/MVP_LIVE_END_TO_END.md en dos tiempos: (1) contrato, build y capturas en entorno previo; (2) tras HG-MVP0-PUBLISH, comprobación de la URL pública. No se da por cerrado hasta el segundo tiempo
+- **Implementación** · PLANNED
+- **Revisión** · NOT_REVIEWED
+- **Integración** · NOT_INTEGRATED
+- **Validación** · NOT_VALIDATED
+- **Despliegue** · NOT_DEPLOYED
+- **Terminado** · Plan de demo documentado.
+- **Pendiente** · Validación integrada y URL comprobada.
+- **Motivo** · Ejecución de MVP 0 pendiente de autorización.
+- **Dependencias** · D-01, D-02, D-03, D-04, D-05
+- **Gates humanos** · HG-MVP0-PUBLISH
+- **Bloqueos** · D-01, D-02, D-03, D-04, D-05, HG-MVP0-PUBLISH
+- **Condición para retomar** · Autorización de MVP 0 y precondiciones de la ficha.
+- **Próxima acción** · Ejecutar contrato, build, capturas y atribuciones; presentar la demo.
+- **Ejecutor** · claude
+- **Revisor** · codex
+- **Commit de referencia** · UNKNOWN
+- **Decisiones del propietario** · Aprobar publicar la URL de la demo estática.
+- **Ficha de alcance** · [docs/deployment/MVP0_IMPLEMENTATION_PLAN.md](deployment/MVP0_IMPLEMENTATION_PLAN.md)
+
+Planificada; no autorizada. La demo no condiciona ni bloquea los P0 de Live.
+
+#### Reanudar D-11
+
+Dockerfiles, compose de producción y Caddy mismo origen
+
+- **Última actualización** · 2026-11-27
+- **Criterio de cierre** · Gate 1 de docs/plans/MVP_LIVE_END_TO_END.md
+- **Implementación** · PLANNED
+- **Revisión** · NOT_REVIEWED
+- **Integración** · NOT_INTEGRATED
+- **Validación** · NOT_VALIDATED
+- **Despliegue** · NOT_DEPLOYED
+- **Terminado** · Subalcance propuesto documentado.
+- **Pendiente** · Dockerfiles, Compose y Caddy.
+- **Motivo** · Staging sin autorización.
+- **Dependencias** · MP-023
+- **Bloqueos** · PROPOSAL-STAGING-LIVE, MP-023
+- **Condición para retomar** · Staging autorizado y precondiciones de despliegue acreditadas.
+- **Próxima acción** · Confirmar alcance de staging y validar un arranque aislado.
+- **Ejecutor** · codex
+- **Revisor** · claude
+- **Commit de referencia** · UNKNOWN
+- **Decisiones del propietario** · Decidir si se autoriza staging como tarea propia y, si procede, hosting y coste.
+- **Ficha de alcance** · [docs/deployment/MVP_RELEASE_CHECKLIST.md](deployment/MVP_RELEASE_CHECKLIST.md)
+
+Subalcance de staging propuesto (separado de MP-032 local hasta decisión del propietario); no duplica backlog. D-19 (cierre de FR-01 y FR-02) = MP-024, MP-025a/b y MP-026a: solo en CROSSWALK.
+
+#### Reanudar D-12
+
+Migraciones idempotentes en arranque
+
+- **Última actualización** · 2026-11-27
+- **Criterio de cierre** · Gate 1 de docs/plans/MVP_LIVE_END_TO_END.md
+- **Implementación** · PLANNED
+- **Revisión** · NOT_REVIEWED
+- **Integración** · NOT_INTEGRATED
+- **Validación** · NOT_VALIDATED
+- **Despliegue** · NOT_DEPLOYED
+- **Terminado** · Subalcance propuesto documentado.
+- **Pendiente** · Migraciones idempotentes en arranque.
+- **Motivo** · Staging sin autorización.
+- **Dependencias** · D-11
+- **Bloqueos** · PROPOSAL-STAGING-LIVE, D-11
+- **Condición para retomar** · Staging autorizado y precondiciones de despliegue acreditadas.
+- **Próxima acción** · Probar dos arranques en una base desechable.
+- **Ejecutor** · codex
+- **Revisor** · claude
+- **Commit de referencia** · UNKNOWN
+- **Decisiones del propietario** · Decidir si se autoriza staging como tarea propia y, si procede, hosting y coste.
+- **Ficha de alcance** · [docs/deployment/MVP_RELEASE_CHECKLIST.md](deployment/MVP_RELEASE_CHECKLIST.md)
+
+Subalcance de staging propuesto (separado de MP-032 local hasta decisión del propietario); no duplica backlog. D-19 (cierre de FR-01 y FR-02) = MP-024, MP-025a/b y MP-026a: solo en CROSSWALK.
+
+#### Reanudar D-14
+
+Purga y retención de BD caliente
+
+- **Última actualización** · 2026-11-27
+- **Criterio de cierre** · Gate 1 de docs/plans/MVP_LIVE_END_TO_END.md
+- **Implementación** · PLANNED
+- **Revisión** · NOT_REVIEWED
+- **Integración** · NOT_INTEGRATED
+- **Validación** · NOT_VALIDATED
+- **Despliegue** · NOT_DEPLOYED
+- **Terminado** · Subalcance propuesto documentado.
+- **Pendiente** · Purga y archivo en volumen.
+- **Motivo** · Staging sin autorización.
+- **Dependencias** · D-11
+- **Bloqueos** · PROPOSAL-STAGING-LIVE, D-11
+- **Condición para retomar** · Staging autorizado y precondiciones de despliegue acreditadas.
+- **Próxima acción** · Medir crecimiento de la BD caliente y contrastar DEC-004.
+- **Ejecutor** · codex
+- **Revisor** · claude
+- **Commit de referencia** · UNKNOWN
+- **Decisiones del propietario** · Decidir si se autoriza staging como tarea propia y, si procede, hosting y coste., Decidir plazo de retención y umbral de crecimiento (DEC-004).
+- **Ficha de alcance** · [docs/deployment/MVP_RELEASE_CHECKLIST.md](deployment/MVP_RELEASE_CHECKLIST.md)
+
+Subalcance de staging propuesto (separado de MP-032 local hasta decisión del propietario); no duplica backlog. D-19 (cierre de FR-01 y FR-02) = MP-024, MP-025a/b y MP-026a: solo en CROSSWALK.
+
+#### Reanudar D-15
+
+Rate limit, /healthz y cabeceras de seguridad
+
+- **Última actualización** · 2026-11-27
+- **Criterio de cierre** · Gate 1 de docs/plans/MVP_LIVE_END_TO_END.md
+- **Implementación** · PLANNED
+- **Revisión** · NOT_REVIEWED
+- **Integración** · NOT_INTEGRATED
+- **Validación** · NOT_VALIDATED
+- **Despliegue** · NOT_DEPLOYED
+- **Terminado** · Subalcance propuesto documentado.
+- **Pendiente** · Rate limit y salud.
+- **Motivo** · Staging sin autorización.
+- **Dependencias** · D-11
+- **Bloqueos** · PROPOSAL-STAGING-LIVE, D-11
+- **Condición para retomar** · Staging autorizado y precondiciones de despliegue acreditadas.
+- **Próxima acción** · Medir limitación de ráfagas y liveness sin BD.
+- **Ejecutor** · codex
+- **Revisor** · claude
+- **Commit de referencia** · UNKNOWN
+- **Decisiones del propietario** · Decidir si se autoriza staging como tarea propia y, si procede, hosting y coste.
+- **Ficha de alcance** · [docs/deployment/MVP_RELEASE_CHECKLIST.md](deployment/MVP_RELEASE_CHECKLIST.md)
+
+Subalcance de staging propuesto (separado de MP-032 local hasta decisión del propietario); no duplica backlog. D-19 (cierre de FR-01 y FR-02) = MP-024, MP-025a/b y MP-026a: solo en CROSSWALK.
+
+#### Reanudar D-16
+
+Backups con restauración probada
+
+- **Última actualización** · 2026-11-27
+- **Criterio de cierre** · Gate 1 de docs/plans/MVP_LIVE_END_TO_END.md
+- **Implementación** · PLANNED
+- **Revisión** · NOT_REVIEWED
+- **Integración** · NOT_INTEGRATED
+- **Validación** · NOT_VALIDATED
+- **Despliegue** · NOT_DEPLOYED
+- **Terminado** · Subalcance propuesto documentado.
+- **Pendiente** · Backups y restauración.
+- **Motivo** · Staging sin autorización.
+- **Dependencias** · D-11
+- **Bloqueos** · PROPOSAL-STAGING-LIVE, D-11
+- **Condición para retomar** · Staging autorizado y precondiciones de despliegue acreditadas.
+- **Próxima acción** · Restaurar un backup en una BD desechable y cuadrar filas.
+- **Ejecutor** · codex
+- **Revisor** · claude
+- **Commit de referencia** · UNKNOWN
+- **Decisiones del propietario** · Decidir si se autoriza staging como tarea propia y, si procede, hosting y coste.
+- **Ficha de alcance** · [docs/deployment/MVP_RELEASE_CHECKLIST.md](deployment/MVP_RELEASE_CHECKLIST.md)
+
+Subalcance de staging propuesto (separado de MP-032 local hasta decisión del propietario); no duplica backlog. D-19 (cierre de FR-01 y FR-02) = MP-024, MP-025a/b y MP-026a: solo en CROSSWALK.
+
+#### Reanudar D-17
+
+CD por SSH con aprobación manual
+
+- **Última actualización** · 2026-11-27
+- **Criterio de cierre** · Gate 1 de docs/plans/MVP_LIVE_END_TO_END.md
+- **Implementación** · PLANNED
+- **Revisión** · NOT_REVIEWED
+- **Integración** · NOT_INTEGRATED
+- **Validación** · NOT_VALIDATED
+- **Despliegue** · NOT_DEPLOYED
+- **Terminado** · Subalcance propuesto documentado.
+- **Pendiente** · CD por SSH con aprobación manual.
+- **Motivo** · Staging sin autorización.
+- **Dependencias** · D-11
+- **Bloqueos** · PROPOSAL-STAGING-LIVE, D-11
+- **Condición para retomar** · Staging autorizado y precondiciones de despliegue acreditadas.
+- **Próxima acción** · Verificar que el workflow requiere aprobación antes del despliegue.
+- **Ejecutor** · codex
+- **Revisor** · claude
+- **Commit de referencia** · UNKNOWN
+- **Decisiones del propietario** · Decidir si se autoriza staging como tarea propia y, si procede, hosting y coste.
+- **Ficha de alcance** · [docs/deployment/MVP_RELEASE_CHECKLIST.md](deployment/MVP_RELEASE_CHECKLIST.md)
+
+Subalcance de staging propuesto (separado de MP-032 local hasta decisión del propietario); no duplica backlog. D-19 (cierre de FR-01 y FR-02) = MP-024, MP-025a/b y MP-026a: solo en CROSSWALK.
+
+#### Reanudar D-18
+
+Operación supervisada ≥24 h (ideal 72 h)
+
+- **Última actualización** · 2026-11-27
+- **Criterio de cierre** · Gate 1 de docs/plans/MVP_LIVE_END_TO_END.md
+- **Implementación** · PLANNED
+- **Revisión** · NOT_REVIEWED
+- **Integración** · NOT_INTEGRATED
+- **Validación** · NOT_VALIDATED
+- **Despliegue** · NOT_DEPLOYED
+- **Terminado** · Subalcance propuesto documentado.
+- **Pendiente** · Operación supervisada durante ≥24 h.
+- **Motivo** · Staging sin autorización.
+- **Dependencias** · D-11, D-12, D-14, D-15, D-16
+- **Bloqueos** · PROPOSAL-STAGING-LIVE, D-11, D-12, D-14, D-15, D-16
+- **Condición para retomar** · Staging autorizado y precondiciones de despliegue acreditadas.
+- **Próxima acción** · Medir continuidad, recursos y recuperación tras abrir el staging.
+- **Ejecutor** · claude
+- **Revisor** · codex
+- **Commit de referencia** · UNKNOWN
+- **Decisiones del propietario** · Decidir si se autoriza staging como tarea propia y, si procede, hosting y coste.
+- **Ficha de alcance** · [docs/deployment/MVP_RELEASE_CHECKLIST.md](deployment/MVP_RELEASE_CHECKLIST.md)
+
+Subalcance de staging propuesto (separado de MP-032 local hasta decisión del propietario); no duplica backlog. D-19 (cierre de FR-01 y FR-02) = MP-024, MP-025a/b y MP-026a: solo en CROSSWALK.
+
+#### Reanudar DES-00
+
+Baseline y verificación de restricciones
+
+- **Última actualización** · 2026-11-27
+- **Criterio de cierre** · Baseline versionado y restricciones comprobadas
+- **Implementación** · PLANNED
+- **Revisión** · NOT_REVIEWED
+- **Integración** · NOT_INTEGRATED
+- **Validación** · NOT_VALIDATED
+- **Despliegue** · NOT_APPLICABLE
+- **Terminado** · Inicio de discovery autorizado.
+- **Pendiente** · Baseline versionado y restricciones comprobadas.
+- **Motivo** · Pendiente de despacho.
+- **Gates humanos** · HG-DESIGN-START
+- **Condición para retomar** · Despacho en worktree aislado y precondiciones acreditadas.
+- **Próxima acción** · Verificar HEAD, worktrees y restricciones; redactar 00_BASELINE/STATE.md.
+- **Ejecutor** · claude
+- **Revisor** · codex
+- **Commit de referencia** · UNKNOWN
+- **Ficha de alcance** · [docs/design/DESIGN_DISCOVERY_A_B_C.md](design/DESIGN_DISCOVERY_A_B_C.md)
+- **Evidencias** · [docs/design/DESIGN_DISCOVERY_EXECUTION_OVERRIDES.md](design/DESIGN_DISCOVERY_EXECUTION_OVERRIDES.md)
+
+Subtarea interna. Sustitución temporal y alcance en el override del 2026-11-27; roles del plan sujetos al despacho efectivo. HG-DESIGN-CHOICE abierto.
+
+#### Reanudar DES-01
+
+Inspección real y capturas del frontend existente (Claude + preflight de DevTools/Playwright)
+
+- **Última actualización** · 2026-11-27
+- **Criterio de cierre** · Capturas desktop/móvil y consola del frontend actual
+- **Implementación** · PLANNED
+- **Revisión** · NOT_REVIEWED
+- **Integración** · NOT_INTEGRATED
+- **Validación** · NOT_VALIDATED
+- **Despliegue** · NOT_APPLICABLE
+- **Terminado** · Inicio de discovery autorizado.
+- **Pendiente** · Capturas desktop/móvil y consola del frontend actual.
+- **Motivo** · Precondiciones del discovery pendientes.
+- **Dependencias** · DES-00
+- **Bloqueos** · DES-00
+- **Condición para retomar** · Despacho en worktree aislado y precondiciones acreditadas.
+- **Próxima acción** · Hacer preflight de navegador y capturar vistas; si falta, registrar NOT RUN.
+- **Ejecutor** · claude
+- **Revisor** · codex
+- **Commit de referencia** · UNKNOWN
+- **Ficha de alcance** · [docs/design/DESIGN_DISCOVERY_A_B_C.md](design/DESIGN_DISCOVERY_A_B_C.md)
+- **Evidencias** · [docs/design/DESIGN_DISCOVERY_EXECUTION_OVERRIDES.md](design/DESIGN_DISCOVERY_EXECUTION_OVERRIDES.md)
+
+Subtarea interna. Sustitución temporal y alcance en el override del 2026-11-27; roles del plan sujetos al despacho efectivo. HG-DESIGN-CHOICE abierto.
+
+#### Reanudar DES-02
+
+Comparación de fuentes de diseño (frontend-design, Hallmark, Impeccable)
+
+- **Última actualización** · 2026-11-27
+- **Criterio de cierre** · Comparativa de tres fuentes de diseño
+- **Implementación** · PLANNED
+- **Revisión** · NOT_REVIEWED
+- **Integración** · NOT_INTEGRATED
+- **Validación** · NOT_VALIDATED
+- **Despliegue** · NOT_APPLICABLE
+- **Terminado** · Inicio de discovery autorizado.
+- **Pendiente** · Comparativa de tres fuentes de diseño.
+- **Motivo** · Precondiciones del discovery pendientes.
+- **Dependencias** · DES-00
+- **Bloqueos** · DES-00
+- **Condición para retomar** · Despacho en worktree aislado y precondiciones acreditadas.
+- **Próxima acción** · Comprobar versiones, licencias, hooks y permisos sin instalar.
+- **Ejecutor** · claude
+- **Revisor** · codex
+- **Commit de referencia** · UNKNOWN
+- **Ficha de alcance** · [docs/design/DESIGN_DISCOVERY_A_B_C.md](design/DESIGN_DISCOVERY_A_B_C.md)
+- **Evidencias** · [docs/design/DESIGN_DISCOVERY_EXECUTION_OVERRIDES.md](design/DESIGN_DISCOVERY_EXECUTION_OVERRIDES.md)
+
+Subtarea interna. Sustitución temporal y alcance en el override del 2026-11-27; roles del plan sujetos al despacho efectivo. HG-DESIGN-CHOICE abierto.
+
+#### Reanudar DES-03
+
+Brief y tres conceptos A/B/C
+
+- **Última actualización** · 2026-11-27
+- **Criterio de cierre** · Brief factual y conceptos A/B/C
+- **Implementación** · PLANNED
+- **Revisión** · NOT_REVIEWED
+- **Integración** · NOT_INTEGRATED
+- **Validación** · NOT_VALIDATED
+- **Despliegue** · NOT_APPLICABLE
+- **Terminado** · Inicio de discovery autorizado.
+- **Pendiente** · Brief factual y conceptos A/B/C.
+- **Motivo** · Precondiciones del discovery pendientes.
+- **Dependencias** · DES-01, DES-02
+- **Bloqueos** · DES-01, DES-02
+- **Condición para retomar** · Despacho en worktree aislado y precondiciones acreditadas.
+- **Próxima acción** · Redactar el brief desde baseline y revisión de fuentes.
+- **Ejecutor** · claude
+- **Revisor** · codex
+- **Commit de referencia** · UNKNOWN
+- **Ficha de alcance** · [docs/design/DESIGN_DISCOVERY_A_B_C.md](design/DESIGN_DISCOVERY_A_B_C.md)
+- **Evidencias** · [docs/design/DESIGN_DISCOVERY_EXECUTION_OVERRIDES.md](design/DESIGN_DISCOVERY_EXECUTION_OVERRIDES.md)
+
+Subtarea interna. Sustitución temporal y alcance en el override del 2026-11-27; roles del plan sujetos al despacho efectivo. HG-DESIGN-CHOICE abierto.
+
+#### Reanudar DES-04
+
+Prototipo A Titanium Control
+
+- **Última actualización** · 2026-11-27
+- **Criterio de cierre** · Prototipo A Titanium Control
+- **Implementación** · PLANNED
+- **Revisión** · NOT_REVIEWED
+- **Integración** · NOT_INTEGRATED
+- **Validación** · NOT_VALIDATED
+- **Despliegue** · NOT_APPLICABLE
+- **Terminado** · Inicio de discovery autorizado.
+- **Pendiente** · Prototipo A Titanium Control.
+- **Motivo** · Precondiciones del discovery pendientes.
+- **Dependencias** · DES-03
+- **Bloqueos** · DES-03
+- **Condición para retomar** · Despacho en worktree aislado y precondiciones acreditadas.
+- **Próxima acción** · Montar A en su worktree aislado según el brief.
+- **Ejecutor** · claude
+- **Revisor** · codex
+- **Commit de referencia** · UNKNOWN
+- **Ficha de alcance** · [docs/design/DESIGN_DISCOVERY_A_B_C.md](design/DESIGN_DISCOVERY_A_B_C.md)
+- **Evidencias** · [docs/design/DESIGN_DISCOVERY_EXECUTION_OVERRIDES.md](design/DESIGN_DISCOVERY_EXECUTION_OVERRIDES.md)
+
+Subtarea interna. Sustitución temporal y alcance en el override del 2026-11-27; roles del plan sujetos al despacho efectivo. HG-DESIGN-CHOICE abierto.
+
+#### Reanudar DES-05
+
+Prototipo B Immersive Rail Map
+
+- **Última actualización** · 2026-11-27
+- **Criterio de cierre** · Prototipo B Immersive Rail Map
+- **Implementación** · PLANNED
+- **Revisión** · NOT_REVIEWED
+- **Integración** · NOT_INTEGRATED
+- **Validación** · NOT_VALIDATED
+- **Despliegue** · NOT_APPLICABLE
+- **Terminado** · Inicio de discovery autorizado.
+- **Pendiente** · Prototipo B Immersive Rail Map.
+- **Motivo** · Precondiciones del discovery pendientes.
+- **Dependencias** · DES-03
+- **Bloqueos** · DES-03
+- **Condición para retomar** · Despacho en worktree aislado y precondiciones acreditadas.
+- **Próxima acción** · Montar B con jerarquía map-first en worktree aislado.
+- **Ejecutor** · claude
+- **Revisor** · codex
+- **Commit de referencia** · UNKNOWN
+- **Ficha de alcance** · [docs/design/DESIGN_DISCOVERY_A_B_C.md](design/DESIGN_DISCOVERY_A_B_C.md)
+- **Evidencias** · [docs/design/DESIGN_DISCOVERY_EXECUTION_OVERRIDES.md](design/DESIGN_DISCOVERY_EXECUTION_OVERRIDES.md)
+
+Subtarea interna. Sustitución temporal y alcance en el override del 2026-11-27; roles del plan sujetos al despacho efectivo. HG-DESIGN-CHOICE abierto.
+
+#### Reanudar DES-06
+
+Prototipo C Contemporary Signal
+
+- **Última actualización** · 2026-11-27
+- **Criterio de cierre** · Prototipo C Contemporary Signal
+- **Implementación** · PLANNED
+- **Revisión** · NOT_REVIEWED
+- **Integración** · NOT_INTEGRATED
+- **Validación** · NOT_VALIDATED
+- **Despliegue** · NOT_APPLICABLE
+- **Terminado** · Inicio de discovery autorizado.
+- **Pendiente** · Prototipo C Contemporary Signal.
+- **Motivo** · Precondiciones del discovery pendientes.
+- **Dependencias** · DES-03
+- **Bloqueos** · DES-03
+- **Condición para retomar** · Despacho en worktree aislado y precondiciones acreditadas.
+- **Próxima acción** · Montar C con navegación propia en worktree aislado.
+- **Ejecutor** · claude
+- **Revisor** · codex
+- **Commit de referencia** · UNKNOWN
+- **Ficha de alcance** · [docs/design/DESIGN_DISCOVERY_A_B_C.md](design/DESIGN_DISCOVERY_A_B_C.md)
+- **Evidencias** · [docs/design/DESIGN_DISCOVERY_EXECUTION_OVERRIDES.md](design/DESIGN_DISCOVERY_EXECUTION_OVERRIDES.md)
+
+Subtarea interna. Sustitución temporal y alcance en el override del 2026-11-27; roles del plan sujetos al despacho efectivo. HG-DESIGN-CHOICE abierto.
+
+#### Reanudar DES-07
+
+Comparativa de iconografía ferroviaria
+
+- **Última actualización** · 2026-11-27
+- **Criterio de cierre** · Iconografía comparada y medición en MapLibre
+- **Implementación** · PLANNED
+- **Revisión** · NOT_REVIEWED
+- **Integración** · NOT_INTEGRATED
+- **Validación** · NOT_VALIDATED
+- **Despliegue** · NOT_APPLICABLE
+- **Terminado** · Inicio de discovery autorizado.
+- **Pendiente** · Iconografía comparada y medición en MapLibre.
+- **Motivo** · Precondiciones del discovery pendientes.
+- **Dependencias** · DES-03
+- **Bloqueos** · DES-03
+- **Condición para retomar** · Despacho en worktree aislado y precondiciones acreditadas.
+- **Próxima acción** · Probar variantes de iconos; medir solo con navegador verificado.
+- **Ejecutor** · codex
+- **Revisor** · claude
+- **Commit de referencia** · UNKNOWN
+- **Ficha de alcance** · [docs/design/DESIGN_DISCOVERY_A_B_C.md](design/DESIGN_DISCOVERY_A_B_C.md)
+- **Evidencias** · [docs/design/DESIGN_DISCOVERY_EXECUTION_OVERRIDES.md](design/DESIGN_DISCOVERY_EXECUTION_OVERRIDES.md)
+
+Subtarea interna. Sustitución temporal y alcance en el override del 2026-11-27; roles del plan sujetos al despacho efectivo. HG-DESIGN-CHOICE abierto.
+
+#### Reanudar DES-08
+
+Verificación comparativa A/B/C en navegador real (Claude + preflight; Codex audita código y artefactos)
+
+- **Última actualización** · 2026-11-27
+- **Criterio de cierre** · Comparación en navegador; gate visual independiente NOT RUN
+- **Implementación** · PLANNED
+- **Revisión** · NOT_REVIEWED
+- **Integración** · NOT_INTEGRATED
+- **Validación** · NOT_VALIDATED
+- **Despliegue** · NOT_APPLICABLE
+- **Terminado** · Inicio de discovery autorizado.
+- **Pendiente** · Comparación en navegador; gate visual independiente NOT RUN.
+- **Motivo** · Precondiciones del discovery pendientes.
+- **Dependencias** · DES-04, DES-05, DES-06, DES-07
+- **Bloqueos** · DES-04, DES-05, DES-06, DES-07
+- **Condición para retomar** · Despacho en worktree aislado y precondiciones acreditadas.
+- **Próxima acción** · Preflight y revisión de flujos, responsive, teclado y reduced motion.
+- **Ejecutor** · claude
+- **Revisor** · codex
+- **Commit de referencia** · UNKNOWN
+- **Ficha de alcance** · [docs/design/DESIGN_DISCOVERY_A_B_C.md](design/DESIGN_DISCOVERY_A_B_C.md)
+- **Evidencias** · [docs/design/DESIGN_DISCOVERY_EXECUTION_OVERRIDES.md](design/DESIGN_DISCOVERY_EXECUTION_OVERRIDES.md)
+
+Subtarea interna. Sustitución temporal y alcance en el override del 2026-11-27; roles del plan sujetos al despacho efectivo. HG-DESIGN-CHOICE abierto.
+
+#### Reanudar DES-09
+
+Índice comparativo y gate humano de elección
+
+- **Última actualización** · 2026-11-27
+- **Criterio de cierre** · Índice de evidencia, matriz A/B/C y elección
+- **Implementación** · PLANNED
+- **Revisión** · NOT_REVIEWED
+- **Integración** · NOT_INTEGRATED
+- **Validación** · NOT_VALIDATED
+- **Despliegue** · NOT_APPLICABLE
+- **Terminado** · Inicio de discovery autorizado.
+- **Pendiente** · Índice de evidencia, matriz A/B/C y elección.
+- **Motivo** · Precondiciones del discovery pendientes.
+- **Dependencias** · DES-08
+- **Bloqueos** · DES-08, HG-DESIGN-CHOICE
+- **Condición para retomar** · Despacho en worktree aislado y precondiciones acreditadas.
+- **Próxima acción** · Presentar comparación al propietario y esperar su elección.
+- **Ejecutor** · claude
+- **Revisor** · codex
+- **Commit de referencia** · UNKNOWN
+- **Decisiones del propietario** · Elegir A/B/C en HG-DESIGN-CHOICE; cualquier integración productiva requiere autorización.
+- **Ficha de alcance** · [docs/design/DESIGN_DISCOVERY_A_B_C.md](design/DESIGN_DISCOVERY_A_B_C.md)
+- **Evidencias** · [docs/design/DESIGN_DISCOVERY_EXECUTION_OVERRIDES.md](design/DESIGN_DISCOVERY_EXECUTION_OVERRIDES.md)
+
+Subtarea interna. Sustitución temporal y alcance en el override del 2026-11-27; roles del plan sujetos al despacho efectivo. HG-DESIGN-CHOICE abierto.
+
+#### Reanudar MP-036
+
+Fallback del motor: una observación rechazada no reaparece como ancla aceptada (A→B→A)
+
+- **Última actualización** · 2026-11-27
+- **Criterio de cierre** · Regresión RED/GREEN; reconstrucción determinista del historial sin cambiar el esquema; coste acotado y medido; una revisión completa y una verificación del delta
+- **Implementación** · IMPLEMENTED
+- **Revisión** · APPROVED
+- **Integración** · MERGED
+- **Validación** · PROVISIONAL
+- **Despliegue** · NOT_DEPLOYED
+- **Terminado** · Fallback determinista K=2 integrado (#15); 0/416 reapariciones en jornada 1.
+- **Pendiente** · Caracterizar recuperación, jitter y cota 256 en más datos.
+- **Motivo** · El propietario aceptó los costes para desarrollo local; FR-01 sigue abierto.
+- **Condición para retomar** · Datos de una jornada completa y autorización para el contraste.
+- **Próxima acción** · Medir cota 256 y recuperación sobre una jornada completa antes de plantear ajustes.
+- **Ejecutor** · codex
+- **Revisor** · claude
+- **HEAD revisado** · 8c005c8
+- **Rama** · pedromaaz13/mp-036-fallback-gps-rechazado
+- **Commit de referencia** · 0c518fa
+- **PR** · 15
+- **Merge** · d3be45dc5523a36ade751fd6e2aad28700e19c44
+- **Decisiones del propietario** · Decidir si se autoriza evaluar cambios de K/cota tras medir los costes con datos posteriores.
+- **Ficha de alcance** · [docs/roadmap/CROSSWALK.md](roadmap/CROSSWALK.md)
+- **Evidencias** · [docs/evidence/mp-036/README.md](evidence/mp-036/README.md); [docs/evidence/mp-038/JORNADA2.md](evidence/mp-038/JORNADA2.md)
+
+Revisión Opus High: a7e01b8 CHANGES_REQUESTED (2 B, 8 A); delta 8c005c8 APPROVED (3 A residuales). Reconstrucción determinista del historial sin migraciones; re-anclaje K=2 configurable; RED 9+5, GREEN 339/18 omitidos. Integrada el 2026-11-27 (d3be45dc). El propietario aceptó los costes medidos exclusivamente para desarrollo local. Precisión física, cumplimiento integral del motor y preparación para publicación siguen pendientes; FR-01 y NO-GO público abiertos.
+
+#### Reanudar MP-037
+
+Estudio de contradicciones de estado: M7 frente a R4 y STOPPED_AT incoherente con el GPS
+
+- **Última actualización** · 2026-11-27
+- **Criterio de cierre** · Comparación de políticas sobre la captura existente; recomendación y, si cambia la precedencia aprobada del ADR, enmienda concreta para decisión del propietario antes de implementar
+- **Implementación** · IMPLEMENTED
+- **Revisión** · APPROVED
+- **Integración** · MERGED
+- **Validación** · PROVISIONAL
+- **Despliegue** · NOT_DEPLOYED
+- **Terminado** · Estudio M7/R4 y STOPPED_AT integrado (#16); R4 conservada.
+- **Pendiente** · Validar candidatas parada_previa, gps_previo y R7→R8 condicional con datos posteriores.
+- **Motivo** · La evidencia no establece exactitud física; alternativas pendientes de decisión.
+- **Dependencias** · MP-025b
+- **Condición para retomar** · Autorización del contraste y datos posteriores para decidir.
+- **Próxima acción** · Contrastar la jornada 2 y añadir la 3 cuando exista; presentar los deltas al propietario.
+- **Ejecutor** · codex
+- **Revisor** · claude
+- **HEAD revisado** · ebaea29
+- **Rama** · pedromaaz13/mp-037-estudio-m7-r4
+- **Commit de referencia** · ebaea29
+- **PR** · 16
+- **Merge** · 14709bba5280b71b2bd8b9c129a3e4ca10421681
+- **Decisiones del propietario** · Decidir si se acepta alguna candidata, con enmienda si cambia la precedencia del ADR.
+- **Ficha de alcance** · [docs/roadmap/CROSSWALK.md](roadmap/CROSSWALK.md)
+- **Evidencias** · [docs/evidence/mp-037/README.md](evidence/mp-037/README.md)
+
+Estudio de 19 planes positivos con STOPPED_AT incoherente y 135 retenciones de M7. Conservar R4 produjo menos discontinuidades frente a GPS discretizado; exactitud física UNVERIFIED. parada_previa tuvo efecto mínimo y gps_previo intercambió discontinuidades; R7→R8 condicional sigue candidata. Revisión Opus High: CHANGES_REQUESTED (2 B, 5 A) y delta APPROVED. PR #16, merge 14709bba (2026-11-26 23:01 UTC, 2026-11-27 hora de Madrid), integrado como estudio. R4 y el ADR siguen intactos.
+
+#### Reanudar MP-038
+
+Evaluación comparable antes/después sobre las mismas entradas
+
+- **Última actualización** · 2026-11-27
+- **Criterio de cierre** · Baseline y corrección sobre las mismas entradas; dump, manifiesto y resultados originales intactos; métricas globales y estratificadas con denominadores, exclusiones y casos adversos
+- **Implementación** · IMPLEMENTED
+- **Revisión** · APPROVED
+- **Integración** · MERGED
+- **Validación** · PROVISIONAL
+- **Despliegue** · NOT_DEPLOYED
+- **Terminado** · Evaluación reproducible integrada (#17); jornadas 1 y 2 comparadas.
+- **Pendiente** · Completar evidencia de aceptación del motor tras la jornada 3.
+- **Motivo** · La evaluación mide costes y discontinuidades; FR-01 abierto.
+- **Dependencias** · MP-025b, MP-036, MP-037
+- **Bloqueos** · MP-028
+- **Condición para retomar** · Jornada 3 capturada y artefactos verificados.
+- **Próxima acción** · Repetir la comparación con entradas de jornada 3 y criterios congelados.
+- **Ejecutor** · codex
+- **Revisor** · claude
+- **HEAD revisado** · dc59299
+- **Rama** · pedromaaz13/mp-038-evaluacion-comparable
+- **Commit de referencia** · b7aed67
+- **PR** · 17
+- **Merge** · 453a5eb53f53c1f5c45314b1a77d1aae7daa06f0
+- **Ficha de alcance** · [docs/roadmap/CROSSWALK.md](roadmap/CROSSWALK.md)
+- **Evidencias** · [docs/evidence/mp-038/README.md](evidence/mp-038/README.md); [docs/evidence/mp-038/JORNADA2.md](evidence/mp-038/JORNADA2.md)
+
+Separa discrepancia frente al GPS bruto (incluso rechazado), cambio de ancla efectiva aceptada y discontinuidad de la posición presentada. No cambia retrospectivamente el criterio de aceptación. Autorizada el 2026-11-26. FR-01 permanece abierto. RESULTADO (2026-11-26): baseline 4bc8612 frente a corrección 0c518fa sobre la misma jornada 1; saltos presentados >200 m 2 935→2 771 (24 nuevos frente a 188 reducidos; 8 vehículos peores; STOPPED_AT 32↑/23↓); discrepancia frente al GPS bruto en 216 retenciones 674,5→1 845,6 m (se aleja con GPS congelado, 113/113). Revisión Opus High: 1ª pasada CHANGES_REQUESTED (2 B, 7 A) → delta APPROVED. FR-01 abierto. Evidencia: informe docs/evidence/mp-038/README.md en el PR #17 (head 39166da; revisado en 6615d53). JORNADA 2 (2026-11-27, captura 07:54–09:54 UTC: 7 230 s efectivos, 0 huecos, feeds 235/235): baseline 4bc8612 frente a MP-036 0c518fa con la configuración actual (K=2, cota 256, sin ajustes): reapariciones A→B→A 5→0 sobre 373 tríadas; saltos comunes >200 m 2 587→2 461 sobre 39 973 pares; COSTES: ancla más antigua en 1 932/40 117 fotogramas (mediana +78 s, máx 220 s), retenciones >180 s 3→12 (7 censuradas), p90 de recuperación 30,9→61,7 s, discrepancia frente al GPS bruto mayor en 52/52 pares con coordenada repetida. Verificación única Opus High: APPROVED (2 observaciones no bloqueantes, resueltas). Informe docs/evidence/mp-038/JORNADA2.md en el PR #17 (head b7aed67; verificado en dc59299). FR-01 abierto: una jornada más no cierra nada. INTEGRADA el 2026-11-27 por decisión del propietario (PR #17, merge commit 453a5eb5). Integrar NO es validar ni publicar: FR-01 y el NO-GO público siguen abiertos. Las evidencias enlazadas conservan los denominadores, exclusiones y casos censurados originales; la revisión y la integración tienen el alcance del informe.
+
+#### Reanudar GOV-TRACKING
+
+Seguimiento recuperable del plan
+
+- **Última actualización** · 2026-11-27
+- **Criterio de cierre** · Estado coherente con main y evidencias, regeneración determinista, preservación manual, tests de gobernanza y revisión independiente.
+- **Implementación** · IMPLEMENTED
+- **Revisión** · NOT_REVIEWED
+- **Integración** · NOT_INTEGRATED
+- **Validación** · PROVISIONAL
+- **Despliegue** · NOT_APPLICABLE
+- **Terminado** · Tablero, fichas de reanudación y registro de diferidos implementados.
+- **Pendiente** · Revisión de Claude pendiente.
+- **Motivo** · Claude sin cuota; implementación pendiente de revisión.
+- **Condición para retomar** · Claude vuelve a estar disponible.
+- **Próxima acción** · Revisar el diff del PR #14 y repetir la suite de gobernanza sobre el HEAD entregado.
+- **Ejecutor** · codex
+- **Revisor** · claude
+- **Rama** · docs/tareas-lote-correccion
+- **Commit de referencia** · f3e3b0a
+- **PR** · 14
+- **Ficha de alcance** · [docs/governance/UPDATE_PROTOCOL.md](governance/UPDATE_PROTOCOL.md)
+- **Evidencias** · [docs/governance/DISPATCH_LOG.md](governance/DISPATCH_LOG.md); [tests/governance/test_governance.py](../tests/governance/test_governance.py); [docs/STATUS.md](STATUS.md)
+
+El HEAD indicado es la base verificada de este despacho (no el HEAD de revisión); el commit de entrega se identifica en la rama.
+
+### Registro de hallazgos y propuestas diferidas
+
+Estado `DEFERRED`. Trabajo sujeto a autorización.
+
+| ID | Origen | Hallazgo o propuesta | Motivo | Condición para retomar |
+| --- | --- | --- | --- | --- |
+| DEF-DISPLAY-LAG | [docs/evidence/mp-026a/README.md](evidence/mp-026a/README.md) | Añadir tope le=3600 a display_lag_s y devolver 422 por encima. | Propuesta fuera del fix temporal. | Autorización explícita y regresión de límites de la API. |
+| DEF-MP-030-A1 | [docs/CHANGELOG.md](CHANGELOG.md) | El cancelado aparece como «En servicio hoy». | Observación no bloqueante de la comprobación focalizada del PR #11. | Autorizar el ajuste y verificar en navegador con replay identificado. |
+| DEF-MP-030-A2 | [docs/CHANGELOG.md](CHANGELOG.md) | El panel contradice si el tren puede seguir avanzando. | Observación no bloqueante de la comprobación focalizada del PR #11. | Autorizar el ajuste y verificar en navegador con replay identificado. |
+| DEF-MP-030-A3 | [docs/CHANGELOG.md](CHANGELOG.md) | Cancelado y congelado son indistinguibles en el mapa. | Observación no bloqueante de la comprobación focalizada del PR #11. | Autorizar el ajuste y verificar en navegador con replay identificado. |
+| DEF-MP-030-NOT-RUN | [docs/CHANGELOG.md](CHANGELOG.md) | schedule_incoherent, outside_schedule_extent, horizon_exhausted, not_yet_valid, lector de pantalla y otros navegadores: NOT RUN. | Quedaron fuera de la comprobación visual focalizada. | Matriz de pruebas y entorno con navegador y lector de pantalla disponibles. |
+| DEF-MP-036-K | [docs/evidence/mp-036/README.md](evidence/mp-036/README.md) | 20752 no recuperado con K=2; K=1 rompe A→B→A. | El ajuste cambia el compromiso entre recuperación y reapariciones. | Medir ambos costes con datos posteriores y solicitar autorización. |
+| DEF-MP-036-CATALOGO | [docs/evidence/mp-036/README.md](evidence/mp-036/README.md) | Listado legado C1/C8a/C9↔C4. | La corrección preserva el catálogo existente. | Comprobar el catálogo y sus patrones con evidencia versionada antes de cambiarlo. |
+| DEF-MP-036-JITTER | [docs/evidence/mp-038/JORNADA2.md](evidence/mp-038/JORNADA2.md) | Coste del re-anclaje erróneo, retenciones y jitter. | Costes aceptados solo para desarrollo local. | Probar latencia, recuperación y transiciones adversas con jornadas adicionales. |
+| DEF-COTA-256 | [docs/evidence/mp-036/README.md](evidence/mp-036/README.md) | Medir la cota de 256 muestras con una jornada completa. | Las ventanas disponibles no cubren un día completo. | Captura de día completo y benchmark de historial con denominadores. |
+| DEF-MP-037-PARADA | [docs/evidence/mp-037/README.md](evidence/mp-037/README.md) | Candidata parada_previa. | Estudio integrado sin cambios de política; evidencia acotada a la jornada 1. | Contrastar en jornadas posteriores; decisión expresa del propietario antes de implementar. |
+| DEF-MP-037-GPS | [docs/evidence/mp-037/README.md](evidence/mp-037/README.md) | Candidata gps_previo. | Estudio integrado sin cambios de política; evidencia acotada a la jornada 1. | Contrastar en jornadas posteriores; decisión expresa del propietario antes de implementar. |
+| DEF-MP-037-R8 | [docs/evidence/mp-037/README.md](evidence/mp-037/README.md) | Candidata R7→R8 condicional. | Estudio integrado sin cambios de política; evidencia acotada a la jornada 1. | Contrastar en jornadas posteriores; decisión expresa del propietario antes de implementar. |
+| DEF-SOAK-MP-007 | [docs/TASKS.md#mp-007--collector-idempotente](TASKS.md#mp-007--collector-idempotente) | Soak real de 24 h para gate F3. | Soak disponible de 20 min, con 668 posiciones. | Autorizar operación aislada de MP-032 y documentar una corrida de 24 h. |
+| DEF-TEST-SEGMENTS | [docs/evidence/mp-038/JORNADA2.md](evidence/mp-038/JORNADA2.md) | test_segments en el endpoint histórico de MP-025b: NOT RUN. | Los replays ejecutaron check_segment sobre las vistas temporales. | Reproducir el endpoint de prueba en entorno aislado y ejecutar la suite. |
+| DEF-ADR-CANCELACION | [docs/adr/0014-amendment-stop-state.md](adr/0014-amendment-stop-state.md) | Falta comprobar: nombre contractual del campo de cancelación. | El ADR deja abierto el nombre definitivo. | Verificar contrato y evidencia de fuente; decisión expresa del propietario. |
+| DEF-VISUAL-INDEPENDIENTE | [docs/design/DESIGN_DISCOVERY_EXECUTION_OVERRIDES.md](design/DESIGN_DISCOVERY_EXECUTION_OVERRIDES.md) | Gate visual independiente del discovery: NOT RUN. | Falta capacidad de navegador verificada para revisión cruzada. | Preflight de navegador en proveedor contrario y capturas reproducibles. |
+| DEF-GPS-CUANTIZADO | [docs/evidence/mp-038/JORNADA2.md](evidence/mp-038/JORNADA2.md) | GPS Renfe cuantizado y coordenadas repetidas. | La repetición no demuestra posición física ni origen de la cuantización. | Contrastar con más jornadas y evidencia operativa independiente. |
+| DEF-REPLAY-CIVIL | [docs/adr/0014-amendment-owner-decision.md](adr/0014-amendment-owner-decision.md) | Visibilidad histórica exacta por hora civil UNVERIFIED. | La garantía aprobada usa identificador de ancla/run. | Obtener evidencia histórica de publicación y una prueba entre inicio y commit (MP-026b/MP-032). |
+| DEF-MP-023-REVISION | [docs/evidence/mp-023/ROUND2.md](evidence/mp-023/ROUND2.md) | Arnés de aislamiento fuera de CI, errores con entorno vacío, reinicio del supervisor y ajustes menores de herramientas. | Recomendaciones no bloqueantes de la revisión. | Autorizar el seguimiento o priorizarlo al planificar operación local. |
+| DEF-MP-026B-REVISION | [docs/evidence/mp-026b/README.md](evidence/mp-026b/README.md) | Identidad del tablero, statement_timeout/pool y casos de error en consistent_read y _revision_scope. | Observaciones no bloqueantes; el ticket cubre coherencia intra-respuesta. | Revisarlas con las mediciones de MP-032/033 y autorización del alcance. |
+| DEF-MP-028-SUSPENSION | [docs/operations/CAPTURE_PROTOCOL.md](operations/CAPTURE_PROTOCOL.md) | Falta comprobar suspensión real y recuperación de un colector huérfano. | La cobertura del delta de supervisor se verificó mediante simulación. | Ensayo controlado en entorno aislado y ventana separada de la jornada 3. |
+| DEF-MP-025A-REVISION | [docs/evidence/mp-025a/ronda2/README.md](evidence/mp-025a/ronda2/README.md) | Bloqueo huérfano con SIGSTOP y valor de regresión de test_collector_without_gtfs_holds_from_first_frame. | Observaciones no bloqueantes fuera del cierre determinista de MP-025a. | Reproducir el escenario y acordar prioridad con el propietario. |
 
 <!-- END GENERATED: backlog-index -->

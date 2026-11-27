@@ -4,26 +4,41 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 
 ## [Unreleased]
 
-### MP-025b — Validación provisional del motor sobre la jornada 1 de MP-028 (integrada por PR #13, merge `d0dd0bc`, como informe provisional)
+### Seguimiento recuperable del plan (PR #14, implementación pendiente de revisión)
+
+- Tablero de estado generado en `STATUS.md`, fichas de reanudación en `TASKS.md` y registro versionado de diferidos. El generador conserva la bitácora manual. Validación y despliegue se registran por separado.
+- Autorización de inicio de Design Discovery y sustitución temporal registradas el 2026-11-27. La elección A/B/C queda abierta.
+
+### MP-036 — Fallback de GPS rechazado (integrada por PR #15, merge `d3be45dc`)
+
+- Reconstrucción determinista del ancla desde el historial, sin migraciones, con re-anclaje K=2 configurable. Regresión original de la jornada 1: 0/416 reapariciones A→B→A con la corrección. Revisión del delta aprobada sobre `8c005c8`. El propietario aceptó los costes medidos solo para desarrollo local. [Evidencia](evidence/mp-036/README.md).
+
+### MP-037 — Estudio M7 frente a R4 y STOPPED_AT (integrada por PR #16, merge `14709bba`)
+
+- Estudio reproducible sobre 19 planes con avance en STOPPED_AT y 135 retenciones M7. Se mantuvo R4. Se documentaron las candidatas `parada_previa`, `gps_previo` y R7→R8 condicional para contraste posterior y decisión del propietario. [Evidencia](evidence/mp-037/README.md).
+
+### MP-038 — Comparación reproducible de jornadas 1 y 2 (integrada por PR #17, merge `453a5eb5`)
+
+- Comparación del baseline `4bc8612` y el fallback `0c518fa` sobre las mismas entradas. En la jornada 2, reapariciones A→B→A de 5 a 0 sobre 373 tríadas, saltos comunes >200 m de 2 587 a 2 461 sobre 39 973 pares y retenciones >180 s de 3 a 12, con 7 censuradas. La integración corresponde a la evaluación reproducible. FR-01 y el NO-GO público siguen abiertos. [Jornada 1](evidence/mp-038/README.md) · [Jornada 2](evidence/mp-038/JORNADA2.md).
 
 ### MP-030 — Interfaz funcional mínima de procedencia y estado (rama `pedromaaz13/mp-030-interfaz-veraz`; integrada con el PR #11)
 
-Ejecutor Codex `gpt-6.1-terra` · medium (sin navegador); revisor Claude Sonnet 5.5 · high con navegador real verificado: **CHANGES_REQUESTED** en la revisión completa y en el delta; la corrección final (`0600610`) se verificó con una **comprobación visual excepcional: PASS** (0 B, 3 A no bloqueantes) en escritorio y móvil. Sin rediseño A/B/C. **No integrada en `main`.**
+Ejecutor Codex `gpt-6.1-terra` · medium (sin navegador). Revisor Claude Sonnet 5.5 · high con navegador real verificado. **CHANGES_REQUESTED** en la revisión completa y en el delta (`6e60249`). El frontend de la corrección final (`0600610`) se verificó con una **comprobación visual excepcional: PASS** (0 B, 3 A no bloqueantes) en escritorio y móvil. La re-verificación del código final queda pendiente. Sin rediseño A/B/C. **Integrada en `main`** (PR #11, merge `359932db`, 2026-11-27).
 
 #### Changed
 - Rótulos de procedencia por (`rendering_method`, `coordinate_space`), `hold_reason` y estado de parada traducidos, congelación F1 con final estimado y última posición confirmada, cancelación y degradación GTFS leída del snapshot (no del catálogo cacheado).
 
 #### Verified
-- 142 tests, lint, typecheck y build; inspección real en escritorio y móvil sobre el smoke de MP-028 (replay identificado). **No observados en navegador:** cancelado, terminal y demás motivos, `not_yet_valid`.
+- 142 tests, lint, typecheck y build. La comprobación focalizada usó replay identificado, con cancelados y terminales reales y una fixture terminal simulada identificada. Pendientes A1 «En servicio hoy» para un cancelado, A2 mensajes contradictorios de avance y A3 marcador cancelado indistinguible de congelado. **NOT RUN** para `schedule_incoherent`, `outside_schedule_extent`, `horizon_exhausted`, `not_yet_valid`, lector de pantalla y otros navegadores.
 
-### MP-028 — Captura real aislada: preparación y smoke (rama `pedromaaz13/mp-028-captura`; sin fusionar)
+### MP-028 — Captura aislada y supervisor corregido (integrada por PR #12, merge `2ffaee4f`)
 
-Ejecutor Codex `gpt-6.2-sol` · medium (recibo de Orca); revisor Claude Sonnet 5.5 · high (argv verificado): **APPROVED** para preparación y smoke. **No integrada en `main`.** **Las sesiones de ≥ 2 h en ≥ 3 días NO están completadas** (0 de 3).
+Ejecutor Codex `gpt-6.2-sol` · medium (recibo de Orca). Revisor Claude Sonnet 5.5 · high: **APPROVED** para preparación y smoke, y para el delta del supervisor. Captura **2 de 3 jornadas**. La tercera sigue pendiente de ejecución y de confirmación de ventana.
 
 #### Added
-- `docs/operations/CAPTURE_PROTOCOL.md` y `infra/operate/capture/` (preparación de la base dedicada `mp028-capture` en el puerto 5466 con volumen persistente, sesión supervisada, manifiesto por sesión). Smoke real: 300,09 s, 10/10 ciclos por feed, 212 posiciones, 24 vehículos. Los datos no se publican.
+- [Protocolo de captura](operations/CAPTURE_PROTOCOL.md) y supervisor con cobertura efectiva, manifiesto v2 y volcado por sesión. Smoke real de 300,09 s, 10/10 ciclos por feed, 212 posiciones y 24 vehículos. Jornadas del 26 y 27 de noviembre completadas. La segunda registró 7 230 s efectivos sin huecos. [Custodia de la jornada 2](evidence/mp-038/JORNADA2.md).
 
-### MP-025b — Validación provisional del motor sobre la jornada 1 de MP-028 (rama `pedromaaz13/mp-025b-validacion`; sin fusionar)
+### MP-025b — Validación provisional del motor sobre la jornada 1 de MP-028 (integrada por PR #13, merge `d0dd0bc`)
 
 Harness e informe: Codex `gpt-6.2-astra` · high (recibo de Orca); correcciones: Codex `gpt-6.2-sol` · medium (sustitución registrada); revisor Claude Opus 5.5 · high (argv verificado): verificación del delta **APPROVED** — del **informe provisional**; **no valida el motor ni cierra FR-01**. **Integrada en `main`** (PR #13, merge commit `d0dd0bc`, 2026-11-26) como informe provisional.
 
@@ -52,16 +67,16 @@ Ejecutor Codex `gpt-6.2-astra` · high (recibo de Orca); revisor Claude Opus 5.5
 #### Verified
 - RED contra `beb9434` y GREEN; 315 tests con 18 skipped sobre PostgreSQL desechable; Vitest 110; `latest_vehicle_histories` con 300 000 runs: 11,55–83,11 ms. Pendiente: Actions remoto y validación en vivo (MP-025b); supuestos `UNVERIFIED` sin validar.
 
-### MP-024 — Propuesta de enmienda de ADR-0014 (PR #7)
+### MP-024 — Enmienda de ADR-0014 (integrada por PR #7, merge `2b71d17`; aclaración por PR #10, merge `a0267c8`)
 
-Solo documentación y evidencia offline; **ningún cambio de código de producto**. **Decisión del propietario (2026-11-25): dirección aprobada** (A con C como degradación R8; F1; P-024 provisional; limitaciones aceptadas; ver `docs/adr/0014-amendment-owner-decision.md`); el dictamen de revisor sigue sin ser APPROVED y los supuestos `UNVERIFIED` siguen sin validar; aún no está implementado (MP-025a). Ejecutor Claude Opus 5.5 · high; revisor Codex `gpt-6.2-astra` · high: **sin dictamen APPROVED** (2 rondas con CHANGES_REQUESTED parcial; las correcciones finales no se re-verificaron).
+Documentación y evidencia offline. **Decisión del propietario (2026-11-25): dirección aprobada** (A con C como degradación R8, F1, P-024 provisional y limitaciones aceptadas). El PR #10 aclara que el ADR base sigue `Propuesto`. La implementación determinista entró por MP-025a. Ejecutor Claude Opus 5.5 · high. Revisor Codex `gpt-6.2-astra` · high: **CHANGES_REQUESTED** parcial en `c7b4df6`; el ajuste posterior `68d7df7` sigue pendiente de re-verificación. [Decisión del propietario](adr/0014-amendment-owner-decision.md).
 
 #### Added
 - `docs/adr/0014-amendment-stop-state.md` (alternativas A/B/C/D comparadas por pruebas, reglas, criterios de aceptación, decisión del propietario) y `docs/evidence/mp-024/` (arnés offline determinista, equivalencia Python↔TypeScript y resultados).
 
 ### MP-026a — Replay temporal `?at=` y vigencia del GTFS (integrada por PR #6, merge `7a5312f`)
 
-Ejecutor Codex `gpt-6.2-sol` · high (recibo de Orca); revisor Claude Opus 5.5 · high (argv verificado): 2 rondas, APPROVED. **Integrada en `main`** (PR #5, merge commit `4b80ce7`, 2026-11-25).
+Ejecutor Codex `gpt-6.2-sol` · high (recibo de Orca); revisor Claude Opus 5.5 · high (argv verificado): 2 rondas, APPROVED. **Integrada en `main`** (PR #6, merge commit `7a5312f`, 2026-11-25).
 
 #### Fixed
 - FR-02: las lecturas de ingestas y observaciones se acotan al instante pedido; antes del primer dato el estado es «sin dato» con edades `null`, nunca negativas; `?at=` fuera de rango → 400 (antes 500).
@@ -75,7 +90,7 @@ Ejecutor Codex `gpt-6.2-sol` · high (recibo de Orca); revisor Claude Opus 5.5 �
 
 ### MP-023 — Configuración segura de PostgreSQL (integrada por PR #5, merge `4b80ce7`)
 
-Implementada por Codex `gpt-6.2-sol` · medium (recibo de Orca); revisada por Claude Sonnet 5.5 · high (argv verificado), 2 rondas, 0 bloqueantes. **Integrada en `main`** (PR #6, merge commit `7a5312f`, 2026-11-25).
+Implementada por Codex `gpt-6.2-sol` · medium (recibo de Orca); revisada por Claude Sonnet 5.5 · high (argv verificado), 2 rondas, 0 bloqueantes. **Integrada en `main`** (PR #5, merge commit `4b80ce7`, 2026-11-25).
 
 #### Changed
 - API, colector y snapshotter sin valor por defecto de conexión: una sola variable `MADRID_PULSE_DATABASE_URL` y `MADRID_PULSE_ENV` obligatorios; fallo seguro antes de abrir conexiones; el puerto compartido de desarrollo se rechaza en cualquier host; marca de base desechable para escribir/probar; CI con base desechable, `MADRID_PULSE_REQUIRE_DB=1` y la marca tras las migraciones.
@@ -83,7 +98,7 @@ Implementada por Codex `gpt-6.2-sol` · medium (recibo de Orca); revisada por Cl
 #### Verified
 - RED contra `beb9434` y GREEN; 283 tests con 18 skipped en 28 módulos contra PostgreSQL desechable propio; arranques sin variables con 0 filas y 0 conexiones; el contenedor compartido de desarrollo no se tocó. Evidencia: `docs/evidence/mp-023/`. Pendiente: ejecución real en GitHub Actions.
 
-### Gobernanza documental y roadmap maestro (2026-11-25, rama `docs/governance-roadmap`, sin fusionar)
+### Gobernanza documental y roadmap maestro (2026-11-25, integrada por PR #4, merge `aee334e`)
 
 Solo documentación y mecanismo de seguimiento; **ningún cambio funcional**. La rama incorpora además dos commits de documentos de despliegue (`docs/deployment/*`, propuestas, procedentes de `docs/mvp-web-deployment`).
 

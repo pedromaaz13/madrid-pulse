@@ -17,7 +17,7 @@ from scripts.governance.governance_lib import REPO_ROOT, STATE_PATH, Record, val
 from scripts.governance.sync_docs import MILESTONES_DOC, STATUS_DOC, TASKS_DOC
 
 DOCUMENTS = {
-    STATUS_DOC: ("state-summary",),
+    STATUS_DOC: ("recovery-board", "state-summary"),
     MILESTONES_DOC: ("phases-table", "milestones-table"),
     TASKS_DOC: ("backlog-index",),
 }
@@ -88,6 +88,29 @@ class StateTests(unittest.TestCase):
         self.state["tasks"].append(self.task.copy())
         self.state["proposed_extensions"].append({"id": "F0"})
         self._assert_errors("MP-023: ID duplicado", "F0: ID duplicado")
+
+    def test_optional_resume_fields_and_deferred_register(self) -> None:
+        """Admite estados antiguos y valida metadatos nuevos cuando se declaran."""
+        self.assertEqual(validate_state(self.state), [])
+        self.task.update(
+            last_update="2026-02-28", done="Preparación", remaining="Captura", next_action="Arrancar",
+            not_closed_reason="Ventana pendiente", unblock_condition="Confirmación",
+            branch="mp-023-captura", blocked_by=["HG-LIVE-PUBLIC"], owner_decisions=["Confirmar ventana"],
+            reviewed_head="a1b2c3d", validation_status="PROVISIONAL",
+        )
+        self.state["deferred_items"] = [{
+            "id": "DEF-CAPTURE", "source": "docs/STATUS.md", "description": "Captura adicional",
+            "reason": "Falta ventana", "resume_when": "Autorización", "status": "DEFERRED",
+        }]
+        self.assertEqual(validate_state(self.state), [])
+        self.task.update(last_update="2026-02-30", done=[], next_action=None, branch=42,
+                         blocked_by=["MP-404"], owner_decisions=["  "], reviewed_head=None,
+                         validation_status="MERGED")
+        self.state["deferred_items"][0].update(id="MP-023", source="../outside", reason=2, status="PLANNED")
+        self._assert_errors("last_update debe ser", "done debe ser", "next_action debe ser",
+                            "branch debe ser", "blocked_by referencia", "owner_decisions debe ser",
+                            "reviewed_head debe ser", "validation_status debe ser", "ID duplicado",
+                            "source:", "reason debe ser", "status debe ser DEFERRED")
 
     def test_missing_dependencies_and_cycle(self) -> None:
         """Comprueba dependencias, referencias de fase e hito, y ciclos."""
@@ -374,9 +397,11 @@ class CliTests(unittest.TestCase):
     def test_preserves_external_bytes_and_state(self) -> None:
         """Preserva CRLF, marcadores, texto ajeno al bloque y el estado JSON."""
         path = self.root / STATUS_DOC
-        prefix = b"Pre\r\n<!-- BEGIN GENERATED: state-summary -->  \r\n"
+        prefix = b"Pre\r\n<!-- BEGIN GENERATED: recovery-board -->  \r\n"
+        middle = (b"<!-- END GENERATED: recovery-board -->\r\nBitacora manual\n"
+                  b"<!-- BEGIN GENERATED: state-summary -->\n")
         suffix = b"<!-- END GENERATED: state-summary -->\nFinal"
-        path.write_bytes(prefix + b"contenido anterior\r\n" + suffix)
+        path.write_bytes(prefix + b"tablero anterior\r\n" + middle + b"resumen anterior\n" + suffix)
         self.state["human_gates"][0].update(
             status="APPROVED_BY_OWNER", approved_by="owner", date="2026-11-25", evidence=["docs/STATUS.md"],
         )
@@ -384,8 +409,34 @@ class CliTests(unittest.TestCase):
         state_bytes = (self.root / STATE_PATH).read_bytes()
         self._assert_synced()
         self.assertTrue(path.read_bytes().startswith(prefix))
+        self.assertIn(middle, path.read_bytes())
         self.assertTrue(path.read_bytes().endswith(suffix))
         self.assertEqual((self.root / STATE_PATH).read_bytes(), state_bytes)
+        self.assertEqual(self._sync("--check").returncode, 0)
+
+    def test_board_distinguishes_merge_from_validation_and_links_deferred(self) -> None:
+        """Una tarea integrada y provisional aparece en espera y enlaza su ficha."""
+        task = self.state["tasks"][0]
+        task.update(implementation_status="IMPLEMENTED", review_status="APPROVED",
+                    integration_status="MERGED", merge_sha="1234567", pr=8, milestone="H4",
+                    validation_status="PROVISIONAL", last_update="2026-11-27",
+                    evidence=["docs/STATUS.md"], done="Dos jornadas", remaining="Jornada 3",
+                    next_action="Acordar ventana", unblock_condition="Mac disponible")
+        self.state["deferred_items"] = [{
+            "id": "DEF-VISUAL", "source": "docs/STATUS.md", "description": "Navegador NOT RUN",
+            "reason": "Falta navegador", "resume_when": "Preflight", "status": "DEFERRED",
+        }]
+        self._write_state()
+        self._assert_synced()
+        summary = (self.root / STATUS_DOC).read_text(encoding="utf-8")
+        self.assertIn("⏸️ [MP-023](TASKS.md#reanudar-mp-023)", summary)
+        self.assertIn("MERGED (PR #8) · PROVISIONAL · NOT_DEPLOYED. **Integrada; validación pendiente**", summary)
+        self.assertIn("Acordar ventana · Mac disponible", summary)
+        self.assertNotIn("✅ [MP-023]", summary)
+        self.assertIn("[1 hallazgos y propuestas diferidas]", summary)
+        backlog = (self.root / TASKS_DOC).read_text(encoding="utf-8")
+        self.assertIn("#### Reanudar MP-023", backlog)
+        self.assertIn("DEF-VISUAL", backlog)
         self.assertEqual(self._sync("--check").returncode, 0)
 
     def test_missing_marker(self) -> None:

@@ -157,6 +157,153 @@ def _backlog(state: Record) -> str:
     if aliases:
         sections.extend(("### Alias (mismo trabajo, otro identificador)", _table(("ID", "alias_of", "Título"), aliases)))
     sections.extend(("### Extensiones propuestas", "\n".join(extensions) or "—"))
+    cards = [_resume_card(task) for task in records(state, "tasks") if _has_resume_card(task)]
+    if cards:
+        sections.extend(("### Fichas de reanudación", *cards))
+    deferred = list(records(state, "deferred_items"))
+    if deferred:
+        sections.extend((
+            "### Registro de hallazgos y propuestas diferidas",
+            "Estado `DEFERRED`. Trabajo sujeto a autorización.",
+            _table(
+                ("ID", "Origen", "Hallazgo o propuesta", "Motivo", "Condición para retomar"),
+                ((item.get("id"), _refs(item, "source", TASKS_DOC), item.get("description"),
+                  item.get("reason"), item.get("resume_when")) for item in deferred),
+            ),
+        ))
+    return "\n\n".join(sections)
+
+
+def _has_resume_card(task: Record) -> bool:
+    return "alias_of" not in task and "last_update" in task and (
+        task.get("milestone") not in ("H0", "H1", "H2", "H3", "AUD") or "next_action" in task
+    )
+
+
+def _resume_card(task: Record) -> str:
+    fields = (
+        ("Última actualización", "last_update"), ("Criterio de cierre", "gate"),
+        ("Implementación", "implementation_status"), ("Revisión", "review_status"),
+        ("Integración", "integration_status"), ("Validación", "validation_status"),
+        ("Despliegue", "deployment_status"), ("Terminado", "done"), ("Pendiente", "remaining"),
+        ("Motivo", "not_closed_reason"), ("Dependencias", "depends_on"),
+        ("Gates humanos", "requires_gates"), ("Bloqueos", "blocked_by"),
+        ("Condición para retomar", "unblock_condition"), ("Próxima acción", "next_action"),
+        ("Ejecutor", "executor"), ("Revisor", "reviewer"), ("Fecha de revisión", "review_date"),
+        ("HEAD revisado", "reviewed_head"), ("Rama", "branch"), ("Commit de referencia", "head"),
+        ("PR", "pr"), ("Merge", "merge_sha"), ("Decisiones del propietario", "owner_decisions"),
+    )
+    lines = [f"#### Reanudar {task.get('id')}", "", _text(task.get("title")), ""]
+    lines.extend(f"- **{label}** · {_text(task[key])}" for label, key in fields if task.get(key))
+    for field, label in (("source", "Ficha de alcance"), ("evidence", "Evidencias")):
+        if task.get(field):
+            lines.append(f"- **{label}** · {_refs(task, field, TASKS_DOC)}")
+    if task.get("notes"):
+        lines.extend(("", _text(task["notes"])))
+    return "\n".join(lines)
+
+
+def _task_indicator(task: Record) -> str:
+    implementation = task.get("implementation_status")
+    if implementation == "BLOCKED":
+        return "🚫"
+    if task.get("unblock_condition") and implementation not in ("PLANNED", "NOT_STARTED"):
+        return "⏸️"
+    if (implementation == "IMPLEMENTED" and task.get("review_status") == "APPROVED"
+            and task.get("validation_status") == "VALIDATED" and not task.get("not_closed_reason")):
+        return "✅"
+    return "⬜" if implementation in ("PLANNED", "NOT_STARTED") else "🔄"
+
+
+def _task_board_row(task: Record) -> tuple[str, ...]:
+    task_id = _text(task.get("id"))
+    label = f"[{task_id}](TASKS.md#reanudar-{task_id.lower()})" if _has_resume_card(task) else task_id
+    validation = task.get("validation_status")
+    integration = _text(task.get("integration_status"))
+    if label_integration := _integration_label(task, task.get("pr")):
+        integration += f" ({label_integration})"
+    statuses = (
+        task.get("implementation_status"), task.get("review_status"),
+        integration, validation, task.get("deployment_status"),
+    )
+    dimensions = " · ".join(map(_text, statuses))
+    if task.get("integration_status") == "MERGED" and validation != "VALIDATED":
+        dimensions += ". **Integrada; validación pendiente**"
+    blockers = text_entries(task.get("blocked_by", task.get("depends_on")))
+    reason = " · ".join(text_entries(task.get("not_closed_reason")) + ([", ".join(blockers)] if blockers else []))
+    action = " · ".join(text_entries(task.get("next_action")) + text_entries(task.get("unblock_condition")))
+    return (
+        f"{_task_indicator(task)} {label}", dimensions, task.get("done") or "—",
+        task.get("remaining") or ("—" if task.get("done") else task.get("title")), reason, action,
+    )
+
+
+def _board(state: Record) -> str:
+    tasks = list(records(state, "tasks"))
+    milestones = {_text(item.get("id")): item for item in records(state, "milestones")}
+    gates = {_text(item.get("id")): item for item in records(state, "human_gates")}
+    sections = [
+        "## Tablero de trabajo",
+        "✅ cerrada según su criterio de aceptación · 🔄 en curso · ⏸️ en espera · "
+        "🚫 bloqueada · ⬜ pendiente",
+        "**Dimensiones** · implementación / revisión / integración / validación / despliegue. "
+        "Cada ID enlaza su ficha de reanudación cuando existe.",
+    ]
+    open_findings = {_text(item.get("id")) for item in records(state, "open_findings") if item.get("status") == "OPEN"}
+    verdict = state.get("product_verdict", {})
+    if isinstance(verdict, dict) and verdict.get("public_deployment") == "NO-GO":
+        sections.append("**NO-GO público.** " + " · ".join(f"{item} abierto" for item in sorted(open_findings)))
+    deferred_count = sum(1 for _ in records(state, "deferred_items"))
+    if deferred_count:
+        sections.append(f"[{deferred_count} hallazgos y propuestas diferidas]"
+                        "(TASKS.md#registro-de-hallazgos-y-propuestas-diferidas).")
+
+    followups = ("MP-036", "MP-037", "MP-038")
+    groups = (
+        ("Gobernanza", (task for task in tasks if task.get("track") == "GOVERNANCE")),
+        ("H4 · MP-023…MP-035", (task for task in tasks if task.get("milestone") == "H4"
+                                and task.get("id") not in followups)),
+        ("Motor y evaluación · MP-036…MP-038", (task for task in tasks if task.get("id") in followups)),
+        ("Demo estática · D-01…D-06", (task for task in tasks if task.get("milestone") == "MVP0")),
+        ("Design Discovery · DES-00…DES-09", (task for task in tasks if task.get("milestone") == "DESIGN")),
+        ("Preparación y despliegue Live · D-10…D-18",
+         (task for task in tasks if task.get("milestone") == "LIVE_STAGING")),
+    )
+    for title, group in groups:
+        rows = []
+        aliases = []
+        for task in group:
+            if task.get("alias_of"):
+                target = _text(task["alias_of"])
+                aliases.append(f"{task.get('id')} → {target}")
+            else:
+                rows.append(_task_board_row(task))
+        if not rows and not aliases:
+            continue
+        sections.append(f"### {title}")
+        if title.startswith("H4") and "H4" in milestones:
+            sections.append(f"**H4 · {_text(milestones['H4'].get('implementation_status'))} · "
+                            f"{_text(milestones['H4'].get('closure'))}.** "
+                            f"{_text(milestones['H4'].get('gate'))}.")
+        if title.startswith("Design Discovery") and "HG-DESIGN-START" in gates:
+            sections.append(_text(gates["HG-DESIGN-START"].get("note")))
+        if rows:
+            sections.append(_table(("Tarea", "Dimensiones", "Terminado", "Pendiente", "Motivo / ID",
+                                    "Próxima acción / condición"), rows))
+        if aliases:
+            sections.append("**Equivalencias** · " + " · ".join(aliases))
+
+    history = []
+    for milestone_id in ("H0", "H1", "H2", "H3", "AUD"):
+        if milestone_id in milestones:
+            milestone = milestones[milestone_id]
+            open_gates = text_entries(milestone.get("open_gates_inherited"))
+            suffix = f" · gates heredados abiertos {', '.join(open_gates)}" if open_gates else ""
+            history.append(f"- **{milestone_id}** · {_text(milestone.get('title'))} · "
+                           f"{_text(milestone.get('integration_status'))} · "
+                           f"{_text(milestone.get('closure'))}{suffix}.")
+    if history:
+        sections.extend(("### Hitos históricos y auditoría", "\n".join(history)))
     return "\n\n".join(sections)
 
 
@@ -190,8 +337,10 @@ def _summary(state: Record) -> str:
         f"Despliegue público **{_cell(verdict.get('public_deployment'))}** · "
         f"código integrado local **{_cell(verdict.get('local_integrated_code'))}**. "
         f"Fuente: {_cell(_refs(verdict, 'source', STATUS_DOC))}.",
-        f"Etiqueta `{_cell(as_of.get('baseline_tag'))}` → `{_cell(as_of.get('origin_main'))}`.",
+        f"Etiqueta `{_cell(as_of.get('baseline_tag'))}` → "
+        f"`{_cell(as_of.get('baseline_tag_sha', as_of.get('origin_main')))}`.",
         f"Baseline de producto auditado: `{_cell(as_of.get('product_baseline_head'))}`.",
+        f"Referencia de `origin/main` al corte: `{_cell(as_of.get('origin_main'))}`.",
         "**DONE ≠ MERGED ≠ LIVE. CI verde ≠ cero P0.**",
         "### Recuentos de tareas por estado",
         _table(("Dimensión", "Estado", "Tareas"), counts),
@@ -272,7 +421,7 @@ def _write_documents(root: Path, changes: list[tuple[str, bytes, bytes]]) -> int
 def sync(root: Path, state: Record, *, check: bool) -> int:
     """Comprueba o actualiza los bloques generados en la raíz indicada."""
     documents = {
-        STATUS_DOC: {"state-summary": _summary(state)},
+        STATUS_DOC: {"recovery-board": _board(state), "state-summary": _summary(state)},
         MILESTONES_DOC: {"phases-table": _phases(state), "milestones-table": _milestones(state, MILESTONES_DOC)},
         TASKS_DOC: {"backlog-index": _backlog(state)},
     }

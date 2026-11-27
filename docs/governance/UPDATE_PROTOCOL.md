@@ -3,19 +3,23 @@
 **Fecha:** 2026-11-25. Complementa (no sustituye) `AGENTS.md`, `CLAUDE.md` y `docs/ORCHESTRATION_POLICY.md`; si contradice a `AGENTS.md`, manda `AGENTS.md`.
 
 ## 1. Una sola fuente de verdad
-*Origen de los datos de `PROJECT_STATE.json`:* estados, roles y dependencias de MP-001…022 se extrajeron de `docs/TASKS.md`; SHA y fechas de `git`; la auditoría, de su registro de despachos. Para evitar dos ediciones independientes, una tarea se edita **en su ficha y en `PROJECT_STATE.json` en el mismo commit**, y `check_docs.py` comprueba las referencias estructuradas (no el texto libre de las fichas).
+*Origen de los datos de `PROJECT_STATE.json`:* estados, roles y dependencias de MP-001…022 se extrajeron de `docs/TASKS.md`; SHA y fechas de `git`; la auditoría, de su registro de despachos. Los cambios de estado y reanudación se registran en `PROJECT_STATE.json`; si cambia el alcance o la evidencia, se actualiza su fuente en el mismo commit. `check_docs.py` valida las referencias estructuradas y la actualización de las vistas generadas.
 | Qué | Dónde | Quién lo escribe |
 |---|---|---|
 | Índice estructurado de fases, hitos, tareas, gates y hallazgos abiertos | `docs/governance/PROJECT_STATE.json` | agente ejecutor/coordinador, **a mano y revisado** |
-| Portada de estado, tablas de hitos y fases, índice de backlog | secciones entre marcadores `GENERATED` de `docs/STATUS.md`, `docs/roadmap/MILESTONES.md`, `docs/TASKS.md` | **solo** `scripts/governance/sync_docs.py` |
-| Fichas de tarea (criterios, evidencia, revisión) | `docs/TASKS.md` (MP-001…022) · `docs/H4_MP_MAPPING.md`/`H4_TASK_MATRIX.md` (MP-023+) | ejecutor y revisor |
-| Cambios confirmados | `docs/CHANGELOG.md` | **manual**, solo sobre código aceptado y validado; nunca funcionalidad no implementada |
+| Tablero, resumen, hitos, índice, fichas de reanudación y diferidos | secciones entre marcadores `GENERATED` de `docs/STATUS.md`, `docs/roadmap/MILESTONES.md`, `docs/TASKS.md` | **solo** `scripts/governance/sync_docs.py` |
+| Alcance y evidencia de tarea | fichas históricas de `docs/TASKS.md`, fuentes de alcance en `source`, resultados en `evidence` | ejecutor y revisor |
+| Cambios confirmados | `docs/CHANGELOG.md` | **manual**, sobre entregas realizadas, con alcance y límites de integración, revisión y validación |
 | Decisiones | `docs/DECISIONS.md` y `docs/adr/` | propuesta del agente; **aceptación solo del propietario** |
 
 Ningún documento nuevo puede crear una segunda verdad. El texto histórico de STATUS/TASKS/CHANGELOG **no se borra**; se corrige con notas fechadas.
 
-## 2. Las cuatro nociones de estado (nunca se confunden)
+## 2. Dimensiones de estado
 `implementation_status` (¿está construido?) · `review_status` (¿lo aprobó un revisor de proveedor contrario?) · `integration_status` (¿está en `main`?) · `deployment_status` (¿está desplegado y dónde?). Un técnico `DONE` no es `MERGED` ni `LIVE`; un CI verde no significa cero P0. `IMPLEMENTED_WITH_OPEN_GATE` = hay código, pero el exit gate literal no tiene evidencia.
+
+`validation_status` es opcional y registra la evidencia de aceptación del alcance (`NOT_VALIDATED`, `PROVISIONAL`, `VALIDATED`); un merge solo acredita integración. La ausencia del campo deja la validación sin registrar.
+
+Para reanudar, actualizar `last_update`, `done`, `remaining`, `not_closed_reason` y `next_action`; si hay espera, documentar `blocked_by` con IDs canónicos y `unblock_condition`. Mantener `gate`, `depends_on`, `evidence` y la referencia de rama/commit/PR; `reviewed_head` conserva el commit evaluado y `owner_decisions` enumera decisiones concretas. En una entrega cerrada basta anotar fecha y resultado. Si falta una comprobación relevante, dejar constancia con «falta comprobar: …».
 
 ## 3. Transiciones válidas
 ```text
@@ -36,7 +40,7 @@ closure (fase/hito): OPEN → CLOSED                                            
 Dictamen `APPROVED` de proveedor contrario sobre el HEAD final; pruebas de aceptación **ejecutadas** (regresión RED en `beb9434` y GREEN tras el fix cuando aplique); evidencia enlazada; sin escritura en bases persistentes; autoría humana sin `Co-authored-by`. `DONE` no implica integración ni despliegue.
 
 ## 6. Hallazgos nuevos
-Un hallazgo nuevo entra como `PROPOSED` (`open_findings` o `proposed_extensions`) hasta que el propietario lo acepta; no cambia gates ni abre tareas por sí solo. No se cierra un P0 sin prueba que falle antes y pase después.
+Un hallazgo nuevo entra como `PROPOSED` (`open_findings` o `proposed_extensions`) hasta que el propietario lo acepta; no cambia gates ni abre tareas por sí solo. No se cierra un P0 sin prueba que falle antes y pase después. `deferred_items` registra hallazgos y propuestas aplazados con ID, origen, descripción, motivo, condición para retomar y estado `DEFERRED`. Su registro mantiene pendiente la autorización correspondiente.
 
 ## 7. Cierre de fases e hitos
 **Cierre histórico ≠ preparación para release:** `CLOSED` registra que un gate se evidenció y no se reescribe; la disponibilidad para publicar se decide aparte (gate MP-035, aprobación humana) y no se deduce de ningún cierre. Los P0 abiertos y el NO-GO público permanecen visibles en `PROJECT_STATE.json` y en las tablas generadas.
