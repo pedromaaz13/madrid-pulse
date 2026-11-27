@@ -1,5 +1,5 @@
 import type { Snapshot, SnapshotVehicle } from "./contract";
-import { formatAge, formatDelay } from "./format";
+import { degradationText, formatAge, formatDelay } from "./format";
 import { circulationOf, vehicleKey, type CirculationId } from "./identity";
 
 export interface NewsEvent {
@@ -21,7 +21,7 @@ export function deriveNews(current: Snapshot, previous: Snapshot | null): NewsEv
     events.push({
       id: `degraded:${degradation.resource}:${degradation.status}:${degradation.last_valid_source_timestamp ?? "none"}`,
       text:
-        `${degradation.resource}: ${degradation.reason}` +
+        degradationText(degradation) +
         (degradation.data_age_s !== null ? ` (${formatAge(degradation.data_age_s)})` : ""),
       circulation: null,
     });
@@ -72,6 +72,8 @@ export function deriveNews(current: Snapshot, previous: Snapshot | null): NewsEv
 /** Fusiona novedades nuevas conservando las vigentes, sin duplicar por `id`. */
 export function mergeNews(previous: NewsEvent[], incoming: NewsEvent[], limit = 12): NewsEvent[] {
   const seen = new Set(incoming.map((event) => event.id));
-  const kept = previous.filter((event) => !seen.has(event.id));
+  // Las degradaciones reflejan el snapshot actual; no perpetuar avisos
+  // caducados cuando un recurso se recupera o cambia de estado.
+  const kept = previous.filter((event) => !event.id.startsWith("degraded:") && !seen.has(event.id));
   return [...incoming, ...kept].slice(0, limit);
 }

@@ -637,7 +637,7 @@ Dos ramas pueden avanzar en paralelo en worktrees independientes una vez resuelt
 | MP-027 | Portada, legal y puertas falsables (H4-10) | PRODUCT | PLANNED | — | claude | codex | Alias H4-10 | — | [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md) | — |
 | MP-028 | Captura en vivo (≥2 h, ≥3 días) (H4-12) | PRODUCT | IN_PROGRESS | MP-023 | codex | claude | Alias H4-12 | — | [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md) | [docs/operations/CAPTURE_PROTOCOL.md](operations/CAPTURE_PROTOCOL.md); [docs/adr/0014-amendment-owner-decision.md](adr/0014-amendment-owner-decision.md) |
 | MP-029 | Corredores, ramales y catálogo honesto (H4-03) | PRODUCT | PLANNED | MP-024 | codex | claude | Alias H4-03 | — | [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md) | — |
-| MP-030 | Interfaz: procedencia y rótulos veraces (H4-05) | PRODUCT | IN_PROGRESS | MP-024 | codex | claude | Alias H4-05 | — | [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md) | — |
+| MP-030 | Interfaz: procedencia y rótulos veraces (H4-05) | PRODUCT | IMPLEMENTED | MP-024 | codex | claude | Alias H4-05 | — | [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md) | [docs/evidence/mp-030/README.md](evidence/mp-030/README.md); [docs/adr/0014-amendment-owner-decision.md](adr/0014-amendment-owner-decision.md) |
 | MP-031 | Métricas de cierre honestas (H4-06) | PRODUCT | PLANNED | MP-028 | claude | codex | Alias H4-06 | — | [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md) | — |
 | MP-032 | Operación supervisada local medida (H4-07) | PRODUCT | PLANNED | MP-023 | codex | claude | Alias H4-07 | — | [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md) | — |
 | MP-033 | Rendimiento y coste (H4-08) | PRODUCT | PLANNED | MP-026a, MP-026b, MP-032 | codex | claude | Alias H4-08 | — | [docs/H4_MP_MAPPING.md](H4_MP_MAPPING.md) | — |

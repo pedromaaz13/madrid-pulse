@@ -1740,18 +1740,21 @@
       "priority": "P1"
     },
     {
-      "implementation_status": "IN_PROGRESS",
-      "review_status": "NOT_REVIEWED",
+      "implementation_status": "IMPLEMENTED",
+      "review_status": "APPROVED",
       "integration_status": "NOT_INTEGRATED",
       "deployment_status": "NOT_DEPLOYED",
-      "head": "UNKNOWN",
-      "evidence": [],
+      "head": "0600610",
+      "evidence": [
+        "docs/evidence/mp-030/README.md",
+        "docs/adr/0014-amendment-owner-decision.md"
+      ],
       "pr": null,
       "merge_sha": null,
-      "review_date": null,
+      "review_date": "2026-11-26",
       "gate": "Aprobación humana donde indica docs/H4_MP_MAPPING.md; prueba RED en beb9434 y GREEN tras el fix",
-      "notes": "Planificada; implementación H4 no autorizada. Autorizada por el propietario el 2026-11-26 (ejecución; sin hosting, publicación pública ni merge de PR nuevos; NO-GO público vigente).",
-      "head_kind": "none",
+      "notes": "Interfaz funcional mínima (procedencia por método y espacio, hold_reason, congelación F1, cancelación, degradación GTFS desde el snapshot); sin rediseño A/B/C. Ejecutor Codex gpt-6.1-terra medium (recibo de Orca; sin navegador); revisor Claude Sonnet 5.5 high con Chrome DevTools MCP verificado (argv verificado). Revisión completa: CHANGES_REQUESTED (2 B, 7 A). Verificación del delta (6e60249): B1, B2, A2-A7 resueltos; A1 parcial con un hallazgo material (congelada indistinguible de observada sobre corredor). Corrección final 0600610 (Terra, 142 tests). COMPROBACIÓN VISUAL EXCEPCIONAL (autorizada por el propietario, 2026-11-26): PASS en escritorio 1440x900 y móvil 390x844 con navegador real (Chrome DevTools MCP) sobre HEAD 35489b2 (apps/web idéntico a 0600610): la congelada (authorized_envelope_end y anchor_version_changed) se distingue de observada sobre corredor, extrapolada y bruta por contorno y punto interior, no solo por color; leyenda sin duplicado; Ampliar panel sin solapar el aviso GTFS. Cancelado y terminal EXISTEN en los datos reales de la jornada 1 (20226, 75303, 20797; terminal 20710 y 19601): evidencia REAL. Solo el motivo terminal en la fixture de 20797 es SIMULADO (identificado y separado). 0 B, 3 A no bloqueantes: A1 un cancelado muestra Estado: En servicio hoy; A2 mensajes contradictorios (puede seguir avanzando frente a no avanza); A3 en el mapa un cancelado es indistinguible de un congelado (solo lo dice el panel). NOT RUN: schedule_incoherent, outside_schedule_extent, horizon_exhausted, not_yet_valid, lector de pantalla y otros navegadores. Capturas fuera de Git en data/capture/2026-11-26/mp030-visual-final/. Autorizada por el propietario; PR #11 en borrador sin merge automático; NO-GO público vigente.",
+      "head_kind": "branch_tip",
       "id": "MP-030",
       "title": "Interfaz: procedencia y rótulos veraces (H4-05)",
       "track": "PRODUCT",

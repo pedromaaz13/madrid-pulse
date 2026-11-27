@@ -1,7 +1,7 @@
 import type { Feature, FeatureCollection, Point } from "geojson";
 import type { CatalogIndex } from "../domain/catalogIndex";
 import type { SnapshotVehicle } from "../domain/contract";
-import { METHOD_STYLES } from "../domain/format";
+import { methodStyle } from "../domain/format";
 import { vehicleKey } from "../domain/identity";
 import { frameFor, lastConfirmedCoordinate } from "../domain/movement";
 import { lineColor } from "../domain/palette";
@@ -92,7 +92,7 @@ export function vehicleFrames(
         : (context.index.axisByPatternId.get(vehicle.rendered.pattern_id) ?? null);
     const frame = frameFor(vehicle.rendered, axis, atMs);
     if (frame === null) continue;
-    const style = METHOD_STYLES[vehicle.rendered.rendering_method];
+    const style = methodStyle(vehicle.rendered.rendering_method, vehicle.rendered.coordinate_space);
     const key = vehicleKey(vehicle);
     features.push({
       type: "Feature",
@@ -103,6 +103,7 @@ export function vehicleFrames(
         key,
         color: lineColor(context.colors, vehicle.line),
         shape: style.shape,
+        provenance: style.label,
         selected: key === context.selectedVehicleKey,
         faded: vehicle.quality.stale,
         line: vehicle.line ?? "—",

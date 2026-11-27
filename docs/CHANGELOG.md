@@ -4,6 +4,16 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/). Solo se regis
 
 ## [Unreleased]
 
+### MP-030 — Interfaz funcional mínima de procedencia y estado (rama `pedromaaz13/mp-030-interfaz-veraz`; integrada con el PR #11)
+
+Ejecutor Codex `gpt-6.1-terra` · medium (sin navegador); revisor Claude Sonnet 5.5 · high con navegador real verificado: **CHANGES_REQUESTED** en la revisión completa y en el delta; la corrección final (`0600610`) se verificó con una **comprobación visual excepcional: PASS** (0 B, 3 A no bloqueantes) en escritorio y móvil. Sin rediseño A/B/C. **No integrada en `main`.**
+
+#### Changed
+- Rótulos de procedencia por (`rendering_method`, `coordinate_space`), `hold_reason` y estado de parada traducidos, congelación F1 con final estimado y última posición confirmada, cancelación y degradación GTFS leída del snapshot (no del catálogo cacheado).
+
+#### Verified
+- 142 tests, lint, typecheck y build; inspección real en escritorio y móvil sobre el smoke de MP-028 (replay identificado). **No observados en navegador:** cancelado, terminal y demás motivos, `not_yet_valid`.
+
 ### MP-028 — Captura real aislada: preparación y smoke (rama `pedromaaz13/mp-028-captura`; sin fusionar)
 
 Ejecutor Codex `gpt-6.2-sol` · medium (recibo de Orca); revisor Claude Sonnet 5.5 · high (argv verificado): **APPROVED** para preparación y smoke. **No integrada en `main`.** **Las sesiones de ≥ 2 h en ≥ 3 días NO están completadas** (0 de 3).

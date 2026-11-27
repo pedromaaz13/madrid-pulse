@@ -1,0 +1,209 @@
+
+ RUN  v5.1.1 /private/tmp/mp030-red.J8yTQE/apps/web
+
+ ❯ src/domain/movement.test.ts (11 tests | 1 failed) 9ms
+   ❯ frameFor (4)
+     × respeta stale_frozen incluso sin valid_until y con envolvente móvil 5ms
+ ❯ src/ui/TruthLabels.test.tsx (20 tests | 17 failed) 62ms
+   ❯ procedencia y parada (17)
+     × rotula anchor 2ms
+     × rotula extrapolated_from_last_anchor 1ms
+     × rotula interpolated_between_known_anchors 0ms
+     × rotula schedule_only 0ms
+     × rotula stale_frozen 0ms
+     × rotula unlocated 0ms
+     × distingue ancla bruta y proyectada 0ms
+     × muestra retención operator_stopped_at 27ms
+     × muestra retención before_first_departure 5ms
+     × muestra retención terminal 3ms
+     × muestra retención trip_canceled 3ms
+     × muestra retención anchor_version_changed 4ms
+     × explica congelación authorized_envelope_end sin valid_until 3ms
+     × explica congelación anchor_version_changed sin valid_until 3ms
+     × explica congelación null sin valid_until 2ms
+     × rotula cancelación independiente de envolvente 3ms
+     × muestra estado de parada 3ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 18 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  src/ui/TruthLabels.test.tsx > procedencia y parada > rotula anchor
+ FAIL  src/ui/TruthLabels.test.tsx > procedencia y parada > rotula extrapolated_from_last_anchor
+ FAIL  src/ui/TruthLabels.test.tsx > procedencia y parada > rotula interpolated_between_known_anchors
+ FAIL  src/ui/TruthLabels.test.tsx > procedencia y parada > rotula schedule_only
+ FAIL  src/ui/TruthLabels.test.tsx > procedencia y parada > rotula stale_frozen
+ FAIL  src/ui/TruthLabels.test.tsx > procedencia y parada > rotula unlocated
+TypeError: methodStyle is not a function
+ ❯ src/ui/TruthLabels.test.tsx:22:12
+     20|     ["stale_frozen", "Congelada"], ["unlocated", "Sin ubicar"],
+     21|   ])("rotula %s", (method, label) => {
+     22|     expect(methodStyle(method as RenderingMethod, "raw").label).toBe(l…
+       |            ^
+     23|   });
+     24|   it("distingue ancla bruta y proyectada", () => {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/11]⎯
+
+ FAIL  src/ui/TruthLabels.test.tsx > procedencia y parada > distingue ancla bruta y proyectada
+TypeError: methodStyle is not a function
+ ❯ src/ui/TruthLabels.test.tsx:25:12
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/11]⎯
+
+ FAIL  src/ui/TruthLabels.test.tsx > procedencia y parada > muestra retención operator_stopped_at
+AssertionError: expected '<div class="panel-body"><p class="lab…' to contain 'Detenido según el operador'
+
+Expected: "Detenido según el operador"
+Received: "<div class="panel-body"><p class="label">Circulación 19656 · 2026-11-20</p><h1>Destino no catalogado</h1><div class="pills"><button type="button" class="pill" style="background:#c3d0cd">C5</button><span class="provenance provenance--dashed"><i aria-hidden="true"></i>Proyectada</span></div><p class="meta">Avance estimado desde la última observación; no es una lectura GPS. Última lectura confirmada 15:33 · hace 19 s.</p><p class="meta">sin ancla futura: avance estimado desde la última ancla</p><div class="actions"><button type="button" class="primary" aria-pressed="false">Seguir tren</button></div><dl class="kv kv--inline"><div><dt>Estado</dt><dd>En servicio hoy</dd></div><div><dt>Retraso</dt><dd>Retraso +5 min</dd></div><div><dt>Viaje</dt><dd class="mono">1023V19656C5</dd></div></dl><p class="notice">El patrón de esta circulación no está catalogado en el GTFS cargado: no hay itinerario que mostrar y no se inventa uno.</p><details class="details"><summary>Detalle técnico de la posición</summary><dl class="kv"><div><dt>Método de presentación</dt><dd>extrapolated_from_last_anchor</dd></div><div><dt>Espacio de la coordenada</dt><dd>map_matched</dd></div><div><dt>Índice de confianza (heurístico, no calibrado)</dt><dd>0.921</dd></div><div><dt>GPS publicado por la fuente</dt><dd>40.28324, -3.79915</dd></div><div><dt>Corrección al proyectar</dt><dd>4.2 m</dd></div><div><dt>Progreso sobre el patrón</dt><dd>41617 m</dd></div><div><dt>Vigencia de la posición</dt><dd>15:36</dd></div><div><dt>GPS observado</dt><dd>15:33</dd></div><div><dt>Publicado por el feed</dt><dd>15:33</dd></div><div><dt>Recibido</dt><dd>15:33</dd></div><div><dt>Snapshot generado</dt><dd>15:33</dd></div><div><dt>Instante dibujado</dt><dd>15:33:40</dd></div><div><dt>Retraso del operador</dt><dd>300 s · hace 19 s</dd></div><div><dt>Aproximación declarada</dt><dd>trip_level_delay_applied_to_all_stops</dd></div><div><dt>Anomalías del motor</dt><dd>station_skip_anomaly</dd></div></dl></details></div>"
+
+ ❯ src/ui/TruthLabels.test.tsx:30:20
+     28|     const envelope = {...sample.rendered.progress_envelope!, speed_mps…
+     29|     const markup = panel({...sample, rendered: {...sample.rendered, pr…
+     30|     expect(markup).toContain(label);
+       |                    ^
+     31|     expect(markup).toContain("La coordenada no avanza durante la reten…
+     32|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/11]⎯
+
+ FAIL  src/ui/TruthLabels.test.tsx > procedencia y parada > muestra retención before_first_departure
+AssertionError: expected '<div class="panel-body"><p class="lab…' to contain 'Antes de la primera salida'
+
+Expected: "Antes de la primera salida"
+Received: "<div class="panel-body"><p class="label">Circulación 19656 · 2026-11-20</p><h1>Destino no catalogado</h1><div class="pills"><button type="button" class="pill" style="background:#c3d0cd">C5</button><span class="provenance provenance--dashed"><i aria-hidden="true"></i>Proyectada</span></div><p class="meta">Avance estimado desde la última observación; no es una lectura GPS. Última lectura confirmada 15:33 · hace 19 s.</p><p class="meta">sin ancla futura: avance estimado desde la última ancla</p><div class="actions"><button type="button" class="primary" aria-pressed="false">Seguir tren</button></div><dl class="kv kv--inline"><div><dt>Estado</dt><dd>En servicio hoy</dd></div><div><dt>Retraso</dt><dd>Retraso +5 min</dd></div><div><dt>Viaje</dt><dd class="mono">1023V19656C5</dd></div></dl><p class="notice">El patrón de esta circulación no está catalogado en el GTFS cargado: no hay itinerario que mostrar y no se inventa uno.</p><details class="details"><summary>Detalle técnico de la posición</summary><dl class="kv"><div><dt>Método de presentación</dt><dd>extrapolated_from_last_anchor</dd></div><div><dt>Espacio de la coordenada</dt><dd>map_matched</dd></div><div><dt>Índice de confianza (heurístico, no calibrado)</dt><dd>0.921</dd></div><div><dt>GPS publicado por la fuente</dt><dd>40.28324, -3.79915</dd></div><div><dt>Corrección al proyectar</dt><dd>4.2 m</dd></div><div><dt>Progreso sobre el patrón</dt><dd>41617 m</dd></div><div><dt>Vigencia de la posición</dt><dd>15:36</dd></div><div><dt>GPS observado</dt><dd>15:33</dd></div><div><dt>Publicado por el feed</dt><dd>15:33</dd></div><div><dt>Recibido</dt><dd>15:33</dd></div><div><dt>Snapshot generado</dt><dd>15:33</dd></div><div><dt>Instante dibujado</dt><dd>15:33:40</dd></div><div><dt>Retraso del operador</dt><dd>300 s · hace 19 s</dd></div><div><dt>Aproximación declarada</dt><dd>trip_level_delay_applied_to_all_stops</dd></div><div><dt>Anomalías del motor</dt><dd>station_skip_anomaly</dd></div></dl></details></div>"
+
+ ❯ src/ui/TruthLabels.test.tsx:30:20
+     28|     const envelope = {...sample.rendered.progress_envelope!, speed_mps…
+     29|     const markup = panel({...sample, rendered: {...sample.rendered, pr…
+     30|     expect(markup).toContain(label);
+       |                    ^
+     31|     expect(markup).toContain("La coordenada no avanza durante la reten…
+     32|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/11]⎯
+
+ FAIL  src/ui/TruthLabels.test.tsx > procedencia y parada > muestra retención terminal
+AssertionError: expected '<div class="panel-body"><p class="lab…' to contain 'En la estación terminal'
+
+Expected: "En la estación terminal"
+Received: "<div class="panel-body"><p class="label">Circulación 19656 · 2026-11-20</p><h1>Destino no catalogado</h1><div class="pills"><button type="button" class="pill" style="background:#c3d0cd">C5</button><span class="provenance provenance--dashed"><i aria-hidden="true"></i>Proyectada</span></div><p class="meta">Avance estimado desde la última observación; no es una lectura GPS. Última lectura confirmada 15:33 · hace 19 s.</p><p class="meta">sin ancla futura: avance estimado desde la última ancla</p><div class="actions"><button type="button" class="primary" aria-pressed="false">Seguir tren</button></div><dl class="kv kv--inline"><div><dt>Estado</dt><dd>En servicio hoy</dd></div><div><dt>Retraso</dt><dd>Retraso +5 min</dd></div><div><dt>Viaje</dt><dd class="mono">1023V19656C5</dd></div></dl><p class="notice">El patrón de esta circulación no está catalogado en el GTFS cargado: no hay itinerario que mostrar y no se inventa uno.</p><details class="details"><summary>Detalle técnico de la posición</summary><dl class="kv"><div><dt>Método de presentación</dt><dd>extrapolated_from_last_anchor</dd></div><div><dt>Espacio de la coordenada</dt><dd>map_matched</dd></div><div><dt>Índice de confianza (heurístico, no calibrado)</dt><dd>0.921</dd></div><div><dt>GPS publicado por la fuente</dt><dd>40.28324, -3.79915</dd></div><div><dt>Corrección al proyectar</dt><dd>4.2 m</dd></div><div><dt>Progreso sobre el patrón</dt><dd>41617 m</dd></div><div><dt>Vigencia de la posición</dt><dd>15:36</dd></div><div><dt>GPS observado</dt><dd>15:33</dd></div><div><dt>Publicado por el feed</dt><dd>15:33</dd></div><div><dt>Recibido</dt><dd>15:33</dd></div><div><dt>Snapshot generado</dt><dd>15:33</dd></div><div><dt>Instante dibujado</dt><dd>15:33:40</dd></div><div><dt>Retraso del operador</dt><dd>300 s · hace 19 s</dd></div><div><dt>Aproximación declarada</dt><dd>trip_level_delay_applied_to_all_stops</dd></div><div><dt>Anomalías del motor</dt><dd>station_skip_anomaly</dd></div></dl></details></div>"
+
+ ❯ src/ui/TruthLabels.test.tsx:30:20
+     28|     const envelope = {...sample.rendered.progress_envelope!, speed_mps…
+     29|     const markup = panel({...sample, rendered: {...sample.rendered, pr…
+     30|     expect(markup).toContain(label);
+       |                    ^
+     31|     expect(markup).toContain("La coordenada no avanza durante la reten…
+     32|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/11]⎯
+
+ FAIL  src/ui/TruthLabels.test.tsx > procedencia y parada > muestra retención trip_canceled
+AssertionError: expected '<div class="panel-body"><p class="lab…' to contain 'Viaje cancelado'
+
+Expected: "Viaje cancelado"
+Received: "<div class="panel-body"><p class="label">Circulación 19656 · 2026-11-20</p><h1>Destino no catalogado</h1><div class="pills"><button type="button" class="pill" style="background:#c3d0cd">C5</button><span class="provenance provenance--dashed"><i aria-hidden="true"></i>Proyectada</span></div><p class="meta">Avance estimado desde la última observación; no es una lectura GPS. Última lectura confirmada 15:33 · hace 19 s.</p><p class="meta">sin ancla futura: avance estimado desde la última ancla</p><div class="actions"><button type="button" class="primary" aria-pressed="false">Seguir tren</button></div><dl class="kv kv--inline"><div><dt>Estado</dt><dd>En servicio hoy</dd></div><div><dt>Retraso</dt><dd>Retraso +5 min</dd></div><div><dt>Viaje</dt><dd class="mono">1023V19656C5</dd></div></dl><p class="notice">El patrón de esta circulación no está catalogado en el GTFS cargado: no hay itinerario que mostrar y no se inventa uno.</p><details class="details"><summary>Detalle técnico de la posición</summary><dl class="kv"><div><dt>Método de presentación</dt><dd>extrapolated_from_last_anchor</dd></div><div><dt>Espacio de la coordenada</dt><dd>map_matched</dd></div><div><dt>Índice de confianza (heurístico, no calibrado)</dt><dd>0.921</dd></div><div><dt>GPS publicado por la fuente</dt><dd>40.28324, -3.79915</dd></div><div><dt>Corrección al proyectar</dt><dd>4.2 m</dd></div><div><dt>Progreso sobre el patrón</dt><dd>41617 m</dd></div><div><dt>Vigencia de la posición</dt><dd>15:36</dd></div><div><dt>GPS observado</dt><dd>15:33</dd></div><div><dt>Publicado por el feed</dt><dd>15:33</dd></div><div><dt>Recibido</dt><dd>15:33</dd></div><div><dt>Snapshot generado</dt><dd>15:33</dd></div><div><dt>Instante dibujado</dt><dd>15:33:40</dd></div><div><dt>Retraso del operador</dt><dd>300 s · hace 19 s</dd></div><div><dt>Aproximación declarada</dt><dd>trip_level_delay_applied_to_all_stops</dd></div><div><dt>Anomalías del motor</dt><dd>station_skip_anomaly</dd></div></dl></details></div>"
+
+ ❯ src/ui/TruthLabels.test.tsx:30:20
+     28|     const envelope = {...sample.rendered.progress_envelope!, speed_mps…
+     29|     const markup = panel({...sample, rendered: {...sample.rendered, pr…
+     30|     expect(markup).toContain(label);
+       |                    ^
+     31|     expect(markup).toContain("La coordenada no avanza durante la reten…
+     32|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/11]⎯
+
+ FAIL  src/ui/TruthLabels.test.tsx > procedencia y parada > muestra retención anchor_version_changed
+AssertionError: expected '<div class="panel-body"><p class="lab…' to contain 'Cambió la versión del ancla'
+
+Expected: "Cambió la versión del ancla"
+Received: "<div class="panel-body"><p class="label">Circulación 19656 · 2026-11-20</p><h1>Destino no catalogado</h1><div class="pills"><button type="button" class="pill" style="background:#c3d0cd">C5</button><span class="provenance provenance--dashed"><i aria-hidden="true"></i>Proyectada</span></div><p class="meta">Avance estimado desde la última observación; no es una lectura GPS. Última lectura confirmada 15:33 · hace 19 s.</p><p class="meta">sin ancla futura: avance estimado desde la última ancla</p><div class="actions"><button type="button" class="primary" aria-pressed="false">Seguir tren</button></div><dl class="kv kv--inline"><div><dt>Estado</dt><dd>En servicio hoy</dd></div><div><dt>Retraso</dt><dd>Retraso +5 min</dd></div><div><dt>Viaje</dt><dd class="mono">1023V19656C5</dd></div></dl><p class="notice">El patrón de esta circulación no está catalogado en el GTFS cargado: no hay itinerario que mostrar y no se inventa uno.</p><details class="details"><summary>Detalle técnico de la posición</summary><dl class="kv"><div><dt>Método de presentación</dt><dd>extrapolated_from_last_anchor</dd></div><div><dt>Espacio de la coordenada</dt><dd>map_matched</dd></div><div><dt>Índice de confianza (heurístico, no calibrado)</dt><dd>0.921</dd></div><div><dt>GPS publicado por la fuente</dt><dd>40.28324, -3.79915</dd></div><div><dt>Corrección al proyectar</dt><dd>4.2 m</dd></div><div><dt>Progreso sobre el patrón</dt><dd>41617 m</dd></div><div><dt>Vigencia de la posición</dt><dd>15:36</dd></div><div><dt>GPS observado</dt><dd>15:33</dd></div><div><dt>Publicado por el feed</dt><dd>15:33</dd></div><div><dt>Recibido</dt><dd>15:33</dd></div><div><dt>Snapshot generado</dt><dd>15:33</dd></div><div><dt>Instante dibujado</dt><dd>15:33:40</dd></div><div><dt>Retraso del operador</dt><dd>300 s · hace 19 s</dd></div><div><dt>Aproximación declarada</dt><dd>trip_level_delay_applied_to_all_stops</dd></div><div><dt>Anomalías del motor</dt><dd>station_skip_anomaly</dd></div></dl></details></div>"
+
+ ❯ src/ui/TruthLabels.test.tsx:30:20
+     28|     const envelope = {...sample.rendered.progress_envelope!, speed_mps…
+     29|     const markup = panel({...sample, rendered: {...sample.rendered, pr…
+     30|     expect(markup).toContain(label);
+       |                    ^
+     31|     expect(markup).toContain("La coordenada no avanza durante la reten…
+     32|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/11]⎯
+
+ FAIL  src/ui/TruthLabels.test.tsx > procedencia y parada > explica congelación authorized_envelope_end sin valid_until
+ FAIL  src/ui/TruthLabels.test.tsx > procedencia y parada > explica congelación anchor_version_changed sin valid_until
+ FAIL  src/ui/TruthLabels.test.tsx > procedencia y parada > explica congelación null sin valid_until
+AssertionError: expected '<div class="panel-body"><p class="lab…' to contain 'Posición congelada'
+
+Expected: "Posición congelada"
+Received: "<div class="panel-body"><p class="label">Circulación 19656 · 2026-11-20</p><h1>Destino no catalogado</h1><div class="pills"><button type="button" class="pill" style="background:#c3d0cd">C5</button><span class="provenance provenance--ring"><i aria-hidden="true"></i>Congelada</span></div><p class="meta">Última posición confirmada; la fuente dejó de actualizar. Última lectura confirmada 15:33 · hace 19 s.</p><p class="meta">sin ancla futura: avance estimado desde la última ancla</p><div class="actions"><button type="button" class="primary" aria-pressed="false">Seguir tren</button></div><dl class="kv kv--inline"><div><dt>Estado</dt><dd>En servicio hoy</dd></div><div><dt>Retraso</dt><dd>Retraso +5 min</dd></div><div><dt>Viaje</dt><dd class="mono">1023V19656C5</dd></div></dl><p class="notice">El patrón de esta circulación no está catalogado en el GTFS cargado: no hay itinerario que mostrar y no se inventa uno.</p><details class="details"><summary>Detalle técnico de la posición</summary><dl class="kv"><div><dt>Método de presentación</dt><dd>stale_frozen</dd></div><div><dt>Espacio de la coordenada</dt><dd>map_matched</dd></div><div><dt>Índice de confianza (heurístico, no calibrado)</dt><dd>0.921</dd></div><div><dt>GPS publicado por la fuente</dt><dd>40.28324, -3.79915</dd></div><div><dt>Corrección al proyectar</dt><dd>4.2 m</dd></div><div><dt>Progreso sobre el patrón</dt><dd>41617 m</dd></div><div><dt>Vigencia de la posición</dt><dd>—</dd></div><div><dt>GPS observado</dt><dd>15:33</dd></div><div><dt>Publicado por el feed</dt><dd>15:33</dd></div><div><dt>Recibido</dt><dd>15:33</dd></div><div><dt>Snapshot generado</dt><dd>15:33</dd></div><div><dt>Instante dibujado</dt><dd>15:33:40</dd></div><div><dt>Retraso del operador</dt><dd>300 s · hace 19 s</dd></div><div><dt>Aproximación declarada</dt><dd>trip_level_delay_applied_to_all_stops</dd></div><div><dt>Anomalías del motor</dt><dd>station_skip_anomaly</dd></div></dl></details></div>"
+
+ ❯ src/ui/TruthLabels.test.tsx:35:20
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/11]⎯
+
+ FAIL  src/ui/TruthLabels.test.tsx > procedencia y parada > rotula cancelación independiente de envolvente
+AssertionError: expected '<div class="panel-body"><p class="lab…' to contain 'Viaje cancelado según el operador'
+
+Expected: "Viaje cancelado según el operador"
+Received: "<div class="panel-body"><p class="label">Circulación 19656 · 2026-11-20</p><h1>Destino no catalogado</h1><div class="pills"><button type="button" class="pill" style="background:#c3d0cd">C5</button><span class="provenance provenance--dashed"><i aria-hidden="true"></i>Proyectada</span></div><p class="meta">Avance estimado desde la última observación; no es una lectura GPS. Última lectura confirmada 15:33 · hace 19 s.</p><p class="meta">sin ancla futura: avance estimado desde la última ancla</p><div class="actions"><button type="button" class="primary" aria-pressed="false">Seguir tren</button></div><dl class="kv kv--inline"><div><dt>Estado</dt><dd>En servicio hoy</dd></div><div><dt>Retraso</dt><dd>Retraso +5 min</dd></div><div><dt>Viaje</dt><dd class="mono">1023V19656C5</dd></div></dl><p class="notice">El patrón de esta circulación no está catalogado en el GTFS cargado: no hay itinerario que mostrar y no se inventa uno.</p><details class="details"><summary>Detalle técnico de la posición</summary><dl class="kv"><div><dt>Método de presentación</dt><dd>extrapolated_from_last_anchor</dd></div><div><dt>Espacio de la coordenada</dt><dd>map_matched</dd></div><div><dt>Índice de confianza (heurístico, no calibrado)</dt><dd>0.921</dd></div><div><dt>GPS publicado por la fuente</dt><dd>40.28324, -3.79915</dd></div><div><dt>Corrección al proyectar</dt><dd>4.2 m</dd></div><div><dt>Progreso sobre el patrón</dt><dd>41617 m</dd></div><div><dt>Vigencia de la posición</dt><dd>15:36</dd></div><div><dt>GPS observado</dt><dd>15:33</dd></div><div><dt>Publicado por el feed</dt><dd>15:33</dd></div><div><dt>Recibido</dt><dd>15:33</dd></div><div><dt>Snapshot generado</dt><dd>15:33</dd></div><div><dt>Instante dibujado</dt><dd>15:33:40</dd></div><div><dt>Retraso del operador</dt><dd>300 s · hace 19 s</dd></div><div><dt>Aproximación declarada</dt><dd>trip_level_delay_applied_to_all_stops</dd></div><div><dt>Anomalías del motor</dt><dd>station_skip_anomaly</dd></div></dl></details></div>"
+
+ ❯ src/ui/TruthLabels.test.tsx:40:67
+     38|   });
+     39|   it("rotula cancelación independiente de envolvente", () => {
+     40|     expect(panel({...sample, schedule_relationship: "CANCELED"})).toCo…
+       |                                                                   ^
+     41|   });
+     42|   it("muestra estado de parada", () => {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/11]⎯
+
+ FAIL  src/ui/TruthLabels.test.tsx > procedencia y parada > muestra estado de parada
+AssertionError: expected '<div class="panel-body"><p class="lab…' to contain 'STOPPED_AT'
+
+Expected: "STOPPED_AT"
+Received: "<div class="panel-body"><p class="label">Circulación 19656 · 2026-11-20</p><h1>Destino no catalogado</h1><div class="pills"><button type="button" class="pill" style="background:#c3d0cd">C5</button><span class="provenance provenance--dashed"><i aria-hidden="true"></i>Proyectada</span></div><p class="meta">Avance estimado desde la última observación; no es una lectura GPS. Última lectura confirmada 15:33 · hace 19 s.</p><p class="meta">sin ancla futura: avance estimado desde la última ancla</p><div class="actions"><button type="button" class="primary" aria-pressed="false">Seguir tren</button></div><dl class="kv kv--inline"><div><dt>Estado</dt><dd>En servicio hoy</dd></div><div><dt>Retraso</dt><dd>Retraso +5 min</dd></div><div><dt>Viaje</dt><dd class="mono">1023V19656C5</dd></div></dl><p class="notice">El patrón de esta circulación no está catalogado en el GTFS cargado: no hay itinerario que mostrar y no se inventa uno.</p><details class="details"><summary>Detalle técnico de la posición</summary><dl class="kv"><div><dt>Método de presentación</dt><dd>extrapolated_from_last_anchor</dd></div><div><dt>Espacio de la coordenada</dt><dd>map_matched</dd></div><div><dt>Índice de confianza (heurístico, no calibrado)</dt><dd>0.921</dd></div><div><dt>GPS publicado por la fuente</dt><dd>40.28324, -3.79915</dd></div><div><dt>Corrección al proyectar</dt><dd>4.2 m</dd></div><div><dt>Progreso sobre el patrón</dt><dd>41617 m</dd></div><div><dt>Vigencia de la posición</dt><dd>15:36</dd></div><div><dt>GPS observado</dt><dd>15:33</dd></div><div><dt>Publicado por el feed</dt><dd>15:33</dd></div><div><dt>Recibido</dt><dd>15:33</dd></div><div><dt>Snapshot generado</dt><dd>15:33</dd></div><div><dt>Instante dibujado</dt><dd>15:33:40</dd></div><div><dt>Retraso del operador</dt><dd>300 s · hace 19 s</dd></div><div><dt>Aproximación declarada</dt><dd>trip_level_delay_applied_to_all_stops</dd></div><div><dt>Anomalías del motor</dt><dd>station_skip_anomaly</dd></div></dl></details></div>"
+
+ ❯ src/ui/TruthLabels.test.tsx:43:199
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/11]⎯
+
+ FAIL  src/domain/movement.test.ts > frameFor > respeta stale_frozen incluso sin valid_until y con envolvente móvil
+AssertionError: expected { coordinate: { …(2) }, …(2) } to deeply equal { …(3) }
+
+- Expected
++ Received
+
+  {
+    "coordinate": {
+-     "lat": 40,
+-     "lon": -3.7,
++     "lat": 40.34550098121174,
++     "lon": -3.8377947468873765,
+    },
+-   "progressM": 1000,
+-   "source": "published",
++   "progressM": 5000,
++   "source": "envelope",
+  }
+
+ ❯ src/domain/movement.test.ts:107:70
+    105|     const axis = [...index.axisByPatternId.values()][0];
+    106|     const base = rendered({rendering_method: "stale_frozen", valid_unt…
+    107|     expect(frameFor(base, axis, Date.parse("2026-11-20T15:30:00Z"))).t…
+       |                                                                      ^
+    108|       coordinate: {lat: 40, lon: -3.7}, progressM: 1000, source: "publ…
+    109|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/11]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  18 failed | 13 passed (31)
+   Start at  00:12:22
+   Duration  321ms (transform 48%, tests 30%, import 19%, worker 2%)
+
+
+Exit: 1 (fallo esperado)

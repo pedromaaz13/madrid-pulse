@@ -36,6 +36,10 @@ const STROKE_COLOR: ExpressionSpecification = [
   "#ffd98f",
   "ring",
   "#0b1f27",
+  "matched",
+  "#0b1f27",
+  "frozen",
+  "#0b1f27",
   "hollow",
   "#9fb3ba",
   "#9fb3ba",
@@ -50,6 +54,10 @@ const STROKE_WIDTH: ExpressionSpecification = [
   2.4,
   "ring",
   3.6,
+  "matched",
+  3.6,
+  "frozen",
+  1.6,
   "hollow",
   1.6,
   1.6,
@@ -66,18 +74,17 @@ const BODY_RADIUS: ExpressionSpecification = [
 ];
 
 /**
- * Marca interior: hueco para `solid` (observada), punto oscuro para las
- * posiciones que **no** son una lectura (proyectada, congelada, solo
- * horario). Es el tercer canal, independiente del color de línea.
+ * Marca interior: las observaciones no llevan punto; para las posiciones
+ * estimadas o congeladas el tamaño del punto distingue la procedencia.
  */
 const CORE_RADIUS: ExpressionSpecification = [
   "interpolate",
   ["linear"],
   ["zoom"],
   8,
-  ["match", ["get", "shape"], "solid", 0, "dashed", 1.6, "ring", 2.2, "hollow", 2.6, 0],
+  ["match", ["get", "shape"], "solid", 0, "matched", 0, "dashed", 1.6, "ring", 2.2, "hollow", 2.6, "frozen", 3.6, 0],
   13,
-  ["match", ["get", "shape"], "solid", 0, "dashed", 2.6, "ring", 3.4, "hollow", 4, 0],
+  ["match", ["get", "shape"], "solid", 0, "matched", 0, "dashed", 2.6, "ring", 3.4, "hollow", 4, "frozen", 5.2, 0],
 ];
 
 export function addRailLayers(map: MapLibreMap): void {

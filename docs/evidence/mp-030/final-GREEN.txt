@@ -1,0 +1,50 @@
+v22.13.1
+
+> @madrid-pulse/web@0.1.0 lint
+> eslint . --max-warnings 0
+
+
+> @madrid-pulse/web@0.1.0 typecheck
+> tsc -b --pretty false
+
+
+> @madrid-pulse/web@0.1.0 test
+> vitest run
+
+
+ RUN  v5.1.1 /Users/matu/orca/workspaces/madrid-pulse/mp-030-interfaz-veraz/apps/web
+
+
+ Test Files  15 passed (15)
+      Tests  142 passed (142)
+   Start at  03:55:30
+   Duration  885ms (environment 54%, import 17%, tests 15%, transform 11%, worker 2%)
+
+    Isolate  15 workers spawned · ~221ms startup each (spawn + environment, per file)
+             at least ~252ms faster with isolate: false — reuses workers across files instead of one per file
+
+
+> @madrid-pulse/web@0.1.0 build
+> tsc -b && vite build && node scripts/verify-build.mjs
+
+vite v8.3.8 building client environment for production...
+transforming...
+✓ 55 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                         0.59 kB │ gzip:   0.36 kB
+dist/assets/maplibre-gl-worker.mjs    550.75 kB
+dist/assets/index-CNUivjfy.css         12.07 kB │ gzip:   3.60 kB
+dist/assets/MapView-qvkd0SPb.css       71.33 kB │ gzip:  10.25 kB
+dist/assets/index-B0c8xs4j.js         289.79 kB │ gzip:  88.14 kB
+dist/assets/MapView-cPktBU45.js     1,084.13 kB │ gzip: 299.30 kB
+
+[plugin builtin:vite-reporter]
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 227ms
+Verified production MapLibre worker (550754 bytes)
+
+Exit: 0

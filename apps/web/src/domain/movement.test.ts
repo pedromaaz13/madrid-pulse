@@ -100,6 +100,14 @@ describe("frameFor", () => {
     expect(atHorizon?.progressM).toBe(wayPast?.progressM);
     expect(wayPast?.source).toBe("frozen_horizon");
   });
+
+  it("respeta stale_frozen incluso sin valid_until y con envolvente móvil", () => {
+    const axis = [...index.axisByPatternId.values()][0];
+    const base = rendered({rendering_method: "stale_frozen", valid_until: null, progress_envelope: envelope()});
+    expect(frameFor(base, axis, Date.parse("2026-11-20T15:30:00Z"))).toEqual({
+      coordinate: {lat: 40, lon: -3.7}, progressM: 1000, source: "published",
+    });
+  });
 });
 
 describe("coordenada del cliente frente a la que publicó el backend", () => {

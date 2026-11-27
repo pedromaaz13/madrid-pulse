@@ -75,7 +75,8 @@ export interface Frame {
 /**
  * Coordenada a dibujar en el instante `atMs`.
  *
- * El cliente solo avanza cuando el backend publicó una envolvente **y** un
+ * Una posición `stale_frozen` se conserva tal como la publicó el backend.
+ * En los demás casos el cliente solo avanza cuando publicó una envolvente y un
  * patrón con corredor, y únicamente hasta `rendered.valid_until`. Agotado el
  * horizonte se congela: nunca se extrapola más allá de lo que el contrato
  * autoriza, y jamás se interpola lat/lon en recta entre dos puntos.
@@ -86,7 +87,7 @@ export function frameFor(
   atMs: number,
 ): Frame | null {
   const envelope = rendered.progress_envelope;
-  if (envelope !== null && axis !== null) {
+  if (rendered.rendering_method !== "stale_frozen" && envelope !== null && axis !== null) {
     const validUntilMs =
       rendered.valid_until === null ? Number.POSITIVE_INFINITY : Date.parse(rendered.valid_until);
     const clampedMs = Math.min(atMs, validUntilMs);
