@@ -1,0 +1,19 @@
+{
+  "source": "Renfe Operadora · Renfe Data",
+  "source_url": "https://data.renfe.com/",
+  "license": "CC BY 4.0",
+  "license_url": "https://creativecommons.org/licenses/by/4.0/",
+  "changes": "Proyección de campos de seis observaciones y filtrado del GTFS a dos viajes; shapes omitidos porque se usa geometría OSM.",
+  "dump_sha256": "95b578603f6cd8f0faee93f7207c2313b61c51056dd72fe13f2bbfb452922ea1",
+  "capture_manifest_sha256": "5de84ef60f84769cf962f05e20fd1b7ba910832441e13a2883f9c2eaf2cdbb6e",
+  "gtfs_source_sha256": "58ac554356acddfffb2411f48ada26b5ff4655549e6957372906cf7a38e4ba4e",
+  "sha256": {
+    "gtfs/calendar.txt": "56f6cfd81c0cb6beebaf0049c623a47b7ba8f234b9720812a42190c256678caf",
+    "gtfs/routes.txt": "e26d83a4f06298d7b494de5eafa2b09d3e69c32efd1ab422b4301c6a0fc3b32f",
+    "gtfs/shapes.txt": "55b537311199668045cf164c451336cea80c27f0e1edd797d0c3d01b438a8344",
+    "gtfs/stop_times.txt": "d58ee0b54155e01ab338c078b93b1b1d10ec9db1e2db0c98a4db493383375dee",
+    "gtfs/stops.txt": "e1aeb40173b0f870c4d7df3ec57de31206af4000272097e1b6859fbd82bbfb1c",
+    "gtfs/trips.txt": "8fb27c1f9612b0acd0a02370a9cc7bc6cb53dac9786e65a249a2a5c777d724dc",
+    "observations.json": "f31190023fb5610d1ea2e3393ad00d8d9b231b732231f1554455dc9c27683ef9"
+  }
+}

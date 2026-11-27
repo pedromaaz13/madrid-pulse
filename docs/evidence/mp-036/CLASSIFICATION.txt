@@ -1,0 +1,15 @@
+4bc86128d44a9b83f8f9747df5cf83ce593f0194
+resurrected 19547 2026-11-26T06:06:52+00:00 2026-11-26T06:07:41.156878+00:00
+resurrected 20215 2026-11-26T06:10:10+00:00 2026-11-26T06:10:46.071610+00:00
+resurrected 20231 2026-11-26T06:21:52+00:00 2026-11-26T06:22:35.444589+00:00
+segmento 1 {"accepted_kept": 23, "fallback_called_with_b": 27, "no_confirmed_anchor": 1, "no_engine": 91, "resurrected": 3, "return_accepted": 42, "total": 160}
+resurrected 20229 2026-11-26T07:40:10+00:00 2026-11-26T07:40:50.012035+00:00
+resurrected 20233 2026-11-26T07:46:52+00:00 2026-11-26T07:47:30.621765+00:00
+resurrected 20793 2026-11-26T08:46:51+00:00 2026-11-26T08:47:40.042598+00:00
+segmento 2 {"accepted_kept": 21, "fallback_called_with_b": 28, "no_confirmed_anchor": 4, "no_engine": 166, "resurrected": 3, "return_accepted": 62, "total": 256}
+total {"accepted_kept": 44, "fallback_called_with_b": 55, "no_confirmed_anchor": 5, "no_engine": 257, "resurrected": 6, "return_accepted": 104, "total": 416}
+
+ee92097f6cdb1301b85f278c6a51258f9e69dc79
+segmento 1 {"accepted_kept": 23, "no_engine": 91, "return_accepted": 46, "total": 160}
+segmento 2 {"accepted_kept": 21, "no_engine": 166, "return_accepted": 69, "total": 256}
+total {"accepted_kept": 44, "no_engine": 257, "return_accepted": 115, "total": 416}

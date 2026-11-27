@@ -1,0 +1,67 @@
+RED · checkout 4bc8612 con solo la fixture y el módulo nuevo
+python -m unittest apps.api.tests.test_anchor_history -v
+test_buffer_uses_only_accepted_interpolation_endpoints (apps.api.tests.test_anchor_history.AnchorHistoryTests.test_buffer_uses_only_accepted_interpolation_endpoints) ... FAIL
+test_capture_20231 (apps.api.tests.test_anchor_history.AnchorHistoryTests.test_capture_20231) ... FAIL
+test_capture_20793 (apps.api.tests.test_anchor_history.AnchorHistoryTests.test_capture_20793) ... FAIL
+test_consecutive_rejections (apps.api.tests.test_anchor_history.AnchorHistoryTests.test_consecutive_rejections) ... FAIL
+test_replay_applies_both_clocks_to_history (apps.api.tests.test_anchor_history.AnchorHistoryTests.test_replay_applies_both_clocks_to_history) ... FAIL
+test_restart_rebuilds_same_snapshot_in_two_processes (apps.api.tests.test_anchor_history.AnchorHistoryTests.test_restart_rebuilds_same_snapshot_in_two_processes) ... FAIL
+test_trip_change_breaks_history_even_if_trip_id_repeats (apps.api.tests.test_anchor_history.AnchorHistoryTests.test_trip_change_breaks_history_even_if_trip_id_repeats) ... FAIL
+test_truncated_history_does_not_promote_first_visible_outlier (apps.api.tests.test_anchor_history.AnchorHistoryTests.test_truncated_history_does_not_promote_first_visible_outlier) ... FAIL
+test_valid_recovery_after_rejection (apps.api.tests.test_anchor_history.AnchorHistoryTests.test_valid_recovery_after_rejection) ... FAIL
+Ran 9 tests in 8.736s
+FAILED (failures=9)
+Exit 1 esperado. Las nueve diferencias fueron fallos de aserción.
+
+GREEN · checkout ee92097, PostgreSQL desechable recién migrado y marcado
+python -m unittest $(awk "<módulos de CI, comando literal en RUN.md>" .github/workflows/ci.yml) -v
+test_buffer_uses_only_accepted_interpolation_endpoints (apps.api.tests.test_anchor_history.AnchorHistoryTests.test_buffer_uses_only_accepted_interpolation_endpoints) ... ok
+test_capture_20231 (apps.api.tests.test_anchor_history.AnchorHistoryTests.test_capture_20231) ... ok
+test_capture_20793 (apps.api.tests.test_anchor_history.AnchorHistoryTests.test_capture_20793) ... ok
+test_consecutive_rejections (apps.api.tests.test_anchor_history.AnchorHistoryTests.test_consecutive_rejections) ... ok
+test_replay_applies_both_clocks_to_history (apps.api.tests.test_anchor_history.AnchorHistoryTests.test_replay_applies_both_clocks_to_history) ... ok
+test_restart_rebuilds_same_snapshot_in_two_processes (apps.api.tests.test_anchor_history.AnchorHistoryTests.test_restart_rebuilds_same_snapshot_in_two_processes) ... ok
+test_trip_change_breaks_history_even_if_trip_id_repeats (apps.api.tests.test_anchor_history.AnchorHistoryTests.test_trip_change_breaks_history_even_if_trip_id_repeats) ... ok
+test_truncated_history_does_not_promote_first_visible_outlier (apps.api.tests.test_anchor_history.AnchorHistoryTests.test_truncated_history_does_not_promote_first_visible_outlier) ... ok
+test_valid_recovery_after_rejection (apps.api.tests.test_anchor_history.AnchorHistoryTests.test_valid_recovery_after_rejection) ... ok
+Ran 332 tests in 35.539s
+OK (skipped=18)
+Exit 0. Comparación de los 18 casos omitidos de MP-026b con diff -u: salida vacía.
+
+python scripts/governance/check_docs.py
+Documentación de gobernanza correcta.
+python -m unittest tests.governance.test_governance -v
+Ran 36 tests in 1.939s
+OK
+
+Regeneración de OpenAPI con json.dump(app.openapi(), indent=2, sort_keys=True),
+comparación con cmp y python -m compileall -q apps/api packages/geo packages/movement.
+Salida vacía, exit 0.
+
+ruff check --isolated --select E4,E7,E9,F <archivos Python modificados>
+All checks passed!
+Ruff 0.16.0 con todas sus reglas por defecto en módulos de producción, exit 1 en ambas revisiones.
+Base: Found 49 errors. Entrega: Found 46 errors.
+
+PYTHONPATH=. python docs/evidence/mp-036/check_projection.py
+700 proyecciones idénticas al recorrido exhaustivo
+
+Frontend · checkout temporal 2f2955a, Node v22.13.1
+npm ci --offline --no-audit --no-fund: added 246 packages in 14s
+npm run lint && npm run typecheck && npm test && npm run build
+Test Files  11 passed (11)
+Tests  110 passed (110)
+✓ built in 739ms
+Verified production MapLibre worker (550754 bytes)
+Exit 0. Aviso de Vite por tamaño de chunk.
+
+Aislamiento y retirada de los recursos propios
+shasum -a 256 -c session-1-20261126T090138Z.dump.sha256: OK
+('mp036_capture', 'public', 'mp_test') madrid-pulse:disposable
+('mp036_bench', 'public', 'mp_test') madrid-pulse:disposable
+('mp036_ci', 'public', 'mp_test') madrid-pulse:disposable
+volume 7f3f9cbf1e50cbd81891ce344bac0f8f873a7142118d1623ccec913f239d83e5
+
+mp036-isolated
+Checkouts temporales eliminados.
+docker volume inspect: no such volume. Filtro de contenedores y lsof :5459: salida vacía.

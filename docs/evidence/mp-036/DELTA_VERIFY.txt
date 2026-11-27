@@ -1,0 +1,60 @@
+RED contra a7e01b8 · módulo nuevo superpuesto a checkout de revisión · exit 1 esperado
+test_reacquires_after_a_plausible_but_wrong_forward_jump (apps.api.tests.test_anchor_history.AnchorHistoryTests.test_reacquires_after_a_plausible_but_wrong_forward_jump) ... FAIL
+test_recovery_requires_distinct_consecutive_monotone_coordinates (apps.api.tests.test_anchor_history.AnchorHistoryTests.test_recovery_requires_distinct_consecutive_monotone_coordinates) ... FAIL
+test_recovery_size_can_be_configured (apps.api.tests.test_anchor_history.AnchorHistoryTests.test_recovery_size_can_be_configured) ... FAIL
+test_return_does_not_confirm_b_when_a_was_also_rejected (apps.api.tests.test_anchor_history.AnchorHistoryTests.test_return_does_not_confirm_b_when_a_was_also_rejected) ... FAIL
+test_snapshot_enriches_only_the_effective_row (apps.api.tests.test_anchor_history.AnchorHistoryTests.test_snapshot_enriches_only_the_effective_row) ... FAIL
+Ran 16 tests in 4.043s
+FAILED (failures=5)
+
+Guardia ABA adicional · RED contra 713b8a0
+AssertionError: datetime.datetime(2026, 11, 26, 8, 47, tzinfo=datetime.timezone.utc) != datetime.datetime(2026, 11, 26, 8, 46, tzinfo=datetime.timezone.utc)
+Ran 1 test in 0.241s
+FAILED (failures=1)
+
+GREEN de módulos Python de CI contra 121c438 · exit 0
+test_history_depth_range (apps.api.tests.test_anchor_history.AnchorConfigTests.test_history_depth_range) ... ok
+test_buffer_uses_only_accepted_interpolation_endpoints (apps.api.tests.test_anchor_history.AnchorHistoryTests.test_buffer_uses_only_accepted_interpolation_endpoints) ... ok
+test_capture_20231 (apps.api.tests.test_anchor_history.AnchorHistoryTests.test_capture_20231) ... ok
+test_capture_20793 (apps.api.tests.test_anchor_history.AnchorHistoryTests.test_capture_20793) ... ok
+test_consecutive_rejections (apps.api.tests.test_anchor_history.AnchorHistoryTests.test_consecutive_rejections) ... ok
+test_history_depth_boundary (apps.api.tests.test_anchor_history.AnchorHistoryTests.test_history_depth_boundary) ... ok
+test_reacquires_after_a_plausible_but_wrong_forward_jump (apps.api.tests.test_anchor_history.AnchorHistoryTests.test_reacquires_after_a_plausible_but_wrong_forward_jump) ... ok
+test_recovery_requires_distinct_consecutive_monotone_coordinates (apps.api.tests.test_anchor_history.AnchorHistoryTests.test_recovery_requires_distinct_consecutive_monotone_coordinates) ... ok
+test_recovery_size_can_be_configured (apps.api.tests.test_anchor_history.AnchorHistoryTests.test_recovery_size_can_be_configured) ... ok
+test_replay_applies_both_clocks_to_history (apps.api.tests.test_anchor_history.AnchorHistoryTests.test_replay_applies_both_clocks_to_history) ... ok
+test_restart_rebuilds_same_snapshot_in_two_processes (apps.api.tests.test_anchor_history.AnchorHistoryTests.test_restart_rebuilds_same_snapshot_in_two_processes) ... ok
+test_return_does_not_confirm_b_when_a_was_also_rejected (apps.api.tests.test_anchor_history.AnchorHistoryTests.test_return_does_not_confirm_b_when_a_was_also_rejected) ... ok
+test_snapshot_enriches_only_the_effective_row (apps.api.tests.test_anchor_history.AnchorHistoryTests.test_snapshot_enriches_only_the_effective_row) ... ok
+test_trip_change_breaks_history_even_if_trip_id_repeats (apps.api.tests.test_anchor_history.AnchorHistoryTests.test_trip_change_breaks_history_even_if_trip_id_repeats) ... ok
+test_truncated_history_does_not_promote_first_visible_outlier (apps.api.tests.test_anchor_history.AnchorHistoryTests.test_truncated_history_does_not_promote_first_visible_outlier) ... ok
+test_valid_recovery_after_rejection (apps.api.tests.test_anchor_history.AnchorHistoryTests.test_valid_recovery_after_rejection) ... ok
+Ran 339 tests in 37.073s
+OK (skipped=18)
+Exit 0. Los mismos 18 casos omitidos. Comparación diff -u de nombres y motivos: salida vacía.
+
+check_docs.py: Documentación de gobernanza correcta.
+tests.governance.test_governance: Ran 36 tests, OK.
+Regeneración de OpenAPI y cmp sobre los bytes versionados: salida vacía, exit 0.
+compileall -q apps/api packages/movement: salida vacía, exit 0.
+Ruff E4,E7,E9,F en archivos Python modificados: All checks passed!
+Frontend en checkout temporal con Node v22.13.1, npm ci --offline, lint, typecheck, test y build: exit 0.
+Test Files 11 passed, Tests 110 passed, Verified production MapLibre worker (550754 bytes).
+Vite emitió un aviso de tamaño del chunk.
+
+Clasificador de tríadas contra 121c438
+segmento 1 {"accepted_kept": 23, "no_engine": 91, "return_accepted": 46, "total": 160}
+segmento 2 {"accepted_kept": 21, "no_engine": 166, "return_accepted": 69, "total": 256}
+total {"accepted_kept": 44, "no_engine": 257, "return_accepted": 115, "total": 416}
+
+Calendario GTFS estático de la captura, filas totales y con fecha inicial=final: 450 450.
+
+Aislamiento
+shasum -a 256 -c session-1-20261126T090138Z.dump.sha256: OK
+('mp036_capture', 'public', 'mp_test') madrid-pulse:disposable
+('mp036_bench', 'public', 'mp_test') madrid-pulse:disposable
+('mp036_ci', 'public', 'mp_test') madrid-pulse:disposable
+mp036-delta
+
+Error response from daemon: get 824bc1b53d89328a3d474e20e02e1aa6aebb92d55f3dfdd8904ff38bbb97c41a: no such volume
+Contenedor, volumen y checkouts temporales eliminados. Puerto 5459 libre.
