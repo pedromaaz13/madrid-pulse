@@ -2694,7 +2694,7 @@
       "review_status": "APPROVED",
       "integration_status": "NOT_INTEGRATED",
       "deployment_status": "NOT_DEPLOYED",
-      "head": "6615d53",
+      "head": "b7aed67",
       "evidence": [
         "UNKNOWN"
       ],
@@ -2702,7 +2702,7 @@
       "merge_sha": null,
       "review_date": null,
       "gate": "Baseline y corrección sobre las mismas entradas; dump, manifiesto y resultados originales intactos; métricas globales y estratificadas con denominadores, exclusiones y casos adversos",
-      "notes": "Separa discrepancia frente al GPS bruto (incluso rechazado), cambio de ancla efectiva aceptada y discontinuidad de la posición presentada. No cambia retrospectivamente el criterio de aceptación. Autorizada el 2026-11-26. FR-01 permanece abierto. RESULTADO (2026-11-26): baseline 4bc8612 frente a corrección 0c518fa sobre la misma jornada 1; saltos presentados >200 m 2 935→2 771 (24 nuevos frente a 188 reducidos; 8 vehículos peores; STOPPED_AT 32↑/23↓); discrepancia frente al GPS bruto en 216 retenciones 674,5→1 845,6 m (se aleja con GPS congelado, 113/113). Revisión Opus High: 1ª pasada CHANGES_REQUESTED (2 B, 7 A) → delta APPROVED. PR #17 en borrador apilado sobre #15. FR-01 abierto. Evidencia: informe docs/evidence/mp-038/README.md en el PR #17 (head 39166da; revisado en 6615d53); sigue en borrador, apilado sobre el PR #15, hasta evaluar la jornada 2 (decisión del propietario 2026-11-27).",
+      "notes": "Separa discrepancia frente al GPS bruto (incluso rechazado), cambio de ancla efectiva aceptada y discontinuidad de la posición presentada. No cambia retrospectivamente el criterio de aceptación. Autorizada el 2026-11-26. FR-01 permanece abierto. RESULTADO (2026-11-26): baseline 4bc8612 frente a corrección 0c518fa sobre la misma jornada 1; saltos presentados >200 m 2 935→2 771 (24 nuevos frente a 188 reducidos; 8 vehículos peores; STOPPED_AT 32↑/23↓); discrepancia frente al GPS bruto en 216 retenciones 674,5→1 845,6 m (se aleja con GPS congelado, 113/113). Revisión Opus High: 1ª pasada CHANGES_REQUESTED (2 B, 7 A) → delta APPROVED. PR #17 en borrador apilado sobre #15. FR-01 abierto. Evidencia: informe docs/evidence/mp-038/README.md en el PR #17 (head 39166da; revisado en 6615d53); sigue en borrador, apilado sobre el PR #15, hasta evaluar la jornada 2 (decisión del propietario 2026-11-27). JORNADA 2 (2026-11-27, captura 07:54–09:54 UTC: 7 230 s efectivos, 0 huecos, feeds 235/235): baseline 4bc8612 frente a MP-036 0c518fa con la configuración actual (K=2, cota 256, sin ajustes): reapariciones A→B→A 5→0 sobre 373 tríadas; saltos comunes >200 m 2 587→2 461 sobre 39 973 pares; COSTES: ancla más antigua en 1 932/40 117 fotogramas (mediana +78 s, máx 220 s), retenciones >180 s 3→12 (7 censuradas), p90 de recuperación 30,9→61,7 s, discrepancia frente al GPS bruto mayor en 52/52 pares con coordenada repetida. Verificación única Opus High: APPROVED (2 observaciones no bloqueantes, resueltas). Informe docs/evidence/mp-038/JORNADA2.md en el PR #17 (head b7aed67; verificado en dc59299). FR-01 abierto: una jornada más no cierra nada.",
       "head_kind": "branch_tip",
       "track": "PRODUCT",
       "milestone": "H4",
