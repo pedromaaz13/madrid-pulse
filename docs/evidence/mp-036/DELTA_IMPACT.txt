@@ -1,0 +1,21 @@
+Jornada 1 · 4bc8612 → a7e01b8 → 121c438
+pre B1 20414 GPS, m, ancla, ancla post B1, evento [('06:06:30', 15438, '06:05:52', '06:05:52', False), ('06:06:52', 15438, '06:05:52', '06:05:52', False), ('06:07:30', 15438, '06:05:52', '06:05:52', False)]
+pre B1 20414 GPS, m, ancla, ancla post B1, evento [('06:17:10', 25215, '06:16:52', '06:16:52', False), ('06:17:52', 25412, '06:16:52', '06:17:10', True)]
+pre B1 20414 GPS, m, ancla, ancla post B1, evento [('06:19:10', 22925, '06:18:52', '06:18:52', False), ('06:19:52', 22925, '06:18:52', '06:18:52', False)]
+pre B1 20418 GPS, m, ancla, ancla post B1, evento [('06:32:10', 16187, '06:31:52', '06:31:52', False), ('06:32:52', 16383, '06:31:52', '06:32:10', True)]
+pre B1 20752 GPS, m, ancla, ancla post B1, evento [('07:40:10', 35602, '07:39:30', '07:39:30', False), ('07:40:30', 35602, '07:39:30', '07:39:30', False), ('07:41:10', 35602, '07:39:30', '07:39:30', False)]
+pre B1 20752 GPS, m, ancla, ancla post B1, evento [('07:44:52', 17659, '07:44:10', '07:44:10', False), ('07:45:10', 39595, '07:44:10', '07:44:10', False)]
+pre B1 {'total': 12160, 'positioned': 12146, 'base_accepted_now_rejected': 227, 'reacquire_events': 0, 'streaks_on_track': 111, 'identical_streaks': 107, 'identical_streaks_with_reacquire': 0, 'identical_then_near_anchor': 104}
+post B1 reanclaje 19588 2026-11-26T07:57:10+00:00 2026-11-26T07:56:30+00:00 15190 m
+post B1 reanclaje 20414 2026-11-26T06:17:52+00:00 2026-11-26T06:17:10+00:00 25215 m
+post B1 reanclaje 20418 2026-11-26T06:32:52+00:00 2026-11-26T06:32:10+00:00 16187 m
+post B1 20414 GPS, m, ancla, ancla post B1, evento [('06:06:30', 15438, '06:05:52', '06:05:52', False), ('06:06:52', 15438, '06:05:52', '06:05:52', False), ('06:07:30', 15438, '06:05:52', '06:05:52', False)]
+post B1 20414 GPS, m, ancla, ancla post B1, evento [('06:17:10', 25215, '06:16:52', '06:16:52', False), ('06:17:52', 25412, '06:17:10', '06:17:10', True)]
+post B1 20414 GPS, m, ancla, ancla post B1, evento [('06:19:10', 22925, '06:18:52', '06:18:52', False), ('06:19:52', 22925, '06:18:52', '06:18:52', False)]
+post B1 20418 GPS, m, ancla, ancla post B1, evento [('06:32:10', 16187, '06:31:52', '06:31:52', False), ('06:32:52', 16383, '06:32:10', '06:32:10', True)]
+post B1 20752 GPS, m, ancla, ancla post B1, evento [('07:40:10', 35602, '07:39:30', '07:39:30', False), ('07:40:30', 35602, '07:39:30', '07:39:30', False), ('07:41:10', 35602, '07:39:30', '07:39:30', False)]
+post B1 20752 GPS, m, ancla, ancla post B1, evento [('07:44:52', 17659, '07:44:10', '07:44:10', False), ('07:45:10', 39595, '07:44:10', '07:44:10', False)]
+post B1 {'total': 12160, 'positioned': 12146, 'base_accepted_now_rejected': 223, 'reacquire_events': 3, 'streaks_on_track': 111, 'identical_streaks': 107, 'identical_streaks_with_reacquire': 0, 'identical_then_near_anchor': 104}
+pre B1 {'total': 26601, 'changed': 413, 'older': 401, 'newer': 8, 'null_transition': 4} max_older_s 398.0 {'stale_frozen → stale_frozen': 312, 'extrapolated_from_last_anchor → extrapolated_from_last_anchor': 46, 'anchor → extrapolated_from_last_anchor': 10, 'extrapolated_from_last_anchor → anchor': 24, 'anchor → anchor': 3, 'schedule_only → anchor': 2, 'schedule_only → extrapolated_from_last_anchor': 2, 'extrapolated_from_last_anchor → stale_frozen': 10, 'anchor → stale_frozen': 4}
+post B1 {'total': 26601, 'changed': 411, 'older': 399, 'newer': 8, 'null_transition': 4} max_older_s 398.0 {'stale_frozen → stale_frozen': 312, 'extrapolated_from_last_anchor → extrapolated_from_last_anchor': 46, 'anchor → extrapolated_from_last_anchor': 8, 'extrapolated_from_last_anchor → anchor': 24, 'anchor → anchor': 3, 'schedule_only → anchor': 2, 'schedule_only → extrapolated_from_last_anchor': 2, 'extrapolated_from_last_anchor → stale_frozen': 10, 'anchor → stale_frozen': 4}
+delta B1 {'total': 26601, 'changed': 2, 'newer': 2} max_older_s 0 {'extrapolated_from_last_anchor → anchor': 2}
